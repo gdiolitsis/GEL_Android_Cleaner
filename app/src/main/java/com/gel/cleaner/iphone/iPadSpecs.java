@@ -1280,14 +1280,38 @@ ipadMini6.notes        = "Apple Pencil 2 support, flat-edge design";
 
     }
 
-// =====================================================
-// PUBLIC ACCESS — LOCKED
-// =====================================================
-public static AppleDeviceSpec get(String key) {
-    AppleDeviceSpec d = MAP.get(key);
-    return d != null ? d : AppleDeviceSpec.unknown();
-}
+public static AppleDeviceSpec get(String modelName) {
 
-private iPadSpecs() {
-    // no instances
+    if (modelName == null)
+        return AppleDeviceSpec.unknown();
+
+    String m = modelName.trim().toLowerCase();
+
+    // =====================================================
+    // SERIES RESOLUTION — CRITICAL
+    // =====================================================
+
+    if (m.contains("ipad pro")) {
+        if (m.contains("12.9")) return MAP.get("ipad pro 12.9");
+        if (m.contains("11"))   return MAP.get("ipad pro 11");
+        return MAP.get("ipad pro");
+    }
+
+    if (m.contains("ipad air")) {
+        return MAP.get("ipad air");
+    }
+
+    if (m.contains("ipad mini")) {
+        return MAP.get("ipad mini");
+    }
+
+    if (m.contains("ipad")) {
+        return MAP.get("ipad");
+    }
+
+    // =====================================================
+    // FALLBACK (exact key)
+    // =====================================================
+    AppleDeviceSpec d = MAP.get(m);
+    return d != null ? d : AppleDeviceSpec.unknown();
 }

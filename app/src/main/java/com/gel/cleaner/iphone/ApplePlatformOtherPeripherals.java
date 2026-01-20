@@ -5,7 +5,7 @@ public final class ApplePlatformOtherPeripherals {
 
     private ApplePlatformOtherPeripherals() {}
 
-    public static String getOtherPeripherals() {
+    public static String get() {
         return
             line("IR / Proximity Sensor", "Yes (system-level)") +
             line("Hall Sensor", "Yes (used by cover & magnets)") +

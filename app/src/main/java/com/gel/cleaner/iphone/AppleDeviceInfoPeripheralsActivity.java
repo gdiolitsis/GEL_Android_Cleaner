@@ -117,7 +117,7 @@ protected void onCreate(Bundle savedInstanceState) {
         return;
     }
 
-    d = AppleSpecs.get(model);
+    d = AppleSpecProvider.getSelectedDevice(this);
     populate();
 }
 
@@ -263,11 +263,25 @@ private void populate() {
 // BATTERY
 // ------------------------------------------------------------
 section(headerBattery, txtBattery,
-        log("Battery Type", d.batteryType) +
-        log("Capacity", d.batteryCapacity) +
-        log("Charging", d.charging) +
+        log("Battery Chemistry", d.batteryChemistry) +
+        log("Design Capacity",
+                d.batteryMah != null
+                        ? d.batteryMah + " mAh"
+                        : null) +
+        log("Nominal Voltage",
+                d.batteryVoltage != null
+                        ? d.batteryVoltage + " V"
+                        : null) +
+        log("Energy",
+                d.getBatteryEnergyWh()) +
+        log("Design Cycles",
+                d.batteryDesignCycles != null
+                        ? "~" + d.batteryDesignCycles + " cycles"
+                        : null) +
+        log("Charging", d.batteryCharging) +
         log("Fast Charging", yes(d.hasFastCharge)) +
-        log("Wireless Charging", yes(d.hasWirelessCharge))
+        log("Wireless Charging", yes(d.hasWirelessCharge)) +
+        log("Battery Notes", d.batteryNotes)
 );
 
     // ------------------------------------------------------------

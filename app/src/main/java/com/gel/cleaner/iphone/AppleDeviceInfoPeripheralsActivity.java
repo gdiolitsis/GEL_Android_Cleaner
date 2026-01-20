@@ -459,6 +459,7 @@ section(headerOtherPeripherals, txtOther,
         ApplePlatformOtherPeripherals.get() +
         log("Notes", d.notes)
 );
+}
    
 // ============================================================
 // COLOR HELPERS — PERIPHERALS (HTML SAFE)

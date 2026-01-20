@@ -71,6 +71,30 @@ public class AppleDeviceInfoPeripheralsActivity extends Activity {
     private TextView txtSecurityFlags;
     private TextView txtRoot;
     private TextView txtOther;
+    
+// ============================================================
+// TOGGLE ICONS (AS IN XML)
+// ============================================================
+private TextView iconBattery;
+private TextView iconScreen;
+private TextView iconCamera;
+private TextView iconConnectivity;
+private TextView iconLocation;
+private TextView iconThermal;
+private TextView iconModem;
+private TextView iconWifiAdvanced;
+private TextView iconAudio;
+private TextView iconSensors;
+private TextView iconBiometrics;
+private TextView iconNfc;
+private TextView iconGnss;
+private TextView iconUwb;
+private TextView iconUsb;
+private TextView iconHaptics;
+private TextView iconSystemFeatures;
+private TextView iconSecurityFlags;
+private TextView iconRoot;
+private TextView iconOtherPeripherals;
 
     private AppleDeviceSpec d;
 
@@ -145,6 +169,27 @@ public class AppleDeviceInfoPeripheralsActivity extends Activity {
         txtRoot = findViewById(R.id.txtRootContent);
         txtOther = findViewById(R.id.txtOtherPeripheralsContent);
         
+iconBattery = findViewById(R.id.iconBatteryToggle);
+iconScreen = findViewById(R.id.iconScreenToggle);
+iconCamera = findViewById(R.id.iconCameraToggle);
+iconConnectivity = findViewById(R.id.iconConnectivityToggle);
+iconLocation = findViewById(R.id.iconLocationToggle);
+iconThermal = findViewById(R.id.iconThermalToggle);
+iconModem = findViewById(R.id.iconModemToggle);
+iconWifiAdvanced = findViewById(R.id.iconWifiAdvancedToggle);
+iconAudio = findViewById(R.id.iconAudioUnifiedToggle);
+iconSensors = findViewById(R.id.iconSensorsToggle);
+iconBiometrics = findViewById(R.id.iconBiometricsToggle);
+iconNfc = findViewById(R.id.iconNfcToggle);
+iconGnss = findViewById(R.id.iconGnssToggle);
+iconUwb = findViewById(R.id.iconUwbToggle);
+iconUsb = findViewById(R.id.iconUsbToggle);
+iconHaptics = findViewById(R.id.iconHapticsToggle);
+iconSystemFeatures = findViewById(R.id.iconSystemFeaturesToggle);
+iconSecurityFlags = findViewById(R.id.iconSecurityFlagsToggle);
+iconRoot = findViewById(R.id.iconRootToggle);
+iconOtherPeripherals = findViewById(R.id.iconOtherPeripheralsToggle);
+               
     // --------------------------------------------
     // APPLE ONLY — HIDE "SET MODEL CAPACITY"
     // --------------------------------------------
@@ -156,32 +201,33 @@ public class AppleDeviceInfoPeripheralsActivity extends Activity {
     }
 }
 
-    // ============================================================
-    // TOGGLES SETUP - UNIFIED (LOCKED)
-    // ============================================================
-    private void setupPeripheralsToggles() {
+// ============================================================
+// TOGGLES SETUP - UNIFIED (LOCKED)
+// ============================================================
+private void setupPeripheralsToggles() {
 
-        setupUnifiedSection(headerBattery, batteryContainer); // container
-        setupUnifiedSection(headerScreen, txtScreen);
-        setupUnifiedSection(headerCamera, txtCamera);
-        setupUnifiedSection(headerConnectivity, txtConnectivity);
-        setupUnifiedSection(headerLocation, txtLocation);
-        setupUnifiedSection(headerThermal, txtThermal);
-        setupUnifiedSection(headerModem, txtModem);
-        setupUnifiedSection(headerWifiAdvanced, txtWifiAdvanced);
-        setupUnifiedSection(headerAudioUnified, txtAudio);
-        setupUnifiedSection(headerSensors, txtSensors);
-        setupUnifiedSection(headerBiometrics, txtBiometrics);
-        setupUnifiedSection(headerNfc, txtNfc);
-        setupUnifiedSection(headerGnss, txtGnss);
-        setupUnifiedSection(headerUwb, txtUwb);
-        setupUnifiedSection(headerUsb, txtUsb);
-        setupUnifiedSection(headerHaptics, txtHaptics);
-        setupUnifiedSection(headerSystemFeatures, txtSystemFeatures);
-        setupUnifiedSection(headerSecurityFlags, txtSecurityFlags);
-        setupUnifiedSection(headerRoot, txtRoot);
-        setupUnifiedSection(headerOtherPeripherals, txtOther);
-    }
+    setupUnifiedSection(headerBattery, batteryContainer, iconBattery);
+
+    setupUnifiedSection(headerScreen, txtScreen, iconScreen);
+    setupUnifiedSection(headerCamera, txtCamera, iconCamera);
+    setupUnifiedSection(headerConnectivity, txtConnectivity, iconConnectivity);
+    setupUnifiedSection(headerLocation, txtLocation, iconLocation);
+    setupUnifiedSection(headerThermal, txtThermal, iconThermal);
+    setupUnifiedSection(headerModem, txtModem, iconModem);
+    setupUnifiedSection(headerWifiAdvanced, txtWifiAdvanced, iconWifiAdvanced);
+    setupUnifiedSection(headerAudioUnified, txtAudio, iconAudio);
+    setupUnifiedSection(headerSensors, txtSensors, iconSensors);
+    setupUnifiedSection(headerBiometrics, txtBiometrics, iconBiometrics);
+    setupUnifiedSection(headerNfc, txtNfc, iconNfc);
+    setupUnifiedSection(headerGnss, txtGnss, iconGnss);
+    setupUnifiedSection(headerUwb, txtUwb, iconUwb);
+    setupUnifiedSection(headerUsb, txtUsb, iconUsb);
+    setupUnifiedSection(headerHaptics, txtHaptics, iconHaptics);
+    setupUnifiedSection(headerSystemFeatures, txtSystemFeatures, iconSystemFeatures);
+    setupUnifiedSection(headerSecurityFlags, txtSecurityFlags, iconSecurityFlags);
+    setupUnifiedSection(headerRoot, txtRoot, iconRoot);
+    setupUnifiedSection(headerOtherPeripherals, txtOther, iconOtherPeripherals);
+}
 
     // ============================================================
     // POPULATE - FINAL

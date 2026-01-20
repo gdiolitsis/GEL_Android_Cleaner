@@ -18,64 +18,81 @@ public final class iPhoneSpecs {
         // 📱 iPhone 15
         // =====================================================
         AppleDeviceSpec iphone15 = new AppleDeviceSpec("iphone", "iPhone 15");
-        iphone15.year           = "2023";
-        iphone15.identifier     = "iPhone15,4";
-        iphone15.os             = "iOS";
-        iphone15.soc            = "A16 Bionic";
-        iphone15.chipset        = "A16 Bionic";
-        iphone15.arch           = "ARMv8.6-A";
-        iphone15.processNode    = "4 nm";
-        iphone15.cpu            = "Apple CPU";
-        iphone15.cpuCores       = 6;
-        iphone15.gpu            = "Apple GPU";
-        iphone15.gpuCores       = 5;
-        iphone15.metalFeatureSet= "Metal 3";
+        iphone15.year            = "2023";
+        iphone15.identifier      = "iPhone15,4";
+        iphone15.os              = "iOS";
+        iphone15.soc             = "A16 Bionic";
+        iphone15.chipset         = "A16 Bionic";
+        iphone15.arch            = "ARMv8.6-A";
+        iphone15.processNode     = "4 nm";
+        iphone15.cpu             = "Apple CPU";
+        iphone15.cpuCores        = 6;
+        iphone15.gpu             = "Apple GPU";
+        iphone15.gpuCores        = 5;
+        iphone15.metalFeatureSet = "Metal 3";
 
-        iphone15.ram            = "6 GB";
-        iphone15.ramType        = "LPDDR5";
-        iphone15.storageBase    = "128 GB";
-        iphone15.storageOptions = "128 / 256 / 512 GB";
-        iphone15.screen  = "6.1\"";
-        iphone15.display = "OLED Super Retina XDR";
-        iphone15.resolution     = "2556 × 1179";
-        iphone15.refreshRate   = "60 Hz";
-        iphone15.displayOut     = "DisplayPort (USB-C)";
+        iphone15.ram             = "6 GB";
+        iphone15.ramType         = "LPDDR5";
+        iphone15.storageBase     = "128 GB";
+        iphone15.storageOptions  = "128 / 256 / 512 GB";
+        iphone15.screen          = "6.1\"";
+        iphone15.display         = "OLED Super Retina XDR";
+        iphone15.resolution      = "2556 × 1179";
+        iphone15.refreshRate     = "60 Hz";
+        iphone15.displayOut      = "DisplayPort (USB-C)";
+        iphone15.displayVariants = "Standard 60 Hz (no ProMotion)";
 
-        iphone15.has5G          = true;
-        iphone15.hasLTE         = true;
-        iphone15.cellular       = "5G NR, LTE";
-        iphone15.modem          = "Qualcomm Snapdragon X70";
-        iphone15.wifi           = "Wi-Fi 6";
-        iphone15.bluetooth      = "Bluetooth 5.3";
-        iphone15.hasNFC         = true;
-        iphone15.hasAirDrop     = true;
-        iphone15.hasAirPlay     = true;
-        iphone15.gps            = "GPS, GLONASS, Galileo, QZSS";
-        iphone15.hasCompass     = true;
-        iphone15.hasGyro        = true;
-        iphone15.hasAccel       = true;
-        iphone15.hasBarometer   = true;
+        iphone15.has5G           = true;
+        iphone15.hasLTE          = true;
+        iphone15.cellular        = "5G NR, LTE";
+        iphone15.modem           = "Qualcomm Snapdragon X70";
+        iphone15.wifi            = "Wi-Fi 6";
+        iphone15.bluetooth       = "Bluetooth 5.3";
+        iphone15.hasNFC          = true;
+        iphone15.hasAirDrop      = true;
+        iphone15.hasAirPlay      = true;
+        iphone15.gps             = "GPS, GLONASS, Galileo, QZSS";
+        iphone15.hasCompass      = true;
+        iphone15.hasGyro         = true;
+        iphone15.hasAccel        = true;
+        iphone15.hasBarometer    = true;
 
-        iphone15.simSlots       = "Dual eSIM";
-        iphone15.hasESim        = true;
-        iphone15.port           = "USB-C";
-        iphone15.usbStandard    = "USB 2";
+        iphone15.simSlots        = "Dual eSIM";
+        iphone15.hasESim         = true;
+        iphone15.port            = "USB-C";
+        iphone15.usbStandard     = "USB 2";
 
-        iphone15.speakers       = "Stereo speakers";
-        iphone15.microphones   = "Multiple microphones";
-        iphone15.hasDolby       = true;
-        iphone15.hasJack        = false;
+        iphone15.speakers        = "Stereo speakers";
+        iphone15.microphones    = "Multiple microphones";
+        iphone15.hasDolby        = true;
+        iphone15.hasJack         = false;
 
-        iphone15.cameraMain     = "48 MP Wide";
-        iphone15.cameraUltraWide= "12 MP Ultra-Wide";
-        iphone15.cameraTele     = null;
-        iphone15.cameraFront    = "12 MP TrueDepth";
-        iphone15.cameraVideo    = "4K@60fps HDR";
+        iphone15.cameraMain      = "48 MP Wide";
+        iphone15.cameraUltraWide = "12 MP Ultra-Wide";
+        iphone15.cameraTele      = null;
+        iphone15.cameraFront     = "12 MP TrueDepth";
+        iphone15.cameraVideo     = "4K@60fps HDR";
+        iphone15.cameraVariants  =
+                "Dual-camera system (Wide + Ultra-Wide)";
 
-        iphone15.hasFaceID      = true;
-        iphone15.biometrics     = "Face ID";
-        iphone15.hasFastCharge  = true;
+        iphone15.hasFaceID       = true;
+        iphone15.biometrics      = "Face ID";
+        iphone15.hasFastCharge   = true;
         iphone15.hasWirelessCharge = true;
+
+        // =====================================================
+        // 🔋 BATTERY — SERVICE / REFERENCE DATA
+        // =====================================================
+        iphone15.batteryMah          = 3349;   // model-based reference
+        iphone15.batteryVoltage      = 3.82f;  // Apple nominal
+        iphone15.batteryWh           =
+                (iphone15.batteryMah * iphone15.batteryVoltage) / 1000f;
+        iphone15.batteryChemistry    = "Lithium-Ion (pouch)";
+        iphone15.batteryDesignCycles = 500;
+        iphone15.batteryCharging     =
+                "Fast wired charging, MagSafe 15W, Qi wireless";
+        iphone15.batteryNotes        =
+                "Integrated battery; capacity varies slightly by production batch";
 
         iphone15.thermalNote =
                 "No public access to thermal sensors (Apple restriction)";
@@ -84,39 +101,87 @@ public final class iPhoneSpecs {
 
         MAP.put("iphone 15", iphone15);
 
-
         // =====================================================
         // 📱 iPhone 15 Plus
         // =====================================================
         AppleDeviceSpec iphone15Plus = new AppleDeviceSpec("iphone", "iPhone 15 Plus");
-        iphone15Plus.year            = "2023";
-        iphone15Plus.identifier      = "iPhone15,5";
-        iphone15Plus.os              = "iOS";
-        iphone15Plus.soc             = "A16 Bionic";
-        iphone15Plus.chipset         = "A16 Bionic";
-        iphone15Plus.arch            = "ARMv8.6-A";
-        iphone15Plus.processNode     = "4 nm";
-        iphone15Plus.cpu             = "Apple CPU";
-        iphone15Plus.cpuCores        = 6;
-        iphone15Plus.gpu             = "Apple GPU";
-        iphone15Plus.gpuCores        = 5;
+        iphone15Plus.year           = "2023";
+        iphone15Plus.identifier     = "iPhone15,5";
+        iphone15Plus.os             = "iOS";
+        iphone15Plus.soc            = "A16 Bionic";
+        iphone15Plus.chipset        = "A16 Bionic";
+        iphone15Plus.arch           = "ARMv8.6-A";
+        iphone15Plus.processNode    = "4 nm";
+        iphone15Plus.cpu            = "Apple CPU";
+        iphone15Plus.cpuCores       = 6;
+        iphone15Plus.gpu            = "Apple GPU";
+        iphone15Plus.gpuCores       = 5;
+        iphone15Plus.metalFeatureSet= "Metal 3";
 
-        iphone15Plus.ram             = "6 GB";
-        iphone15Plus.storageOptions  = "128 / 256 / 512 GB";
-        iphone15Plus.screen  = "6.7\"";
-        iphone15Plus.display = "OLED Super Retina XDR";
-        iphone15Plus.refreshRate     = "60 Hz";
-        iphone15Plus.port            = "USB-C";
-        iphone15Plus.usbStandard     = "USB 2";
+        iphone15Plus.ram            = "6 GB";
+        iphone15Plus.ramType        = "LPDDR5";
+        iphone15Plus.storageBase    = "128 GB";
+        iphone15Plus.storageOptions = "128 / 256 / 512 GB";
+        iphone15Plus.screen         = "6.7\"";
+        iphone15Plus.display        = "OLED Super Retina XDR";
+        iphone15Plus.resolution     = "2796 × 1290";
+        iphone15Plus.refreshRate    = "60 Hz";
+        iphone15Plus.displayOut     = "DisplayPort (USB-C)";
+
+        iphone15Plus.has5G          = true;
+        iphone15Plus.hasLTE         = true;
+        iphone15Plus.cellular       = "5G NR, LTE";
+        iphone15Plus.modem          = "Qualcomm Snapdragon X70";
+        iphone15Plus.wifi           = "Wi-Fi 6";
+        iphone15Plus.bluetooth      = "Bluetooth 5.3";
+        iphone15Plus.hasNFC         = true;
+        iphone15Plus.hasAirDrop     = true;
+        iphone15Plus.hasAirPlay     = true;
+        iphone15Plus.gps            = "GPS, GLONASS, Galileo, QZSS";
+        iphone15Plus.hasCompass     = true;
+        iphone15Plus.hasGyro        = true;
+        iphone15Plus.hasAccel       = true;
+        iphone15Plus.hasBarometer   = true;
+
+        iphone15Plus.simSlots       = "Dual eSIM";
+        iphone15Plus.hasESim        = true;
+        iphone15Plus.port           = "USB-C";
+        iphone15Plus.usbStandard    = "USB 2";
+
+        iphone15Plus.speakers       = "Stereo speakers";
+        iphone15Plus.microphones   = "Multiple microphones";
+        iphone15Plus.hasDolby       = true;
+        iphone15Plus.hasJack        = false;
+
         iphone15Plus.cameraMain      = "48 MP Wide";
         iphone15Plus.cameraUltraWide = "12 MP Ultra-Wide";
+        iphone15Plus.cameraTele      = null;
         iphone15Plus.cameraFront     = "12 MP TrueDepth";
+        iphone15Plus.cameraVideo     = "4K@60fps HDR";
+
+        iphone15Plus.hasFaceID       = true;
         iphone15Plus.biometrics      = "Face ID";
-        iphone15Plus.thermalNote     =
-                "Thermal data not accessible (Apple restriction)";
+        iphone15Plus.hasFastCharge   = true;
+        iphone15Plus.hasWirelessCharge = true;
+
+        // =====================================================
+        // 🔋 BATTERY — SERVICE / REFERENCE DATA
+        // =====================================================
+        iphone15Plus.batteryMah          = 4383;   // model-based reference
+        iphone15Plus.batteryVoltage      = 3.82f;  // Apple nominal
+        iphone15Plus.batteryChemistry    = "Lithium-Ion (pouch)";
+        iphone15Plus.batteryDesignCycles = 500;
+        iphone15Plus.batteryCharging     =
+                "Fast wired charging, MagSafe 15W, Qi wireless";
+        iphone15Plus.batteryNotes        =
+                "Larger chassis allows higher capacity and improved endurance";
+
+        iphone15Plus.thermalNote =
+                "Larger enclosure provides better passive thermal dissipation";
+        iphone15Plus.notes =
+                "Factory specifications only. No runtime system probing.";
 
         MAP.put("iphone 15 plus", iphone15Plus);
-
 
         // =====================================================
         // 📱 iPhone 15 Pro
@@ -133,24 +198,70 @@ public final class iPhoneSpecs {
         iphone15Pro.cpuCores        = 6;
         iphone15Pro.gpu             = "Apple GPU";
         iphone15Pro.gpuCores        = 6;
-        iphone15Pro.metalFeatureSet = "Metal 3 (Ray Tracing)";
+        iphone15Pro.metalFeatureSet = "Metal 3 (Hardware Ray Tracing)";
 
         iphone15Pro.ram             = "8 GB";
+        iphone15Pro.ramType         = "LPDDR5";
+        iphone15Pro.storageBase     = "128 GB";
         iphone15Pro.storageOptions  = "128 / 256 / 512 GB / 1 TB";
-        iphone15Pro.screen  = "6.1\"";
-        iphone15Pro.display = "OLED Super Retina XDR (ProMotion)";
+        iphone15Pro.screen          = "6.1\"";
+        iphone15Pro.display         = "OLED Super Retina XDR (ProMotion)";
+        iphone15Pro.resolution      = "2556 × 1179";
         iphone15Pro.refreshRate     = "120 Hz";
-        iphone15Pro.port            = "USB-C";
-        iphone15Pro.usbStandard     = "USB 3";
+        iphone15Pro.displayOut      = "DisplayPort (USB-C)";
 
-        iphone15Pro.cameraMain      = "48 MP Pro";
-        iphone15Pro.cameraUltraWide = "12 MP Ultra-Wide";
-        iphone15Pro.cameraTele      = "12 MP Telephoto";
-        iphone15Pro.cameraVideo     = "4K ProRes";
-        iphone15Pro.biometrics      = "Face ID";
+        iphone15Pro.has5G            = true;
+        iphone15Pro.hasLTE           = true;
+        iphone15Pro.cellular         = "5G NR, LTE";
+        iphone15Pro.modem            = "Qualcomm Snapdragon X70";
+        iphone15Pro.wifi             = "Wi-Fi 6E";
+        iphone15Pro.bluetooth        = "Bluetooth 5.3";
+        iphone15Pro.hasNFC           = true;
+        iphone15Pro.hasAirDrop       = true;
+        iphone15Pro.hasAirPlay       = true;
+        iphone15Pro.gps              = "GPS, GLONASS, Galileo, QZSS";
+        iphone15Pro.hasCompass       = true;
+        iphone15Pro.hasGyro          = true;
+        iphone15Pro.hasAccel         = true;
+        iphone15Pro.hasBarometer     = true;
 
+        iphone15Pro.simSlots         = "Dual eSIM";
+        iphone15Pro.hasESim          = true;
+        iphone15Pro.port             = "USB-C";
+        iphone15Pro.usbStandard      = "USB 3 (up to 10 Gbps)";
+
+        iphone15Pro.speakers         = "Stereo speakers";
+        iphone15Pro.microphones     = "Multiple microphones";
+        iphone15Pro.hasDolby         = true;
+        iphone15Pro.hasJack          = false;
+
+        iphone15Pro.cameraMain       = "48 MP Pro";
+        iphone15Pro.cameraUltraWide  = "12 MP Ultra-Wide";
+        iphone15Pro.cameraTele       = "12 MP Telephoto (3×)";
+        iphone15Pro.cameraFront      = "12 MP TrueDepth";
+        iphone15Pro.cameraVideo      = "4K ProRes, Spatial Video support";
+
+        iphone15Pro.hasFaceID        = true;
+        iphone15Pro.biometrics       = "Face ID";
+        iphone15Pro.hasFastCharge    = true;
+        iphone15Pro.hasWirelessCharge= true;
+
+        // =====================================================
+        // 🔋 BATTERY — SERVICE / REFERENCE DATA
+        // =====================================================
+        iphone15Pro.batteryMah          = 3274;   // model-based reference
+        iphone15Pro.batteryVoltage      = 3.82f;  // Apple nominal
+        iphone15Pro.batteryChemistry    = "Lithium-Ion (pouch)";
+        iphone15Pro.batteryDesignCycles = 500;
+        iphone15Pro.batteryCharging     =
+                "Fast wired charging, MagSafe 15W, Qi wireless";
+        iphone15Pro.batteryNotes        =
+                "Pro chassis with improved thermal efficiency vs base models";
+
+        iphone15Pro.thermalNote =
+                "Titanium frame improves heat dissipation under sustained load";
         iphone15Pro.notes =
-                "Pro model includes hardware ray tracing and USB-C high-speed data.";
+                "Pro model with A17 Pro, hardware ray tracing and high-speed USB-C data.";
 
         MAP.put("iphone 15 pro", iphone15Pro);
 
@@ -163,24 +274,77 @@ public final class iPhoneSpecs {
         iphone15ProMax.identifier      = "iPhone16,2";
         iphone15ProMax.os              = "iOS";
         iphone15ProMax.soc             = "A17 Pro";
+        iphone15ProMax.chipset         = "A17 Pro";
         iphone15ProMax.arch            = "ARMv9";
         iphone15ProMax.processNode     = "3 nm";
+        iphone15ProMax.cpu             = "Apple CPU";
         iphone15ProMax.cpuCores        = 6;
+        iphone15ProMax.gpu             = "Apple GPU";
         iphone15ProMax.gpuCores        = 6;
-        iphone15ProMax.metalFeatureSet = "Metal 3 (Ray Tracing)";
+        iphone15ProMax.metalFeatureSet = "Metal 3 (Hardware Ray Tracing)";
 
         iphone15ProMax.ram             = "8 GB";
+        iphone15ProMax.ramType         = "LPDDR5";
+        iphone15ProMax.storageBase     = "256 GB";
         iphone15ProMax.storageOptions  = "256 / 512 GB / 1 TB";
-        iphone15ProMax.screen  = "6.7\"";
-        iphone15ProMax.display = "OLED Super Retina XDR (ProMotion)";
+        iphone15ProMax.screen          = "6.7\"";
+        iphone15ProMax.display         = "OLED Super Retina XDR (ProMotion)";
+        iphone15ProMax.resolution      = "2796 × 1290";
         iphone15ProMax.refreshRate     = "120 Hz";
-        iphone15ProMax.cameraTele      = "12 MP Telephoto (5×)";
-        iphone15ProMax.port            = "USB-C";
-        iphone15ProMax.usbStandard     = "USB 3";
-        iphone15ProMax.biometrics      = "Face ID";
+        iphone15ProMax.displayOut      = "DisplayPort (USB-C)";
 
+        iphone15ProMax.has5G            = true;
+        iphone15ProMax.hasLTE           = true;
+        iphone15ProMax.cellular         = "5G NR, LTE";
+        iphone15ProMax.modem            = "Qualcomm Snapdragon X70";
+        iphone15ProMax.wifi             = "Wi-Fi 6E";
+        iphone15ProMax.bluetooth        = "Bluetooth 5.3";
+        iphone15ProMax.hasNFC           = true;
+        iphone15ProMax.hasAirDrop       = true;
+        iphone15ProMax.hasAirPlay       = true;
+        iphone15ProMax.gps              = "GPS, GLONASS, Galileo, QZSS";
+        iphone15ProMax.hasCompass       = true;
+        iphone15ProMax.hasGyro          = true;
+        iphone15ProMax.hasAccel         = true;
+        iphone15ProMax.hasBarometer     = true;
+
+        iphone15ProMax.simSlots         = "Dual eSIM";
+        iphone15ProMax.hasESim          = true;
+        iphone15ProMax.port             = "USB-C";
+        iphone15ProMax.usbStandard      = "USB 3 (up to 10 Gbps)";
+
+        iphone15ProMax.speakers         = "Stereo speakers";
+        iphone15ProMax.microphones     = "Multiple microphones";
+        iphone15ProMax.hasDolby         = true;
+        iphone15ProMax.hasJack          = false;
+
+        iphone15ProMax.cameraMain       = "48 MP Pro";
+        iphone15ProMax.cameraUltraWide  = "12 MP Ultra-Wide";
+        iphone15ProMax.cameraTele       = "12 MP Telephoto (5×)";
+        iphone15ProMax.cameraFront      = "12 MP TrueDepth";
+        iphone15ProMax.cameraVideo      = "4K ProRes, Spatial Video support";
+
+        iphone15ProMax.hasFaceID        = true;
+        iphone15ProMax.biometrics       = "Face ID";
+        iphone15ProMax.hasFastCharge    = true;
+        iphone15ProMax.hasWirelessCharge= true;
+
+        // =====================================================
+        // 🔋 BATTERY — SERVICE / REFERENCE DATA
+        // =====================================================
+        iphone15ProMax.batteryMah          = 4422;   // model-based reference
+        iphone15ProMax.batteryVoltage      = 3.82f;  // Apple nominal
+        iphone15ProMax.batteryChemistry    = "Lithium-Ion (pouch)";
+        iphone15ProMax.batteryDesignCycles = 500;
+        iphone15ProMax.batteryCharging     =
+                "Fast wired charging, MagSafe 15W, Qi wireless";
+        iphone15ProMax.batteryNotes        =
+                "Largest capacity in the series; improved endurance and thermal headroom";
+
+        iphone15ProMax.thermalNote =
+                "Titanium frame and larger chassis provide better sustained thermal performance";
         iphone15ProMax.notes =
-                "Exclusive 5× telephoto lens. Highest factory configuration.";
+                "Top-tier configuration with exclusive 5× telephoto and maximum performance headroom.";
 
         MAP.put("iphone 15 pro max", iphone15ProMax);
 

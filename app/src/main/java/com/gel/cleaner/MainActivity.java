@@ -1132,22 +1132,37 @@ private void showAppleDeviceDeclarationPopup() {
 private void showAppleModelPicker(String type) {
 
     String[] models = "iphone".equals(type)
-            ? new String[]{
-                    "iPhone 11 Series",
-                    "iPhone 12 Series",
-                    "iPhone 13 Series",
-                    "iPhone 14 Series",
-                    "iPhone 15 Series"
-            }
-            : new String[]{
-                    "iPad Pro 11 (M2)",
-                    "iPad Pro 11 (M1)",
-                    "iPad Pro 12.9 (M1)",
-                    "iPad Air 11 (M2)",
-                    "iPad Air 13 (M2)",
-                    "iPad Air (M1)",
-                    "iPad mini 6"
-            };
+        ? new String[]{
+                "iPhone 15",
+                "iPhone 15 Pro",
+                "iPhone 15 Pro Max",
+
+                "iPhone 14",
+                "iPhone 14 Pro",
+                "iPhone 14 Pro Max",
+
+                "iPhone 13",
+                "iPhone 13 Pro",
+                "iPhone 13 Pro Max",
+
+                "iPhone 12",
+                "iPhone 12 Pro",
+                "iPhone 12 Pro Max",
+
+                "iPhone 11",
+                "iPhone 11 Pro",
+                "iPhone 11 Pro Max"
+        }
+        : new String[]{
+                "iPad Pro 11 (M2)",
+                "iPad Pro 12.9 (M2)",
+                "iPad Pro 11 (M1)",
+                "iPad Pro 12.9 (M1)",
+                "iPad Air 11 (M2)",
+                "iPad Air 13 (M2)",
+                "iPad Air (M1)",
+                "iPad mini 6"
+        };
 
     AlertDialog.Builder b =
             new AlertDialog.Builder(this,

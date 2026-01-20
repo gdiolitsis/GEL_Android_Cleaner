@@ -125,37 +125,21 @@ public final class AppleSpecProvider {
     // REFLECTION BRIDGE → AppleSpecs
     // =========================================================
     public static Object getSpecOrNull(Context c) {
-        try {
-            Selection s = getSavedSelection(c);
+    try {
+        Selection s = getSavedSelection(c);
 
-            Class<?> cls =
-                    Class.forName("com.gel.cleaner.iphone.AppleSpecs");
+        Class<?> cls =
+                Class.forName("com.gel.cleaner.iphone.AppleSpecs");
 
-            Method m = null;
+        Method m = cls.getDeclaredMethod("get", String.class);
+        m.setAccessible(true);
 
-            try { m = cls.getDeclaredMethod("get", String.class, String.class); }
-            catch (Throwable ignore) {}
+        return m.invoke(null, s.model);
 
-            if (m == null) {
-                try { m = cls.getDeclaredMethod("getSpec", String.class, String.class); }
-                catch (Throwable ignore) {}
-            }
-
-            if (m == null) {
-                try { m = cls.getDeclaredMethod("find", String.class, String.class); }
-                catch (Throwable ignore) {}
-            }
-
-            if (m == null) return null;
-
-            m.setAccessible(true);
-            return m.invoke(null, s.type, s.model);
-
-        } catch (Throwable ignore) {
-            return null;
-        }
+    } catch (Throwable ignore) {
+        return null;
     }
-
+}
     // =========================================================
     // DIRECT SAFE ACCESS FOR ACTIVITIES
     // =========================================================

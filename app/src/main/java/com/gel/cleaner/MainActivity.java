@@ -979,6 +979,12 @@ private void setupButtons() {
 // ========================================================
 // 🍎 APPLE MODE — RENAME DIAGNOSIS BUTTON
 // ========================================================
+SharedPreferences prefs =
+        getSharedPreferences("gel_prefs", MODE_PRIVATE);
+
+boolean isAppleMode =
+        prefs.getBoolean("apple_mode", false);
+
 if (isAppleMode) {
 
     TextView btnDiag = findViewById(R.id.btnDiagnostics);

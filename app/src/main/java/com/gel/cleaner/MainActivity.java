@@ -1398,20 +1398,7 @@ builder.setCustomTitle(title);
                 scroll.post(() -> scroll.fullScroll(ScrollView.FOCUS_DOWN));
         });
     }
-    
-// =========================================================
-// 🍎 MODEL NAME NORMALIZER — iPad / iPhone SAFE
-// =========================================================
-private String normalizeAppleModel(String model) {
-    if (model == null) return null;
-
-    return model
-            .replace("(M2)", "M2")
-            .replace("(M1)", "M1")
-            .replaceAll("\\s+", " ")
-            .trim();
-}
-    
+        
 // =========================================================
 // OPEN APP INFO (for Browser Picker)
 // =========================================================

@@ -558,16 +558,25 @@ ipadPro129M1.notes =
 MAP.put("ipad pro 12.9 m1", ipadPro129M1);
 
 // -----------------------------------------------------
-// iPad Air (M1)
+// 📱 iPad Air (M1)
 // -----------------------------------------------------
 AppleDeviceSpec ipadAirM1 = new AppleDeviceSpec();
 ipadAirM1.type = "ipad";
 ipadAirM1.model = "iPad Air (M1)";
 ipadAirM1.year = "2022";
-ipadAirM1.identifier = "iPad13,16 / iPad13,17";
-ipadAirM1.modelNumber = "A2588 / A2589 / A2591";
+ipadAirM1.identifier =
+        "iPad13,16 / iPad13,17";
+ipadAirM1.modelNumber =
+        "A2588 / A2589 / A2591";
 
+// =====================================================
+// OS / PLATFORM
+// =====================================================
 ipadAirM1.os = "iPadOS";
+
+// =====================================================
+// SOC / CPU / GPU
+// =====================================================
 ipadAirM1.soc = "Apple M1";
 ipadAirM1.chipset = "M1";
 ipadAirM1.processNode = "5 nm";
@@ -577,71 +586,131 @@ ipadAirM1.gpu = "Apple GPU";
 ipadAirM1.gpuCores = 8;
 ipadAirM1.metalFeatureSet = "Metal 3";
 
+// =====================================================
+// MEMORY / STORAGE
+// =====================================================
 ipadAirM1.ram = "8 GB";
 ipadAirM1.ramType = "Unified Memory";
 ipadAirM1.storageBase = "64 GB";
 ipadAirM1.storageOptions = "64 / 256 GB";
+ipadAirM1.storageVariants =
+        "Single RAM tier across all storage options";
 
+// =====================================================
+// DISPLAY
+// =====================================================
 ipadAirM1.screen = "10.9\"";
 ipadAirM1.display = "Liquid Retina (IPS)";
 ipadAirM1.resolution = "2360 × 1640";
 ipadAirM1.refreshRate = "60 Hz";
 ipadAirM1.displayOut = "USB-C DisplayPort";
+ipadAirM1.displayVariants =
+        "Non-ProMotion IPS panel; laminated display with P3 color";
 
+// =====================================================
+// NETWORK / WIRELESS
+// =====================================================
 ipadAirM1.has5G = true;
 ipadAirM1.hasLTE = true;
-ipadAirM1.cellular = "5G / LTE";
+ipadAirM1.cellular = "5G / LTE (cellular models)";
 ipadAirM1.modem = "Qualcomm Snapdragon X55";
 ipadAirM1.wifi = "Wi-Fi 6";
 ipadAirM1.bluetooth = "Bluetooth 5.0";
 ipadAirM1.hasNFC = false;
 ipadAirM1.hasAirDrop = true;
 ipadAirM1.hasAirPlay = true;
-ipadAirM1.gps = "GPS / GNSS (Cellular models)";
+ipadAirM1.gps = "GPS / GNSS (cellular models)";
 ipadAirM1.hasCompass = true;
 ipadAirM1.hasGyro = true;
 ipadAirM1.hasAccel = true;
 ipadAirM1.hasBarometer = true;
 
-ipadAirM1.simSlots = "Nano-SIM + eSIM";
+// =====================================================
+// SIM / PORTS
+// =====================================================
+ipadAirM1.simSlots =
+        "Nano-SIM + eSIM (cellular models)";
 ipadAirM1.hasESim = true;
 ipadAirM1.port = "USB-C";
 ipadAirM1.usbStandard = "USB 3.1 Gen 1";
 
-ipadAirM1.speakers = "Stereo speakers";
+// =====================================================
+// AUDIO
+// =====================================================
+ipadAirM1.speakers = "Stereo speakers (landscape)";
 ipadAirM1.microphones = "Dual microphones";
 ipadAirM1.hasDolby = true;
 ipadAirM1.hasJack = false;
 
+// =====================================================
+// CAMERA
+// =====================================================
 ipadAirM1.cameraMain = "12 MP Wide";
-ipadAirM1.cameraFront = "12 MP Ultra-Wide (Center Stage)";
-ipadAirM1.cameraVideo = "4K@60fps";
+ipadAirM1.cameraFront =
+        "12 MP Ultra-Wide (Center Stage)";
+ipadAirM1.cameraVideo =
+        "4K@60fps";
+ipadAirM1.cameraVariants =
+        "Single rear camera; Center Stage front camera";
 
+// =====================================================
+// BIOMETRICS
+// =====================================================
 ipadAirM1.hasFaceID = false;
 ipadAirM1.hasTouchID = true;
-ipadAirM1.biometrics = "Touch ID (Top Button)";
+ipadAirM1.biometrics =
+        "Touch ID (Top Button)";
 
+// =====================================================
+// POWER
+// =====================================================
 ipadAirM1.hasFastCharge = true;
 ipadAirM1.hasWirelessCharge = false;
 
+// =====================================================
+// 🔋 BATTERY — SERVICE / REFERENCE DATA
+// =====================================================
+ipadAirM1.batteryMah          = 7606;   // ≈ 28.6 Wh
+ipadAirM1.batteryVoltage      = 3.76f;
+ipadAirM1.batteryWh           =
+        (ipadAirM1.batteryMah * ipadAirM1.batteryVoltage) / 1000f;
+ipadAirM1.batteryChemistry    = "Lithium-Polymer";
+ipadAirM1.batteryDesignCycles = 1000;
+ipadAirM1.batteryCharging     =
+        "USB-C fast charging";
+ipadAirM1.batteryNotes        =
+        "Apple rates up to 10 hours web/video usage";
+
+// =====================================================
+// THERMAL / NOTES
+// =====================================================
 ipadAirM1.thermalNote =
         "Thermal sensors not accessible to applications (Apple restriction)";
 ipadAirM1.notes =
-        "M1 performance class, limited by iPadOS multitasking constraints";
+        "M1-class performance in thin Air chassis; sustained loads limited vs iPad Pro";
 
 MAP.put("ipad air m1", ipadAirM1);
 
 // -----------------------------------------------------
-// iPad Air 11 (M2)
+// 📱 iPad Air 11" (M2)
 // -----------------------------------------------------
 AppleDeviceSpec ipadAir11M2 = new AppleDeviceSpec();
 ipadAir11M2.type = "ipad";
 ipadAir11M2.model = "iPad Air 11 (M2)";
 ipadAir11M2.year = "2024";
-ipadAir11M2.identifier = "iPad14,8 / iPad14,9";
-ipadAir11M2.modelNumber = "A2902 / A2903";
+ipadAir11M2.identifier =
+        "iPad14,8 / iPad14,9";
+ipadAir11M2.modelNumber =
+        "A2902 / A2903";
 
+// =====================================================
+// OS / PLATFORM
+// =====================================================
 ipadAir11M2.os = "iPadOS";
+
+// =====================================================
+// SOC / CPU / GPU
+// =====================================================
 ipadAir11M2.soc = "Apple M2";
 ipadAir11M2.chipset = "M2";
 ipadAir11M2.processNode = "5 nm";
@@ -651,57 +720,107 @@ ipadAir11M2.gpu = "Apple GPU";
 ipadAir11M2.gpuCores = 9;
 ipadAir11M2.metalFeatureSet = "Metal 3";
 
+// =====================================================
+// MEMORY / STORAGE
+// =====================================================
 ipadAir11M2.ram = "8 GB";
 ipadAir11M2.ramType = "Unified Memory";
 ipadAir11M2.storageBase = "128 GB";
-ipadAir11M2.storageOptions = "128 / 256 / 512 GB / 1 TB";
+ipadAir11M2.storageOptions =
+        "128 / 256 / 512 GB / 1 TB";
+ipadAir11M2.storageVariants =
+        "Single RAM tier across all storage configurations";
 
+// =====================================================
+// DISPLAY
+// =====================================================
 ipadAir11M2.screen = "11\"";
 ipadAir11M2.display = "Liquid Retina (IPS)";
 ipadAir11M2.resolution = "2360 × 1640";
 ipadAir11M2.refreshRate = "60 Hz";
 ipadAir11M2.displayOut = "USB-C DisplayPort";
+ipadAir11M2.displayVariants =
+        "Non-ProMotion IPS panel; laminated display with P3 color";
 
+// =====================================================
+// NETWORK / WIRELESS
+// =====================================================
 ipadAir11M2.has5G = true;
 ipadAir11M2.hasLTE = true;
-ipadAir11M2.cellular = "5G / LTE";
+ipadAir11M2.cellular = "5G / LTE (cellular models)";
 ipadAir11M2.modem = "Qualcomm Snapdragon X65";
 ipadAir11M2.wifi = "Wi-Fi 6E";
 ipadAir11M2.bluetooth = "Bluetooth 5.3";
 ipadAir11M2.hasNFC = false;
 ipadAir11M2.hasAirDrop = true;
 ipadAir11M2.hasAirPlay = true;
-ipadAir11M2.gps = "GPS / GNSS (Cellular models)";
+ipadAir11M2.gps = "GPS / GNSS (cellular models)";
 ipadAir11M2.hasCompass = true;
 ipadAir11M2.hasGyro = true;
 ipadAir11M2.hasAccel = true;
 ipadAir11M2.hasBarometer = true;
 
-ipadAir11M2.simSlots = "eSIM only";
+// =====================================================
+// SIM / PORTS
+// =====================================================
+ipadAir11M2.simSlots = "eSIM only (cellular models)";
 ipadAir11M2.hasESim = true;
 ipadAir11M2.port = "USB-C";
 ipadAir11M2.usbStandard = "USB 3.1 Gen 2";
 
-ipadAir11M2.speakers = "Stereo speakers";
+// =====================================================
+// AUDIO
+// =====================================================
+ipadAir11M2.speakers = "Stereo speakers (landscape)";
 ipadAir11M2.microphones = "Dual microphones";
 ipadAir11M2.hasDolby = true;
 ipadAir11M2.hasJack = false;
 
+// =====================================================
+// CAMERA
+// =====================================================
 ipadAir11M2.cameraMain = "12 MP Wide";
-ipadAir11M2.cameraFront = "12 MP Landscape Ultra-Wide (Center Stage)";
+ipadAir11M2.cameraFront =
+        "12 MP Landscape Ultra-Wide (Center Stage)";
 ipadAir11M2.cameraVideo = "4K@60fps";
+ipadAir11M2.cameraVariants =
+        "Landscape-oriented front camera optimized for video calls";
 
+// =====================================================
+// BIOMETRICS
+// =====================================================
 ipadAir11M2.hasFaceID = false;
 ipadAir11M2.hasTouchID = true;
-ipadAir11M2.biometrics = "Touch ID (Top Button)";
+ipadAir11M2.biometrics =
+        "Touch ID (Top Button)";
 
-ipadAir11M2.charging = "USB-C fast charge";
+// =====================================================
+// POWER
+// =====================================================
+ipadAir11M2.charging = "USB-C fast charging";
 ipadAir11M2.hasWirelessCharge = false;
 
+// =====================================================
+// 🔋 BATTERY — SERVICE / REFERENCE DATA
+// =====================================================
+ipadAir11M2.batteryMah          = 7606;   // ≈ 28.6 Wh (Air class)
+ipadAir11M2.batteryVoltage      = 3.76f;
+ipadAir11M2.batteryWh           =
+        (ipadAir11M2.batteryMah * ipadAir11M2.batteryVoltage) / 1000f;
+ipadAir11M2.batteryChemistry    = "Lithium-Polymer";
+ipadAir11M2.batteryDesignCycles = 1000;
+ipadAir11M2.batteryCharging     =
+        "USB-C fast charging";
+ipadAir11M2.batteryNotes        =
+        "Apple rates up to 10 hours web/video usage";
+
+// =====================================================
+// THERMAL / NOTES
+// =====================================================
 ipadAir11M2.thermalNote =
         "Thermal sensors not accessible to applications (Apple restriction)";
 ipadAir11M2.notes =
-        "M2 performance class without ProMotion or LiDAR; iPadOS limits pro workflows";
+        "M2 performance tier without ProMotion or LiDAR; lighter chassis vs iPad Pro, sustained loads OS-limited";
 
 MAP.put("ipad air 11 m2", ipadAir11M2);
 

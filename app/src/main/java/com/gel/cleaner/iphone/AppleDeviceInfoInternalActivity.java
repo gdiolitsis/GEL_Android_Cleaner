@@ -42,6 +42,15 @@ public class AppleDeviceInfoInternalActivity extends Activity {
     private TextView outVulkan;
     private TextView outRam;
     private TextView outStorage;
+    
+private TextView iconSystem;
+private TextView iconAndroid;
+private TextView iconCpu;
+private TextView iconGpu;
+private TextView iconThermal;
+private TextView iconVulkan;
+private TextView iconRam;
+private TextView iconStorage;
 
     private AppleDeviceSpec d;
     private View currentlyOpen;
@@ -71,16 +80,16 @@ protected void onCreate(Bundle savedInstanceState) {
     populate();               // 3️⃣ μετά γεμίζουμε
 }
 
-    private void setupInternalToggles() {
+private void setupInternalToggles() {
 
-    setupToggle(secSystem,  outSystem);
-    setupToggle(secAndroid, outAndroid);
-    setupToggle(secCpu,     outCpu);
-    setupToggle(secGpu,     outGpu);
-    setupToggle(secThermal, outThermal);
-    setupToggle(secVulkan,  outVulkan);
-    setupToggle(secRam,     outRam);
-    setupToggle(secStorage, outStorage);
+    setupUnifiedSection(secSystem,  outSystem,  iconSystem);
+    setupUnifiedSection(secAndroid, outAndroid, iconAndroid);
+    setupUnifiedSection(secCpu,     outCpu,     iconCpu);
+    setupUnifiedSection(secGpu,     outGpu,     iconGpu);
+    setupUnifiedSection(secThermal, outThermal, iconThermal);
+    setupUnifiedSection(secVulkan,  outVulkan,  iconVulkan);
+    setupUnifiedSection(secRam,     outRam,     iconRam);
+    setupUnifiedSection(secStorage, outStorage, iconStorage);
 }
 
     // ============================================================
@@ -105,42 +114,17 @@ protected void onCreate(Bundle savedInstanceState) {
         outVulkan   = findViewById(R.id.txtVulkanContent);
         outRam      = findViewById(R.id.txtRamContent);
         outStorage  = findViewById(R.id.txtStorageContent);
+        
+iconSystem  = findViewById(R.id.iconSystemToggle);
+iconAndroid = findViewById(R.id.iconAndroidToggle);
+iconCpu     = findViewById(R.id.iconCpuToggle);
+iconGpu     = findViewById(R.id.iconGpuToggle);
+iconThermal = findViewById(R.id.iconThermalToggle);
+iconVulkan  = findViewById(R.id.iconVulkanToggle);
+iconRam     = findViewById(R.id.iconRamToggle);
+iconStorage = findViewById(R.id.iconStorageToggle);
+        
     }
-
-private void setupToggle(LinearLayout header, TextView content) {
-    if (header == null || content == null) return;
-
-    TextView icon =
-            header.findViewById(R.id.iconToggle); // το + στο XML
-
-    content.setVisibility(View.GONE);
-    if (icon != null) icon.setText("+");
-
-    header.setOnClickListener(v -> {
-
-        boolean isOpen = (currentlyOpen == content);
-
-        // κλείσε ό,τι άλλο είναι ανοιχτό
-        if (currentlyOpen != null && currentlyOpen != content) {
-            currentlyOpen.setVisibility(View.GONE);
-
-            if (currentlyOpen.getTag() instanceof TextView) {
-                ((TextView) currentlyOpen.getTag()).setText("+");
-            }
-        }
-
-        if (isOpen) {
-            content.setVisibility(View.GONE);
-            if (icon != null) icon.setText("+");
-            currentlyOpen = null;
-        } else {
-            content.setVisibility(View.VISIBLE);
-            if (icon != null) icon.setText("−");
-            currentlyOpen = content;
-            content.setTag(icon);
-        }
-    });
-}
 
 // ============================================================
 // POPULATE — FINAL (SERIES + PRO / PRO MAX AWARE)

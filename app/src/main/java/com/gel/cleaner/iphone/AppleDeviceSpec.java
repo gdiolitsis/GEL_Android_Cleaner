@@ -131,26 +131,13 @@ public class AppleDeviceSpec {
     // =========================================================
     // BATTERY — SERVICE / REFERENCE DATA (MODEL-BASED)
     // =========================================================
-    // Design capacity (from teardowns / service manuals)
-    public Integer batteryMah;           // e.g. 4422
-
-    // Nominal voltage (Apple standard ≈ 3.82V)
-    public Float   batteryVoltage;       // e.g. 3.82f
-
-    // Cached energy (Wh) — optional
-    public Float   batteryWh;             // (mAh * V) / 1000
-
-    // Chemistry
-    public String  batteryChemistry;      // Lithium-Ion (pouch)
-
-    // Design lifecycle
-    public Integer batteryDesignCycles;   // ~500 full cycles to ~80%
-
-    // Charging capabilities (human-readable)
-    public String  batteryCharging;       // Fast wired / MagSafe / Qi
-
-    // Thermal / aging notes
-    public String  batteryNotes;          // Pro vs Base differences
+    public Integer batteryMah;           // design capacity
+    public Float   batteryVoltage;       // nominal ≈ 3.82V
+    public Float   batteryWh;             // cached / auto-derived
+    public String  batteryChemistry;
+    public Integer batteryDesignCycles;
+    public String  batteryCharging;
+    public String  batteryNotes;
 
     // =========================================================
     // THERMAL / NOTES
@@ -168,7 +155,7 @@ public class AppleDeviceSpec {
         this.model = model;
     }
 
-    // Legacy constructor — KEEP (do not break old code)
+    // Legacy constructor — KEEP
     public AppleDeviceSpec(
             String type,
             String model,
@@ -207,10 +194,16 @@ public class AppleDeviceSpec {
         return batteryMah != null && batteryVoltage != null;
     }
 
+    /**
+     * Returns battery energy in Wh.
+     * Auto-derives and caches batteryWh if missing.
+     */
     public String getBatteryEnergyWh() {
-        if (batteryMah == null || batteryVoltage == null) return null;
-        float wh = (batteryMah * batteryVoltage) / 1000f;
-        return String.format(Locale.US, "%.2f Wh", wh);
+        if (batteryWh == null) {
+            if (batteryMah == null || batteryVoltage == null) return null;
+            batteryWh = (batteryMah * batteryVoltage) / 1000f;
+        }
+        return String.format(Locale.US, "%.2f Wh", batteryWh);
     }
 
     // =========================================================

@@ -6,6 +6,8 @@
 
 package com.gel.cleaner.iphone;
 
+import java.util.Locale;
+
 public class AppleDeviceSpec {
 
     // =========================================================
@@ -120,11 +122,35 @@ public class AppleDeviceSpec {
     public String  biometrics;
 
     // =========================================================
-    // POWER
+    // POWER (GENERIC FLAGS)
     // =========================================================
     public boolean hasFastCharge;
     public boolean hasWirelessCharge;
     public String  batteryVariants;
+
+    // =========================================================
+    // BATTERY — SERVICE / REFERENCE DATA (MODEL-BASED)
+    // =========================================================
+    // Design capacity (from teardowns / service manuals)
+    public Integer batteryMah;           // e.g. 4422
+
+    // Nominal voltage (Apple standard ≈ 3.82V)
+    public Float   batteryVoltage;       // e.g. 3.82f
+
+    // Cached energy (Wh) — optional
+    public Float   batteryWh;             // (mAh * V) / 1000
+
+    // Chemistry
+    public String  batteryChemistry;      // Lithium-Ion (pouch)
+
+    // Design lifecycle
+    public Integer batteryDesignCycles;   // ~500 full cycles to ~80%
+
+    // Charging capabilities (human-readable)
+    public String  batteryCharging;       // Fast wired / MagSafe / Qi
+
+    // Thermal / aging notes
+    public String  batteryNotes;          // Pro vs Base differences
 
     // =========================================================
     // THERMAL / NOTES
@@ -171,10 +197,20 @@ public class AppleDeviceSpec {
     }
 
     // =========================================================
-    // SAFE HELPERS (UI USE ONLY)
+    // SAFE HELPERS (UI / SERVICE USE)
     // =========================================================
     public boolean isAnyPro() {
         return isPro || isProMax;
+    }
+
+    public boolean hasBatterySpec() {
+        return batteryMah != null && batteryVoltage != null;
+    }
+
+    public String getBatteryEnergyWh() {
+        if (batteryMah == null || batteryVoltage == null) return null;
+        float wh = (batteryMah * batteryVoltage) / 1000f;
+        return String.format(Locale.US, "%.2f Wh", wh);
     }
 
     // =========================================================
@@ -201,6 +237,7 @@ public class AppleDeviceSpec {
         d.seriesVariants  = "Unknown";
         d.displayVariants = "Unknown";
         d.cameraVariants  = "Unknown";
+        d.batteryNotes    = "Unknown";
 
         return d;
     }

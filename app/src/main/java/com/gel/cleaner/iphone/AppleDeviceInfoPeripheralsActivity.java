@@ -174,25 +174,27 @@ private void bind() {
 // ============================================================
 private void setupPeripheralsToggles() {
 
-setupToggle(headerScreen, txtScreen);
-setupToggle(headerCamera, txtCamera);
-setupToggle(headerConnectivity, txtConnectivity);
-setupToggle(headerLocation, txtLocation);
-setupToggle(headerThermal, txtThermal);
-setupToggle(headerModem, txtModem);
-setupToggle(headerWifiAdvanced, txtWifiAdvanced);
-setupToggle(headerAudioUnified, txtAudio);
-setupToggle(headerSensors, txtSensors);
-setupToggle(headerBiometrics, txtBiometrics);
-setupToggle(headerNfc, txtNfc);
-setupToggle(headerGnss, txtGnss);
-setupToggle(headerUwb, txtUwb);
-setupToggle(headerUsb, txtUsb);
-setupToggle(headerHaptics, txtHaptics);
-setupToggle(headerSystemFeatures, txtSystemFeatures);
-setupToggle(headerSecurityFlags, txtSecurityFlags);
-setupToggle(headerRoot, txtRoot);
-setupToggle(headerOtherPeripherals, txtOther);
+    setupToggle(headerBattery, txtBattery); // ⬅️ ΑΥΤΟ ΕΛΕΙΠΕ
+
+    setupToggle(headerScreen, txtScreen);
+    setupToggle(headerCamera, txtCamera);
+    setupToggle(headerConnectivity, txtConnectivity);
+    setupToggle(headerLocation, txtLocation);
+    setupToggle(headerThermal, txtThermal);
+    setupToggle(headerModem, txtModem);
+    setupToggle(headerWifiAdvanced, txtWifiAdvanced);
+    setupToggle(headerAudioUnified, txtAudio);
+    setupToggle(headerSensors, txtSensors);
+    setupToggle(headerBiometrics, txtBiometrics);
+    setupToggle(headerNfc, txtNfc);
+    setupToggle(headerGnss, txtGnss);
+    setupToggle(headerUwb, txtUwb);
+    setupToggle(headerUsb, txtUsb);
+    setupToggle(headerHaptics, txtHaptics);
+    setupToggle(headerSystemFeatures, txtSystemFeatures);
+    setupToggle(headerSecurityFlags, txtSecurityFlags);
+    setupToggle(headerRoot, txtRoot);
+    setupToggle(headerOtherPeripherals, txtOther);
 }
 
 // ============================================================
@@ -223,6 +225,30 @@ private void setupToggle(LinearLayout header, View content) {
     });
 }
 
+private void setupToggleLayout(
+        LinearLayout header,
+        LinearLayout content,
+        View[] all
+) {
+    if (header == null || content == null) return;
+
+    content.setVisibility(View.GONE);
+
+    header.setOnClickListener(v -> {
+
+        boolean willOpen = content.getVisibility() != View.VISIBLE;
+
+        // κλείσε ΟΛΑ
+        for (View view : all) {
+            if (view != null) view.setVisibility(View.GONE);
+        }
+
+        if (willOpen) {
+            content.setVisibility(View.VISIBLE);
+        }
+    });
+}
+
 // ============================================================
 // POPULATE — FINAL (SERIES + PRO / PRO MAX DIFFERENTIATION)
 // ============================================================
@@ -232,6 +258,17 @@ private void populate() {
         hideAll();
         return;
     }
+
+// ------------------------------------------------------------
+// BATTERY
+// ------------------------------------------------------------
+section(headerBattery, txtBattery,
+        log("Battery Type", d.batteryType) +
+        log("Capacity", d.batteryCapacity) +
+        log("Charging", d.charging) +
+        log("Fast Charging", yes(d.hasFastCharge)) +
+        log("Wireless Charging", yes(d.hasWirelessCharge))
+);
 
     // ------------------------------------------------------------
     // SCREEN / DISPLAY
@@ -439,7 +476,9 @@ private boolean isProMax() {
 private void section(View header, TextView content, String text) {
     if (header == null || content == null) return;
 
-    content.setText(text);
+    content.setText(
+        Html.fromHtml(text, Html.FROM_HTML_MODE_LEGACY)
+);
 }
 
 // ============================================================

@@ -1288,35 +1288,38 @@ public static AppleDeviceSpec get(String modelName) {
     String m = modelName.trim().toLowerCase();
 
     // =====================================================
-    // EXPLICIT RESOLUTION — LOCKED
+    // EXACT MODEL RESOLUTION — LOCKED
     // =====================================================
 
-    if (m.contains("ipad pro 12.9") && m.contains("m2"))
+    // iPad Pro
+    if (m.contains("ipad pro") && m.contains("12.9") && m.contains("m2"))
         return MAP.get("ipad pro 12.9 m2");
 
-    if (m.contains("ipad pro 12.9") && m.contains("m1"))
+    if (m.contains("ipad pro") && m.contains("12.9") && m.contains("m1"))
         return MAP.get("ipad pro 12.9 m1");
 
-    if (m.contains("ipad pro 11") && m.contains("m2"))
+    if (m.contains("ipad pro") && m.contains("11") && m.contains("m2"))
         return MAP.get("ipad pro 11 m2");
 
-    if (m.contains("ipad pro 11") && m.contains("m1"))
+    if (m.contains("ipad pro") && m.contains("11") && m.contains("m1"))
         return MAP.get("ipad pro 11 m1");
 
-    if (m.contains("ipad air 13") && m.contains("m2"))
+    // iPad Air
+    if (m.contains("ipad air") && m.contains("13") && m.contains("m2"))
         return MAP.get("ipad air 13 m2");
 
-    if (m.contains("ipad air 11") && m.contains("m2"))
+    if (m.contains("ipad air") && m.contains("11") && m.contains("m2"))
         return MAP.get("ipad air 11 m2");
 
     if (m.contains("ipad air") && m.contains("m1"))
         return MAP.get("ipad air m1");
 
+    // iPad mini
     if (m.contains("ipad mini"))
         return MAP.get("ipad mini 6");
 
     // =====================================================
-    // FALLBACK — exact key only
+    // FINAL FALLBACK
     // =====================================================
     AppleDeviceSpec d = MAP.get(m);
     return d != null ? d : AppleDeviceSpec.unknown();

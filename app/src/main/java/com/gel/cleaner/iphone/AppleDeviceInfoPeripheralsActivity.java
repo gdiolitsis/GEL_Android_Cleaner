@@ -452,13 +452,13 @@ section(headerBattery, txtBattery,
             log("Root Access", "Not applicable (iOS)")
     );
 
-    // ------------------------------------------------------------
-    // OTHER PERIPHERALS / NOTES
-    // ------------------------------------------------------------
-    section(headerOtherPeripherals, txtOther,
-            log("Notes", d.notes)
-    );
-}
+// ------------------------------------------------------------
+// OTHER PERIPHERALS / NOTES
+// ------------------------------------------------------------
+section(headerOtherPeripherals, txtOther,
+        ApplePlatformOtherPeripherals.get() +
+        log("Notes", d.notes)
+);
    
 // ============================================================
 // COLOR HELPERS — PERIPHERALS (HTML SAFE)

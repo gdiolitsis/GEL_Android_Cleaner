@@ -1473,7 +1473,7 @@ MAP.put("iphone 12 pro max", iphone12ProMax);
 // =========================================================
 
 // ---------------------------------------------------------
-// iPhone 11
+// 📱 iPhone 11
 // ---------------------------------------------------------
 AppleDeviceSpec iphone11 = new AppleDeviceSpec("iphone", "iPhone 11");
 iphone11.year            = "2019";
@@ -1499,12 +1499,13 @@ iphone11.display         = "Liquid Retina IPS LCD";
 iphone11.resolution      = "1792 × 828";
 iphone11.refreshRate     = "60 Hz";
 iphone11.displayOut      = "Lightning Digital AV (adapter)";
+iphone11.displayVariants = "LCD panel; standard 60 Hz (no OLED / ProMotion)";
 
 iphone11.has5G           = false;
 iphone11.hasLTE          = true;
 iphone11.cellular        = "LTE";
 iphone11.modem           = "Intel LTE modem";
-iphone11.wifi            = "Wi-Fi 6";
+iphone11.wifi            = "Wi-Fi 6 (802.11ax)";
 iphone11.bluetooth       = "Bluetooth 5.0";
 iphone11.hasNFC          = true;
 iphone11.hasAirDrop      = true;
@@ -1520,8 +1521,8 @@ iphone11.hasESim         = true;
 iphone11.port            = "Lightning";
 iphone11.usbStandard     = "USB 2.0";
 
-iphone11.speakers        = "Stereo";
-iphone11.microphones     = "Multiple";
+iphone11.speakers        = "Stereo speakers";
+iphone11.microphones    = "Multiple microphones";
 iphone11.hasDolby        = true;
 iphone11.hasJack         = false;
 
@@ -1530,22 +1531,41 @@ iphone11.cameraUltraWide = "12 MP Ultra-Wide";
 iphone11.cameraTele      = null;
 iphone11.cameraFront     = "12 MP TrueDepth";
 iphone11.cameraVideo     = "4K@60fps HDR";
+iphone11.cameraVariants  =
+        "Dual-camera system (Wide + Ultra-Wide) with Night Mode";
 
 iphone11.hasFaceID       = true;
 iphone11.hasTouchID      = false;
 iphone11.biometrics      = "Face ID";
 
-iphone11.hasFastCharge       = true;
-iphone11.hasWirelessCharge  = true;
-iphone11.charging           = "Lightning / Qi wireless";
+iphone11.hasFastCharge      = true;
+iphone11.hasWirelessCharge = true;
+iphone11.charging          = "Lightning / Qi wireless";
 
-iphone11.thermalNote    = "Thermal sensors not accessible via iOS";
-iphone11.notes          = "First base iPhone with dual camera and Night Mode";
+
+// =====================================================
+// 🔋 BATTERY — SERVICE / REFERENCE DATA
+// =====================================================
+iphone11.batteryMah          = 3110;   // model-based reference
+iphone11.batteryVoltage      = 3.83f;  // Apple nominal
+iphone11.batteryWh           =
+        (iphone11.batteryMah * iphone11.batteryVoltage) / 1000f;
+iphone11.batteryChemistry    = "Lithium-Ion (pouch)";
+iphone11.batteryDesignCycles = 500;
+iphone11.batteryCharging     =
+        "Fast wired charging, Qi wireless";
+iphone11.batteryNotes        =
+        "Large capacity for LCD model; excellent endurance despite non-OLED panel";
+
+iphone11.thermalNote =
+        "Thermal sensors not accessible via iOS; aluminum frame aids passive dissipation";
+iphone11.notes =
+        "First base iPhone with dual camera and Night Mode; strong battery life.";
 
 MAP.put("iphone 11", iphone11);
 
 // ---------------------------------------------------------
-// iPhone 11 Pro
+// 📱 iPhone 11 Pro
 // ---------------------------------------------------------
 AppleDeviceSpec iphone11Pro = new AppleDeviceSpec("iphone", "iPhone 11 Pro");
 iphone11Pro.year            = "2019";
@@ -1571,12 +1591,13 @@ iphone11Pro.display         = "OLED Super Retina XDR";
 iphone11Pro.resolution      = "2436 × 1125";
 iphone11Pro.refreshRate     = "60 Hz";
 iphone11Pro.displayOut      = "Lightning Digital AV (adapter)";
+iphone11Pro.displayVariants = "OLED panel; standard 60 Hz (no ProMotion)";
 
 iphone11Pro.has5G           = false;
 iphone11Pro.hasLTE          = true;
 iphone11Pro.cellular        = "LTE";
 iphone11Pro.modem           = "Intel LTE modem";
-iphone11Pro.wifi            = "Wi-Fi 6";
+iphone11Pro.wifi            = "Wi-Fi 6 (802.11ax)";
 iphone11Pro.bluetooth       = "Bluetooth 5.0";
 iphone11Pro.hasNFC          = true;
 iphone11Pro.hasAirDrop      = true;
@@ -1592,8 +1613,8 @@ iphone11Pro.hasESim         = true;
 iphone11Pro.port            = "Lightning";
 iphone11Pro.usbStandard     = "USB 2.0";
 
-iphone11Pro.speakers        = "Stereo";
-iphone11Pro.microphones     = "Multiple";
+iphone11Pro.speakers        = "Stereo speakers";
+iphone11Pro.microphones    = "Multiple microphones";
 iphone11Pro.hasDolby        = true;
 iphone11Pro.hasJack         = false;
 
@@ -1602,22 +1623,41 @@ iphone11Pro.cameraUltraWide = "12 MP Ultra-Wide";
 iphone11Pro.cameraTele      = "12 MP Telephoto (2×)";
 iphone11Pro.cameraFront     = "12 MP TrueDepth";
 iphone11Pro.cameraVideo     = "4K@60fps HDR";
+iphone11Pro.cameraVariants  =
+        "Triple-camera Pro system (Wide + Ultra-Wide + Telephoto)";
 
 iphone11Pro.hasFaceID       = true;
 iphone11Pro.hasTouchID      = false;
 iphone11Pro.biometrics      = "Face ID";
 
-iphone11Pro.hasFastCharge       = true;
-iphone11Pro.hasWirelessCharge  = true;
-iphone11Pro.charging           = "Lightning / Qi wireless";
+iphone11Pro.hasFastCharge      = true;
+iphone11Pro.hasWirelessCharge = true;
+iphone11Pro.charging          = "Lightning / Qi wireless";
 
-iphone11Pro.thermalNote    = "Thermal sensors not accessible via iOS";
-iphone11Pro.notes          = "First triple-camera iPhone";
+
+// =====================================================
+// 🔋 BATTERY — SERVICE / REFERENCE DATA
+// =====================================================
+iphone11Pro.batteryMah          = 3046;   // model-based reference
+iphone11Pro.batteryVoltage      = 3.83f;  // Apple nominal
+iphone11Pro.batteryWh           =
+        (iphone11Pro.batteryMah * iphone11Pro.batteryVoltage) / 1000f;
+iphone11Pro.batteryChemistry    = "Lithium-Ion (pouch)";
+iphone11Pro.batteryDesignCycles = 500;
+iphone11Pro.batteryCharging     =
+        "Fast wired charging, Qi wireless";
+iphone11Pro.batteryNotes        =
+        "Good endurance for compact Pro model; OLED efficiency offsets size";
+
+iphone11Pro.thermalNote =
+        "Thermal sensors not accessible via iOS; stainless steel frame aids heat spreading";
+iphone11Pro.notes =
+        "First triple-camera iPhone; compact Pro form factor with OLED display.";
 
 MAP.put("iphone 11 pro", iphone11Pro);
-
+        
 // ---------------------------------------------------------
-// iPhone 11 Pro Max
+// 📱 iPhone 11 Pro Max
 // ---------------------------------------------------------
 AppleDeviceSpec iphone11ProMax = new AppleDeviceSpec("iphone", "iPhone 11 Pro Max");
 iphone11ProMax.year            = "2019";
@@ -1643,12 +1683,14 @@ iphone11ProMax.display         = "OLED Super Retina XDR";
 iphone11ProMax.resolution      = "2688 × 1242";
 iphone11ProMax.refreshRate     = "60 Hz";
 iphone11ProMax.displayOut      = "Lightning Digital AV (adapter)";
+iphone11ProMax.displayVariants =
+        "OLED panel; standard 60 Hz (no ProMotion)";
 
 iphone11ProMax.has5G           = false;
 iphone11ProMax.hasLTE          = true;
 iphone11ProMax.cellular        = "LTE";
 iphone11ProMax.modem           = "Intel LTE modem";
-iphone11ProMax.wifi            = "Wi-Fi 6";
+iphone11ProMax.wifi            = "Wi-Fi 6 (802.11ax)";
 iphone11ProMax.bluetooth       = "Bluetooth 5.0";
 iphone11ProMax.hasNFC          = true;
 iphone11ProMax.hasAirDrop      = true;
@@ -1664,8 +1706,8 @@ iphone11ProMax.hasESim         = true;
 iphone11ProMax.port            = "Lightning";
 iphone11ProMax.usbStandard     = "USB 2.0";
 
-iphone11ProMax.speakers        = "Stereo";
-iphone11ProMax.microphones     = "Multiple";
+iphone11ProMax.speakers        = "Stereo speakers";
+iphone11ProMax.microphones    = "Multiple microphones";
 iphone11ProMax.hasDolby        = true;
 iphone11ProMax.hasJack         = false;
 
@@ -1674,19 +1716,38 @@ iphone11ProMax.cameraUltraWide = "12 MP Ultra-Wide";
 iphone11ProMax.cameraTele      = "12 MP Telephoto (2×)";
 iphone11ProMax.cameraFront     = "12 MP TrueDepth";
 iphone11ProMax.cameraVideo     = "4K@60fps HDR";
+iphone11ProMax.cameraVariants  =
+        "Triple-camera Pro system (Wide + Ultra-Wide + Telephoto)";
 
 iphone11ProMax.hasFaceID       = true;
 iphone11ProMax.hasTouchID      = false;
 iphone11ProMax.biometrics      = "Face ID";
 
-iphone11ProMax.hasFastCharge       = true;
-iphone11ProMax.hasWirelessCharge  = true;
-iphone11ProMax.charging           = "Lightning / Qi wireless";
+iphone11ProMax.hasFastCharge      = true;
+iphone11ProMax.hasWirelessCharge = true;
+iphone11ProMax.charging          = "Lightning / Qi wireless";
 
-iphone11ProMax.thermalNote    = "Thermal sensors not accessible via iOS";
-iphone11ProMax.notes          = "Largest iPhone 11 with best battery life of the series";
 
-MAP.put("iphone 11 pro max", iphone11ProMax);       
+// =====================================================
+// 🔋 BATTERY — SERVICE / REFERENCE DATA
+// =====================================================
+iphone11ProMax.batteryMah          = 3969;   // model-based reference
+iphone11ProMax.batteryVoltage      = 3.83f;  // Apple nominal
+iphone11ProMax.batteryWh           =
+        (iphone11ProMax.batteryMah * iphone11ProMax.batteryVoltage) / 1000f;
+iphone11ProMax.batteryChemistry    = "Lithium-Ion (pouch)";
+iphone11ProMax.batteryDesignCycles = 500;
+iphone11ProMax.batteryCharging     =
+        "Fast wired charging, Qi wireless";
+iphone11ProMax.batteryNotes        =
+        "Excellent endurance; one of the best battery performers in iPhone history";
+
+iphone11ProMax.thermalNote =
+        "Thermal sensors not accessible via iOS; larger chassis improves passive cooling";
+iphone11ProMax.notes =
+        "Largest iPhone 11; best battery life of the series and flagship endurance.";
+
+MAP.put("iphone 11 pro max", iphone11ProMax);  
 }
 
 public static AppleDeviceSpec get(String modelName) {

@@ -25,8 +25,8 @@ public class AppleDeviceInfoPeripheralsActivity extends Activity {
     // HEADERS (AS IN XML)
     // ============================================================
 
-    private View[] allContents;
     private LinearLayout headerBattery;
+    private LinearLayout batteryContainer;
     private LinearLayout headerScreen;
     private LinearLayout headerCamera;
     private LinearLayout headerConnectivity;
@@ -127,7 +127,8 @@ protected void onCreate(Bundle savedInstanceState) {
 // ============================================================
 private void bind() {
 
-    headerBattery          = findViewById(R.id.headerBattery);
+    headerBattery     = findViewById(R.id.headerBattery);
+    batteryContainer  = findViewById(R.id.batteryContainer);
     headerScreen           = findViewById(R.id.headerScreen);
     headerCamera           = findViewById(R.id.headerCamera);
     headerConnectivity     = findViewById(R.id.headerConnectivity);
@@ -175,45 +176,27 @@ private void bind() {
 // ============================================================
 private void setupPeripheralsToggles() {
 
-    setupToggle(headerBattery, txtBattery); // ⬅️ ΑΥΤΟ ΕΛΕΙΠΕ
-
-    setupToggle(headerScreen, txtScreen);
-    setupToggle(headerCamera, txtCamera);
-    setupToggle(headerConnectivity, txtConnectivity);
-    setupToggle(headerLocation, txtLocation);
-    setupToggle(headerThermal, txtThermal);
-    setupToggle(headerModem, txtModem);
-    setupToggle(headerWifiAdvanced, txtWifiAdvanced);
-    setupToggle(headerAudioUnified, txtAudio);
-    setupToggle(headerSensors, txtSensors);
-    setupToggle(headerBiometrics, txtBiometrics);
-    setupToggle(headerNfc, txtNfc);
-    setupToggle(headerGnss, txtGnss);
-    setupToggle(headerUwb, txtUwb);
-    setupToggle(headerUsb, txtUsb);
-    setupToggle(headerHaptics, txtHaptics);
-    setupToggle(headerSystemFeatures, txtSystemFeatures);
-    setupToggle(headerSecurityFlags, txtSecurityFlags);
-    setupToggle(headerRoot, txtRoot);
-    setupToggle(headerOtherPeripherals, txtOther);
+    setupSection(headerBattery, batteryContainer); // ✅ FIX
+    setupSection(headerScreen, txtScreen);
+    setupSection(headerCamera, txtCamera);
+    setupSection(headerConnectivity, txtConnectivity);
+    setupSection(headerLocation, txtLocation);
+    setupSection(headerThermal, txtThermal);
+    setupSection(headerModem, txtModem);
+    setupSection(headerWifiAdvanced, txtWifiAdvanced);
+    setupSection(headerAudioUnified, txtAudio);
+    setupSection(headerSensors, txtSensors);
+    setupSection(headerBiometrics, txtBiometrics);
+    setupSection(headerNfc, txtNfc);
+    setupSection(headerGnss, txtGnss);
+    setupSection(headerUwb, txtUwb);
+    setupSection(headerUsb, txtUsb);
+    setupSection(headerHaptics, txtHaptics);
+    setupSection(headerSystemFeatures, txtSystemFeatures);
+    setupSection(headerSecurityFlags, txtSecurityFlags);
+    setupSection(headerRoot, txtRoot);
+    setupSection(headerOtherPeripherals, txtOther);
 }
-
-// ============================================================
-// TOGGLE ENGINE — SHARED
-// ============================================================
-private void setupToggle(LinearLayout header, View content) {
-    if (header == null || content == null) return;
-
-    content.setVisibility(View.GONE);
-
-    header.setOnClickListener(v -> {
-
-        // Αν είναι ήδη ανοιχτό → κλείσε το
-        if (currentlyOpen == content) {
-            content.setVisibility(View.GONE);
-            currentlyOpen = null;
-            return;
-        }
 
         // Κλείσε ό,τι άλλο είναι ανοιχτό
         if (currentlyOpen != null) {
@@ -223,30 +206,6 @@ private void setupToggle(LinearLayout header, View content) {
         // Άνοιξε αυτό
         content.setVisibility(View.VISIBLE);
         currentlyOpen = content;
-    });
-}
-
-private void setupToggleLayout(
-        LinearLayout header,
-        LinearLayout content,
-        View[] all
-) {
-    if (header == null || content == null) return;
-
-    content.setVisibility(View.GONE);
-
-    header.setOnClickListener(v -> {
-
-        boolean willOpen = content.getVisibility() != View.VISIBLE;
-
-        // κλείσε ΟΛΑ
-        for (View view : all) {
-            if (view != null) view.setVisibility(View.GONE);
-        }
-
-        if (willOpen) {
-            content.setVisibility(View.VISIBLE);
-        }
     });
 }
 
@@ -484,6 +443,32 @@ private boolean isProMax() {
             && d.model != null
             && (d.model.toLowerCase().contains("pro max")
                 || d.model.toLowerCase().endsWith("max"));
+}
+
+private void setupSection(View header, View content) {
+    if (header == null || content == null) return;
+
+    // αρχική κατάσταση
+    content.setVisibility(View.GONE);
+
+    header.setOnClickListener(v -> {
+
+        // αν πατάμε το ήδη ανοιχτό → κλείσε
+        if (currentlyOpen == content) {
+            content.setVisibility(View.GONE);
+            currentlyOpen = null;
+            return;
+        }
+
+        // κλείσε ό,τι άλλο ήταν ανοιχτό
+        if (currentlyOpen != null) {
+            currentlyOpen.setVisibility(View.GONE);
+        }
+
+        // άνοιξε αυτό
+        content.setVisibility(View.VISIBLE);
+        currentlyOpen = content;
+    });
 }
 
 // ============================================================

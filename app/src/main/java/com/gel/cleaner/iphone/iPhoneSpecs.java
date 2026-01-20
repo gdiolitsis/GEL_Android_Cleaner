@@ -353,7 +353,7 @@ public final class iPhoneSpecs {
 // =========================================================
 
 // ---------------------------------------------------------
-// iPhone 14
+// 📱 iPhone 14
 // ---------------------------------------------------------
 AppleDeviceSpec iphone14 = new AppleDeviceSpec("iphone", "iPhone 14");
 iphone14.year            = "2022";
@@ -379,6 +379,7 @@ iphone14.display         = "OLED Super Retina XDR";
 iphone14.resolution      = "2532 × 1170";
 iphone14.refreshRate     = "60 Hz";
 iphone14.displayOut      = "Lightning Digital AV (adapter)";
+iphone14.displayVariants = "Standard 60 Hz (no ProMotion)";
 
 iphone14.has5G           = true;
 iphone14.hasLTE          = true;
@@ -400,8 +401,8 @@ iphone14.hasESim         = true;
 iphone14.port            = "Lightning";
 iphone14.usbStandard     = "USB 2.0";
 
-iphone14.speakers        = "Stereo";
-iphone14.microphones     = "Multiple";
+iphone14.speakers        = "Stereo speakers";
+iphone14.microphones    = "Multiple microphones";
 iphone14.hasDolby        = true;
 iphone14.hasJack         = false;
 
@@ -410,22 +411,42 @@ iphone14.cameraUltraWide = "12 MP Ultra-Wide";
 iphone14.cameraTele      = null;
 iphone14.cameraFront     = "12 MP TrueDepth";
 iphone14.cameraVideo     = "4K@60fps HDR";
+iphone14.cameraVariants  =
+        "Dual-camera system (Wide + Ultra-Wide)";
 
 iphone14.hasFaceID       = true;
 iphone14.hasTouchID      = false;
 iphone14.biometrics      = "Face ID";
 
-iphone14.hasFastCharge       = true;
-iphone14.hasWirelessCharge  = true;
-iphone14.charging           = "Lightning / MagSafe";
+iphone14.hasFastCharge      = true;
+iphone14.hasWirelessCharge = true;
+iphone14.charging          = "Lightning / MagSafe";
 
-iphone14.thermalNote    = "No public thermal sensor access (Apple restriction)";
-iphone14.notes          = "Same SoC as iPhone 13 Pro, improved GPU & safety features";
+
+// =====================================================
+// 🔋 BATTERY — SERVICE / REFERENCE DATA
+// =====================================================
+iphone14.batteryMah          = 3279;   // model-based reference
+iphone14.batteryVoltage      = 3.82f;  // Apple nominal
+iphone14.batteryWh           =
+        (iphone14.batteryMah * iphone14.batteryVoltage) / 1000f;
+iphone14.batteryChemistry    = "Lithium-Ion (pouch)";
+iphone14.batteryDesignCycles = 500;
+iphone14.batteryCharging     =
+        "Fast wired charging, MagSafe 15W, Qi wireless";
+iphone14.batteryNotes        =
+        "Similar capacity to iPhone 13; optimized efficiency with A15 Bionic";
+
+iphone14.thermalNote =
+        "No public thermal sensor access (Apple restriction)";
+iphone14.notes =
+        "Same SoC generation as iPhone 13 Pro with incremental GPU and safety improvements.";
 
 MAP.put("iphone 14", iphone14);
-
+        
 // ---------------------------------------------------------
-// iPhone 14 Plus
+// ---------------------------------------------------------
+// 📱 iPhone 14 Plus
 // ---------------------------------------------------------
 AppleDeviceSpec iphone14Plus = new AppleDeviceSpec("iphone", "iPhone 14 Plus");
 iphone14Plus.year            = "2022";
@@ -451,12 +472,13 @@ iphone14Plus.display         = "OLED Super Retina XDR";
 iphone14Plus.resolution      = "2778 × 1284";
 iphone14Plus.refreshRate     = "60 Hz";
 iphone14Plus.displayOut      = "Lightning Digital AV (adapter)";
+iphone14Plus.displayVariants = "Standard 60 Hz (no ProMotion)";
 
 iphone14Plus.has5G           = true;
 iphone14Plus.hasLTE          = true;
 iphone14Plus.cellular        = "5G NR / LTE";
 iphone14Plus.modem           = "Qualcomm Snapdragon X65";
-iphone14Plus.wifi            = "Wi-Fi 6";
+iphone14Plus.wifi            = "Wi-Fi 6 (802.11ax)";
 iphone14Plus.bluetooth       = "Bluetooth 5.3";
 iphone14Plus.hasNFC          = true;
 iphone14Plus.hasAirDrop      = true;
@@ -472,8 +494,8 @@ iphone14Plus.hasESim         = true;
 iphone14Plus.port            = "Lightning";
 iphone14Plus.usbStandard     = "USB 2.0";
 
-iphone14Plus.speakers        = "Stereo";
-iphone14Plus.microphones     = "Multiple";
+iphone14Plus.speakers        = "Stereo speakers";
+iphone14Plus.microphones    = "Multiple microphones";
 iphone14Plus.hasDolby        = true;
 iphone14Plus.hasJack         = false;
 
@@ -482,22 +504,41 @@ iphone14Plus.cameraUltraWide = "12 MP Ultra-Wide";
 iphone14Plus.cameraTele      = null;
 iphone14Plus.cameraFront     = "12 MP TrueDepth";
 iphone14Plus.cameraVideo     = "4K@60fps HDR";
+iphone14Plus.cameraVariants  =
+        "Dual-camera system (Wide + Ultra-Wide)";
 
 iphone14Plus.hasFaceID       = true;
 iphone14Plus.hasTouchID      = false;
 iphone14Plus.biometrics      = "Face ID";
 
-iphone14Plus.hasFastCharge       = true;
-iphone14Plus.hasWirelessCharge  = true;
-iphone14Plus.charging           = "Lightning / MagSafe";
+iphone14Plus.hasFastCharge      = true;
+iphone14Plus.hasWirelessCharge = true;
+iphone14Plus.charging          = "Lightning / MagSafe";
 
-iphone14Plus.thermalNote    = "No public thermal sensor access (Apple restriction)";
-iphone14Plus.notes          = "Largest non-Pro iPhone display";
+
+// =====================================================
+// 🔋 BATTERY — SERVICE / REFERENCE DATA
+// =====================================================
+iphone14Plus.batteryMah          = 4325;   // model-based reference
+iphone14Plus.batteryVoltage      = 3.82f;  // Apple nominal
+iphone14Plus.batteryWh           =
+        (iphone14Plus.batteryMah * iphone14Plus.batteryVoltage) / 1000f;
+iphone14Plus.batteryChemistry    = "Lithium-Ion (pouch)";
+iphone14Plus.batteryDesignCycles = 500;
+iphone14Plus.batteryCharging     =
+        "Fast wired charging, MagSafe 15W, Qi wireless";
+iphone14Plus.batteryNotes        =
+        "Very large capacity; excellent endurance for non-Pro model";
+
+iphone14Plus.thermalNote =
+        "No public thermal sensor access (Apple restriction)";
+iphone14Plus.notes =
+        "Largest non-Pro iPhone; prioritizes battery life over refresh rate.";
 
 MAP.put("iphone 14 plus", iphone14Plus);
 
 // ---------------------------------------------------------
-// iPhone 14 Pro
+// 📱 iPhone 14 Pro
 // ---------------------------------------------------------
 AppleDeviceSpec iphone14Pro = new AppleDeviceSpec("iphone", "iPhone 14 Pro");
 iphone14Pro.year            = "2022";
@@ -523,17 +564,18 @@ iphone14Pro.display         = "OLED Super Retina XDR (ProMotion)";
 iphone14Pro.resolution      = "2556 × 1179";
 iphone14Pro.refreshRate     = "1–120 Hz";
 iphone14Pro.displayOut      = "Lightning Digital AV (adapter)";
+iphone14Pro.displayVariants = "ProMotion with adaptive refresh (1–120 Hz)";
 
 iphone14Pro.has5G           = true;
 iphone14Pro.hasLTE          = true;
 iphone14Pro.cellular        = "5G NR / LTE";
 iphone14Pro.modem           = "Qualcomm Snapdragon X65";
-iphone14Pro.wifi            = "Wi-Fi 6";
+iphone14Pro.wifi            = "Wi-Fi 6 (802.11ax)";
 iphone14Pro.bluetooth       = "Bluetooth 5.3";
 iphone14Pro.hasNFC          = true;
 iphone14Pro.hasAirDrop      = true;
 iphone14Pro.hasAirPlay      = true;
-iphone14Pro.gps             = "Dual-frequency GPS";
+iphone14Pro.gps             = "Dual-frequency GPS (L1 + L5)";
 iphone14Pro.hasCompass      = true;
 iphone14Pro.hasGyro         = true;
 iphone14Pro.hasAccel        = true;
@@ -544,8 +586,8 @@ iphone14Pro.hasESim         = true;
 iphone14Pro.port            = "Lightning";
 iphone14Pro.usbStandard     = "USB 2.0";
 
-iphone14Pro.speakers        = "Stereo";
-iphone14Pro.microphones     = "Multiple";
+iphone14Pro.speakers        = "Stereo speakers";
+iphone14Pro.microphones    = "Multiple microphones";
 iphone14Pro.hasDolby        = true;
 iphone14Pro.hasJack         = false;
 
@@ -554,22 +596,42 @@ iphone14Pro.cameraUltraWide = "12 MP Ultra-Wide";
 iphone14Pro.cameraTele      = "12 MP Telephoto (3×)";
 iphone14Pro.cameraFront     = "12 MP TrueDepth";
 iphone14Pro.cameraVideo     = "4K@60fps ProRes / HDR";
+iphone14Pro.cameraVariants  =
+        "Triple-camera Pro system (Wide + Ultra-Wide + Telephoto)";
 
 iphone14Pro.hasFaceID       = true;
 iphone14Pro.hasTouchID      = false;
 iphone14Pro.biometrics      = "Face ID";
 
-iphone14Pro.hasFastCharge       = true;
-iphone14Pro.hasWirelessCharge  = true;
-iphone14Pro.charging           = "Lightning / MagSafe";
+iphone14Pro.hasFastCharge      = true;
+iphone14Pro.hasWirelessCharge = true;
+iphone14Pro.charging          = "Lightning / MagSafe";
 
-iphone14Pro.thermalNote    = "Thermal sensors not accessible via iOS";
-iphone14Pro.notes          = "First iPhone with Dynamic Island";
+
+// =====================================================
+// 🔋 BATTERY — SERVICE / REFERENCE DATA
+// =====================================================
+iphone14Pro.batteryMah          = 3200;   // model-based reference
+iphone14Pro.batteryVoltage      = 3.82f;  // Apple nominal
+iphone14Pro.batteryWh           =
+        (iphone14Pro.batteryMah * iphone14Pro.batteryVoltage) / 1000f;
+iphone14Pro.batteryChemistry    = "Lithium-Ion (pouch)";
+iphone14Pro.batteryDesignCycles = 500;
+iphone14Pro.batteryCharging     =
+        "Fast wired charging, MagSafe 15W, Qi wireless";
+iphone14Pro.batteryNotes        =
+        "Balanced capacity; ProMotion and A16 efficiency optimize daily endurance";
+
+iphone14Pro.thermalNote =
+        "Thermal sensors not accessible via iOS; stainless steel frame";
+iphone14Pro.notes =
+        "First iPhone with Dynamic Island; ProMotion display and Pro camera system.";
 
 MAP.put("iphone 14 pro", iphone14Pro);
 
 // ---------------------------------------------------------
-// iPhone 14 Pro Max
+// ---------------------------------------------------------
+// 📱 iPhone 14 Pro Max
 // ---------------------------------------------------------
 AppleDeviceSpec iphone14ProMax = new AppleDeviceSpec("iphone", "iPhone 14 Pro Max");
 iphone14ProMax.year            = "2022";
@@ -595,17 +657,18 @@ iphone14ProMax.display         = "OLED Super Retina XDR (ProMotion)";
 iphone14ProMax.resolution      = "2796 × 1290";
 iphone14ProMax.refreshRate     = "1–120 Hz";
 iphone14ProMax.displayOut      = "Lightning Digital AV (adapter)";
+iphone14ProMax.displayVariants = "ProMotion with adaptive refresh (1–120 Hz)";
 
 iphone14ProMax.has5G           = true;
 iphone14ProMax.hasLTE          = true;
 iphone14ProMax.cellular        = "5G NR / LTE";
 iphone14ProMax.modem           = "Qualcomm Snapdragon X65";
-iphone14ProMax.wifi            = "Wi-Fi 6";
+iphone14ProMax.wifi            = "Wi-Fi 6 (802.11ax)";
 iphone14ProMax.bluetooth       = "Bluetooth 5.3";
 iphone14ProMax.hasNFC          = true;
 iphone14ProMax.hasAirDrop      = true;
 iphone14ProMax.hasAirPlay      = true;
-iphone14ProMax.gps             = "Dual-frequency GPS";
+iphone14ProMax.gps             = "Dual-frequency GPS (L1 + L5)";
 iphone14ProMax.hasCompass      = true;
 iphone14ProMax.hasGyro         = true;
 iphone14ProMax.hasAccel        = true;
@@ -616,8 +679,8 @@ iphone14ProMax.hasESim         = true;
 iphone14ProMax.port            = "Lightning";
 iphone14ProMax.usbStandard     = "USB 2.0";
 
-iphone14ProMax.speakers        = "Stereo";
-iphone14ProMax.microphones     = "Multiple";
+iphone14ProMax.speakers        = "Stereo speakers";
+iphone14ProMax.microphones    = "Multiple microphones";
 iphone14ProMax.hasDolby        = true;
 iphone14ProMax.hasJack         = false;
 
@@ -626,20 +689,39 @@ iphone14ProMax.cameraUltraWide = "12 MP Ultra-Wide";
 iphone14ProMax.cameraTele      = "12 MP Telephoto (3×)";
 iphone14ProMax.cameraFront     = "12 MP TrueDepth";
 iphone14ProMax.cameraVideo     = "4K@60fps ProRes / HDR";
+iphone14ProMax.cameraVariants  =
+        "Triple-camera Pro system (Wide + Ultra-Wide + Telephoto)";
 
 iphone14ProMax.hasFaceID       = true;
 iphone14ProMax.hasTouchID      = false;
 iphone14ProMax.biometrics      = "Face ID";
 
-iphone14ProMax.hasFastCharge       = true;
-iphone14ProMax.hasWirelessCharge  = true;
-iphone14ProMax.charging           = "Lightning / MagSafe";
+iphone14ProMax.hasFastCharge      = true;
+iphone14ProMax.hasWirelessCharge = true;
+iphone14ProMax.charging          = "Lightning / MagSafe";
 
-iphone14ProMax.thermalNote    = "Thermal sensors not accessible via iOS";
-iphone14ProMax.notes          = "Largest Pro model with maximum battery";
+
+// =====================================================
+// 🔋 BATTERY — SERVICE / REFERENCE DATA
+// =====================================================
+iphone14ProMax.batteryMah          = 4323;   // model-based reference
+iphone14ProMax.batteryVoltage      = 3.82f;  // Apple nominal
+iphone14ProMax.batteryWh           =
+        (iphone14ProMax.batteryMah * iphone14ProMax.batteryVoltage) / 1000f;
+iphone14ProMax.batteryChemistry    = "Lithium-Ion (pouch)";
+iphone14ProMax.batteryDesignCycles = 500;
+iphone14ProMax.batteryCharging     =
+        "Fast wired charging, MagSafe 15W, Qi wireless";
+iphone14ProMax.batteryNotes        =
+        "Largest battery in the iPhone 14 series; excellent endurance for Pro workloads";
+
+iphone14ProMax.thermalNote =
+        "Thermal sensors not accessible via iOS; larger chassis aids passive heat dissipation";
+iphone14ProMax.notes =
+        "Largest Pro model with maximum battery capacity and sustained performance headroom.";
 
 MAP.put("iphone 14 pro max", iphone14ProMax);
-
+        
 // =========================================================
 // 📱 iPHONE 13 SERIES — FULL SPECS
 // =========================================================

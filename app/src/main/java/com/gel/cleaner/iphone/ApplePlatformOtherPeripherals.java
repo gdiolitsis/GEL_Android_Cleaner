@@ -19,10 +19,12 @@ public final class ApplePlatformOtherPeripherals {
     }
 
     private static String line(String k, String v) {
-        return "• " + k + " : " + v + "<br>";
+        return
+            "<font color=\"#FFFFFF\"><b>• " + k + ":</b></font> " +
+            "<font color=\"#00FF7F\">" + v + "</font><br>";
     }
 
     private static String note(String v) {
-        return "<br><i>" + v + "</i>";
+        return "<br><i><font color=\"#AAAAAA\">" + v + "</font></i>";
     }
 }

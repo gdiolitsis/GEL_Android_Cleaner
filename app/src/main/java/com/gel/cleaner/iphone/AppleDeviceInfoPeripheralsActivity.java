@@ -172,7 +172,7 @@ private void bind() {
 // ============================================================
 private void setupPeripheralsToggles() {
 
-    setupToggle(headerBattery,          txtBattery, allContents);
+    setupToggle(headerBattery,          txtBattery,          allContents);
     setupToggle(headerScreen,           txtScreen,          allContents);
     setupToggle(headerCamera,           txtCamera,          allContents);
     setupToggle(headerConnectivity,     txtConnectivity,    allContents);

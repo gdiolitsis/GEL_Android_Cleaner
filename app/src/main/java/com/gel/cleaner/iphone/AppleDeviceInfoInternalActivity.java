@@ -63,7 +63,7 @@ protected void onCreate(Bundle savedInstanceState) {
         return;
     }
 
-    d = AppleSpecs.get(model);
+    d = AppleSpecProvider.getSelectedDevice(this);
 
     setupInternalToggles();   // 2️⃣ 🔥 ΑΥΤΟ ΕΛΕΙΠΕ
     populate();               // 3️⃣ μετά γεμίζουμε

@@ -84,11 +84,10 @@ public final class AppleSpecProvider {
                 ? "ipad"
                 : "iphone";
 
-        // 🔒 HARD FILTER — ONLY SUPPORTED MODELS
-        if (!isSupported(type, model)) {
-            type  = "iphone";
-            model = "iPhone 13";
-        }
+        // 🔒 HARD FILTER — IPHONE ONLY
+if ("iphone".equals(type) && !isSupported(type, model)) {
+    model = "iPhone 13";
+}
 
         return new Selection(type, model);
     }

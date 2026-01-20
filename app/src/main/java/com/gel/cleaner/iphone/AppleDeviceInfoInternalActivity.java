@@ -44,6 +44,7 @@ public class AppleDeviceInfoInternalActivity extends Activity {
     private TextView outStorage;
 
     private AppleDeviceSpec d;
+    private View currentlyOpen;
 
 // ============================================================
 // LIFECYCLE
@@ -70,27 +71,16 @@ protected void onCreate(Bundle savedInstanceState) {
     populate();               // 3️⃣ μετά γεμίζουμε
 }
 
-private void setupInternalToggles() {
+    private void setupInternalToggles() {
 
-    TextView[] all = {
-            outSystem,
-            outAndroid,
-            outCpu,
-            outGpu,
-            outThermal,
-            outVulkan,
-            outRam,
-            outStorage
-    };
-
-    setupToggle(secSystem,  outSystem,  all);
-    setupToggle(secAndroid, outAndroid, all);
-    setupToggle(secCpu,     outCpu,     all);
-    setupToggle(secGpu,     outGpu,     all);
-    setupToggle(secThermal, outThermal, all);
-    setupToggle(secVulkan,  outVulkan,  all);
-    setupToggle(secRam,     outRam,     all);
-    setupToggle(secStorage, outStorage, all);
+    setupToggle(secSystem,  outSystem);
+    setupToggle(secAndroid, outAndroid);
+    setupToggle(secCpu,     outCpu);
+    setupToggle(secGpu,     outGpu);
+    setupToggle(secThermal, outThermal);
+    setupToggle(secVulkan,  outVulkan);
+    setupToggle(secRam,     outRam);
+    setupToggle(secStorage, outStorage);
 }
 
     // ============================================================
@@ -117,23 +107,37 @@ private void setupInternalToggles() {
         outStorage  = findViewById(R.id.txtStorageContent);
     }
 
-private void setupToggle(LinearLayout header, TextView content, TextView[] all) {
+private void setupToggle(LinearLayout header, TextView content) {
     if (header == null || content == null) return;
 
+    TextView icon =
+            header.findViewById(R.id.iconToggle); // το + στο XML
+
     content.setVisibility(View.GONE);
+    if (icon != null) icon.setText("+");
 
     header.setOnClickListener(v -> {
 
-        boolean willOpen = content.getVisibility() != View.VISIBLE;
+        boolean isOpen = (currentlyOpen == content);
 
-        // 🔒 κλείσε ΟΛΑ
-        for (TextView tv : all) {
-            if (tv != null) tv.setVisibility(View.GONE);
+        // κλείσε ό,τι άλλο είναι ανοιχτό
+        if (currentlyOpen != null && currentlyOpen != content) {
+            currentlyOpen.setVisibility(View.GONE);
+
+            if (currentlyOpen.getTag() instanceof TextView) {
+                ((TextView) currentlyOpen.getTag()).setText("+");
+            }
         }
 
-        // ✅ άνοιξε μόνο αυτό αν πρέπει
-        if (willOpen) {
+        if (isOpen) {
+            content.setVisibility(View.GONE);
+            if (icon != null) icon.setText("+");
+            currentlyOpen = null;
+        } else {
             content.setVisibility(View.VISIBLE);
+            if (icon != null) icon.setText("−");
+            currentlyOpen = content;
+            content.setTag(icon);
         }
     });
 }
@@ -258,6 +262,45 @@ private void populate() {
                     Html.FROM_HTML_MODE_LEGACY
             )
     );
+}
+
+// ============================================================
+// UNIFIED SECTION TOGGLE (WITH + / - ICON)
+// ============================================================
+private void setupUnifiedSection(View header, View content, TextView icon) {
+    if (header == null || content == null || icon == null) return;
+
+    content.setVisibility(View.GONE);
+    icon.setText("+");
+
+    header.setOnClickListener(v -> {
+
+        boolean isOpen = (currentlyOpen == content);
+
+        // κλείσε ό,τι άλλο είναι ανοιχτό
+        if (currentlyOpen != null && currentlyOpen != content) {
+            currentlyOpen.setVisibility(View.GONE);
+
+            TextView prevIcon = currentlyOpen.getTag() instanceof TextView
+                    ? (TextView) currentlyOpen.getTag()
+                    : null;
+
+            if (prevIcon != null) prevIcon.setText("+");
+        }
+
+        if (isOpen) {
+            content.setVisibility(View.GONE);
+            icon.setText("+");
+            currentlyOpen = null;
+        } else {
+            content.setVisibility(View.VISIBLE);
+            icon.setText("−");
+            currentlyOpen = content;
+
+            // δέσε το icon με το content
+            content.setTag(icon);
+        }
+    });
 }
 
 // ============================================================

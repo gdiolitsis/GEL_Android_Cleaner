@@ -976,6 +976,18 @@ private void setupButtons() {
         }
     });
 
+// ========================================================
+// 🍎 APPLE MODE — RENAME DIAGNOSIS BUTTON
+// ========================================================
+if (isAppleMode) {
+
+    TextView btnDiag = findViewById(R.id.btnDiagnostics);
+
+    if (btnDiag != null) {
+        btnDiag.setText("GEL Apple Device Diagnosis");
+    }
+}
+
     // ==========================
     // ⚙️ ΥΠΟΛΟΙΠΑ ΚΟΥΜΠΙΑ
     // ==========================

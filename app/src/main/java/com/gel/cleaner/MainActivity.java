@@ -895,7 +895,7 @@ View v = findViewById(R.id.btnDiagnostics);
 if (v instanceof TextView) {
     TextView tv = (TextView) v;
     tv.setText("GEL Apple Device Diagnosis");
-    tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f); // ⬅️ από 18–20 → 16
+    tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f); // ⬅️ από 18–20 → 16
 }
     }
 

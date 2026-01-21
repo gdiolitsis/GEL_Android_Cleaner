@@ -857,15 +857,16 @@ private String buildCameraInfo() {
                 // 🌈 HDR VIDEO (10-bit capability)
                 // --------------------------------------------------
                 boolean hdr = false;
-                if (reqCaps != null) {
-                    for (int c : reqCaps) {
-                        if (c ==
-                            CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES_DYNAMIC_RANGE_TEN_BIT) {
-                            hdr = true;
-                            break;
-                        }
-                    }
-                }
+
+if (reqCaps != null && Build.VERSION.SDK_INT >= 33) {
+    for (int c : reqCaps) {
+        if (c ==
+            CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES_DYNAMIC_RANGE_TEN_BIT) {
+            hdr = true;
+            break;
+        }
+    }
+}
                 sb.append("• HDR Video      : ")
                   .append(hdr ? "Yes" : "No")
                   .append("\n");
@@ -1105,9 +1106,7 @@ if (android.os.Build.VERSION.SDK_INT >= 30) {
                 }
                 sb.append("  MAC            : ").append(macLine).append("\n");
             }
-        }
-
-    } catch (Throwable ignore) {}
+  } catch (Throwable ignore) {}
 
 // ============================================================
 // BLUETOOTH — FULL DETAIL + ROOT PATHS (GEL Edition)

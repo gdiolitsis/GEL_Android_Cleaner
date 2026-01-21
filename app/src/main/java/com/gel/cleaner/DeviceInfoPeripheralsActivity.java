@@ -144,6 +144,9 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
+import java.util.List;
+import java.util.Set;
+
 // ============================================================
 // STATIC
 // ============================================================
@@ -1072,23 +1075,26 @@ private String buildWifiAndBluetoothInfo() {
 
                 sb.append("  Band           : ").append(band).append("\n");
 
-                // ------------------------------------------------------------
-                // WIFI STANDARD (ANDROID ENUM)
-                // ------------------------------------------------------------
-                if (android.os.Build.VERSION.SDK_INT >= 30) {
-                    int std = wi.getWifiStandard();
-                    String stdStr;
-                    switch (std) {
-                        case WifiInfo.WIFI_STANDARD_11AX: stdStr = "Wi-Fi 6 / 6E (802.11ax)"; break;
-                        case WifiInfo.WIFI_STANDARD_11AC: stdStr = "Wi-Fi 5 (802.11ac)"; break;
-                        case WifiInfo.WIFI_STANDARD_11N:  stdStr = "Wi-Fi 4 (802.11n)"; break;
-                        case WifiInfo.WIFI_STANDARD_11A:  stdStr = "802.11a"; break;
-                        case WifiInfo.WIFI_STANDARD_11B:  stdStr = "802.11b"; break;
-                        case WifiInfo.WIFI_STANDARD_11G:  stdStr = "802.11g"; break;
-                        default:                          stdStr = "Unknown"; break;
-                    }
-                    sb.append("  Wi-Fi Standard : ").append(stdStr).append("\n");
-                }
+// ------------------------------------------------------------
+// WIFI STANDARD (SAFE — SDK INDEPENDENT)
+// ------------------------------------------------------------
+if (android.os.Build.VERSION.SDK_INT >= 30) {
+
+    int std = wi.getWifiStandard();
+    String stdStr;
+
+    switch (std) {
+        case 6:  stdStr = "Wi-Fi 6 / 6E (802.11ax)"; break; // WIFI_STANDARD_11AX
+        case 5:  stdStr = "Wi-Fi 5 (802.11ac)";     break; // WIFI_STANDARD_11AC
+        case 4:  stdStr = "Wi-Fi 4 (802.11n)";      break; // WIFI_STANDARD_11N
+        case 1:  stdStr = "802.11a";                break;
+        case 2:  stdStr = "802.11b";                break;
+        case 3:  stdStr = "802.11g";                break;
+        default: stdStr = "Unknown";                break;
+    }
+
+    sb.append("  Wi-Fi Standard : ").append(stdStr).append("\n");
+}
 
                 // ------------------------------------------------------------
                 // SAFE MAC (masked vs real, root-aware)

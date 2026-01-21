@@ -62,8 +62,7 @@ public class MainActivity extends GELAutoActivityHook
 // PREFS
 // ==========================
 private static final String PREFS = "gel_prefs";
-private static final String KEY_PLATFORM = "device_mode";  
-private static final String KEY_PLATFORM_LEGACY = "platform_mode"; 
+private static final String KEY_PLATFORM = "platform_mode"; 
 
 // ==========================
 // WELCOME SKIP (ONE SHOT)
@@ -271,14 +270,18 @@ private ArrayAdapter<String> neonAdapter(String[] names) {
 }
 
 // =========================================================
-// PLATFORM STORAGE
+// PLATFORM STORAGE — FINAL (NO LEGACY)
 // =========================================================
 private void savePlatform(String mode) {
     getSharedPreferences(PREFS, MODE_PRIVATE)
             .edit()
-            .putString(KEY_PLATFORM, mode)          // ✅ νέο key: device_mode
-            .remove(KEY_PLATFORM_LEGACY)            // 🧹 καθάρισε legacy
+            .putString(KEY_PLATFORM, mode)   // "android" | "apple"
             .apply();
+}
+
+private String getSavedPlatform() {
+    return getSharedPreferences(PREFS, MODE_PRIVATE)
+            .getString(KEY_PLATFORM, "android"); // default
 }
 
 private String getSavedPlatform() {

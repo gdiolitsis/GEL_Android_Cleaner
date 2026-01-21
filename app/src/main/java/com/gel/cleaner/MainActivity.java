@@ -841,12 +841,20 @@ private void applyAndroidModeUI() {
     show(R.id.btnDiagnostics);
 
     // 🤖 ANDROID DIAGNOSTICS — LOCALIZED + RESET STYLE
-    View v = findViewById(R.id.btnDiagnostics);
-    if (v instanceof TextView) {
-        TextView tv = (TextView) v;
-        tv.setText(R.string.diagnostics_android);
-        tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f); // 🔒 default
-    }
+View v = findViewById(R.id.btnDiagnostics);
+if (v instanceof TextView) {
+    TextView tv = (TextView) v;
+    tv.setText(R.string.diagnostics_android);
+    tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20f); // ⬆️ ΜΕΓΑΛΥΤΕΡΗ ΣΤΟ ANDROID
+}
+
+// 🍎 APPLE DIAGNOSTICS — LOCALIZED + EMPHASIZED
+View v = findViewById(R.id.btnDiagnostics);
+if (v instanceof TextView) {
+    TextView tv = (TextView) v;
+    tv.setText(R.string.diagnostics_apple);
+    tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f); // ή 19f αν το θες πιο “Apple”
+}
 }
 
 // =========================================================

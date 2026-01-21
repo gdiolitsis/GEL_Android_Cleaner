@@ -839,10 +839,8 @@ appleBtn.setOnClickListener(v -> {
 // =========================================================
 private void applyAndroidModeUI() {
 
-    // ❌ Στο Android δεν θέλουμε το Device Declaration
     hide(R.id.btnAppleDeviceDeclaration);
 
-    // ✅ Όλα τα άλλα Android κουμπιά μένουν κανονικά
     show(R.id.section_system);
     show(R.id.section_clean);
     show(R.id.section_junk);
@@ -859,45 +857,47 @@ private void applyAndroidModeUI() {
     show(R.id.btnPhoneInfoInternal);
     show(R.id.btnPhoneInfoPeripherals);
     show(R.id.btnDiagnostics);
-    
-// 🤖 RESET DIAGNOSTICS (ANDROID MODE)
-View v = findViewById(R.id.btnDiagnostics);
-if (v instanceof TextView) {
-    ((TextView) v).setText("Diagnostics");
-}    
-}
 
-    // =========================================================
-    // APPLE MODE UI FILTER
-    // =========================================================
-    private void applyAppleModeUI() {
-
-        hide(R.id.section_system);
-        hide(R.id.section_clean);
-        hide(R.id.section_junk);
-        hide(R.id.section_performance);
-
-        hide(R.id.btnCpuRamLive);
-        hide(R.id.btnCleanAll);
-        hide(R.id.btnBrowserCache);
-        hide(R.id.btnAppCache);
-
-        hide(R.id.txtLogs);
-
-        show(R.id.btnDonate);
-        show(R.id.btnPhoneInfoInternal);
-        show(R.id.btnPhoneInfoPeripherals);
-        show(R.id.btnDiagnostics);
-        show(R.id.btnAppleDeviceDeclaration);
-        
-// 🍎 RENAME DIAGNOSTICS (APPLE MODE)
-View v = findViewById(R.id.btnDiagnostics);
-if (v instanceof TextView) {
-    TextView tv = (TextView) v;
-    tv.setText("GEL Apple Device Diagnosis");
-    tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f); // ⬅️ από 18–20 → 16
-}
+    // 🤖 ANDROID DIAGNOSTICS — LOCALIZED + RESET STYLE
+    View v = findViewById(R.id.btnDiagnostics);
+    if (v instanceof TextView) {
+        TextView tv = (TextView) v;
+        tv.setText(R.string.diagnostics_android);
+        tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f); // 🔒 default
     }
+}
+
+// =========================================================
+// APPLE MODE UI FILTER
+// =========================================================
+private void applyAppleModeUI() {
+
+    hide(R.id.section_system);
+    hide(R.id.section_clean);
+    hide(R.id.section_junk);
+    hide(R.id.section_performance);
+
+    hide(R.id.btnCpuRamLive);
+    hide(R.id.btnCleanAll);
+    hide(R.id.btnBrowserCache);
+    hide(R.id.btnAppCache);
+
+    hide(R.id.txtLogs);
+
+    show(R.id.btnDonate);
+    show(R.id.btnPhoneInfoInternal);
+    show(R.id.btnPhoneInfoPeripherals);
+    show(R.id.btnDiagnostics);
+    show(R.id.btnAppleDeviceDeclaration);
+
+    // 🍎 APPLE DIAGNOSTICS — LOCALIZED + EMPHASIZED
+    View v = findViewById(R.id.btnDiagnostics);
+    if (v instanceof TextView) {
+        TextView tv = (TextView) v;
+        tv.setText(R.string.diagnostics_apple);
+        tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f);
+    }
+}
 
     private void hide(int id){
         View v = findViewById(id);
@@ -1013,9 +1013,19 @@ private void setupButtons() {
         });
     }
 
-    bind(R.id.btnDiagnostics,
-            () -> startActivity(new Intent(this, DiagnosisMenuActivity.class)));
-}
+    bind(R.id.btnDiagnostics, () -> {
+    if (isAppleMode()) {
+        startActivity(new Intent(
+                this,
+                AppleDeviceLabsActivity.class
+        ));
+    } else {
+        startActivity(new Intent(
+                this,
+                DiagnosisMenuActivity.class
+        ));
+    }
+});
 
 // =========================================================
 // BIND HELPER

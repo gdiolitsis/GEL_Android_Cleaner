@@ -1017,7 +1017,7 @@ private void setupButtons() {
     if (isAppleMode()) {
         startActivity(new Intent(
                 this,
-                AppleDeviceLabsActivity.class
+                IPhoneLabsActivity.class
         ));
     } else {
         startActivity(new Intent(

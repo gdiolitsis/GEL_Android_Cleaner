@@ -1034,46 +1034,66 @@ private String buildWifiAndBluetoothInfo() {
     StringBuilder sb = new StringBuilder();
 
     // ============================================================
-    // WIFI (FULL DETAILS)
-    // ============================================================
+// WIFI (FULL DETAILS) — SAFE / NO CRASH
+// ============================================================
+WifiManager wm = (WifiManager) getApplicationContext()
+        .getSystemService(Context.WIFI_SERVICE);
+
+if (wm != null) {
+
+    WifiInfo wi;
     try {
+        wi = wm.getConnectionInfo();
+    } catch (SecurityException se) {
+        sb.append("\nWi-Fi Details:\n");
+        sb.append("  Access         : Denied (Location permission required)\n");
+        return sb.toString();
+    }
 
-        WifiManager wm = (WifiManager) getApplicationContext()
-                .getSystemService(Context.WIFI_SERVICE);
+    if (wi != null && wi.getNetworkId() != -1) {
 
-        if (wm != null) {
-            WifiInfo wi = wm.getConnectionInfo();
+        sb.append("\nWi-Fi Details:\n");
 
-            if (wi != null && wi.getNetworkId() != -1) {
+        try {
+            sb.append("  SSID           : ").append(wi.getSSID()).append("\n");
+        } catch (Throwable t) {
+            sb.append("  SSID           : Restricted\n");
+        }
 
-                sb.append("\nWi-Fi Details:\n");
-                sb.append("  SSID           : ").append(wi.getSSID()).append("\n");
-                sb.append("  LinkSpeed      : ").append(wi.getLinkSpeed()).append(" Mbps\n");
-                sb.append("  RSSI           : ").append(wi.getRssi()).append(" dBm\n");
-                sb.append("  Frequency      : ").append(wi.getFrequency()).append(" MHz\n");
+        try {
+            sb.append("  LinkSpeed      : ").append(wi.getLinkSpeed()).append(" Mbps\n");
+        } catch (Throwable t) {}
 
-                // ------------------------------------------------------------
-                // HUMAN SIGNAL QUALITY
-                // ------------------------------------------------------------
-                int rssi = wi.getRssi();
-                String quality =
-                        rssi >= -50 ? "Excellent" :
-                        rssi >= -60 ? "Good" :
-                        rssi >= -70 ? "Fair" :
-                        "Weak";
+        try {
+            sb.append("  RSSI           : ").append(wi.getRssi()).append(" dBm\n");
+        } catch (Throwable t) {}
 
-                sb.append("  Signal Quality : ").append(quality).append("\n");
+        try {
+            sb.append("  Frequency      : ").append(wi.getFrequency()).append(" MHz\n");
+        } catch (Throwable t) {}
 
-                // ------------------------------------------------------------
-                // BAND NAME (SAFE)
-                // ------------------------------------------------------------
-                int freq = wi.getFrequency();
-                String band =
-                        freq >= 5925 ? "6 GHz (Wi-Fi 6E)" :
-                        freq >= 4900 ? "5 GHz" :
-                        "2.4 GHz";
+        // Signal quality (safe)
+        try {
+            int rssi = wi.getRssi();
+            String quality =
+                    rssi >= -50 ? "Excellent" :
+                    rssi >= -60 ? "Good" :
+                    rssi >= -70 ? "Fair" :
+                    "Weak";
+            sb.append("  Signal Quality : ").append(quality).append("\n");
+        } catch (Throwable t) {}
 
-                sb.append("  Band           : ").append(band).append("\n");
+        // Band (safe)
+        try {
+            int freq = wi.getFrequency();
+            String band =
+                    freq >= 5925 ? "6 GHz (Wi-Fi 6E)" :
+                    freq >= 4900 ? "5 GHz" :
+                    "2.4 GHz";
+            sb.append("  Band           : ").append(band).append("\n");
+        } catch (Throwable t) {}
+    }
+}
 
 // ------------------------------------------------------------
 // WIFI STANDARD (SAFE — SDK INDEPENDENT)

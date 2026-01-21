@@ -1047,6 +1047,47 @@ private String buildWifiAndBluetoothInfo() {
                 sb.append("  LinkSpeed      : ").append(wi.getLinkSpeed()).append(" Mbps\n");
                 sb.append("  RSSI           : ").append(wi.getRssi()).append(" dBm\n");
                 sb.append("  Frequency      : ").append(wi.getFrequency()).append(" MHz\n");
+                
+// ------------------------------------------------------------
+// HUMAN SIGNAL QUALITY
+// ------------------------------------------------------------
+int rssi = wi.getRssi();
+String quality =
+        rssi >= -50 ? "Excellent" :
+        rssi >= -60 ? "Good" :
+        rssi >= -70 ? "Fair" :
+        "Weak";
+
+sb.append("  Signal Quality : ").append(quality).append("\n");
+
+// ------------------------------------------------------------
+// BAND NAME (SAFE)
+// ------------------------------------------------------------
+int freq = wi.getFrequency();
+String band =
+        freq >= 5925 ? "6 GHz (Wi-Fi 6E)" :
+        freq >= 4900 ? "5 GHz" :
+        "2.4 GHz";
+
+sb.append("  Band           : ").append(band).append("\n");
+
+// ------------------------------------------------------------
+// WIFI STANDARD (ANDROID ENUM)
+// ------------------------------------------------------------
+if (android.os.Build.VERSION.SDK_INT >= 30) {
+    int std = wi.getWifiStandard();
+    String stdStr;
+    switch (std) {
+        case WifiInfo.WIFI_STANDARD_11AX: stdStr = "Wi-Fi 6 / 6E (802.11ax)"; break;
+        case WifiInfo.WIFI_STANDARD_11AC: stdStr = "Wi-Fi 5 (802.11ac)"; break;
+        case WifiInfo.WIFI_STANDARD_11N:  stdStr = "Wi-Fi 4 (802.11n)"; break;
+        case WifiInfo.WIFI_STANDARD_11A:  stdStr = "802.11a"; break;
+        case WifiInfo.WIFI_STANDARD_11B:  stdStr = "802.11b"; break;
+        case WifiInfo.WIFI_STANDARD_11G:  stdStr = "802.11g"; break;
+        default:                          stdStr = "Unknown"; break;
+    }
+    sb.append("  Wi-Fi Standard : ").append(stdStr).append("\n");
+}
 
                 // SAFE MAC (masked vs real, root-aware)
                 String rawMac = wi.getMacAddress();
@@ -1068,34 +1109,37 @@ private String buildWifiAndBluetoothInfo() {
 
     } catch (Throwable ignore) {}
 
-    // ============================================================
-    // BLUETOOTH — FULL DETAIL + ROOT PATHS (GEL Edition)
-    // ============================================================
-    sb.append("\nBluetooth:\n");
+// ============================================================
+// BLUETOOTH — FULL DETAIL + ROOT PATHS (GEL Edition)
+// ============================================================
+sb.append("\nBluetooth:\n");
 
-    try {
-        BluetoothManager bm =
-                (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
-        BluetoothAdapter ba = bm != null ? bm.getAdapter() : null;
+BluetoothManager bm = null;
+BluetoothAdapter  ba = null;
 
-        if (ba == null) {
-            sb.append("  Supported      : No\n");
-        } else {
-            sb.append("  Supported      : Yes\n");
-            sb.append("  Enabled        : ").append(ba.isEnabled() ? "Yes" : "No").append("\n");
+try {
+    bm = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
+    ba = bm != null ? bm.getAdapter() : null;
+} catch (Throwable ignore) {}
 
-            // ------------------------------------------------------------
-            // STATE
-            // ------------------------------------------------------------
-            int state = ba.getState();
-            String stateStr;
-            switch (state) {
-                case BluetoothAdapter.STATE_TURNING_ON:  stateStr = "Turning On";  break;
-                case BluetoothAdapter.STATE_ON:          stateStr = "On";          break;
-                case BluetoothAdapter.STATE_TURNING_OFF: stateStr = "Turning Off"; break;
-                default:                                 stateStr = "Off";         break;
-            }
-            sb.append("  State          : ").append(stateStr).append("\n");
+if (ba == null) {
+    sb.append("  Supported      : No\n");
+} else {
+    sb.append("  Supported      : Yes\n");
+    sb.append("  Enabled        : ").append(ba.isEnabled() ? "Yes" : "No").append("\n");
+
+    // ------------------------------------------------------------
+    // STATE
+    // ------------------------------------------------------------
+    int state = ba.getState();
+    String stateStr;
+    switch (state) {
+        case BluetoothAdapter.STATE_TURNING_ON:  stateStr = "Turning On";  break;
+        case BluetoothAdapter.STATE_ON:          stateStr = "On";          break;
+        case BluetoothAdapter.STATE_TURNING_OFF: stateStr = "Turning Off"; break;
+        default:                                 stateStr = "Off";         break;
+    }
+    sb.append("  State          : ").append(stateStr).append("\n");
 
             // ------------------------------------------------------------
             // NAME / ADDRESS (MASKED IF UNROOTED)
@@ -1151,6 +1195,23 @@ private String buildWifiAndBluetoothInfo() {
             boolean le = getPackageManager()
                     .hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE);
             sb.append("  BLE Support    : ").append(le ? "Yes" : "No").append("\n");
+            
+// ------------------------------------------------------------
+// TRANSPORT TYPE (SAFE INTERPRETATION)
+// ------------------------------------------------------------
+
+sb.append("  Transport Type : ");
+if (le) {
+    sb.append("Classic + Low Energy (supported)\n");
+} else {
+    sb.append("Classic only\n");
+}
+ else if (ba.isEnabled()) {
+    sb.append("Classic\n");
+} 
+else {
+    sb.append("Inactive\n");
+}
 
             // ------------------------------------------------------------
             // HARDWARE CAPABILITIES
@@ -1184,10 +1245,30 @@ private String buildWifiAndBluetoothInfo() {
 
                 sb.append("  GATT Devices   : ")
                         .append(con != null ? con.size() : 0)
-                        .append("\n");
+                        .append("\n");                        
+                        
             } catch (Throwable ignore) {
                 sb.append("  GATT Devices   : Unknown\n");
             }
+
+// ------------------------------------------------------------
+// CONNECTED PROFILES (HUMAN)
+// ------------------------------------------------------------
+try {
+    List<BluetoothDevice> audio =
+            bm.getConnectedDevices(BluetoothProfile.A2DP);
+    sb.append("  Audio Devices  : ")
+      .append(audio != null ? audio.size() : 0)
+      .append("\n");
+} catch (Throwable ignore) {}
+
+try {
+    List<BluetoothDevice> headset =
+            bm.getConnectedDevices(BluetoothProfile.HEADSET);
+    sb.append("  Headset Devices: ")
+      .append(headset != null ? headset.size() : 0)
+      .append("\n");
+} catch (Throwable ignore) {}
 
             // ------------------------------------------------------------
             // ROOT EXCLUSIVE PATHS (vendor logs / firmware info)
@@ -1211,6 +1292,50 @@ private String buildWifiAndBluetoothInfo() {
         }
 
     } catch (Throwable ignore) {}
+
+// ------------------------------------------------------------
+// USER-CENTRIC INFO (NON-INTRUSIVE ADDITIONS)
+// ------------------------------------------------------------
+sb.append("\n  Usage summary   :\n");
+
+// Connected classic devices (bonded)
+try {
+    Set<BluetoothDevice> bonded = ba.getBondedDevices();
+    sb.append("    Paired devices      : ")
+      .append(bonded != null ? bonded.size() : 0)
+      .append("\n");
+} catch (Throwable ignore) {}
+
+// Active GATT connections
+try {
+    List<BluetoothDevice> gatt =
+            bm != null ? bm.getConnectedDevices(BluetoothProfile.GATT) : null;
+
+    sb.append("    Active connections  : ")
+      .append(gatt != null ? gatt.size() : 0)
+      .append("\n");
+} catch (Throwable ignore) {}
+
+// Audio context (human explanation)
+sb.append("    Audio usage         : Supports wireless audio devices ")
+  .append("(headphones, car systems, speakers)\n");
+
+// BLE context
+boolean le = getPackageManager()
+        .hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE);
+
+sb.append("    Low Energy usage    : ")
+  .append(le
+      ? "Supported (wearables, sensors, trackers)"
+      : "Not supported")
+  .append("\n");
+
+// Bluetooth generation (SAFE wording)
+sb.append("    Bluetooth generation: ")
+  .append(isDeviceRooted()
+      ? "Controller-defined (vendor firmware)"
+      : "Managed by Android system")
+  .append("\n");
 
     // ============================================================
     // ADVANCED INFO (green comment style)

@@ -35,7 +35,7 @@
     <!-- CLEANER -->
     <string name="clean_all">🧹 GEL General Cleaner</string>
 
-    <!-- JUNK (FIXED MULTILINE) -->
+    <!-- JUNK -->
     <string name="browser_cache">🌐 Browser Cache\n    Cleaner</string>
     <string name="app_cache">🧽 App Cache Cleaner</string>
     <string name="app_cache_btn">🧽 App Cache\n    Cleaner</string>
@@ -44,12 +44,10 @@
 
     <!-- PERFORMANCE -->
     <string name="diagnostics">GEL Device Diagnostics</string>
-
-    <!-- ✅ DIAGNOSTICS (MODE-SAFE, LOCALIZED) -->
     <string name="diagnostics_android">GEL Device Diagnostics</string>
     <string name="diagnostics_apple">GEL Apple Device Diagnosis</string>
 
-    <!-- Permission prompts -->
+    <!-- Permissions -->
     <string name="toast_storage_access">Please grant Storage Access to continue</string>
     <string name="toast_usage_access">Please enable Usage Access to continue</string>
     <string name="toast_accessibility">Optional: Enable Accessibility Service for full cleaning</string>
@@ -66,23 +64,16 @@ Professional device diagnostics
 Android Manual Tests · Apple Devices Labs · Export Report
     </string>
 
-    <!-- ================================================= -->
-    <!-- SECTION LABELS -->
-    <!-- ================================================= -->
-
     <!-- ANDROID -->
     <string name="manual_tests">ANDROID MANUAL TESTS</string>
 
-    <!-- iPHONE -->
+    <!-- APPLE DEVICES -->
     <string name="auto_diagnosis">APPLE DEVICES DIAGNOSIS</string>
 
     <!-- SERVICE -->
     <string name="service_report">SERVICE REPORT</string>
 
-    <!-- ================================================= -->
-    <!-- ANDROID MANUAL TESTS BUTTON -->
-    <!-- ================================================= -->
-
+    <!-- ANDROID MANUAL TESTS -->
     <string name="manual_tests_title">GEL Android Manual Tests</string>
 
     <string name="manual_tests_desc">
@@ -90,10 +81,7 @@ Targeted service-level tests:
 Sound · Vibration · Display · Sensors · RAM (Live) · WiFi · Thermal
     </string>
 
-    <!-- ================================================= -->
-    <!-- APPLE DEVICES LABS BUTTON -->
-    <!-- ================================================= -->
-
+    <!-- APPLE DEVICES LABS -->
     <string name="gel_phone_diag_title">GEL Apple Devices Diagnosis</string>
 
     <string name="gel_phone_diag_desc">
@@ -104,10 +92,7 @@ Laboratory diagnostics for Apple Devices using system files
 • Service-level log recording
     </string>
 
-    <!-- ================================================= -->
-    <!-- SERVICE REPORT / EXPORT -->
-    <!-- ================================================= -->
-
+    <!-- SERVICE REPORT -->
     <string name="export_report_title">Export Service Report</string>
 
     <string name="export_report_desc">
@@ -119,11 +104,9 @@ PDF format
     <string name="export_pdf_button">📄 Export Report (PDF)</string>
     <string name="export_pdf_error">PDF export failed</string>
 
-    <!-- ================================================= -->
     <!-- REPORT BODY -->
-    <!-- ================================================= -->
-
     <string name="report_title">GEL Service Report</string>
+
     <string name="report_dev_line">
 GDiolitsis Engine Lab (GEL) — Author &amp; Developer
     </string>
@@ -148,10 +131,7 @@ GDiolitsis Engine Lab (GEL) — Author &amp; Developer
 Technician Signature:
     </string>
 
-    <!-- ================================================= -->
-    <!-- EMPTY / PREVIEW -->
-    <!-- ================================================= -->
-
+    <!-- EMPTY -->
     <string name="preview_empty">
 No diagnostics yet.
 Run Android Manual Tests or Apple Devices Labs
@@ -170,10 +150,7 @@ and then export the report.
     <string name="damage_water">Water damage / corrosion</string>
     <string name="damage_yes_no">[   ] YES   [   ] NO</string>
 
-    <!-- ===================================== -->
-    <!-- MANUAL TESTS — HOSPITAL EDITION -->
-    <!-- ===================================== -->
-
+    <!-- HOSPITAL EDITION -->
     <string name="manual_hospital_title">GEL Manual Tests — Hospital Edition</string>
 
     <string name="manual_hospital_sub">
@@ -191,14 +168,12 @@ Professional service tools.\nEach manual lab writes detailed results below (OK /
     <string name="manual_cat_7">Advanced / Logs — Manual Labs 25–30</string>
 
     <string name="manual_log_title">Manual Tests Log</string>
+
     <string name="manual_log_desc">
 ℹ️ GEL Manual Tests — ready.\nOpen a category above and run the required labs.
     </string>
 
-    <!-- =============================== -->
     <!-- 🍎 APPLE MODE -->
-    <!-- =============================== -->
-
     <string name="platform_select_title">SELECT PLATFORM</string>
     <string name="platform_android">🤖 ANDROID</string>
     <string name="platform_apple">🍎 APPLE</string>
@@ -207,7 +182,6 @@ Professional service tools.\nEach manual lab writes detailed results below (OK /
     <string name="apple_device_category_title">Select device category</string>
     <string name="apple_device_cat_iphone">iPhone</string>
     <string name="apple_device_cat_ipad">iPad</string>
-    <string name="apple_device_cat_ipod">iPod touch</string>
 
     <string name="apple_system">🛠 System</string>
 

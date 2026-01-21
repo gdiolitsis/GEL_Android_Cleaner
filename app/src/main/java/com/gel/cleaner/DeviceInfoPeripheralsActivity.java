@@ -1199,18 +1199,14 @@ if (ba == null) {
 // ------------------------------------------------------------
 // TRANSPORT TYPE (SAFE INTERPRETATION)
 // ------------------------------------------------------------
-
 sb.append("  Transport Type : ");
-if (le) {
+
+if (!ba.isEnabled()) {
+    sb.append("Inactive\n");
+} else if (le) {
     sb.append("Classic + Low Energy (supported)\n");
 } else {
     sb.append("Classic only\n");
-}
- else if (ba.isEnabled()) {
-    sb.append("Classic\n");
-} 
-else {
-    sb.append("Inactive\n");
 }
 
             // ------------------------------------------------------------
@@ -1298,34 +1294,37 @@ try {
 // ------------------------------------------------------------
 sb.append("\n  Usage summary   :\n");
 
-// Connected classic devices (bonded)
-try {
-    Set<BluetoothDevice> bonded = ba.getBondedDevices();
-    sb.append("    Paired devices      : ")
-      .append(bonded != null ? bonded.size() : 0)
-      .append("\n");
-} catch (Throwable ignore) {}
+if (ba != null && bm != null) {
 
-// Active GATT connections
-try {
-    List<BluetoothDevice> gatt =
-            bm != null ? bm.getConnectedDevices(BluetoothProfile.GATT) : null;
+    // Connected classic devices (bonded)
+    try {
+        Set<BluetoothDevice> bonded = ba.getBondedDevices();
+        sb.append("    Paired devices      : ")
+          .append(bonded != null ? bonded.size() : 0)
+          .append("\n");
+    } catch (Throwable ignore) {}
 
-    sb.append("    Active connections  : ")
-      .append(gatt != null ? gatt.size() : 0)
-      .append("\n");
-} catch (Throwable ignore) {}
+    // Active GATT connections
+    try {
+        List<BluetoothDevice> gatt =
+                bm.getConnectedDevices(BluetoothProfile.GATT);
+
+        sb.append("    Active connections  : ")
+          .append(gatt != null ? gatt.size() : 0)
+          .append("\n");
+    } catch (Throwable ignore) {}
+}
 
 // Audio context (human explanation)
 sb.append("    Audio usage         : Supports wireless audio devices ")
   .append("(headphones, car systems, speakers)\n");
 
 // BLE context
-boolean le = getPackageManager()
+boolean le2 = getPackageManager()
         .hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE);
 
 sb.append("    Low Energy usage    : ")
-  .append(le
+  .append(le2
       ? "Supported (wearables, sensors, trackers)"
       : "Not supported")
   .append("\n");
@@ -1337,14 +1336,13 @@ sb.append("    Bluetooth generation: ")
       : "Managed by Android system")
   .append("\n");
 
-    // ============================================================
-    // ADVANCED INFO (green comment style)
-    // ============================================================
-    sb.append("\nDeep Stats       : Advanced interface counters, raw RF tables, " +
-            "Bluetooth controller logs and HCI traces, requires root access.\n");
+// ============================================================
+// ADVANCED INFO (green comment style)
+// ============================================================
+sb.append("\nDeep Stats       : Advanced interface counters, raw RF tables, " +
+        "Bluetooth controller logs and HCI traces, requires root access.\n");
 
-    return sb.toString();
-}
+return sb.toString();
       
 // ===================================================================
 // MODEL CAPACITY STORAGE (SharedPreferences) — FINAL GEL EDITION

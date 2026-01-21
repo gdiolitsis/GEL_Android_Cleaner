@@ -859,6 +859,12 @@ private void applyAndroidModeUI() {
     show(R.id.btnPhoneInfoInternal);
     show(R.id.btnPhoneInfoPeripherals);
     show(R.id.btnDiagnostics);
+    
+// 🤖 RESET DIAGNOSTICS (ANDROID MODE)
+View v = findViewById(R.id.btnDiagnostics);
+if (v instanceof TextView) {
+    ((TextView) v).setText("Diagnostics");
+}    
 }
 
     // =========================================================
@@ -883,6 +889,12 @@ private void applyAndroidModeUI() {
         show(R.id.btnPhoneInfoPeripherals);
         show(R.id.btnDiagnostics);
         show(R.id.btnAppleDeviceDeclaration);
+        
+// 🍎 RENAME DIAGNOSTICS (APPLE MODE)
+View v = findViewById(R.id.btnDiagnostics);
+if (v instanceof TextView) {
+    ((TextView) v).setText("GEL Apple Device Diagnosis");
+}        
     }
 
     private void hide(int id){
@@ -975,24 +987,6 @@ private void setupButtons() {
             ));
         }
     });
-
-// ========================================================
-// 🍎 APPLE MODE — RENAME DIAGNOSIS BUTTON
-// ========================================================
-SharedPreferences prefs =
-        getSharedPreferences("gel_prefs", MODE_PRIVATE);
-
-boolean isAppleMode =
-        prefs.getBoolean("apple_mode", false);
-
-if (isAppleMode) {
-
-    TextView btnDiag = findViewById(R.id.btnDiagnostics);
-
-    if (btnDiag != null) {
-        btnDiag.setText("GEL Apple Device Diagnosis");
-    }
-}
 
     // ==========================
     // ⚙️ ΥΠΟΛΟΙΠΑ ΚΟΥΜΠΙΑ

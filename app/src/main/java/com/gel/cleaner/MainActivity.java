@@ -284,24 +284,6 @@ private String getSavedPlatform() {
             .getString(KEY_PLATFORM, "android"); // default
 }
 
-    // 1️⃣ ΝΕΟ KEY (device_mode)
-    String mode = sp.getString(KEY_PLATFORM, null);
-    if (mode != null) return mode;
-
-    // 2️⃣ LEGACY KEY (platform_mode) → MIGRATE
-    String legacy = sp.getString(KEY_PLATFORM_LEGACY, null);
-    if (legacy != null) {
-        sp.edit()
-          .putString(KEY_PLATFORM, legacy)
-          .remove(KEY_PLATFORM_LEGACY)
-          .apply();
-        return legacy;
-    }
-
-    // 3️⃣ DEFAULT
-    return "android";
-}
-
     // =========================================================
     // TTS — WELCOME
     // =========================================================
@@ -1026,8 +1008,6 @@ private void setupButtons() {
         ));
     }
 });
-
-} 
 
 // =========================================================
 // BIND HELPER

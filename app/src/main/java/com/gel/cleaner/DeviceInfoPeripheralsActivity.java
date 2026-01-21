@@ -1334,10 +1334,8 @@ if (ba == null) {
 
         sb.append("  Root data      : Requires root access\n");
     }
+    return sb.toString();
 }
-
-// (return sb.toString(); stays where it is in your parent method)
-      
 // ===================================================================
 // MODEL CAPACITY STORAGE (SharedPreferences) — FINAL GEL EDITION
 // ===================================================================

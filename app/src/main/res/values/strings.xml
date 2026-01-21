@@ -43,7 +43,7 @@
     <string name="app_icon_desc">App Icon</string>
 
     <!-- PERFORMANCE -->
-    <string name="diagnostics">GEL Device Diagnosis</string>
+    <string name="diagnostics">GEL Device Diagnostics</string>
 
     <!-- Permission prompts -->
     <string name="toast_storage_access">Please grant Storage Access to continue</string>

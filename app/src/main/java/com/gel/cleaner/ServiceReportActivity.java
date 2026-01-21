@@ -168,7 +168,9 @@ public class ServiceReportActivity extends AppCompatActivity {
 
             pdf.finishPage(page);
 
-            File outDir = getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
+            File outDir =
+        Environment.getExternalStoragePublicDirectory(
+                Environment.DIRECTORY_DOWNLOADS);
 if (outDir == null) {
     outDir = getFilesDir();
 }
@@ -181,10 +183,22 @@ if (outDir == null) {
             pdf.writeTo(fos);
             fos.close();
             pdf.close();
+            
+            android.media.MediaScannerConnection.scanFile(
+        this,
+        new String[]{ out.getAbsolutePath() },
+        new String[]{ "application/pdf" },
+        null
+);
 
             Toast.makeText(this,
                     "PDF saved: Downloads/" + fileName,
                     Toast.LENGTH_LONG).show();
+                    // ✅ RESET SERVICE LOG
+GELServiceLog.clear();
+
+// ✅ RESET PREVIEW
+txtPreview.setText("");
 
         } catch (Throwable t) {
             Toast.makeText(this,

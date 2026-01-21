@@ -18,7 +18,7 @@
     <string name="cpu_ram_info">📱 DEVICE INFO</string>
     <string name="cpu_ram_live">📈 CPU / RAM LIVE MONITOR</string>
 
-    <!-- PHONE INFO -->
+    <!-- DEVICE INFO -->
     <string name="phone_info_internal">📱 DEVICE INFO\n(Internal)</string>
     <string name="phone_info_peripherals">📡 DEVICE INFO\n(Peripherals)</string>
 
@@ -37,7 +37,7 @@
 
     <!-- JUNK -->
     <string name="browser_cache">🌐 Browser Cache\n    Cleaner</string>
-    <string name="app_cache">🧽 App Cache Cleaner</string>
+    <string name="app_cache">🧽 App Cache\n    Cleaner</string>
     <string name="app_cache_btn">🧽 App Cache\n    Cleaner</string>
     <string name="app_cache_title">Select app to clear cache</string>
     <string name="app_icon_desc">App Icon</string>
@@ -51,10 +51,10 @@
     <string name="toast_storage_access">Please grant Storage Access to continue</string>
     <string name="toast_usage_access">Please enable Usage Access to continue</string>
     <string name="toast_accessibility">Optional: Enable Accessibility Service for full cleaning</string>
-    <string name="toast_done">Permissions granted</string>
+    <string name="toast_done">✅ Permissions granted</string>
 
     <!-- ===================================== -->
-    <!-- GEL SERVICE LAB -->
+    <!-- SERVICE LAB -->
     <!-- ===================================== -->
 
     <string name="gel_service_lab">GEL Service Lab</string>
@@ -62,7 +62,11 @@
     <string name="gel_service_lab_sub">
 Professional device diagnostics
 Android Manual Tests · Apple Devices Labs · Export Report
-    </string>
+</string>
+
+    <!-- ================================================= -->
+    <!-- SECTION LABELS -->
+    <!-- ================================================= -->
 
     <!-- ANDROID -->
     <string name="manual_tests">ANDROID MANUAL TESTS</string>
@@ -73,15 +77,21 @@ Android Manual Tests · Apple Devices Labs · Export Report
     <!-- SERVICE -->
     <string name="service_report">SERVICE REPORT</string>
 
-    <!-- ANDROID MANUAL TESTS -->
+    <!-- ================================================= -->
+    <!-- ANDROID MANUAL TESTS BUTTON -->
+    <!-- ================================================= -->
+
     <string name="manual_tests_title">GEL Android Manual Tests</string>
 
     <string name="manual_tests_desc">
 Targeted service-level tests:
 Sound · Vibration · Display · Sensors · RAM (Live) · WiFi · Thermal
-    </string>
+</string>
 
-    <!-- APPLE DEVICES LABS -->
+    <!-- ================================================= -->
+    <!-- APPLE DEVICES LABS BUTTON -->
+    <!-- ================================================= -->
+
     <string name="gel_phone_diag_title">GEL Apple Devices Diagnosis</string>
 
     <string name="gel_phone_diag_desc">
@@ -90,26 +100,32 @@ Laboratory diagnostics for Apple Devices using system files
 • System stability evaluation
 • Hardware fault detection
 • Service-level log recording
-    </string>
+</string>
 
-    <!-- SERVICE REPORT -->
+    <!-- ================================================= -->
+    <!-- SERVICE REPORT / EXPORT -->
+    <!-- ================================================= -->
+
     <string name="export_report_title">Export Service Report</string>
 
     <string name="export_report_desc">
 Generate final technician report
 (Android + Apple Devices diagnostics)
 PDF format
-    </string>
+</string>
 
     <string name="export_pdf_button">📄 Export Report (PDF)</string>
     <string name="export_pdf_error">PDF export failed</string>
 
+    <!-- ================================================= -->
     <!-- REPORT BODY -->
+    <!-- ================================================= -->
+
     <string name="report_title">GEL Service Report</string>
 
     <string name="report_dev_line">
 GDiolitsis Engine Lab (GEL) — Author &amp; Developer
-    </string>
+</string>
 
     <string name="report_date">Date</string>
     <string name="report_device">Device</string>
@@ -117,26 +133,29 @@ GDiolitsis Engine Lab (GEL) — Author &amp; Developer
 
     <string name="report_diag_header">
 === Service Lab Diagnostics ===
-    </string>
+</string>
 
     <string name="report_no_entries">
 [No diagnostic entries found]
-    </string>
+</string>
 
     <string name="report_end">
 --- End of Report ---
-    </string>
+</string>
 
     <string name="report_signature">
 Technician Signature:
-    </string>
+</string>
 
-    <!-- EMPTY -->
+    <!-- ================================================= -->
+    <!-- EMPTY / PREVIEW -->
+    <!-- ================================================= -->
+
     <string name="preview_empty">
 No diagnostics yet.
 Run Android Manual Tests or Apple Devices Labs
 and then export the report.
-    </string>
+</string>
 
     <!-- DAMAGE CHECKLIST -->
     <string name="damage_title">Damage Inspection</string>
@@ -150,15 +169,22 @@ and then export the report.
     <string name="damage_water">Water damage / corrosion</string>
     <string name="damage_yes_no">[   ] YES   [   ] NO</string>
 
-    <!-- HOSPITAL EDITION -->
+    <!-- ===================================== -->
+    <!-- MANUAL TESTS — HOSPITAL EDITION -->
+    <!-- ===================================== -->
+
+    <!-- TITLE ALWAYS ENGLISH -->
     <string name="manual_hospital_title">GEL Manual Tests — Hospital Edition</string>
 
+    <!-- SUBTITLE -->
     <string name="manual_hospital_sub">
 Professional service tools.\nEach manual lab writes detailed results below (OK / WARN / ERROR)\nand is included in the final Service Report.
-    </string>
+</string>
 
+    <!-- SECTION HEADER -->
     <string name="manual_section1">SECTION 1 — System &amp; Hardware Tests</string>
 
+   <!-- 7 CATEGORIES -->
     <string name="manual_cat_1">Audio &amp; Vibration — Manual Labs 1–5</string>
     <string name="manual_cat_2">Display &amp; Sensors — Manual Labs 6–9</string>
     <string name="manual_cat_3">Wireless &amp; Connectivity — Manual Labs 10–13</string>
@@ -167,27 +193,35 @@ Professional service tools.\nEach manual lab writes detailed results below (OK /
     <string name="manual_cat_6">Security &amp; System Health — Manual Labs 21–24</string>
     <string name="manual_cat_7">Advanced / Logs — Manual Labs 25–30</string>
 
+    <!-- LOG -->
     <string name="manual_log_title">Manual Tests Log</string>
-
     <string name="manual_log_desc">
 ℹ️ GEL Manual Tests — ready.\nOpen a category above and run the required labs.
-    </string>
+</string>
 
+    <!-- =============================== -->
     <!-- 🍎 APPLE MODE -->
+    <!-- =============================== -->
+
+    <!-- PLATFORM SELECT POPUP -->
     <string name="platform_select_title">SELECT PLATFORM</string>
     <string name="platform_android">🤖 ANDROID</string>
     <string name="platform_apple">🍎 APPLE</string>
 
+    <!-- DEVICE DECLARATION -->
     <string name="apple_device_declaration">🍎 Apple Device Declaration</string>
     <string name="apple_device_category_title">Select device category</string>
     <string name="apple_device_cat_iphone">iPhone</string>
     <string name="apple_device_cat_ipad">iPad</string>
 
+    <!-- APPLE SYSTEM -->
     <string name="apple_system">🛠 System</string>
 
+    <!-- SAME FORMAT AS ANDROID -->
     <string name="apple_phone_info_internal">📱 DEVICE INFO\n(Internal)</string>
     <string name="apple_phone_info_peripherals">📡 DEVICE INFO\n(Peripherals)</string>
 
+    <!-- APPLE DIAGNOSIS -->
     <string name="apple_diagnosis">🚀 GEL Apple Devices Diagnosis</string>
 
 </resources>

@@ -893,8 +893,10 @@ if (v instanceof TextView) {
 // 🍎 RENAME DIAGNOSTICS (APPLE MODE)
 View v = findViewById(R.id.btnDiagnostics);
 if (v instanceof TextView) {
-    ((TextView) v).setText("GEL Apple Device Diagnosis");
-}        
+    TextView tv = (TextView) v;
+    tv.setText("GEL Apple Device Diagnosis");
+    tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f); // ⬅️ από 18–20 → 16
+}
     }
 
     private void hide(int id){

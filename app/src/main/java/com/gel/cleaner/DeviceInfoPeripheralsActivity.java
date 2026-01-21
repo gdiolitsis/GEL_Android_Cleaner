@@ -1343,6 +1343,7 @@ sb.append("\nDeep Stats       : Advanced interface counters, raw RF tables, " +
         "Bluetooth controller logs and HCI traces, requires root access.\n");
 
 return sb.toString();
+}
       
 // ===================================================================
 // MODEL CAPACITY STORAGE (SharedPreferences) — FINAL GEL EDITION

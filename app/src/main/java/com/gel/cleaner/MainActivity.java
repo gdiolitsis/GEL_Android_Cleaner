@@ -996,18 +996,12 @@ private void setupButtons() {
     }
 
     bind(R.id.btnDiagnostics, () -> {
-    if (isAppleMode()) {
-        startActivity(new Intent(
-                this,
-                IPhoneLabsActivity.class
-        ));
-    } else {
         startActivity(new Intent(
                 this,
                 DiagnosisMenuActivity.class
-            ));
-        }
+        ));
     });
+
 }
 
 // =========================================================

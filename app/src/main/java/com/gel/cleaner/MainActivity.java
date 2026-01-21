@@ -284,9 +284,6 @@ private String getSavedPlatform() {
             .getString(KEY_PLATFORM, "android"); // default
 }
 
-private String getSavedPlatform() {
-    SharedPreferences sp = getSharedPreferences(PREFS, MODE_PRIVATE);
-
     // 1️⃣ ΝΕΟ KEY (device_mode)
     String mode = sp.getString(KEY_PLATFORM, null);
     if (mode != null) return mode;

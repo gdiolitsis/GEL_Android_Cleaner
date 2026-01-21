@@ -1336,7 +1336,6 @@ if (ba == null) {
     }
     return sb.toString();
 }
-}
 
 // ===================================================================
 // MODEL CAPACITY STORAGE (SharedPreferences) — FINAL GEL EDITION

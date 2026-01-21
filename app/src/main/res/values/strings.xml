@@ -45,7 +45,7 @@
     <!-- PERFORMANCE -->
     <string name="diagnostics">GEL Device Diagnostics</string>
     <string name="diagnostics_android">GEL Device Diagnostics</string>
-    <string name="diagnostics_apple">GEL Apple Device Diagnosis</string>
+    <string name="diagnostics_apple">GEL Apple Devices Diagnosis</string>
 
     <!-- Permissions -->
     <string name="toast_storage_access">Please grant Storage Access to continue</string>

@@ -464,14 +464,6 @@ setupSection(findViewById(R.id.headerOtherPeripherals), txtOtherPeripherals, ico
 
 // 🔥 END onCreate()
 
-private boolean isAppleMode() {
-    SharedPreferences prefs =
-            getSharedPreferences("gel_prefs", MODE_PRIVATE);
-    return "apple".equals(
-            prefs.getString("platform_mode", "android")
-    );
-}
-
 // ============================================================
 // CONNECTIVITY INFO — SNAPSHOT BASED (FIXED)
 // ============================================================
@@ -613,7 +605,7 @@ private void setupSection(View header, View content, TextView icon) {
         // 1️⃣ Κλείσε ΟΛΑ τα sections
         // ------------------------------------------------------------
         if (allContents != null && allIcons != null) {
-            for (int i = 1; i < allContents.length; i++) { 
+            for (int i = 0; i < allContents.length; i++) {
                 if (allContents[i] != null)
                     allContents[i].setVisibility(View.GONE);
                 if (allIcons[i] != null)
@@ -736,11 +728,11 @@ private void setupSection(View header, View content, TextView icon) {
     // CAMERA / BIOMETRICS / SENSORS / CONNECTIVITY / LOCATION
     // ============================================================
    
-    // ============================================================
-    // CAMERA / 
-    // ============================================================
+// ============================================================
+// CAMERA / FULL PHOTO + VIDEO CAPABILITY MAP
+// ============================================================
 
- private String buildCameraInfo() {
+private String buildCameraInfo() {
     StringBuilder sb = new StringBuilder();
 
     try {
@@ -788,39 +780,119 @@ private void setupSection(View header, View content, TextView icon) {
                     sb.append("• Flash          : ").append(flashAvail ? "Yes" : "No").append("\n");
                 }
 
+                // --------------------------------------------------
+                // 📸 JPEG + 🎥 VIDEO STREAM CONFIGURATION
+                // --------------------------------------------------
                 try {
                     android.hardware.camera2.params.StreamConfigurationMap map =
                             cc.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
+
                     if (map != null) {
+
+                        // JPEG
                         android.util.Size[] jpegSizes =
                                 map.getOutputSizes(android.graphics.ImageFormat.JPEG);
                         if (jpegSizes != null && jpegSizes.length > 0) {
                             sb.append("• JPEG Modes     : ")
-                                    .append(jpegSizes.length)
-                                    .append(" available sizes\n");
+                              .append(jpegSizes.length)
+                              .append(" available sizes\n");
+                        }
+
+                        // VIDEO (MediaRecorder)
+                        android.util.Size[] videoSizes =
+                                map.getOutputSizes(android.media.MediaRecorder.class);
+
+                        if (videoSizes != null && videoSizes.length > 0) {
+
+                            android.util.Size max = videoSizes[0];
+                            for (android.util.Size s : videoSizes) {
+                                if (s.getWidth() * s.getHeight() >
+                                    max.getWidth() * max.getHeight()) {
+                                    max = s;
+                                }
+                            }
+
+                            sb.append("• Video Max      : ")
+                              .append(max.getWidth()).append("x")
+                              .append(max.getHeight()).append("\n");
+
+                            sb.append("• Video Modes    : ")
+                              .append(videoSizes.length)
+                              .append(" resolutions\n");
                         }
                     }
                 } catch (Throwable ignore) { }
 
-                if (reqCaps != null) {
-                    sb.append("• Capabilities   : ").append(reqCaps.length).append(" flags\n");
+                // --------------------------------------------------
+                // 🎞 FPS RANGE
+                // --------------------------------------------------
+                android.util.Range<Integer>[] fpsRanges =
+                        cc.get(CameraCharacteristics.CONTROL_AE_AVAILABLE_TARGET_FPS_RANGES);
+
+                if (fpsRanges != null && fpsRanges.length > 0) {
+                    int min = Integer.MAX_VALUE;
+                    int max = 0;
+
+                    for (android.util.Range<Integer> r : fpsRanges) {
+                        min = Math.min(min, r.getLower());
+                        max = Math.max(max, r.getUpper());
+                    }
+
+                    sb.append("• FPS Range      : ")
+                      .append(min).append("–").append(max)
+                      .append(" fps\n");
                 }
 
+                // --------------------------------------------------
+                // 🎥 VIDEO STABILIZATION
+                // --------------------------------------------------
+                int[] stab =
+                        cc.get(CameraCharacteristics.CONTROL_AVAILABLE_VIDEO_STABILIZATION_MODES);
+
+                sb.append("• Stabilization  : ")
+                  .append(stab != null && stab.length > 0 ? "Yes" : "No")
+                  .append("\n");
+
+                // --------------------------------------------------
+                // 🌈 HDR VIDEO (10-bit capability)
+                // --------------------------------------------------
+                boolean hdr = false;
+                if (reqCaps != null) {
+                    for (int c : reqCaps) {
+                        if (c ==
+                            CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES_DYNAMIC_RANGE_TEN_BIT) {
+                            hdr = true;
+                            break;
+                        }
+                    }
+                }
+                sb.append("• HDR Video      : ")
+                  .append(hdr ? "Yes" : "No")
+                  .append("\n");
+
+                // --------------------------------------------------
+                // 🔧 CAPABILITIES COUNT
+                // --------------------------------------------------
+                if (reqCaps != null) {
+                    sb.append("• Capabilities   : ")
+                      .append(reqCaps.length)
+                      .append(" flags\n");
+                }
+
+                // --------------------------------------------------
+                // ⚙️ HARDWARE LEVEL
+                // --------------------------------------------------
                 if (hwLevel != null) {
                     String level;
                     switch (hwLevel) {
                         case CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_FULL:
-                            level = "FULL";
-                            break;
+                            level = "FULL"; break;
                         case CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_LIMITED:
-                            level = "LIMITED";
-                            break;
+                            level = "LIMITED"; break;
                         case CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_LEGACY:
-                            level = "LEGACY";
-                            break;
+                            level = "LEGACY"; break;
                         case CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_3:
-                            level = "LEVEL_3";
-                            break;
+                            level = "LEVEL_3"; break;
                         default:
                             level = "UNKNOWN";
                     }
@@ -837,7 +909,7 @@ private void setupSection(View header, View content, TextView icon) {
     }
 
     appendAccessInstructions(sb, "camera");
-return sb.toString();
+    return sb.toString();
 }
 
 // ============================================================
@@ -1409,13 +1481,11 @@ private void initBatterySection() {
     refreshBatteryInfoView();
 
     if (btnCapacity != null) {
-    btnCapacity.setOnClickListener(v -> showBatteryCapacityDialog());
-}
-
-if (!isAppleMode()) {
-    maybeShowBatteryCapacityDialogOnce();
+        btnCapacity.setOnClickListener(v -> showBatteryCapacityDialog());
     }
-}  
+
+    maybeShowBatteryCapacityDialogOnce();
+}
 
 // ===================================================================
 // POPUP ONLY ONCE
@@ -3622,7 +3692,7 @@ private void handleSettingsClick(Context ctx, String path) {
     } catch (Throwable ignore) {}
 }
 
-private void animateCollapse(View v) {
+private void animateCollapse(TextView v) {
     if (v == null) return;
     v.setVisibility(View.GONE);
 }

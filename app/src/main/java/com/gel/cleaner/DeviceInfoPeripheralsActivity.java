@@ -1034,114 +1034,126 @@ private String buildWifiAndBluetoothInfo() {
     StringBuilder sb = new StringBuilder();
 
     // ============================================================
-// WIFI (FULL DETAILS) — SAFE / NO CRASH
-// ============================================================
-WifiManager wm = (WifiManager) getApplicationContext()
-        .getSystemService(Context.WIFI_SERVICE);
+    // WIFI (FULL DETAILS) — SAFE / NO CRASH
+    // ============================================================
+    WifiManager wm = (WifiManager) getApplicationContext()
+            .getSystemService(Context.WIFI_SERVICE);
 
-if (wm != null) {
+    WifiInfo wi = null; // 🔒 FIX: stable scope (used later for standard + mac)
 
-    WifiInfo wi;
-    try {
-        wi = wm.getConnectionInfo();
-    } catch (SecurityException se) {
-        sb.append("\nWi-Fi Details:\n");
-        sb.append("  Access         : Denied (Location permission required)\n");
-        return sb.toString();
-    }
-
-    if (wi != null && wi.getNetworkId() != -1) {
-
-        sb.append("\nWi-Fi Details:\n");
+    if (wm != null) {
 
         try {
-            sb.append("  SSID           : ").append(wi.getSSID()).append("\n");
+            wi = wm.getConnectionInfo();
+        } catch (SecurityException se) {
+            sb.append("\nWi-Fi Details:\n");
+            sb.append("  Access         : Denied (Location permission required)\n");
+            return sb.toString();
         } catch (Throwable t) {
-            sb.append("  SSID           : Restricted\n");
+            // ultra-safe fallback (no crash)
+            sb.append("\nWi-Fi Details:\n");
+            sb.append("  Access         : Unavailable\n");
+            return sb.toString();
         }
 
-        try {
-            sb.append("  LinkSpeed      : ").append(wi.getLinkSpeed()).append(" Mbps\n");
-        } catch (Throwable t) {}
+        if (wi != null && wi.getNetworkId() != -1) {
 
-        try {
-            sb.append("  RSSI           : ").append(wi.getRssi()).append(" dBm\n");
-        } catch (Throwable t) {}
+            sb.append("\nWi-Fi Details:\n");
 
-        try {
-            sb.append("  Frequency      : ").append(wi.getFrequency()).append(" MHz\n");
-        } catch (Throwable t) {}
-
-        // Signal quality (safe)
-        try {
-            int rssi = wi.getRssi();
-            String quality =
-                    rssi >= -50 ? "Excellent" :
-                    rssi >= -60 ? "Good" :
-                    rssi >= -70 ? "Fair" :
-                    "Weak";
-            sb.append("  Signal Quality : ").append(quality).append("\n");
-        } catch (Throwable t) {}
-
-        // Band (safe)
-        try {
-            int freq = wi.getFrequency();
-            String band =
-                    freq >= 5925 ? "6 GHz (Wi-Fi 6E)" :
-                    freq >= 4900 ? "5 GHz" :
-                    "2.4 GHz";
-            sb.append("  Band           : ").append(band).append("\n");
-        } catch (Throwable t) {}
-    }
-}
-
-// ------------------------------------------------------------
-// WIFI STANDARD (SAFE — SDK INDEPENDENT)
-// ------------------------------------------------------------
-if (android.os.Build.VERSION.SDK_INT >= 30) {
-
-    int std = wi.getWifiStandard();
-    String stdStr;
-
-    switch (std) {
-        case 6:  stdStr = "Wi-Fi 6 / 6E (802.11ax)"; break; // WIFI_STANDARD_11AX
-        case 5:  stdStr = "Wi-Fi 5 (802.11ac)";     break; // WIFI_STANDARD_11AC
-        case 4:  stdStr = "Wi-Fi 4 (802.11n)";      break; // WIFI_STANDARD_11N
-        case 1:  stdStr = "802.11a";                break;
-        case 2:  stdStr = "802.11b";                break;
-        case 3:  stdStr = "802.11g";                break;
-        default: stdStr = "Unknown";                break;
-    }
-
-    sb.append("  Wi-Fi Standard : ").append(stdStr).append("\n");
-}
-
-                // ------------------------------------------------------------
-                // SAFE MAC (masked vs real, root-aware)
-                // ------------------------------------------------------------
-                String rawMac = wi.getMacAddress();
-                String macLine;
-
-                if (rawMac != null
-                        && rawMac.length() > 0
-                        && !"02:00:00:00:00:00".equals(rawMac)) {
-
-                    macLine = rawMac;   // real MAC (root / older Android)
-
-                } else {
-
-                    if (!isDeviceRooted()) {
-                        macLine = "Masked by Android security. Requires root access";
-                    } else {
-                        macLine = "Unavailable";
-                    }
-                }
-
-                sb.append("  MAC            : ").append(macLine).append("\n");
+            try {
+                sb.append("  SSID           : ").append(wi.getSSID()).append("\n");
+            } catch (Throwable t) {
+                sb.append("  SSID           : Restricted\n");
             }
-        }
 
-    } catch (Throwable ignore) {}
+            try {
+                sb.append("  LinkSpeed      : ").append(wi.getLinkSpeed()).append(" Mbps\n");
+            } catch (Throwable t) {}
+
+            try {
+                sb.append("  RSSI           : ").append(wi.getRssi()).append(" dBm\n");
+            } catch (Throwable t) {}
+
+            try {
+                sb.append("  Frequency      : ").append(wi.getFrequency()).append(" MHz\n");
+            } catch (Throwable t) {}
+
+            // ------------------------------------------------------------
+            // Signal quality (safe)
+            // ------------------------------------------------------------
+            try {
+                int rssi = wi.getRssi();
+                String quality =
+                        rssi >= -50 ? "Excellent" :
+                        rssi >= -60 ? "Good" :
+                        rssi >= -70 ? "Fair" :
+                        "Weak";
+                sb.append("  Signal Quality : ").append(quality).append("\n");
+            } catch (Throwable t) {}
+
+            // ------------------------------------------------------------
+            // Band (safe)
+            // ------------------------------------------------------------
+            try {
+                int freq = wi.getFrequency();
+                String band =
+                        freq >= 5925 ? "6 GHz (Wi-Fi 6E)" :
+                        freq >= 4900 ? "5 GHz" :
+                        "2.4 GHz";
+                sb.append("  Band           : ").append(band).append("\n");
+            } catch (Throwable t) {}
+        }
+    }
+
+    // ------------------------------------------------------------
+    // WIFI STANDARD (SAFE — SDK INDEPENDENT)
+    // ------------------------------------------------------------
+    if (wi != null && android.os.Build.VERSION.SDK_INT >= 30) {
+
+        try {
+            int std = wi.getWifiStandard();
+            String stdStr;
+
+            switch (std) {
+                case 6:  stdStr = "Wi-Fi 6 / 6E (802.11ax)"; break; // WIFI_STANDARD_11AX
+                case 5:  stdStr = "Wi-Fi 5 (802.11ac)";     break; // WIFI_STANDARD_11AC
+                case 4:  stdStr = "Wi-Fi 4 (802.11n)";      break; // WIFI_STANDARD_11N
+                case 1:  stdStr = "802.11a";                break;
+                case 2:  stdStr = "802.11b";                break;
+                case 3:  stdStr = "802.11g";                break;
+                default: stdStr = "Unknown";                break;
+            }
+
+            sb.append("  Wi-Fi Standard : ").append(stdStr).append("\n");
+        } catch (Throwable ignore) {}
+    }
+
+    // ------------------------------------------------------------
+    // SAFE MAC (masked vs real, root-aware)
+    // ------------------------------------------------------------
+    if (wi != null) {
+        try {
+            String rawMac = wi.getMacAddress();
+            String macLine;
+
+            if (rawMac != null
+                    && rawMac.length() > 0
+                    && !"02:00:00:00:00:00".equals(rawMac)) {
+
+                macLine = rawMac;   // real MAC (root / older Android)
+
+            } else {
+
+                if (!isDeviceRooted()) {
+                    macLine = "Masked by Android security. Requires root access";
+                } else {
+                    macLine = "Unavailable";
+                }
+            }
+
+            sb.append("  MAC            : ").append(macLine).append("\n");
+        } catch (Throwable ignore) {}
+    }
 
     // ============================================================
     // BLUETOOTH — FULL DETAIL + ROOT PATHS (GEL Edition)
@@ -1168,9 +1180,10 @@ if (android.os.Build.VERSION.SDK_INT >= 30) {
         // ------------------------------------------------------------
         // STATE
         // ------------------------------------------------------------
-        int state = ba.getState();
-        String stateStr;
+        int state = BluetoothAdapter.STATE_OFF;
+        try { state = ba.getState(); } catch (Throwable ignore) {}
 
+        String stateStr;
         switch (state) {
             case BluetoothAdapter.STATE_TURNING_ON:  stateStr = "Turning On";  break;
             case BluetoothAdapter.STATE_ON:          stateStr = "On";          break;
@@ -1183,14 +1196,18 @@ if (android.os.Build.VERSION.SDK_INT >= 30) {
         // ------------------------------------------------------------
         // NAME / ADDRESS (MASKED IF UNROOTED)
         // ------------------------------------------------------------
-        String btName = ba.getName();
+        String btName = null;
+        try { btName = ba.getName(); } catch (Throwable ignore) {}
+
         if (btName == null || btName.trim().isEmpty()) {
             btName = isDeviceRooted()
                     ? "Unavailable"
                     : "Unavailable (requires root access)";
         }
 
-        String btAddr = ba.getAddress();
+        String btAddr = null;
+        try { btAddr = ba.getAddress(); } catch (Throwable ignore) {}
+
         if (btAddr == null
                 || btAddr.trim().isEmpty()
                 || "02:00:00:00:00:00".equals(btAddr)) {
@@ -1210,9 +1227,11 @@ if (android.os.Build.VERSION.SDK_INT >= 30) {
 
             sb.append("  Version        : ");
 
-            String v = readSysString("/proc/bluetooth/version");
-            if (v == null || v.isEmpty())
-                v = readSysString("/sys/module/bluetooth/version");
+            String v = null;
+            try { v = readSysString("/proc/bluetooth/version"); } catch (Throwable ignore) {}
+            if (v == null || v.isEmpty()) {
+                try { v = readSysString("/sys/module/bluetooth/version"); } catch (Throwable ignore) {}
+            }
 
             sb.append(v != null && !v.isEmpty()
                     ? v
@@ -1226,15 +1245,23 @@ if (android.os.Build.VERSION.SDK_INT >= 30) {
         // ------------------------------------------------------------
         // CLASSIC CAPABILITIES
         // ------------------------------------------------------------
-        sb.append("  Scan Mode      : ").append(ba.getScanMode()).append("\n");
-        sb.append("  Discoverable   : ")
-                .append(ba.getScanMode() ==
-                        BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE
-                        ? "Yes" : "No")
-                .append("\n");
+        try {
+            sb.append("  Scan Mode      : ").append(ba.getScanMode()).append("\n");
+        } catch (Throwable ignore) {}
 
-        boolean le = getPackageManager()
-                .hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE);
+        try {
+            sb.append("  Discoverable   : ")
+                    .append(ba.getScanMode() ==
+                            BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE
+                            ? "Yes" : "No")
+                    .append("\n");
+        } catch (Throwable ignore) {}
+
+        boolean le = false;
+        try {
+            le = getPackageManager()
+                    .hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE);
+        } catch (Throwable ignore) {}
 
         sb.append("  BLE Support    : ").append(le ? "Yes" : "No").append("\n");
 
@@ -1347,30 +1374,30 @@ if (android.os.Build.VERSION.SDK_INT >= 30) {
         // ------------------------------------------------------------
         sb.append("\n  Usage summary   :\n");
 
-        if (bm != null) {
+        try {
+            Set<BluetoothDevice> bonded = ba.getBondedDevices();
+            sb.append("    Paired devices      : ")
+                    .append(bonded != null ? bonded.size() : 0)
+                    .append("\n");
+        } catch (Throwable ignore) {}
 
-            try {
-                Set<BluetoothDevice> bonded = ba.getBondedDevices();
-                sb.append("    Paired devices      : ")
-                        .append(bonded != null ? bonded.size() : 0)
-                        .append("\n");
-            } catch (Throwable ignore) {}
+        try {
+            List<BluetoothDevice> gatt =
+                    (bm != null) ? bm.getConnectedDevices(BluetoothProfile.GATT) : null;
 
-            try {
-                List<BluetoothDevice> gatt =
-                        bm.getConnectedDevices(BluetoothProfile.GATT);
-
-                sb.append("    Active connections  : ")
-                        .append(gatt != null ? gatt.size() : 0)
-                        .append("\n");
-            } catch (Throwable ignore) {}
-        }
+            sb.append("    Active connections  : ")
+                    .append(gatt != null ? gatt.size() : 0)
+                    .append("\n");
+        } catch (Throwable ignore) {}
 
         sb.append("    Audio usage         : Supports wireless audio devices ")
                 .append("(headphones, car systems, speakers)\n");
 
-        boolean le2 = getPackageManager()
-                .hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE);
+        boolean le2 = false;
+        try {
+            le2 = getPackageManager()
+                    .hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE);
+        } catch (Throwable ignore) {}
 
         sb.append("    Low Energy usage    : ")
                 .append(le2

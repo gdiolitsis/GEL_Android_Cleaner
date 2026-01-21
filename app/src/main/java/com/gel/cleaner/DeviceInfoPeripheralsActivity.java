@@ -1155,271 +1155,188 @@ private String buildWifiAndBluetoothInfo() {
         } catch (Throwable ignore) {}
     }
 
-    // ============================================================
-    // BLUETOOTH — FULL DETAIL + ROOT PATHS (GEL Edition)
-    // ============================================================
-    sb.append("\nBluetooth:\n");
+ // ============================================================
+// BLUETOOTH — USEFUL INFO (CLEAN + CONNECTED DEVICES + ROOT-AWARE)
+// ============================================================
+// NOTE: No fake "Bluetooth 5.x" claims. We report what Android can
+// truly expose + root-only controller/firmware strings when available.
+sb.append("\nBluetooth:\n");
 
-    BluetoothManager bm = null;
-    BluetoothAdapter ba = null;
+BluetoothManager bm = null;
+BluetoothAdapter ba = null;
+
+try {
+    bm = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
+    ba = (bm != null) ? bm.getAdapter() : null;
+} catch (Throwable ignore) {}
+
+if (ba == null) {
+
+    sb.append("  Supported      : No\n");
+
+} else {
+
+    sb.append("  Supported      : Yes\n");
+
+    boolean enabled = false;
+    try { enabled = ba.isEnabled(); } catch (Throwable ignore) {}
+    sb.append("  Enabled        : ").append(enabled ? "Yes" : "No").append("\n");
+
+    // ------------------------------------------------------------
+    // STATE (SAFE)
+    // ------------------------------------------------------------
+    int state = BluetoothAdapter.STATE_OFF;
+    try { state = ba.getState(); } catch (Throwable ignore) {}
+
+    String stateStr;
+    switch (state) {
+        case BluetoothAdapter.STATE_TURNING_ON:  stateStr = "Turning On";  break;
+        case BluetoothAdapter.STATE_ON:          stateStr = "On";          break;
+        case BluetoothAdapter.STATE_TURNING_OFF: stateStr = "Turning Off"; break;
+        default:                                 stateStr = "Off";         break;
+    }
+    sb.append("  State          : ").append(stateStr).append("\n");
+
+    // ------------------------------------------------------------
+    // BLE SUPPORT (REAL)
+    // ------------------------------------------------------------
+    boolean le = false;
+    try {
+        le = getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE);
+    } catch (Throwable ignore) {}
+    sb.append("  BLE Support    : ").append(le ? "Yes" : "No").append("\n");
+
+    // ------------------------------------------------------------
+    // CONNECTED DEVICES (WHAT USER ACTUALLY CARES ABOUT)
+    // ------------------------------------------------------------
+    int gattCount = -1;
+    int a2dpCount = -1;
+    int hspCount  = -1;
 
     try {
-        bm = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
-        ba = (bm != null) ? bm.getAdapter() : null;
+        List<BluetoothDevice> gatt =
+                (bm != null) ? bm.getConnectedDevices(BluetoothProfile.GATT) : null;
+        gattCount = (gatt != null) ? gatt.size() : 0;
     } catch (Throwable ignore) {}
 
-    if (ba == null) {
+    try {
+        List<BluetoothDevice> audio =
+                (bm != null) ? bm.getConnectedDevices(BluetoothProfile.A2DP) : null;
+        a2dpCount = (audio != null) ? audio.size() : 0;
+    } catch (Throwable ignore) {}
 
-        sb.append("  Supported      : No\n");
+    try {
+        List<BluetoothDevice> headset =
+                (bm != null) ? bm.getConnectedDevices(BluetoothProfile.HEADSET) : null;
+        hspCount = (headset != null) ? headset.size() : 0;
+    } catch (Throwable ignore) {}
+
+    sb.append("  Connected      :\n");
+    sb.append("    Audio (A2DP) : ").append(a2dpCount >= 0 ? a2dpCount : "Unknown").append("\n");
+    sb.append("    Headset (HSP): ").append(hspCount  >= 0 ? hspCount  : "Unknown").append("\n");
+    sb.append("    BLE (GATT)   : ").append(gattCount >= 0 ? gattCount : "Unknown").append("\n");
+
+    // ------------------------------------------------------------
+    // PAIRED DEVICES (USEFUL + AVAILABLE)
+    // ------------------------------------------------------------
+    int paired = -1;
+    try {
+        Set<BluetoothDevice> bonded = ba.getBondedDevices();
+        paired = (bonded != null) ? bonded.size() : 0;
+    } catch (Throwable ignore) {}
+    sb.append("  Paired devices : ").append(paired >= 0 ? paired : "Unknown").append("\n");
+
+    // ------------------------------------------------------------
+    // TRANSPORT (HONEST)
+    // ------------------------------------------------------------
+    sb.append("  Transport      : ");
+    if (!enabled) {
+        sb.append("Inactive\n");
+    } else if (le) {
+        sb.append("Classic + Low Energy\n");
+    } else {
+        sb.append("Classic only\n");
+    }
+
+    // ------------------------------------------------------------
+    // OPTIONAL CAPABILITIES (KEEP ONLY IF ENABLED)
+    // ------------------------------------------------------------
+    if (enabled && le) {
+
+        sb.append("  LE features    :\n");
+
+        try {
+            sb.append("    Multi-Adv    : ")
+              .append(ba.isMultipleAdvertisementSupported() ? "Yes" : "No")
+              .append("\n");
+        } catch (Throwable ignore) {
+            sb.append("    Multi-Adv    : Unknown\n");
+        }
+
+        try {
+            sb.append("    LE Scanner   : ")
+              .append(ba.getBluetoothLeScanner() != null ? "Yes" : "No")
+              .append("\n");
+        } catch (Throwable ignore) {
+            sb.append("    LE Scanner   : Unknown\n");
+        }
+
+        try {
+            sb.append("    Offload Filt : ")
+              .append(ba.isOffloadedFilteringSupported() ? "Yes" : "No")
+              .append("\n");
+        } catch (Throwable ignore) {
+            sb.append("    Offload Filt : Unknown\n");
+        }
+    }
+
+    // ------------------------------------------------------------
+    // ROOT-AWARE CONTROLLER / FIRMWARE STRINGS (NO LIES)
+    // ------------------------------------------------------------
+    if (isDeviceRooted()) {
+
+        sb.append("  Root data      :\n");
+
+        String ctrl = null;
+        try {
+            ctrl = readSysString("/proc/bluetooth/version");
+        } catch (Throwable ignore) {}
+
+        if (ctrl == null || ctrl.trim().isEmpty()) {
+            try { ctrl = readSysString("/proc/bluetooth/soc"); } catch (Throwable ignore) {}
+        }
+        if (ctrl == null || ctrl.trim().isEmpty()) {
+            try { ctrl = readSysString("/sys/module/bluetooth/version"); } catch (Throwable ignore) {}
+        }
+
+        if (ctrl != null && !ctrl.trim().isEmpty()) {
+            sb.append("    Controller   : ").append(ctrl.trim()).append("\n");
+        } else {
+            sb.append("    Controller   : Not exposed by vendor\n");
+        }
+
+        String fw = null;
+        try { fw = readSysString("/vendor/firmware/bt/default/bt_version.txt"); } catch (Throwable ignore) {}
+        if (fw == null || fw.trim().isEmpty()) {
+            try { fw = readSysString("/vendor/etc/bluetooth/bt_stack.conf"); } catch (Throwable ignore) {}
+        }
+        if (fw == null || fw.trim().isEmpty()) {
+            try { fw = readSysString("/system/etc/bluetooth/bt_stack.conf"); } catch (Throwable ignore) {}
+        }
+
+        if (fw != null && !fw.trim().isEmpty()) {
+            sb.append("    Firmware     : ").append(fw.trim()).append("\n");
+        } else {
+            sb.append("    Firmware     : Not exposed by vendor\n");
+        }
 
     } else {
 
-        sb.append("  Supported      : Yes\n");
-        sb.append("  Enabled        : ").append(ba.isEnabled() ? "Yes" : "No").append("\n");
-
-        // ------------------------------------------------------------
-        // STATE
-        // ------------------------------------------------------------
-        int state = BluetoothAdapter.STATE_OFF;
-        try { state = ba.getState(); } catch (Throwable ignore) {}
-
-        String stateStr;
-        switch (state) {
-            case BluetoothAdapter.STATE_TURNING_ON:  stateStr = "Turning On";  break;
-            case BluetoothAdapter.STATE_ON:          stateStr = "On";          break;
-            case BluetoothAdapter.STATE_TURNING_OFF: stateStr = "Turning Off"; break;
-            default:                                 stateStr = "Off";         break;
-        }
-
-        sb.append("  State          : ").append(stateStr).append("\n");
-
-        // ------------------------------------------------------------
-        // NAME / ADDRESS (MASKED IF UNROOTED)
-        // ------------------------------------------------------------
-        String btName = null;
-        try { btName = ba.getName(); } catch (Throwable ignore) {}
-
-        if (btName == null || btName.trim().isEmpty()) {
-            btName = isDeviceRooted()
-                    ? "Unavailable"
-                    : "Unavailable (requires root access)";
-        }
-
-        String btAddr = null;
-        try { btAddr = ba.getAddress(); } catch (Throwable ignore) {}
-
-        if (btAddr == null
-                || btAddr.trim().isEmpty()
-                || "02:00:00:00:00:00".equals(btAddr)) {
-
-            btAddr = isDeviceRooted()
-                    ? "Unavailable"
-                    : "Masked by Android security (requires root access)";
-        }
-
-        sb.append("  Name           : ").append(btName).append("\n");
-        sb.append("  Address        : ").append(btAddr).append("\n");
-
-        // ------------------------------------------------------------
-        // BLUETOOTH VERSION — REALITY CHECK (Android does NOT expose)
-        // ------------------------------------------------------------
-        if (isDeviceRooted()) {
-
-            sb.append("  Version        : ");
-
-            String v = null;
-            try { v = readSysString("/proc/bluetooth/version"); } catch (Throwable ignore) {}
-            if (v == null || v.isEmpty()) {
-                try { v = readSysString("/sys/module/bluetooth/version"); } catch (Throwable ignore) {}
-            }
-
-            sb.append(v != null && !v.isEmpty()
-                    ? v
-                    : "Not exposed by vendor firmware").append("\n");
-
-        } else {
-
-            sb.append("  Version        : Not exposed by Android (requires root access)\n");
-        }
-
-        // ------------------------------------------------------------
-        // CLASSIC CAPABILITIES
-        // ------------------------------------------------------------
-        try {
-            sb.append("  Scan Mode      : ").append(ba.getScanMode()).append("\n");
-        } catch (Throwable ignore) {}
-
-        try {
-            sb.append("  Discoverable   : ")
-                    .append(ba.getScanMode() ==
-                            BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE
-                            ? "Yes" : "No")
-                    .append("\n");
-        } catch (Throwable ignore) {}
-
-        boolean le = false;
-        try {
-            le = getPackageManager()
-                    .hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE);
-        } catch (Throwable ignore) {}
-
-        sb.append("  BLE Support    : ").append(le ? "Yes" : "No").append("\n");
-
-        // ------------------------------------------------------------
-        // TRANSPORT TYPE (SAFE INTERPRETATION)
-        // ------------------------------------------------------------
-        sb.append("  Transport Type : ");
-
-        if (!ba.isEnabled()) {
-            sb.append("Inactive\n");
-        } else if (le) {
-            sb.append("Classic + Low Energy (supported)\n");
-        } else {
-            sb.append("Classic only\n");
-        }
-
-        // ------------------------------------------------------------
-        // HARDWARE CAPABILITIES
-        // ------------------------------------------------------------
-        sb.append("  Multiple Adv   : ");
-        try {
-            sb.append(ba.isMultipleAdvertisementSupported()
-                    ? "Yes" : "No").append("\n");
-        } catch (Throwable ignore) {
-            sb.append("Unknown\n");
-        }
-
-        sb.append("  LE Scanner     : ");
-        try {
-            sb.append(ba.getBluetoothLeScanner() != null
-                    ? "Yes" : "No").append("\n");
-        } catch (Throwable ignore) {
-            sb.append("Unknown\n");
-        }
-
-        sb.append("  Offloaded Filt.: ");
-        try {
-            sb.append(ba.isOffloadedFilteringSupported()
-                    ? "Yes" : "No").append("\n");
-        } catch (Throwable ignore) {
-            sb.append("Unknown\n");
-        }
-
-        // ------------------------------------------------------------
-        // CONNECTED DEVICES (GATT)
-        // ------------------------------------------------------------
-        try {
-            List<BluetoothDevice> con =
-                    (bm != null)
-                            ? bm.getConnectedDevices(BluetoothProfile.GATT)
-                            : null;
-
-            sb.append("  GATT Devices   : ")
-                    .append(con != null ? con.size() : 0)
-                    .append("\n");
-
-        } catch (Throwable ignore) {
-
-            sb.append("  GATT Devices   : Unknown\n");
-        }
-
-        // ------------------------------------------------------------
-        // CONNECTED PROFILES (HUMAN)
-        // ------------------------------------------------------------
-        try {
-            List<BluetoothDevice> audio =
-                    (bm != null) ? bm.getConnectedDevices(BluetoothProfile.A2DP) : null;
-
-            sb.append("  Audio Devices  : ")
-                    .append(audio != null ? audio.size() : 0)
-                    .append("\n");
-        } catch (Throwable ignore) {}
-
-        try {
-            List<BluetoothDevice> headset =
-                    (bm != null) ? bm.getConnectedDevices(BluetoothProfile.HEADSET) : null;
-
-            sb.append("  Headset Devices: ")
-                    .append(headset != null ? headset.size() : 0)
-                    .append("\n");
-        } catch (Throwable ignore) {}
-
-        // ------------------------------------------------------------
-        // ROOT EXCLUSIVE PATHS (vendor logs / firmware info)
-        // ------------------------------------------------------------
-        sb.append("\n  Firmware Info  : ");
-
-        if (isDeviceRooted()) {
-
-            String fw = null;
-
-            try {
-                if (fw == null) fw = readSysString("/vendor/firmware/bt/default/bt_version.txt");
-                if (fw == null) fw = readSysString("/system/etc/bluetooth/bt_stack.conf");
-                if (fw == null) fw = readSysString("/vendor/etc/bluetooth/bt_stack.conf");
-                if (fw == null) fw = readSysString("/proc/bluetooth/soc");
-            } catch (Throwable ignore) {}
-
-            sb.append(fw != null && !fw.isEmpty()
-                    ? fw
-                    : "Not exposed by vendor").append("\n");
-
-        } else {
-
-            sb.append("Requires root access\n");
-        }
-
-        // ------------------------------------------------------------
-        // USER-CENTRIC INFO (NON-INTRUSIVE ADDITIONS)
-        // ------------------------------------------------------------
-        sb.append("\n  Usage summary   :\n");
-
-        try {
-            Set<BluetoothDevice> bonded = ba.getBondedDevices();
-            sb.append("    Paired devices      : ")
-                    .append(bonded != null ? bonded.size() : 0)
-                    .append("\n");
-        } catch (Throwable ignore) {}
-
-        try {
-            List<BluetoothDevice> gatt =
-                    (bm != null) ? bm.getConnectedDevices(BluetoothProfile.GATT) : null;
-
-            sb.append("    Active connections  : ")
-                    .append(gatt != null ? gatt.size() : 0)
-                    .append("\n");
-        } catch (Throwable ignore) {}
-
-        sb.append("    Audio usage         : Supports wireless audio devices ")
-                .append("(headphones, car systems, speakers)\n");
-
-        boolean le2 = false;
-        try {
-            le2 = getPackageManager()
-                    .hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE);
-        } catch (Throwable ignore) {}
-
-        sb.append("    Low Energy usage    : ")
-                .append(le2
-                        ? "Supported (wearables, sensors, trackers)"
-                        : "Not supported")
-                .append("\n");
-
-        sb.append("    Bluetooth generation: ")
-                .append(isDeviceRooted()
-                        ? "Controller-defined (vendor firmware)"
-                        : "Managed by Android system")
-                .append("\n");
-
-        // ------------------------------------------------------------
-        // ADVANCED INFO (green comment style)
-        // ------------------------------------------------------------
-        sb.append("\nDeep Stats       : Advanced interface counters, raw RF tables, ")
-                .append("Bluetooth controller logs and HCI traces, requires root access.\n");
+        sb.append("  Root data      : Requires root access\n");
     }
-
-    return sb.toString();
 }
+
+// (return sb.toString(); stays where it is in your parent method)
       
 // ===================================================================
 // MODEL CAPACITY STORAGE (SharedPreferences) — FINAL GEL EDITION

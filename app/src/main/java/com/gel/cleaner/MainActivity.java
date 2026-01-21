@@ -1005,9 +1005,10 @@ private void setupButtons() {
         startActivity(new Intent(
                 this,
                 DiagnosisMenuActivity.class
-        ));
-    }
-});
+            ));
+        }
+    });
+}
 
 // =========================================================
 // BIND HELPER

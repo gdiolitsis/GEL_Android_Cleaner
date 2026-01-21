@@ -1107,6 +1107,7 @@ if (android.os.Build.VERSION.SDK_INT >= 30) {
                 sb.append("  MAC            : ").append(macLine).append("\n");
             }
   } catch (Throwable ignore) {}
+  }
 
 // ============================================================
 // BLUETOOTH — FULL DETAIL + ROOT PATHS (GEL Edition)

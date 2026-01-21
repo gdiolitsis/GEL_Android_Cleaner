@@ -43,7 +43,9 @@
 <string name="app_icon_desc">Εικονίδιο Εφαρμογής</string>
 
     <!-- PERFORMANCE -->
-    <string name="diagnostics">GEL Διάγνωση Συσκευής</string>
+<string name="diagnostics">GEL Διάγνωση Συσκευής</string>
+<string name="diagnostics_android">GEL Διάγνωση Συσκευής</string>
+<string name="diagnostics_apple">GEL Διάγνωση Συσκευών Apple</string>
 
     <!-- Permissions -->
     <string name="toast_storage_access">Παραχώρησε πρόσβαση στα αρχεία για να συνεχίσεις</string>

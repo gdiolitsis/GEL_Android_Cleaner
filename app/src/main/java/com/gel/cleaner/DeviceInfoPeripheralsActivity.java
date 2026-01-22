@@ -208,7 +208,7 @@ private TextView txtBatteryModelCapacity;
 
 private TextView txtScreenContent;
 private TextView txtCameraContent;
-private TextView txtConnectivityContent;   // ⭐ FIXED — Η ΜΟΝΗ ΠΟΥ ΕΛΕΙΠΕ
+private TextView txtConnectivityContent;  
 private TextView txtLocationContent;
 private TextView txtThermalContent;
 private TextView txtModemContent;
@@ -1706,7 +1706,6 @@ if (mA != null) {
 
     return sb.toString();
 }
-
 
 // ============================================================
 // ROOT HELPERS — CHARGE CURRENT (µA → mA)
@@ -3322,7 +3321,6 @@ applyNeonValues(findViewById(R.id.txtNfcContent), nfc);
     applyNeonValues(findViewById(R.id.txtOtherPeripheralsContent), oth);
 }
 
-
 // ============================================================
 // GEL Permission Debug Mode v24 — FULL BLOCK (Logcat only)
 // ============================================================
@@ -3555,7 +3553,7 @@ private String getLocationCapabilities() {
                 .append(pm.hasSystemFeature(PackageManager.FEATURE_LOCATION_GPS) ? "Yes" : "No")
                 .append("\n");
 
-        sb.append("Network Locatio    : ")
+        sb.append("Network Location    : ")
                 .append(pm.hasSystemFeature(PackageManager.FEATURE_LOCATION_NETWORK) ? "Yes" : "No")
                 .append("\n");
 

@@ -463,8 +463,7 @@ root.setBackgroundColor(0xFF101010); // GEL black
     body3.addView(makeTestButton("10. Wi-Fi Connection Check", this::lab10WifiConnectivityCheck));  
     body3.addView(makeTestButton("11. Mobile Network Diagnostic", this::lab11MobileDataDiagnostic));  
     body3.addView(makeTestButton("12. Call Function Interpretation", this::lab12CallFunctionInterpretation));  
-    body3.addView(makeTestButton("13. Internet Access Quick Check", this::lab13InternetQuickCheck));  
-
+    body3.addView(makeTestButton("13. Bluetooth Connectivity Check",this::lab13BluetoothConnectivityCheck));
     // ============================================================  
     // SECTION 4: BATTERY & THERMAL — LABS 14–17  
     // ============================================================  
@@ -9623,6 +9622,7 @@ return;
 // END OF CLASS
 // ============================================================
 }
+
 
 
 

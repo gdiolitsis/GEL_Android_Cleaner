@@ -841,11 +841,11 @@ private void applyAndroidModeUI() {
     show(R.id.btnDiagnostics);
 
     // 🤖 ANDROID DIAGNOSTICS — LOCALIZED + RESET STYLE
-View v = findViewById(R.id.btnDiagnostics);
-if (v instanceof TextView) {
-    TextView tv = (TextView) v;
+View diagBtn = findViewById(R.id.btnDiagnostics);
+if (diagBtn instanceof TextView) {
+    TextView tv = (TextView) diagBtn;
     tv.setText(R.string.diagnostics_android);
-    tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20f); // ⬆️ ΜΕΓΑΛΥΤΕΡΗ ΣΤΟ ANDROID
+    tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20f); // ⬆️ μεγαλύτερη
 }
 
 // 🍎 APPLE DIAGNOSTICS — LOCALIZED + EMPHASIZED

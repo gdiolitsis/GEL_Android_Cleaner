@@ -20,6 +20,10 @@ package com.gel.cleaner;
 // ANDROID — CORE
 // ============================================================
 
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothManager;
+import android.bluetooth.BluetoothProfile;
 import android.graphics.drawable.StateListDrawable;
 import android.graphics.drawable.RippleDrawable;
 import android.content.res.ColorStateList;
@@ -10149,3 +10153,7 @@ return;
 // END OF CLASS
 // ============================================================
 }
+
+
+
+

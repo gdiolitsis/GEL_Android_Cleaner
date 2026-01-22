@@ -3615,226 +3615,382 @@ logWarn(name + " is NOT reported — features depending on it may be limited or 
 }
 
 // ============================================================
-// LAB 10: Wi-Fi Snapshot (SAFE SSID + DeepScan) — NO PASSWORD / NO QR
+// LAB 10: Wi-Fi Connectivity Check (Wi-Fi + Internet + Exposure)
 // ============================================================
-private void lab10WifiSnapshot() {
+private void lab10WifiConnectivityCheck() {
 
-appendHtml("<br>");  
-logLine();    
-logInfo("LAB 10 — Wi-Fi Link Snapshot + SSID Safe Mode + DeepScan (NO password).");    
-logLine();  
+    appendHtml("<br>");
+    logLine();
+    logInfo("LAB 10 — Wi-Fi Link Connectivity Check");
+    logLine();
 
-WifiManager wm = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);    
-if (wm == null) {    
-    logError("WifiManager not available.");    
-    return;    
-}    
+    WifiManager wm =
+            (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
 
-if (!wm.isWifiEnabled()) {    
-    logWarn("Wi-Fi is OFF — please enable and retry.");    
-    return;    
-}    
+    if (wm == null) {
+        logError("WifiManager not available.");
+        return;
+    }
 
-// 1) Runtime Location Permission (required for SSID/BSSID on Android 8.1+/10+)    
-if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {    
-    boolean fineGranted =    
-            ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)    
-                    == PackageManager.PERMISSION_GRANTED;    
-    boolean coarseGranted =    
-            ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)    
-                    == PackageManager.PERMISSION_GRANTED;    
+    if (!wm.isWifiEnabled()) {
+        logWarn("Wi-Fi is OFF — please enable and retry.");
+        return;
+    }
 
-    if (!fineGranted && !coarseGranted) {    
-        logWarn("Location permission required to read SSID/BSSID (Android policy).");    
-        pendingLab10AfterPermission = this::lab10WifiSnapshot;    
+    // ------------------------------------------------------------
+    // 1) Location permission (SSID policy)
+    // ------------------------------------------------------------
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 
-        ActivityCompat.requestPermissions(    
-                this,    
-                new String[]{    
-                        Manifest.permission.ACCESS_FINE_LOCATION,    
-                        Manifest.permission.ACCESS_COARSE_LOCATION    
-                },    
-                REQ_LOCATION_LAB10    
-        );    
+        boolean fineGranted =
+                ContextCompat.checkSelfPermission(
+                        this, Manifest.permission.ACCESS_FINE_LOCATION)
+                        == PackageManager.PERMISSION_GRANTED;
 
-        logInfo("Grant permission, then Lab 10 will auto-retry.");    
-        return;    
-    }    
+        boolean coarseGranted =
+                ContextCompat.checkSelfPermission(
+                        this, Manifest.permission.ACCESS_COARSE_LOCATION)
+                        == PackageManager.PERMISSION_GRANTED;
 
-    // 2) Location services ON check    
-    try {    
-        LocationManager lm = (LocationManager) getSystemService(LOCATION_SERVICE);    
-        boolean gpsOn = lm != null && lm.isProviderEnabled(LocationManager.GPS_PROVIDER);    
-        boolean netOn = lm != null && lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER);    
+        if (!fineGranted && !coarseGranted) {
 
-        if (!gpsOn && !netOn) {    
-            logWarn("Location services are OFF. SSID may show UNKNOWN.");    
-            logWarn("Opening Location Settingsâ€¦ enable Location and come back.");    
-            try {    
-                startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));    
-            } catch (Exception ignored) {}    
-            return;    
-        }    
-    } catch (Exception e) {    
-        logWarn("Location services check failed: " + e.getMessage());    
-    }    
-}    
+            logWarn("Location permission required to read SSID/BSSID.");
+            pendingLab10AfterPermission =
+                    this::lab10WifiConnectivityCheck;
 
-// 3) Read basic WifiInfo    
-WifiInfo info = wm.getConnectionInfo();    
-if (info == null) {    
-    logError("Wi-Fi info not available.");    
-    return;    
-}    
+            ActivityCompat.requestPermissions(
+                    this,
+                    new String[]{
+                            Manifest.permission.ACCESS_FINE_LOCATION,
+                            Manifest.permission.ACCESS_COARSE_LOCATION
+                    },
+                    REQ_LOCATION_LAB10
+            );
 
-String ssid = cleanSsid(info.getSSID());    
-String bssid = info.getBSSID();    
-int rssi  = info.getRssi();    
-int speed = info.getLinkSpeed();    
-int freqMhz = 0;    
-try { freqMhz = info.getFrequency(); } catch (Throwable ignored) {}    
-String band = (freqMhz > 3000) ? "5 GHz" : "2.4 GHz";    
+            logInfo("Grant permission, then Lab 10 will auto-retry.");
+            return;
+        }
 
-logInfo("SSID: " + ssid);    
-if (bssid != null) logInfo("BSSID: " + bssid);    
-if (freqMhz > 0) logInfo("Band: " + band + " (" + freqMhz + " MHz)");    
-else logInfo("Band: " + band);    
+        try {
+            LocationManager lm =
+                    (LocationManager) getSystemService(LOCATION_SERVICE);
 
-logInfo("Link speed: " + speed + " Mbps");    
-logInfo("RSSI: " + rssi + " dBm");    
+            boolean gpsOn =
+                    lm != null &&
+                    (lm.isProviderEnabled(LocationManager.GPS_PROVIDER)
+                     || lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER));
 
-if ("Unknown".equalsIgnoreCase(ssid)) {    
-    logWarn("SSID is UNKNOWN due to Android privacy policy.");    
-    logWarn("Fix: grant Location permission + turn Location ON, then re-run Lab 10.");    
-} else {    
-    logOk("SSID read OK.");    
-}    
+            if (!gpsOn) {
+                logWarn("Location services are OFF. SSID may be UNKNOWN.");
+                startActivity(
+                        new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+                return;
+            }
 
-if (rssi > -65)    
-    logOk("Wi-Fi signal is strong.");    
-else if (rssi > -80)    
-    logWarn("Moderate Wi-Fi signal.");    
-else    
-    logError("Very weak Wi-Fi signal — expect drops.");    
+        } catch (Exception e) {
+            logWarn("Location services check failed: " + e.getMessage());
+        }
+    }
 
-// 4) DHCP / IP details    
-try {    
-    DhcpInfo dh = wm.getDhcpInfo();    
-    if (dh != null) {    
-        logInfo("IP: " + ipToStr(dh.ipAddress));    
-        logInfo("Gateway: " + ipToStr(dh.gateway));    
-        logInfo("DNS1: " + ipToStr(dh.dns1));    
-        logInfo("DNS2: " + ipToStr(dh.dns2));    
-    } else {    
-        logWarn("DHCP info not available.");    
-    }    
-} catch (Exception e) {    
-    logWarn("DHCP read failed: " + e.getMessage());    
-}    
+    // ------------------------------------------------------------
+    // 2) Wi-Fi snapshot
+    // ------------------------------------------------------------
+    WifiInfo info = wm.getConnectionInfo();
+    if (info == null) {
+        logError("Wi-Fi info not available.");
+        return;
+    }
 
-// 5) DeepScan    
-runWifiDeepScan(wm);
+    String ssid = cleanSsid(info.getSSID());
+    String bssid = info.getBSSID();
+    int rssi = info.getRssi();
+    int speed = info.getLinkSpeed();
+    int freqMhz = 0;
+    try { freqMhz = info.getFrequency(); } catch (Throwable ignore) {}
 
+    String band = (freqMhz > 3000) ? "5 GHz" : "2.4 GHz";
+
+    logInfo("SSID: " + ssid);
+    if (bssid != null) logInfo("BSSID: " + bssid);
+    logInfo("Band: " + band +
+            (freqMhz > 0 ? " (" + freqMhz + " MHz)" : ""));
+    logInfo("Link speed: " + speed + " Mbps");
+    logInfo("RSSI: " + rssi + " dBm");
+
+    if ("Unknown".equalsIgnoreCase(ssid)) {
+        logWarn("SSID hidden by Android privacy policy.");
+    } else {
+        logOk("SSID read OK.");
+    }
+
+    if (rssi > -65)
+        logOk("Wi-Fi signal strong.");
+    else if (rssi > -80)
+        logWarn("Wi-Fi signal moderate.");
+    else
+        logError("Wi-Fi signal weak.");
+
+    // ------------------------------------------------------------
+    // 3) DHCP / LAN info
+    // ------------------------------------------------------------
+    try {
+        DhcpInfo dh = wm.getDhcpInfo();
+        if (dh != null) {
+            logInfo("IP: " + ipToStr(dh.ipAddress));
+            logInfo("Gateway: " + ipToStr(dh.gateway));
+            logInfo("DNS1: " + ipToStr(dh.dns1));
+            logInfo("DNS2: " + ipToStr(dh.dns2));
+        } else {
+            logWarn("DHCP info not available.");
+        }
+    } catch (Exception e) {
+        logWarn("DHCP read failed: " + e.getMessage());
+    }
+
+    // ------------------------------------------------------------
+    // 4) DeepScan + Internet + Exposure
+    // ------------------------------------------------------------
+    runWifiDeepScan(wm);
 }
 
 @Override
-public void onRequestPermissionsResult(int requestCode, String[] perms, int[] grantResults) {
-super.onRequestPermissionsResult(requestCode, perms, grantResults);
+public void onRequestPermissionsResult(
+        int requestCode,
+        String[] perms,
+        int[] grantResults) {
 
-if (requestCode == REQ_LOCATION_LAB10) {    
-    boolean granted = false;    
-    if (grantResults != null) {    
-        for (int r : grantResults) {    
-            if (r == PackageManager.PERMISSION_GRANTED) {    
-                granted = true;    
-                break;    
-            }    
-        }    
-    }    
+    super.onRequestPermissionsResult(requestCode, perms, grantResults);
 
-    if (granted) {    
-        logOk("Location permission granted.");    
-        if (pendingLab10AfterPermission != null) pendingLab10AfterPermission.run();    
-    } else {    
-        logWarn("Location permission denied. SSID/BSSID may remain UNKNOWN.");    
-    }    
-    pendingLab10AfterPermission = null;    
-}
+    if (requestCode == REQ_LOCATION_LAB10) {
 
+        boolean granted = false;
+        if (grantResults != null)
+            for (int r : grantResults)
+                if (r == PackageManager.PERMISSION_GRANTED)
+                    granted = true;
+
+        if (granted) {
+            logOk("Location permission granted.");
+            if (pendingLab10AfterPermission != null)
+                pendingLab10AfterPermission.run();
+        } else {
+            logWarn("Location permission denied. SSID may remain UNKNOWN.");
+        }
+
+        pendingLab10AfterPermission = null;
+    }
 }
 
 // ============================================================
-// LAB 10 — DEEPSCAN v3.0
+// LAB 10 — DEEPSCAN v3.0 (Internet + Exposure included)
 // ============================================================
 private void runWifiDeepScan(WifiManager wm) {
-new Thread(() -> {
-try {
-logLine();
-logInfo("GEL Network DeepScan v3.0 started...");
 
-String gatewayStr = null;  
-        try {  
-            DhcpInfo dh = wm.getDhcpInfo();  
-            if (dh != null) gatewayStr = ipToStr(dh.gateway);  
-        } catch (Exception ignored) {}  
+    new Thread(() -> {
 
-        // 1) Ping latency  
-        float pingMs = tcpLatencyMs("8.8.8.8", 53, 1500);  
-        if (pingMs > 0)  
-            logOk(String.format(Locale.US,  
-                    "Ping latency to 8.8.8.8: %.1f ms", pingMs));  
-        else  
-            logWarn("Ping latency test failed (network blocked).");  
+        try {
+            logLine();
+            logInfo("GEL Network DeepScan v3.0 started...");
 
-        // 2) DNS resolve  
-        float dnsMs = dnsResolveMs("google.com");  
-        if (dnsMs > 0)  
-            logOk(String.format(Locale.US,  
-                    "DNS resolve google.com: %.0f ms", dnsMs));  
-        else  
-            logWarn("DNS resolve failed.");  
+            String gatewayStr = null;
+            try {
+                DhcpInfo dh = wm.getDhcpInfo();
+                if (dh != null)
+                    gatewayStr = ipToStr(dh.gateway);
+            } catch (Exception ignored) {}
 
-        // 3) Gateway ping  
-        if (gatewayStr != null) {  
-            float gwMs = tcpLatencyMs(gatewayStr, 80, 1200);  
-            if (gwMs > 0)  
-                logOk(String.format(Locale.US,  
-                        "Gateway ping (%s): %.1f ms", gatewayStr, gwMs));  
-            else  
-                logWarn("Gateway ping failed.");  
-        } else {  
-            logWarn("Gateway not detected.");  
-        }  
+            // ----------------------------------------------------
+            // 1) Internet ping
+            // ----------------------------------------------------
+            float pingMs =
+                    tcpLatencyMs("8.8.8.8", 53, 1500);
 
-        // 4) SpeedSim  
-        WifiInfo info = wm.getConnectionInfo();  
-        int link = info != null ? info.getLinkSpeed() : 0;  
-        int rssi = info != null ? info.getRssi() : -80;  
-        float speedSim = estimateSpeedSimMbps(link, rssi);  
-        logOk(String.format(Locale.US,  
-                "SpeedSim: ~%.2f Mbps (heuristic)", speedSim));  
+            if (pingMs > 0)
+                logOk(String.format(
+                        Locale.US,
+                        "Ping latency to 8.8.8.8: %.1f ms",
+                        pingMs));
+            else
+                logWarn("Ping latency test failed.");
 
-        logOk("DeepScan finished.");  
-          
-        appendHtml("<br>");  
-        logOk("Lab 10 finished.");  
-        logLine();  
+            // ----------------------------------------------------
+            // 2) DNS resolve
+            // ----------------------------------------------------
+            float dnsMs = dnsResolveMs("google.com");
 
-    } catch (Exception e) {  
-        logError("DeepScan error: " + e.getMessage());  
-    }  
-}).start();
+            if (dnsMs > 0)
+                logOk(String.format(
+                        Locale.US,
+                        "DNS resolve google.com: %.0f ms",
+                        dnsMs));
+            else
+                logWarn("DNS resolve failed.");
 
+            // ----------------------------------------------------
+            // 3) Gateway ping
+            // ----------------------------------------------------
+            if (gatewayStr != null) {
+                float gwMs =
+                        tcpLatencyMs(gatewayStr, 80, 1200);
+                if (gwMs > 0)
+                    logOk(String.format(
+                            Locale.US,
+                            "Gateway ping (%s): %.1f ms",
+                            gatewayStr, gwMs));
+                else
+                    logWarn("Gateway ping failed.");
+            } else {
+                logWarn("Gateway not detected.");
+            }
+
+            // ----------------------------------------------------
+            // 4) Speed heuristic
+            // ----------------------------------------------------
+            WifiInfo info = wm.getConnectionInfo();
+            int link = info != null ? info.getLinkSpeed() : 0;
+            int rssi = info != null ? info.getRssi() : -80;
+
+            float speedSim =
+                    estimateSpeedSimMbps(link, rssi);
+
+            logOk(String.format(
+                    Locale.US,
+                    "SpeedSim: ~%.2f Mbps (heuristic)",
+                    speedSim));
+
+            logOk("DeepScan finished.");
+
+            // ====================================================
+            // INTERNET AVAILABILITY (former LAB 13)
+            // ====================================================
+            try {
+                ConnectivityManager cm =
+                        (ConnectivityManager)
+                                getSystemService(CONNECTIVITY_SERVICE);
+
+                if (cm == null) {
+                    logError("ConnectivityManager not available.");
+                } else {
+
+                    boolean hasInternet = false;
+                    String transport = "UNKNOWN";
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        Network n = cm.getActiveNetwork();
+                        NetworkCapabilities caps =
+                                cm.getNetworkCapabilities(n);
+
+                        if (caps != null) {
+                            hasInternet =
+                                    caps.hasCapability(
+                                            NetworkCapabilities
+                                                    .NET_CAPABILITY_INTERNET);
+
+                            if (caps.hasTransport(
+                                    NetworkCapabilities.TRANSPORT_WIFI))
+                                transport = "Wi-Fi";
+                            else if (caps.hasTransport(
+                                    NetworkCapabilities.TRANSPORT_CELLULAR))
+                                transport = "Cellular";
+                        }
+                    } else {
+                        @SuppressWarnings("deprecation")
+                        NetworkInfo ni =
+                                cm.getActiveNetworkInfo();
+                        if (ni != null && ni.isConnected()) {
+                            hasInternet = true;
+                            transport = ni.getTypeName();
+                        }
+                    }
+
+                    if (!hasInternet)
+                        logError("No active Internet connection detected (OS-level).");
+                    else
+                        logOk("Internet connectivity active (" + transport + ").");
+                }
+
+            } catch (Exception e) {
+                logError("Internet quick check error: " + e.getMessage());
+            }
+
+            // ====================================================
+            // NETWORK / PRIVACY EXPOSURE
+            // ====================================================
+            try {
+                logInfo("Network Exposure Snapshot (no traffic inspection).");
+
+                PackageManager pm2 = getPackageManager();
+                ApplicationInfo ai = getApplicationInfo();
+
+                boolean hasInternetPerm =
+                        pm2.checkPermission(
+                                Manifest.permission.INTERNET,
+                                ai.packageName)
+                                == PackageManager.PERMISSION_GRANTED;
+
+                if (hasInternetPerm)
+                    logWarn("INTERNET permission present (capability only).");
+                else
+                    logOk("No INTERNET permission detected.");
+
+                boolean cleartextAllowed = true;
+                try {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        cleartextAllowed =
+                                android.security
+                                        .NetworkSecurityPolicy
+                                        .getInstance()
+                                        .isCleartextTrafficPermitted();
+                    }
+                } catch (Throwable ignore) {}
+
+                if (cleartextAllowed)
+                    logWarn("Cleartext traffic ALLOWED.");
+                else
+                    logOk("Cleartext traffic NOT allowed.");
+
+                boolean bgPossible =
+                        pm2.checkPermission(
+                                Manifest.permission.RECEIVE_BOOT_COMPLETED,
+                                ai.packageName)
+                                == PackageManager.PERMISSION_GRANTED;
+
+                if (bgPossible)
+                    logWarn("Background network possible after boot.");
+                else
+                    logOk("No boot-time background network capability.");
+
+                logInfo("Network exposure assessment completed.");
+
+            } catch (Throwable e) {
+                logWarn("Network exposure snapshot unavailable: " + e.getMessage());
+            }
+
+            appendHtml("<br>");
+            logOk("Lab 10 finished.");
+            logLine();
+
+        } catch (Exception e) {
+            logError("DeepScan error: " + e.getMessage());
+        }
+
+    }).start();
 }
 
-private float estimateSpeedSimMbps(int linkSpeedMbps, int rssiDbm) {
-if (linkSpeedMbps <= 0) linkSpeedMbps = 72;
-float rssiFactor;
-if (rssiDbm > -55) rssiFactor = 1.2f;
-else if (rssiDbm > -65) rssiFactor = 1.0f;
-else if (rssiDbm > -75) rssiFactor = 0.7f;
-else rssiFactor = 0.4f;
-return Math.max(5f, linkSpeedMbps * rssiFactor);
+private float estimateSpeedSimMbps(
+        int linkSpeedMbps,
+        int rssiDbm) {
+
+    if (linkSpeedMbps <= 0)
+        linkSpeedMbps = 72;
+
+    float rssiFactor;
+    if (rssiDbm > -55) rssiFactor = 1.2f;
+    else if (rssiDbm > -65) rssiFactor = 1.0f;
+    else if (rssiDbm > -75) rssiFactor = 0.7f;
+    else rssiFactor = 0.4f;
+
+    return Math.max(5f, linkSpeedMbps * rssiFactor);
 }
 
 // ============================================================
@@ -9467,3 +9623,4 @@ return;
 // END OF CLASS
 // ============================================================
 }
+

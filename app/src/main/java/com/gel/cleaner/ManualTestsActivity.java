@@ -142,6 +142,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 public class ManualTestsActivity extends AppCompatActivity {
 
@@ -4678,8 +4679,7 @@ private boolean lab13IsAnyExternalConnected() {
 
     int[] profiles = new int[]{
             BluetoothProfile.A2DP,
-            BluetoothProfile.HEADSET,
-            BluetoothProfile.HID_HOST,
+            BluetoothProfile.HEADSET,            
             BluetoothProfile.GATT
     };
 
@@ -4727,8 +4727,7 @@ private void lab13FinishAndReport(boolean adapterStable) {
 
     int[] profiles = new int[]{
             BluetoothProfile.A2DP,
-            BluetoothProfile.HEADSET,
-            BluetoothProfile.HID_HOST,
+            BluetoothProfile.HEADSET,            
             BluetoothProfile.GATT
     };
 
@@ -4806,8 +4805,7 @@ private void lab13FinishAndReport(boolean adapterStable) {
 // ============================================================
 private String lab13ProfileName(int p) {
     if (p == BluetoothProfile.A2DP) return "A2DP";
-    if (p == BluetoothProfile.HEADSET) return "HEADSET";
-    if (p == BluetoothProfile.HID_HOST) return "HID";
+    if (p == BluetoothProfile.HEADSET) return "HEADSET";   
     if (p == BluetoothProfile.GATT) return "GATT";
     return "PROFILE(" + p + ")";
 }
@@ -10153,7 +10151,3 @@ return;
 // END OF CLASS
 // ============================================================
 }
-
-
-
-

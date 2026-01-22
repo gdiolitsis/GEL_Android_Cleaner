@@ -1818,6 +1818,30 @@ private void stopCpuBurn() {
 __cpuBurn = false;
 }
 
+// --------------------------
+// LAB 13 STATE (FIELDS)
+// --------------------------
+private AlertDialog lab13Dialog;
+private TextView lab13StatusText;
+private TextView lab13CounterText;
+private LinearLayout lab13ProgressBar;
+private TextView lab13DotsView;
+
+private final Handler lab13Handler = new Handler(Looper.getMainLooper());
+private boolean lab13Running = false;
+
+private long lab13StartMs = 0L;
+private int lab13Seconds = 0;
+
+private boolean lab13HadAnyConnection = false;
+private boolean lab13LastConnected = false;
+
+private int lab13DisconnectEvents = 0;
+private int lab13ReconnectEvents = 0;
+
+private BluetoothManager lab13Bm;
+private BluetoothAdapter lab13Ba;
+
 // ------------------------------------------------------------
 // LAB 15 USER ABORT — required by Exit button
 // (safe: stops flags + dismisses dialog; does NOT nuke all handler callbacks)
@@ -4188,122 +4212,625 @@ logLine();
 }
 
 // ============================================================
-// LAB 13 — Internet Quick Check + Network Exposure
+// LAB 13 — Bluetooth Connectivity Check (POPUP + 60s Monitor + External Devices + Disconnect Diagnosis)
 // ============================================================
-private void lab13InternetQuickCheck() {
 
-appendHtml("<br>");  
-logLine();  
-logInfo("LAB 13 — Internet Access Quick Check.");  
-logLine();  
+// ============================================================
+// ENTRY — BUTTON CALLS THIS
+// ============================================================
+private void lab13BluetoothConnectivityCheck() {
 
-// ------------------------------------------------------------  
-// PART A — Internet availability (OS-level)  
-// ------------------------------------------------------------  
-try {  
-    ConnectivityManager cm =  
-            (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);  
+    // ---------- PRECHECK: Bluetooth supported?
+    BluetoothManager bm = null;
+    BluetoothAdapter ba = null;
 
-    if (cm == null) {  
-        logError("ConnectivityManager not available.");  
-        return;  
-    }  
+    try {
+        bm = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
+        ba = (bm != null) ? bm.getAdapter() : null;
+    } catch (Throwable ignore) {}
 
-    boolean hasInternet = false;  
-    String transport = "UNKNOWN";  
+    if (ba == null) {
+        appendHtml("<br>");
+        logLine();
+        logInfo("LAB 13 — Bluetooth Connectivity Check");
+        logLine();
+        logError("Bluetooth NOT supported on this device.");
+        logLine();
+        return;
+    }
 
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {  
-        Network n = cm.getActiveNetwork();  
-        NetworkCapabilities caps = cm.getNetworkCapabilities(n);  
-        if (caps != null) {  
-            hasInternet =  
-                    caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);  
+    // ---------- POPUP (instruction gate)
+    AlertDialog.Builder b = new AlertDialog.Builder(this);
 
-            if (caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI))  
-                transport = "Wi-Fi";  
-            else if (caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR))  
-                transport = "Cellular";  
-        }  
-    } else {  
-        @SuppressWarnings("deprecation")  
-        NetworkInfo ni = cm.getActiveNetworkInfo();  
-        if (ni != null && ni.isConnected()) {  
-            hasInternet = true;  
-            transport = ni.getTypeName();  
-        }  
-    }  
+    // GEL Dark+Gold custom view (like LAB 15)
+    LinearLayout root = new LinearLayout(this);
+    root.setOrientation(LinearLayout.VERTICAL);
+    root.setPadding(dp(24), dp(20), dp(24), dp(18));
 
-    if (!hasInternet)  
-        logError("No active Internet connection detected at OS level.");  
-    else  
-        logOk("Internet connectivity is reported as active (" + transport + ").");  
+    GradientDrawable bg = new GradientDrawable();
+    bg.setColor(0xFF101010);
+    bg.setCornerRadius(dp(18));
+    bg.setStroke(dp(4), 0xFFFFD700);
+    root.setBackground(bg);
 
-} catch (Exception e) {  
-    logError("Internet quick check error: " + e.getMessage());  
-}  
+    TextView title = new TextView(this);
+    title.setText(
+            "LAB 13 — External Bluetooth Device Check\n\n" +
+            "Connect ONE external Bluetooth device\n" +
+            "(e.g. headphones, car kit, keyboard).\n\n" +
+            "Keep the device CONNECTED for at least 1 minute\n" +
+            "and DO NOT disconnect during the test.\n\n" +
+            "This check evaluates connection stability."
+    );
+    title.setTextColor(0xFFFFFFFF);
+    title.setTextSize(18f);
+    title.setTypeface(null, Typeface.BOLD);
+    title.setGravity(Gravity.CENTER);
+    title.setPadding(0, 0, 0, dp(12));
+    root.addView(title);
 
-// ------------------------------------------------------------  
-// PART B — Network / Privacy Exposure Snapshot  
-// ------------------------------------------------------------  
-try {  
-    logInfo("Network Exposure Snapshot (no traffic inspection).");  
+    // Small note line
+    TextView note = new TextView(this);
+    note.setText("Tip: if Bluetooth is OFF, enable it first.");
+    note.setTextColor(0xFFAAAAAA);
+    note.setTextSize(14f);
+    note.setGravity(Gravity.CENTER);
+    note.setPadding(0, 0, 0, dp(10));
+    root.addView(note);
 
-    PackageManager pm2 = getPackageManager();  
-    ApplicationInfo ai = getApplicationInfo();  
+    // Buttons row
+    LinearLayout row = new LinearLayout(this);
+    row.setOrientation(LinearLayout.HORIZONTAL);
+    row.setGravity(Gravity.CENTER);
+    row.setPadding(0, dp(6), 0, 0);
 
-    // INTERNET permission  
-    boolean hasInternetPerm =  
-            pm2.checkPermission(  
-                    Manifest.permission.INTERNET,  
-                    ai.packageName  
-            ) == PackageManager.PERMISSION_GRANTED;  
+    Button cancelBtn = new Button(this);
+    cancelBtn.setAllCaps(false);
+    cancelBtn.setText("Cancel");
+    cancelBtn.setTextColor(0xFFFFFFFF);
 
-    if (hasInternetPerm) {  
-logWarn("ℹ INTERNET capability present (permission-level only).\n" +  
-        "✔ No network activity detected during test.");
+    GradientDrawable cancelBg = new GradientDrawable();
+    cancelBg.setColor(0xFF444444);
+    cancelBg.setCornerRadius(dp(14));
+    cancelBg.setStroke(dp(3), 0xFFFFD700);
+    cancelBtn.setBackground(cancelBg);
 
-} else {
-logOk("No INTERNET permission detected.");
+    LinearLayout.LayoutParams lpC =
+            new LinearLayout.LayoutParams(0, dp(52), 1f);
+    lpC.setMargins(0, 0, dp(8), 0);
+    cancelBtn.setLayoutParams(lpC);
+
+    Button contBtn = new Button(this);
+    contBtn.setAllCaps(false);
+    contBtn.setText("Continue");
+    contBtn.setTextColor(0xFFFFFFFF);
+    contBtn.setTypeface(null, Typeface.BOLD);
+
+    GradientDrawable contBg = new GradientDrawable();
+    contBg.setColor(0xFF0F8A3B);
+    contBg.setCornerRadius(dp(14));
+    contBg.setStroke(dp(3), 0xFFFFD700);
+    contBtn.setBackground(contBg);
+
+    LinearLayout.LayoutParams lpK =
+            new LinearLayout.LayoutParams(0, dp(52), 1f);
+    lpK.setMargins(dp(8), 0, 0, 0);
+    contBtn.setLayoutParams(lpK);
+
+    row.addView(cancelBtn);
+    row.addView(contBtn);
+    root.addView(row);
+
+    b.setView(root);
+
+    AlertDialog gate = b.create();
+    if (gate.getWindow() != null) {
+        gate.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+    }
+
+    cancelBtn.setOnClickListener(v -> {
+        try {
+            if (tts != null && tts[0] != null) tts[0].stop();
+        } catch (Throwable ignore) {}
+        gate.dismiss();
+    });
+
+    contBtn.setOnClickListener(v -> {
+        try {
+            if (tts != null && tts[0] != null) tts[0].stop();
+        } catch (Throwable ignore) {}
+        gate.dismiss();
+        runLab13BluetoothCheckCore(); // START FULL LAB
+    });
+
+    gate.show();
+
+    // TTS (optional)
+    if (tts != null && tts[0] != null && ttsReady[0] && !isTtsMuted()) {
+        try { tts[0].stop(); } catch (Throwable ignore) {}
+        tts[0].speak(
+                "Connect one external Bluetooth device. Keep it connected for at least one minute. Do not disconnect during the test.",
+                TextToSpeech.QUEUE_FLUSH,
+                null,
+                "LAB13_GATE"
+        );
+    }
 }
 
-// Cleartext traffic policy  
-    boolean cleartextAllowed = true;  
-    try {  
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {  
-            cleartextAllowed =  
-                    android.security.NetworkSecurityPolicy  
-                            .getInstance()  
-                            .isCleartextTrafficPermitted();  
-        }  
-    } catch (Throwable ignore) {}  
+// ============================================================
+// CORE — FULL LAB 13 (UI + Monitoring + Diagnosis)
+// ============================================================
+private void runLab13BluetoothCheckCore() {
 
-    if (cleartextAllowed)  
-        logWarn("Cleartext traffic ALLOWED — unencrypted data possible.");  
-    else  
-        logOk("Cleartext traffic NOT allowed (HTTPS enforced).");  
+    // ---------- LOG HEADER
+    appendHtml("<br>");
+    logLine();
+    logInfo("LAB 13 — Bluetooth Connectivity Check");
+    logLine();
 
-    // Background network capability  
-    boolean bgPossible =  
-            pm2.checkPermission(  
-                    Manifest.permission.RECEIVE_BOOT_COMPLETED,  
-                    ai.packageName  
-            ) == PackageManager.PERMISSION_GRANTED;  
+    // ---------- GET BT
+    lab13Bm = null;
+    lab13Ba = null;
 
-    if (bgPossible)  
-        logWarn("App may access network shortly after boot (background capable).");  
-    else  
-        logOk("No boot-time background network trigger detected.");  
+    try {
+        lab13Bm = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
+        lab13Ba = (lab13Bm != null) ? lab13Bm.getAdapter() : null;
+    } catch (Throwable e) {
+        logError("BluetoothManager access failed: " + e.getMessage());
+        return;
+    }
 
-    logInfo("Network exposure assessment completed.");  
+    // BASIC SUPPORT
+    if (lab13Ba == null) {
+        logError("Bluetooth NOT supported on this device.");
+        logLine();
+        return;
+    }
+    logOk("Bluetooth supported.");
 
-} catch (Throwable e) {  
-    logWarn("Network exposure snapshot unavailable: " + e.getMessage());  
-}  
-  
-appendHtml("<br>");  
-logOk("Lab 13 finished.");  
-logLine();
+    boolean enabled = false;
+    try { enabled = lab13Ba.isEnabled(); } catch (Throwable ignore) {}
+    logInfo("Enabled: " + (enabled ? "Yes" : "No"));
 
+    int state = BluetoothAdapter.STATE_OFF;
+    try { state = lab13Ba.getState(); } catch (Throwable ignore) {}
+
+    String stateStr =
+            state == BluetoothAdapter.STATE_ON ? "ON" :
+            state == BluetoothAdapter.STATE_TURNING_ON ? "TURNING ON" :
+            state == BluetoothAdapter.STATE_TURNING_OFF ? "TURNING OFF" : "OFF";
+    logInfo("State: " + stateStr);
+
+    boolean le = false;
+    try {
+        le = getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE);
+    } catch (Throwable ignore) {}
+    logInfo("BLE Support: " + (le ? "Yes" : "No"));
+
+    if (!enabled) {
+        logWarn("Bluetooth is OFF — enable Bluetooth and re-run Lab 13.");
+        logLine();
+        return;
+    }
+
+    // ---------- PAIRED DEVICES SNAPSHOT
+    try {
+        Set<BluetoothDevice> bonded = lab13Ba.getBondedDevices();
+        if (bonded == null || bonded.isEmpty()) {
+            logWarn("No paired Bluetooth devices found.");
+        } else {
+            logOk("Paired devices detected: " + bonded.size());
+            for (BluetoothDevice d : bonded) {
+                String name = d.getName();
+                String addr = d.getAddress();
+                int type = d.getType();
+
+                String typeStr =
+                        type == BluetoothDevice.DEVICE_TYPE_CLASSIC ? "Classic" :
+                        type == BluetoothDevice.DEVICE_TYPE_LE ? "LE" :
+                        type == BluetoothDevice.DEVICE_TYPE_DUAL ? "Dual" : "Unknown";
+
+                logInfo("• " + (name != null ? name : "Unnamed") +
+                        " [" + typeStr + "] (" + addr + ")");
+            }
+        }
+    } catch (Throwable e) {
+        logWarn("Paired device scan failed: " + e.getMessage());
+    }
+
+    // ---------- SHOW GEL DARK-GOLD MONITOR DIALOG
+    AlertDialog.Builder b = new AlertDialog.Builder(this);
+
+    LinearLayout root = new LinearLayout(this);
+    root.setOrientation(LinearLayout.VERTICAL);
+    root.setPadding(dp(24), dp(20), dp(24), dp(18));
+
+    GradientDrawable bg = new GradientDrawable();
+    bg.setColor(0xFF101010);
+    bg.setCornerRadius(dp(18));
+    bg.setStroke(dp(4), 0xFFFFD700);
+    root.setBackground(bg);
+
+    TextView title = new TextView(this);
+    title.setText(
+            "LAB 13 — Bluetooth Stability Monitor\n\n" +
+            "Keep ONE external device connected.\n" +
+            "Monitoring for 60 seconds.\n" +
+            "Do not disconnect during the test."
+    );
+    title.setTextColor(0xFFFFFFFF);
+    title.setTextSize(18f);
+    title.setTypeface(null, Typeface.BOLD);
+    title.setGravity(Gravity.CENTER);
+    title.setPadding(0, 0, 0, dp(12));
+    root.addView(title);
+
+    lab13StatusText = new TextView(this);
+    lab13StatusText.setText("Waiting for stable Bluetooth connection...");
+    lab13StatusText.setTextColor(0xFFAAAAAA);
+    lab13StatusText.setTextSize(15f);
+    lab13StatusText.setGravity(Gravity.CENTER);
+    root.addView(lab13StatusText);
+
+    lab13DotsView = new TextView(this);
+    lab13DotsView.setText("•");
+    lab13DotsView.setTextColor(0xFF39FF14);
+    lab13DotsView.setTextSize(22f);
+    lab13DotsView.setGravity(Gravity.CENTER);
+    root.addView(lab13DotsView);
+
+    lab13CounterText = new TextView(this);
+    lab13CounterText.setText("Monitoring: 0 / 60 sec");
+    lab13CounterText.setTextColor(0xFF39FF14);
+    lab13CounterText.setGravity(Gravity.CENTER);
+    root.addView(lab13CounterText);
+
+    lab13ProgressBar = new LinearLayout(this);
+    lab13ProgressBar.setOrientation(LinearLayout.HORIZONTAL);
+    lab13ProgressBar.setGravity(Gravity.CENTER);
+
+    for (int i = 0; i < 6; i++) {
+        View seg = new View(this);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, dp(10), 1f);
+        lp.setMargins(dp(3), 0, dp(3), 0);
+        seg.setLayoutParams(lp);
+        seg.setBackgroundColor(0xFF333333);
+        lab13ProgressBar.addView(seg);
+    }
+    root.addView(lab13ProgressBar);
+
+    // MUTE (GLOBAL)
+    CheckBox muteBox = new CheckBox(this);
+    muteBox.setChecked(isTtsMuted());
+    muteBox.setText("Mute voice instructions");
+    muteBox.setTextColor(0xFFDDDDDD);
+    muteBox.setGravity(Gravity.CENTER);
+    muteBox.setPadding(0, dp(10), 0, dp(10));
+    root.addView(muteBox);
+
+    muteBox.setOnCheckedChangeListener((v, checked) -> {
+        setTtsMuted(checked);
+        if (checked && tts != null && tts[0] != null) {
+            try { tts[0].stop(); } catch (Throwable ignore) {}
+        }
+    });
+
+    // EXIT BUTTON
+    Button exitBtn = new Button(this);
+    exitBtn.setText("Exit test");
+    exitBtn.setAllCaps(false);
+    exitBtn.setTextColor(0xFFFFFFFF);
+    exitBtn.setTypeface(null, Typeface.BOLD);
+
+    GradientDrawable exitBg = new GradientDrawable();
+    exitBg.setColor(0xFF8B0000);
+    exitBg.setCornerRadius(dp(14));
+    exitBg.setStroke(dp(3), 0xFFFFD700);
+    exitBtn.setBackground(exitBg);
+
+    LinearLayout.LayoutParams lpExit =
+            new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(52));
+    lpExit.setMargins(0, dp(14), 0, 0);
+    exitBtn.setLayoutParams(lpExit);
+
+    exitBtn.setOnClickListener(v -> {
+        try {
+            if (tts != null && tts[0] != null) tts[0].stop();
+        } catch (Throwable ignore) {}
+        abortLab13ByUser(); // your existing abort flow
+    });
+
+    root.addView(exitBtn);
+
+    b.setView(root);
+    lab13Dialog = b.create();
+
+    if (lab13Dialog.getWindow() != null) {
+        lab13Dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+    }
+
+    lab13Dialog.setCancelable(false);
+    lab13Dialog.show();
+
+    // TTS AFTER SHOW
+    if (tts != null && tts[0] != null && ttsReady[0] && !isTtsMuted()) {
+        try { tts[0].stop(); } catch (Throwable ignore) {}
+        tts[0].speak(
+                "Bluetooth stability monitor started. Keep one external Bluetooth device connected for one minute. Do not disconnect during the test.",
+                TextToSpeech.QUEUE_FLUSH,
+                null,
+                "LAB13_INTRO"
+        );
+    }
+
+    // ---------- START MONITOR
+    startLab13Monitor60s();
+}
+
+// ============================================================
+// MONITOR LOOP (60s) — polls connected devices + detects flips
+// ============================================================
+private void startLab13Monitor60s() {
+
+    // reset state
+    lab13Running = true;
+    lab13StartMs = SystemClock.elapsedRealtime();
+    lab13Seconds = 0;
+
+    lab13HadAnyConnection = false;
+    lab13LastConnected = false;
+
+    lab13DisconnectEvents = 0;
+    lab13ReconnectEvents = 0;
+
+    // initial snapshot
+    boolean connectedNow = lab13IsAnyExternalConnected();
+    lab13LastConnected = connectedNow;
+    if (connectedNow) lab13HadAnyConnection = true;
+
+    lab13Handler.removeCallbacksAndMessages(null);
+
+    lab13Handler.post(new Runnable() {
+        int dotPhase = 0;
+
+        @Override
+        public void run() {
+
+            if (!lab13Running) return;
+
+            // safety: adapter should remain stable (our "phone stable" condition)
+            boolean adapterStable = false;
+            try {
+                adapterStable =
+                        (lab13Ba != null) &&
+                        lab13Ba.isEnabled() &&
+                        (lab13Ba.getState() == BluetoothAdapter.STATE_ON);
+            } catch (Throwable ignore) {}
+
+            // poll external connections
+            boolean connected = lab13IsAnyExternalConnected();
+            if (connected) lab13HadAnyConnection = true;
+
+            // detect flips
+            if (lab13LastConnected && !connected) {
+                lab13DisconnectEvents++;
+            } else if (!lab13LastConnected && connected) {
+                lab13ReconnectEvents++;
+            }
+            lab13LastConnected = connected;
+
+            // UI update
+            lab13Seconds++;
+            if (lab13CounterText != null) {
+                lab13CounterText.setText("Monitoring: " + lab13Seconds + " / 60 sec");
+            }
+
+            // dots animation
+            dotPhase = (dotPhase + 1) % 4;
+            if (lab13DotsView != null) {
+                if (dotPhase == 0) lab13DotsView.setText("•");
+                else if (dotPhase == 1) lab13DotsView.setText("••");
+                else if (dotPhase == 2) lab13DotsView.setText("•••");
+                else lab13DotsView.setText("•");
+            }
+
+            // progress segments (6 x 10s)
+            lab13UpdateProgressSegments(lab13Seconds);
+
+            // status text
+            if (lab13StatusText != null) {
+                if (!adapterStable) {
+                    lab13StatusText.setText("Bluetooth adapter not stable (check Bluetooth state).");
+                } else if (!connected) {
+                    lab13StatusText.setText("No active external device detected — keep it connected.");
+                } else {
+                    lab13StatusText.setText("External device connected — monitoring stability...");
+                }
+            }
+
+            // end?
+            if (lab13Seconds >= 60) {
+                lab13Running = false;
+                lab13FinishAndReport(adapterStable);
+                return;
+            }
+
+            // next tick
+            lab13Handler.postDelayed(this, 1000);
+        }
+    });
+}
+
+// ============================================================
+// CONNECTED DEVICES (external) — profiles snapshot
+// ============================================================
+private boolean lab13IsAnyExternalConnected() {
+
+    if (lab13Bm == null || lab13Ba == null) return false;
+
+    // NOTE: getConnectedDevices may require BLUETOOTH_CONNECT on Android 12+
+    // We keep it safe with try/catch and treat failures as "unknown".
+    boolean any = false;
+
+    int[] profiles = new int[]{
+            BluetoothProfile.A2DP,
+            BluetoothProfile.HEADSET,
+            BluetoothProfile.HID_HOST,
+            BluetoothProfile.GATT
+    };
+
+    for (int p : profiles) {
+        try {
+            List<BluetoothDevice> list = lab13Bm.getConnectedDevices(p);
+            if (list != null && !list.isEmpty()) {
+                any = true;
+                break;
+            }
+        } catch (Throwable ignore) {}
+    }
+
+    return any;
+}
+
+// ============================================================
+// UI — progress segments
+// ============================================================
+private void lab13UpdateProgressSegments(int seconds) {
+    if (lab13ProgressBar == null) return;
+
+    int filled = Math.min(6, seconds / 10); // 0..6
+    for (int i = 0; i < lab13ProgressBar.getChildCount(); i++) {
+        View seg = lab13ProgressBar.getChildAt(i);
+        if (seg == null) continue;
+        if (i < filled) seg.setBackgroundColor(0xFF39FF14);   // GEL green
+        else seg.setBackgroundColor(0xFF333333);
+    }
+}
+
+// ============================================================
+// FINISH — close dialog + log diagnosis + list connected devices
+// ============================================================
+private void lab13FinishAndReport(boolean adapterStable) {
+
+    // close dialog
+    try {
+        if (lab13Dialog != null && lab13Dialog.isShowing()) lab13Dialog.dismiss();
+    } catch (Throwable ignore) {}
+    lab13Dialog = null;
+
+    // snapshot: connected devices list per profile (for report)
+    boolean anyActive = false;
+
+    int[] profiles = new int[]{
+            BluetoothProfile.A2DP,
+            BluetoothProfile.HEADSET,
+            BluetoothProfile.HID_HOST,
+            BluetoothProfile.GATT
+    };
+
+    // report header
+    logLine();
+    logInfo("LAB 13 — Results (60s monitor)");
+    logInfo("Adapter stable: " + (adapterStable ? "Yes" : "No"));
+    logInfo("Disconnect events: " + lab13DisconnectEvents);
+    logInfo("Reconnect events: " + lab13ReconnectEvents);
+
+    // list connected devices now
+    for (int p : profiles) {
+        try {
+            List<BluetoothDevice> list = (lab13Bm != null) ? lab13Bm.getConnectedDevices(p) : null;
+            if (list != null && !list.isEmpty()) {
+                anyActive = true;
+                logOk(lab13ProfileName(p) + " connected devices:");
+                for (BluetoothDevice d : list) {
+                    String n = (d != null ? d.getName() : null);
+                    logInfo("• " + (n != null ? n : "Unnamed"));
+                }
+            }
+        } catch (Throwable ignore) {}
+    }
+
+    if (!anyActive) {
+        logWarn("No active external Bluetooth connections detected at finish.");
+    } else {
+        logOk("External Bluetooth connectivity detected at finish.");
+    }
+
+    // ------------------------------------------------------------
+    // DIAGNOSIS LOGIC (LOCKED MESSAGE)
+    // ------------------------------------------------------------
+    // "Phone stable" = adapter stable and stayed ON for monitor duration (best-effort)
+    // "Frequent disconnects" threshold: >=3 disconnect events within 60s (tunable)
+    boolean frequentDisconnects = (lab13DisconnectEvents >= 3);
+
+    if (adapterStable && lab13HadAnyConnection && frequentDisconnects) {
+
+        // 🔒 LOCKED DIAGNOSIS MESSAGE
+        logWarn(
+                "Η σύνδεση Bluetooth εμφανίζει συχνές αποσυνδέσεις,\n" +
+                "ενώ το Bluetooth του κινητού παραμένει σταθερό.\n" +
+                "Αυτό υποδεικνύει πρόβλημα στη συνδεδεμένη συσκευή."
+        );
+
+    } else if (!lab13HadAnyConnection) {
+
+        logWarn("No external device stayed connected during the test. Re-run Lab 13 with one connected device.");
+
+    } else if (!adapterStable) {
+
+        logWarn("Bluetooth adapter was not stable during the test. Toggle Bluetooth OFF/ON and retry.");
+
+    } else {
+
+        logOk("Bluetooth connection appears stable during the 60s monitor.");
+    }
+
+    // root note (optional)
+    if (isDeviceRooted()) {
+        logInfo("Root access: Available (advanced diagnostics possible).");
+    } else {
+        logInfo("Root access: Not available.");
+    }
+
+    appendHtml("<br>");
+    logOk("Lab 13 finished.");
+    logLine();
+}
+
+// ============================================================
+// PROFILE NAME (small internal helper)
+// ============================================================
+private String lab13ProfileName(int p) {
+    if (p == BluetoothProfile.A2DP) return "A2DP";
+    if (p == BluetoothProfile.HEADSET) return "HEADSET";
+    if (p == BluetoothProfile.HID_HOST) return "HID";
+    if (p == BluetoothProfile.GATT) return "GATT";
+    return "PROFILE(" + p + ")";
+}
+
+// ============================================================
+// OPTIONAL: abort hook (call this from your existing abort flow if needed)
+// ============================================================
+private void abortLab13ByUser() {
+    // stop monitor
+    lab13Running = false;
+    lab13Handler.removeCallbacksAndMessages(null);
+
+    // close dialog
+    try {
+        if (lab13Dialog != null && lab13Dialog.isShowing()) lab13Dialog.dismiss();
+    } catch (Throwable ignore) {}
+    lab13Dialog = null;
+
+    // stop TTS (no shutdown)
+    try {
+        if (tts != null && tts[0] != null) tts[0].stop();
+    } catch (Throwable ignore) {}
+
+    // log
+    appendHtml("<br>");
+    logWarn("Lab 13 aborted by user.");
+    logLine();
 }
 
 // ============================================================
@@ -9622,7 +10149,3 @@ return;
 // END OF CLASS
 // ============================================================
 }
-
-
-
-

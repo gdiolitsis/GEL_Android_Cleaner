@@ -460,7 +460,7 @@ root.setBackgroundColor(0xFF101010); // GEL black
     root.addView(header3);  
     root.addView(body3);  
 
-    body3.addView(makeTestButton("10. Wi-Fi Link Snapshot", this::lab10WifiSnapshot));  
+    body3.addView(makeTestButton("10. Wi-Fi Connection Check", this::lab10WifiSnapshot));  
     body3.addView(makeTestButton("11. Mobile Network Diagnostic", this::lab11MobileDataDiagnostic));  
     body3.addView(makeTestButton("12. Call Function Interpretation", this::lab12CallFunctionInterpretation));  
     body3.addView(makeTestButton("13. Internet Access Quick Check", this::lab13InternetQuickCheck));  
@@ -9623,4 +9623,5 @@ return;
 // END OF CLASS
 // ============================================================
 }
+
 

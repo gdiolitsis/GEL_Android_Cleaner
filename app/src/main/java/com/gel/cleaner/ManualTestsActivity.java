@@ -4610,16 +4610,17 @@ private void runLab13BluetoothCheckCore() {
     lab13WaitForDeviceThenStart();
 
     // TTS
-    if (tts != null && tts[0] != null && ttsReady[0] && !isTtsMuted()) {
-        try { tts[0].stop(); } catch (Throwable ignore) {}
-        tts[0].speak(
-            "Connect one external Bluetooth device. Keep it connected for at least one minute. " +
-            "Do not disconnect during the test, " +
-            TextToSpeech.QUEUE_FLUSH,
-            null,
-            "LAB13_GATE"             
-        );
-    }
+if (tts != null && tts[0] != null && ttsReady[0] && !isTtsMuted()) {
+    try { tts[0].stop(); } catch (Throwable ignore) {}
+
+    tts[0].speak(
+        "Connect one external Bluetooth device. Keep it connected for at least one minute. " +
+        "Do not disconnect during the test.",
+        TextToSpeech.QUEUE_FLUSH,
+        null,
+        "LAB13_GATE"
+    );
+}
 }
 
 // ============================================================

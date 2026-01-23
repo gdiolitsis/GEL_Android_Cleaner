@@ -4338,17 +4338,21 @@ title.setText(
     try {
         if (tts != null && tts[0] != null) tts[0].stop();
     } catch (Throwable ignore) {}
+
+    lab13SkipExternalTest = true;   // ⬅️ ΚΛΕΙΔΙ
     gate.dismiss();
-    runLab13BluetoothCheckCore(); // system Bluetooth check only
+    runLab13BluetoothCheckCore();  // system-only
 });
 
     contBtn.setOnClickListener(v -> {
-        try {
-            if (tts != null && tts[0] != null) tts[0].stop();
-        } catch (Throwable ignore) {}
-        gate.dismiss();
-        runLab13BluetoothCheckCore(); // START FULL LAB
-    });
+    try {
+        if (tts != null && tts[0] != null) tts[0].stop();
+    } catch (Throwable ignore) {}
+
+    lab13SkipExternalTest = false;  // ⬅️ ΚΛΕΙΔΙ
+    gate.dismiss();
+    runLab13BluetoothCheckCore();   // full test
+});
 
     gate.show();
 
@@ -4447,12 +4451,14 @@ private void runLab13BluetoothCheckCore() {
         logWarn("Paired device scan failed: " + e.getMessage());
     }
 
-// ---------- EXTERNAL DEVICE PRESENCE CHECK
-boolean hasExternal = lab13IsAnyExternalConnected();
+// ------------------------------------------------------------
+// SYSTEM-ONLY MODE (Skip external device test)
+// ------------------------------------------------------------
+if (lab13SkipExternalTest) {
 
-if (!hasExternal) {
-    logWarn("No external Bluetooth device connected.");
-    logInfo("System Bluetooth check completed. External device test skipped.");
+    logInfo("External Bluetooth device test skipped by user.");
+    logInfo("Proceeding with system Bluetooth connection check only.");
+
     appendHtml("<br>");
     logOk("Lab 13 finished.");
     logLine();
@@ -4736,6 +4742,21 @@ private void lab13FinishAndReport(boolean adapterStable) {
         if (lab13Dialog != null && lab13Dialog.isShowing()) lab13Dialog.dismiss();
     } catch (Throwable ignore) {}
     lab13Dialog = null;
+    
+    // ------------------------------------------------------------
+    // NO EXTERNAL DEVICE CONNECTED — SYSTEM CHECK ONLY
+    // ------------------------------------------------------------
+    if (!lab13HadAnyConnection) {
+
+        logLine();
+        logInfo("LAB 13 — Results");
+        logWarn("No external Bluetooth device was connected during the test.");
+        logInfo("System Bluetooth check completed. External device test skipped.");
+        appendHtml("<br>");
+        logOk("Lab 13 finished.");
+        logLine();
+        return;
+    }
 
     // snapshot: connected devices list per profile (for report)
     boolean anyActive = false;

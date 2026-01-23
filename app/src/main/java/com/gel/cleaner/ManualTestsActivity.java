@@ -147,6 +147,7 @@ import java.util.Set;
 public class ManualTestsActivity extends AppCompatActivity {
 
 private AlertDialog lab14RunningDialog;
+private static final int REQ_LAB13_BT_CONNECT = 1313;
 
 // ============================================================
 // GLOBAL TTS (for labs that need shared access)
@@ -3786,8 +3787,8 @@ private void lab10WifiConnectivityCheck() {
 @Override
 public void onRequestPermissionsResult(
         int requestCode,
-        @NonNull String[] permissions,
-        @NonNull int[] grantResults) {
+        String[] permissions,
+        int[] grantResults) {
 
     super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 

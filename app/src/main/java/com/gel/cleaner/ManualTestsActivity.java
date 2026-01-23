@@ -4449,7 +4449,7 @@ private void runLab13BluetoothCheckCore() {
                         type == BluetoothDevice.DEVICE_TYPE_LE ? "LE" :
                         type == BluetoothDevice.DEVICE_TYPE_DUAL ? "Dual" : "Unknown";
 
-                logInfo("â€¢ " + (name != null ? name : "Unnamed") +
+                logInfo("• " + (name != null ? name : "Unnamed") +
                         " [" + typeStr + "] (" + (addr != null ? addr : "no-mac") + ")");
             }
         }
@@ -4515,7 +4515,7 @@ private void runLab13BluetoothCheckCore() {
     root.addView(lab13StatusText);
 
     lab13DotsView = new TextView(this);
-    lab13DotsView.setText("â€¢");
+    lab13DotsView.setText("•");
     lab13DotsView.setTextColor(0xFF39FF14);
     lab13DotsView.setTextSize(22f);
     lab13DotsView.setGravity(Gravity.CENTER);
@@ -4615,7 +4615,6 @@ private void runLab13BluetoothCheckCore() {
         tts[0].speak(
             "Connect one external Bluetooth device. Keep it connected for at least one minute. " +
             "Do not disconnect during the test, " +
-            "Or, skip this step, to continue with the system Bluetooth connection check.",
             TextToSpeech.QUEUE_FLUSH,
             null,
             "LAB13_GATE"             
@@ -4715,8 +4714,8 @@ private void startLab13Monitor60s() {
             dotPhase = (dotPhase + 1) % 4;
             if (lab13DotsView != null) {
                 lab13DotsView.setText(
-                        dotPhase == 1 ? "â€¢â€¢" :
-                        dotPhase == 2 ? "â€¢â€¢â€¢" : "â€¢"
+                        dotPhase == 1 ? "••" :
+                        dotPhase == 2 ? "•••" : "•"
                 );
             }
 
@@ -4841,7 +4840,7 @@ private void lab13FinishAndReport(boolean adapterStable) {
                 for (BluetoothDevice d : list) {
                     String n = null;
                     try { n = (d != null ? d.getName() : null); } catch (Throwable ignore) {}
-                    logInfo("â€¢ " + (n != null ? n : "Unnamed"));
+                    logInfo("• " + (n != null ? n : "Unnamed"));
                 }
             }
         } catch (Throwable ignore) {}

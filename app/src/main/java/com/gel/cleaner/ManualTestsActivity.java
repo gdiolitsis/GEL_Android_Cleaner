@@ -3786,28 +3786,24 @@ private void lab10WifiConnectivityCheck() {
 @Override
 public void onRequestPermissionsResult(
         int requestCode,
-        String[] perms,
-        int[] grantResults) {
+        @NonNull String[] permissions,
+        @NonNull int[] grantResults) {
 
-    super.onRequestPermissionsResult(requestCode, perms, grantResults);
+    super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
-    if (requestCode == REQ_LOCATION_LAB10) {
+    if (requestCode == REQ_LAB13_BT_CONNECT) {
 
-        boolean granted = false;
-        if (grantResults != null)
-            for (int r : grantResults)
-                if (r == PackageManager.PERMISSION_GRANTED)
-                    granted = true;
+        if (grantResults.length > 0 &&
+            grantResults[0] == PackageManager.PERMISSION_GRANTED) {
 
-        if (granted) {
-            logOk("Location permission granted.");
-            if (pendingLab10AfterPermission != null)
-                pendingLab10AfterPermission.run();
+            lab13WaitForDeviceThenStart(); // ✅ ΤΩΡΑ ξεκινά
         } else {
-            logWarn("Location permission denied. SSID may remain UNKNOWN.");
-        }
 
-        pendingLab10AfterPermission = null;
+            logWarn("BLUETOOTH_CONNECT permission denied.");
+            logWarn("External Bluetooth device monitoring skipped.");
+            logOk("Lab 13 finished.");
+            logLine();
+        }
     }
 }
 
@@ -4598,16 +4594,28 @@ private void runLab13BluetoothCheckCore() {
     lab13Dialog.show();
 
     // ------------------------------------------------------------
-    // WAIT FOR EXTERNAL DEVICE — DO NOT START MONITOR YET
-    // ------------------------------------------------------------
-    if (lab13StatusText != null)
-        lab13StatusText.setText("Waiting for an external Bluetooth device...");
+// WAIT FOR EXTERNAL DEVICE — DO NOT START MONITOR YET
+// ------------------------------------------------------------
+if (lab13StatusText != null)
+    lab13StatusText.setText("Waiting for an external Bluetooth device...");
 
-    if (lab13CounterText != null)
-        lab13CounterText.setText("Monitoring: waiting...");
+if (lab13CounterText != null)
+    lab13CounterText.setText("Monitoring: waiting...");
 
-    lab13Running = true;
-    lab13WaitForDeviceThenStart();
+// ⛔ ΜΗΝ σημαδέψεις running ακόμα
+if (Build.VERSION.SDK_INT >= 31 &&
+    checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT)
+            != PackageManager.PERMISSION_GRANTED) {
+
+    requestPermissions(
+            new String[]{ Manifest.permission.BLUETOOTH_CONNECT },
+            REQ_LAB13_BT_CONNECT
+    );
+    return; // ⛔ σταμάτα εδώ
+}
+
+lab13Running = true;
+lab13WaitForDeviceThenStart();
 
     // TTS
 if (tts != null && tts[0] != null && ttsReady[0] && !isTtsMuted()) {

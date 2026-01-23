@@ -4511,6 +4511,22 @@ private void runLab13BluetoothCheckCore() {
 
     lab13DisconnectEvents = 0;
     lab13ReconnectEvents = 0;
+    
+    try {
+    unregisterReceiver(lab13BtReceiver);
+} catch (Throwable ignore) {}
+    
+// ------------------------------------------------------------
+// REGISTER BLUETOOTH RECEIVER (LAB 13)
+// ------------------------------------------------------------
+IntentFilter f = new IntentFilter();
+f.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
+f.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
+
+registerReceiver(lab13BtReceiver, f);
+
+// arm lab
+lab13Running = true;
 
     // ---------- SHOW GEL DARK-GOLD MONITOR DIALOG
     AlertDialog.Builder b = new AlertDialog.Builder(this);
@@ -4667,17 +4683,6 @@ if (tts != null && tts[0] != null && ttsReady[0] && !isTtsMuted()) {
 }
 
 // ============================================================
-// WAIT FOR EXTERNAL DEVICE — START MONITOR ONLY WHEN CONNECTED
-// ============================================================
-IntentFilter f = new IntentFilter();
-f.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
-f.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
-
-registerReceiver(lab13BtReceiver, f);
-
-lab13Running = true;
-
-// ============================================================
 // MONITOR LOOP (60s) — polls connected devices + detects flips
 // ============================================================
 private void startLab13Monitor60s() {
@@ -4813,7 +4818,7 @@ private void lab13UpdateProgressSegments(int seconds) {
 // ============================================================
 private void lab13FinishAndReport(boolean adapterStable) {
 
-    // stop lab state FIRST
+ // stop lab state FIRST
 lab13Running = false;
 
 // stop handler callbacks

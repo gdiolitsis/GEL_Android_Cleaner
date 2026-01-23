@@ -151,31 +151,34 @@ private static final int REQ_LAB13_BT_CONNECT = 1313;
 
 private final BroadcastReceiver lab13BtReceiver = new BroadcastReceiver() {
     @Override
-    public void onReceive(Context context, Intent intent) {
+public void onReceive(Context context, Intent intent) {
 
-        String action = intent.getAction();
-        if (action == null || !lab13Running) return;
+    String action = intent.getAction();
+    if (action == null || !lab13Running) return;
 
-        if (BluetoothDevice.ACTION_ACL_CONNECTED.equals(action)) {
+    if (BluetoothDevice.ACTION_ACL_CONNECTED.equals(action)) {
 
-            if (!lab13HadAnyConnection) {
-                lab13HadAnyConnection = true;
+        // 🔒 guard: μην ξεκινήσει δεύτερη φορά
+        if (lab13MonitoringStarted) return;
 
-                if (lab13StatusText != null) {
-                    lab13StatusText.setText(
-                        "External device connected. Starting stability monitor..."
-                    );
-                }
+        lab13HadAnyConnection = true;
+        lab13MonitoringStarted = true;
 
-                startLab13Monitor60s(); // ✅ ΕΔΩ ΞΕΚΙΝΑ
-            }
+        if (lab13StatusText != null) {
+            lab13StatusText.setText(
+                "External device connected. Starting stability monitor..."
+            );
         }
 
-        if (BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(action)) {
+        startLab13Monitor60s(); // ✅ ξεκινά ΜΙΑ φορά
+    }
+
+    if (BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(action)) {
+        if (lab13MonitoringStarted) {
             lab13DisconnectEvents++;
         }
     }
-};
+}
 
 // ============================================================
 // GLOBAL TTS (for labs that need shared access)
@@ -4525,8 +4528,24 @@ f.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
 
 registerReceiver(lab13BtReceiver, f);
 
-// arm lab
+// arm lab (ΜΟΝΟ ΕΔΩ)
 lab13Running = true;
+
+// ------------------------------------------------------------
+// IMMEDIATE CHECK — already connected devices
+// ------------------------------------------------------------
+if (lab13IsAnyExternalConnected()) {
+
+    lab13HadAnyConnection = true;
+
+    if (lab13StatusText != null) {
+        lab13StatusText.setText(
+                "External device already connected. Starting stability monitor..."
+        );
+    }
+
+    startLab13Monitor60s();
+}
 
     // ---------- SHOW GEL DARK-GOLD MONITOR DIALOG
     AlertDialog.Builder b = new AlertDialog.Builder(this);

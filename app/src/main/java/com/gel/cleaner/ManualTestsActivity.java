@@ -1843,6 +1843,8 @@ private boolean lab13LastConnected = false;
 
 private int lab13DisconnectEvents = 0;
 private int lab13ReconnectEvents = 0;
+// Skip external device test (system Bluetooth check only)
+private boolean lab13SkipExternalTest = false;
 
 private BluetoothManager lab13Bm;
 private BluetoothAdapter lab13Ba;

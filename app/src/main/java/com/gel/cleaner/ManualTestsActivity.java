@@ -149,6 +149,34 @@ public class ManualTestsActivity extends AppCompatActivity {
 private AlertDialog lab14RunningDialog;
 private static final int REQ_LAB13_BT_CONNECT = 1313;
 
+private final BroadcastReceiver lab13BtReceiver = new BroadcastReceiver() {
+    @Override
+    public void onReceive(Context context, Intent intent) {
+
+        String action = intent.getAction();
+        if (action == null || !lab13Running) return;
+
+        if (BluetoothDevice.ACTION_ACL_CONNECTED.equals(action)) {
+
+            if (!lab13HadAnyConnection) {
+                lab13HadAnyConnection = true;
+
+                if (lab13StatusText != null) {
+                    lab13StatusText.setText(
+                        "External device connected. Starting stability monitor..."
+                    );
+                }
+
+                startLab13Monitor60s(); // ✅ ΕΔΩ ΞΕΚΙΝΑ
+            }
+        }
+
+        if (BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(action)) {
+            lab13DisconnectEvents++;
+        }
+    }
+};
+
 // ============================================================
 // GLOBAL TTS (for labs that need shared access)
 // ============================================================
@@ -3797,8 +3825,15 @@ public void onRequestPermissionsResult(
         if (grantResults.length > 0 &&
             grantResults[0] == PackageManager.PERMISSION_GRANTED) {
 
-            lab13WaitForDeviceThenStart(); // ✅ ΤΩΡΑ ξεκινά
+            // ✅ απλώς ενεργοποιούμε το LAB
+            lab13Running = true;
+
+            // receiver είναι ΗΔΗ registered
+            // περιμένουμε ACTION_ACL_CONNECTED
+
         } else {
+
+            lab13Running = false;
 
             logWarn("BLUETOOTH_CONNECT permission denied.");
             logWarn("External Bluetooth device monitoring skipped.");
@@ -4594,8 +4629,8 @@ private void runLab13BluetoothCheckCore() {
     lab13Dialog.setCancelable(false);
     lab13Dialog.show();
 
-    // ------------------------------------------------------------
-// WAIT FOR EXTERNAL DEVICE — DO NOT START MONITOR YET
+// ------------------------------------------------------------
+// WAIT FOR EXTERNAL DEVICE — RECEIVER-BASED
 // ------------------------------------------------------------
 if (lab13StatusText != null)
     lab13StatusText.setText("Waiting for an external Bluetooth device...");
@@ -4603,7 +4638,6 @@ if (lab13StatusText != null)
 if (lab13CounterText != null)
     lab13CounterText.setText("Monitoring: waiting...");
 
-// ⛔ ΜΗΝ σημαδέψεις running ακόμα
 if (Build.VERSION.SDK_INT >= 31 &&
     checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT)
             != PackageManager.PERMISSION_GRANTED) {
@@ -4612,11 +4646,11 @@ if (Build.VERSION.SDK_INT >= 31 &&
             new String[]{ Manifest.permission.BLUETOOTH_CONNECT },
             REQ_LAB13_BT_CONNECT
     );
-    return; // ⛔ σταμάτα εδώ
+    return;
 }
 
+// ✅ permission OK → απλώς arm το LAB
 lab13Running = true;
-lab13WaitForDeviceThenStart();
 
     // TTS
 if (tts != null && tts[0] != null && ttsReady[0] && !isTtsMuted()) {
@@ -4635,35 +4669,13 @@ if (tts != null && tts[0] != null && ttsReady[0] && !isTtsMuted()) {
 // ============================================================
 // WAIT FOR EXTERNAL DEVICE — START MONITOR ONLY WHEN CONNECTED
 // ============================================================
-private void lab13WaitForDeviceThenStart() {
+IntentFilter f = new IntentFilter();
+f.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
+f.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
 
-    try { lab13Handler.removeCallbacksAndMessages(null); } catch (Throwable ignore) {}
+registerReceiver(lab13BtReceiver, f);
 
-    lab13Handler.postDelayed(new Runnable() {
-        @Override
-        public void run() {
-
-            if (!lab13Running) return;
-
-            boolean connected = lab13IsAnyExternalConnected();
-
-            if (connected) {
-
-                if (lab13StatusText != null) {
-                    lab13StatusText.setText(
-                            "External device detected. Starting stability monitor..."
-                    );
-                }
-
-                try { lab13Handler.removeCallbacksAndMessages(null); } catch (Throwable ignore) {}
-                startLab13Monitor60s();   // âœ… ONLY HERE
-                return;
-            }
-
-            lab13Handler.postDelayed(this, 1000);
-        }
-    }, 1000);
-}
+lab13Running = true;
 
 // ============================================================
 // MONITOR LOOP (60s) — polls connected devices + detects flips
@@ -4801,14 +4813,23 @@ private void lab13UpdateProgressSegments(int seconds) {
 // ============================================================
 private void lab13FinishAndReport(boolean adapterStable) {
 
-    // stop handler callbacks
-    try { lab13Handler.removeCallbacksAndMessages(null); } catch (Throwable ignore) {}
+    // stop lab state FIRST
+lab13Running = false;
 
-    // close dialog
-    try {
-        if (lab13Dialog != null && lab13Dialog.isShowing()) lab13Dialog.dismiss();
-    } catch (Throwable ignore) {}
-    lab13Dialog = null;
+// stop handler callbacks
+try { lab13Handler.removeCallbacksAndMessages(null); } catch (Throwable ignore) {}
+
+// close dialog
+try {
+    if (lab13Dialog != null && lab13Dialog.isShowing())
+        lab13Dialog.dismiss();
+} catch (Throwable ignore) {}
+lab13Dialog = null;
+
+// unregister BT receiver
+try {
+    unregisterReceiver(lab13BtReceiver);
+} catch (Throwable ignore) {}
 
     // ------------------------------------------------------------
     // NO EXTERNAL DEVICE CONNECTED — SYSTEM CHECK ONLY

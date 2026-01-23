@@ -4353,16 +4353,16 @@ title.setText(
     gate.show();
 
     // TTS (optional)
-    if (tts != null && tts[0] != null && ttsReady[0] && !isTtsMuted()) {
-        try { tts[0].stop(); } catch (Throwable ignore) {}
-        tts[0].speak(
-                "Connect one external Bluetooth device. Keep it connected for at least one minute. AND, Do not disconnect during the test.",
-                "Or, skip this step, to continue with the system Bluetooth connection check."
-                TextToSpeech.QUEUE_FLUSH,
-                null,
-                "LAB13_GATE"
-        );
-    }
+if (tts != null && tts[0] != null && ttsReady[0] && !isTtsMuted()) {
+    try { tts[0].stop(); } catch (Throwable ignore) {}
+    tts[0].speak(
+            "Connect one external Bluetooth device. Keep it connected for at least one minute. " +
+            "Do not disconnect during the test, " +
+            "Or, skip this step, to continue with the system Bluetooth connection check.",
+            TextToSpeech.QUEUE_FLUSH,
+            null,
+            "LAB13_GATE"
+    );
 }
 
 // ============================================================
@@ -4693,7 +4693,7 @@ private boolean lab13IsAnyExternalConnected() {
     boolean any = false;
 
     int[] profiles = new int[]{
-            BluetoothProfile.A2DP, 
+            BluetoothProfile.A2DP,            ,            
             BluetoothProfile.GATT
     };
 
@@ -4740,7 +4740,7 @@ private void lab13FinishAndReport(boolean adapterStable) {
     boolean anyActive = false;
 
     int[] profiles = new int[]{
-            BluetoothProfile.A2DP,  
+            BluetoothProfile.A2DP,            ,            
             BluetoothProfile.GATT
     };
 

@@ -4580,6 +4580,15 @@ if (lab13SkipExternalTest) {
 
     lab13Dialog.setCancelable(false);
     lab13Dialog.show();
+    
+// ------------------------------------------------------------
+// WAIT FOR EXTERNAL DEVICE — DO NOT START MONITOR YET
+// ------------------------------------------------------------
+lab13StatusText.setText("Waiting for an external Bluetooth device...");
+lab13CounterText.setText("Monitoring: waiting...");
+
+lab13Running = true;
+lab13WaitForDeviceThenStart();
 
     // TTS AFTER SHOW
     if (tts != null && tts[0] != null && ttsReady[0] && !isTtsMuted()) {
@@ -4592,8 +4601,33 @@ if (lab13SkipExternalTest) {
         );
     }
 
-    // ---------- START MONITOR
-    startLab13Monitor60s();
+// ------------------------------------------------------------
+// WAIT FOR EXTERNAL DEVICE — DO NOT START MONITOR YET
+// ------------------------------------------------------------
+lab13StatusText.setText("Waiting for an external Bluetooth device...");
+lab13CounterText.setText("Monitoring: waiting...");
+
+private void lab13WaitForDeviceThenStart() {
+
+    lab13Handler.postDelayed(new Runnable() {
+        @Override
+        public void run() {
+
+            if (!lab13Running) return;
+
+            boolean connected = lab13IsAnyExternalConnected();
+
+            if (connected) {
+                lab13StatusText.setText("External device detected. Starting stability monitor...");
+                lab13Seconds = 0;
+                startLab13Monitor60s();   // ⬅️ ΜΟΝΟ ΕΔΩ ξεκινά
+                return;
+            }
+
+            // keep waiting
+            lab13Handler.postDelayed(this, 1000);
+        }
+    }, 1000);
 }
 
 // ============================================================

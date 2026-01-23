@@ -4259,14 +4259,15 @@ private void lab13BluetoothConnectivityCheck() {
     root.setBackground(bg);
 
     TextView title = new TextView(this);
-    title.setText(
-            "LAB 13 — External Bluetooth Device Check\n\n" +
-            "Connect ONE external Bluetooth device\n" +
-            "(e.g. headphones, car kit, keyboard).\n\n" +
-            "Keep the device CONNECTED for at least 1 minute\n" +
-            "and DO NOT disconnect during the test.\n\n" +
-            "This check evaluates connection stability."
-    );
+title.setText(
+        "LAB 13 — External Bluetooth Device Check\n\n" +
+        "Connect ONE external Bluetooth device\n" +
+        "(e.g. headphones, car kit, keyboard).\n\n" +
+        "Keep the device CONNECTED for at least 1 minute\n" +
+        "and DO NOT disconnect during the test.\n\n" +
+        "This check evaluates connection stability.\n\n" +
+        "Or, skip this step, to continue with the system Bluetooth connection check."
+);
     title.setTextColor(0xFFFFFFFF);
     title.setTextSize(18f);
     title.setTypeface(null, Typeface.BOLD);
@@ -4291,7 +4292,7 @@ private void lab13BluetoothConnectivityCheck() {
 
     Button cancelBtn = new Button(this);
     cancelBtn.setAllCaps(false);
-    cancelBtn.setText("Cancel");
+    cancelBtn.setText("Skip");
     cancelBtn.setTextColor(0xFFFFFFFF);
 
     GradientDrawable cancelBg = new GradientDrawable();
@@ -4334,11 +4335,12 @@ private void lab13BluetoothConnectivityCheck() {
     }
 
     cancelBtn.setOnClickListener(v -> {
-        try {
-            if (tts != null && tts[0] != null) tts[0].stop();
-        } catch (Throwable ignore) {}
-        gate.dismiss();
-    });
+    try {
+        if (tts != null && tts[0] != null) tts[0].stop();
+    } catch (Throwable ignore) {}
+    gate.dismiss();
+    runLab13BluetoothCheckCore(); // system Bluetooth check only
+});
 
     contBtn.setOnClickListener(v -> {
         try {
@@ -4354,7 +4356,8 @@ private void lab13BluetoothConnectivityCheck() {
     if (tts != null && tts[0] != null && ttsReady[0] && !isTtsMuted()) {
         try { tts[0].stop(); } catch (Throwable ignore) {}
         tts[0].speak(
-                "Connect one external Bluetooth device. Keep it connected for at least one minute. Do not disconnect during the test.",
+                "Connect one external Bluetooth device. Keep it connected for at least one minute. AND, Do not disconnect during the test.",
+                "Or, skip this step, to continue with the system Bluetooth connection check."
                 TextToSpeech.QUEUE_FLUSH,
                 null,
                 "LAB13_GATE"
@@ -4442,6 +4445,18 @@ private void runLab13BluetoothCheckCore() {
     } catch (Throwable e) {
         logWarn("Paired device scan failed: " + e.getMessage());
     }
+
+// ---------- EXTERNAL DEVICE PRESENCE CHECK
+boolean hasExternal = lab13IsAnyExternalConnected();
+
+if (!hasExternal) {
+    logWarn("No external Bluetooth device connected.");
+    logInfo("System Bluetooth check completed. External device test skipped.");
+    appendHtml("<br>");
+    logOk("Lab 13 finished.");
+    logLine();
+    return;
+}
 
     // ---------- SHOW GEL DARK-GOLD MONITOR DIALOG
     AlertDialog.Builder b = new AlertDialog.Builder(this);
@@ -4678,8 +4693,7 @@ private boolean lab13IsAnyExternalConnected() {
     boolean any = false;
 
     int[] profiles = new int[]{
-            BluetoothProfile.A2DP,
-            BluetoothProfile.HEADSET,            
+            BluetoothProfile.A2DP,            ,            
             BluetoothProfile.GATT
     };
 
@@ -4726,8 +4740,7 @@ private void lab13FinishAndReport(boolean adapterStable) {
     boolean anyActive = false;
 
     int[] profiles = new int[]{
-            BluetoothProfile.A2DP,
-            BluetoothProfile.HEADSET,            
+            BluetoothProfile.A2DP,            ,            
             BluetoothProfile.GATT
     };
 
@@ -4769,11 +4782,11 @@ private void lab13FinishAndReport(boolean adapterStable) {
     if (adapterStable && lab13HadAnyConnection && frequentDisconnects) {
 
         // 🔒 LOCKED DIAGNOSIS MESSAGE
-        logWarn(
-                "Η σύνδεση Bluetooth εμφανίζει συχνές αποσυνδέσεις,\n" +
-                "ενώ το Bluetooth του κινητού παραμένει σταθερό.\n" +
-                "Αυτό υποδεικνύει πρόβλημα στη συνδεδεμένη συσκευή."
-        );
+logWarn(
+        "The Bluetooth connection shows frequent disconnections,\n" +
+        "while the phone’s Bluetooth subsystem remains stable.\n" +
+        "This indicates a problem with the connected external device."
+);
 
     } else if (!lab13HadAnyConnection) {
 
@@ -4805,7 +4818,6 @@ private void lab13FinishAndReport(boolean adapterStable) {
 // ============================================================
 private String lab13ProfileName(int p) {
     if (p == BluetoothProfile.A2DP) return "A2DP";
-    if (p == BluetoothProfile.HEADSET) return "HEADSET";   
     if (p == BluetoothProfile.GATT) return "GATT";
     return "PROFILE(" + p + ")";
 }

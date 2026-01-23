@@ -4694,7 +4694,7 @@ private boolean lab13IsAnyExternalConnected() {
     boolean any = false;
 
     int[] profiles = new int[]{
-            BluetoothProfile.A2DP,            ,            
+            BluetoothProfile.A2DP,         
             BluetoothProfile.GATT
     };
 
@@ -4741,7 +4741,7 @@ private void lab13FinishAndReport(boolean adapterStable) {
     boolean anyActive = false;
 
     int[] profiles = new int[]{
-            BluetoothProfile.A2DP,            ,            
+            BluetoothProfile.A2DP,         
             BluetoothProfile.GATT
     };
 
@@ -10164,3 +10164,4 @@ return;
 // END OF CLASS
 // ============================================================
 }
+

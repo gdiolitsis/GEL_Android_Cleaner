@@ -4266,7 +4266,7 @@ title.setText(
         "Keep the device CONNECTED for at least 1 minute\n" +
         "and DO NOT disconnect during the test.\n\n" +
         "This check evaluates connection stability.\n\n" +
-        "Or, skip this step, to continue with the system Bluetooth connection check."
+        "Or skip this step to continue with the system Bluetooth connection check."
 );
     title.setTextColor(0xFFFFFFFF);
     title.setTextSize(18f);
@@ -4693,7 +4693,7 @@ private boolean lab13IsAnyExternalConnected() {
     boolean any = false;
 
     int[] profiles = new int[]{
-            BluetoothProfile.A2DP,            ,            
+            BluetoothProfile.A2DP, 
             BluetoothProfile.GATT
     };
 
@@ -4740,7 +4740,7 @@ private void lab13FinishAndReport(boolean adapterStable) {
     boolean anyActive = false;
 
     int[] profiles = new int[]{
-            BluetoothProfile.A2DP,            ,            
+            BluetoothProfile.A2DP,  
             BluetoothProfile.GATT
     };
 

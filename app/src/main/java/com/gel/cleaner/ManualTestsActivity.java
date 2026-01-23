@@ -4223,40 +4223,7 @@ logLine();
 // POPUP + WAIT FOR DEVICE + 60s MONITOR + DIAGNOSIS
 // (FINAL — STRUCTURED / NO NESTED METHODS / READY COPY-PASTE)
 // ============================================================
-//
-// NOTE (LOCKED WORKFLOW): Πάντα σου δίνω ΟΛΟ το μπλοκ έτοιμο για copy-paste.
-//
 
-// ============================================================
-// LAB 13 — STATE / FIELDS (place at class level)
-// ============================================================
-private BluetoothManager lab13Bm;
-private BluetoothAdapter lab13Ba;
-
-private AlertDialog lab13Dialog;
-
-private TextView lab13StatusText;
-private TextView lab13DotsView;
-private TextView lab13CounterText;
-private LinearLayout lab13ProgressBar;
-
-private final Handler lab13Handler = new Handler(Looper.getMainLooper());
-
-private boolean lab13Running = false;
-private boolean lab13SkipExternalTest = false;
-
-private long lab13StartMs = 0L;
-private int lab13Seconds = 0;
-
-private boolean lab13HadAnyConnection = false;
-private boolean lab13LastConnected = false;
-
-private int lab13DisconnectEvents = 0;
-private int lab13ReconnectEvents = 0;
-
-// ============================================================
-// ENTRY — BUTTON CALLS THIS
-// ============================================================
 private void lab13BluetoothConnectivityCheck() {
 
     // ---------- PRECHECK: Bluetooth supported?
@@ -4295,12 +4262,12 @@ private void lab13BluetoothConnectivityCheck() {
     TextView title = new TextView(this);
     title.setText(
             "LAB 13 — External Bluetooth Device Check\n\n" +
-            "Connect ONE external Bluetooth device\n" +
+            "Connect ONE external Bluetooth device.\n" +
             "(e.g. headphones, car kit, keyboard).\n\n" +
-            "Keep the device CONNECTED for at least 1 minute\n" +
-            "and DO NOT disconnect during the test.\n\n" +
-            "This check evaluates connection stability.\n\n" +
-            "Or skip this step to continue with the system Bluetooth connection check."
+            "Keep the device CONNECTED for at least 1 minute,\n" +
+            "and DO NOT disconnect, during the test.\n\n" +
+            "This check, evaluates connection stability.\n\n" +
+            "Or, skip this step, to continue with the system Bluetooth connection check."
     );
     title.setTextColor(0xFFFFFFFF);
     title.setTextSize(18f);
@@ -4373,7 +4340,7 @@ private void lab13BluetoothConnectivityCheck() {
             if (tts != null && tts[0] != null) tts[0].stop();
         } catch (Throwable ignore) {}
 
-        lab13SkipExternalTest = true;   // 🔑
+        lab13SkipExternalTest = true;   
         gate.dismiss();
         runLab13BluetoothCheckCore();   // system-only
     });
@@ -4383,7 +4350,7 @@ private void lab13BluetoothConnectivityCheck() {
             if (tts != null && tts[0] != null) tts[0].stop();
         } catch (Throwable ignore) {}
 
-        lab13SkipExternalTest = false;  // 🔑
+        lab13SkipExternalTest = false; 
         gate.dismiss();
         runLab13BluetoothCheckCore();   // full test
     });
@@ -4482,7 +4449,7 @@ private void runLab13BluetoothCheckCore() {
                         type == BluetoothDevice.DEVICE_TYPE_LE ? "LE" :
                         type == BluetoothDevice.DEVICE_TYPE_DUAL ? "Dual" : "Unknown";
 
-                logInfo("• " + (name != null ? name : "Unnamed") +
+                logInfo("â€¢ " + (name != null ? name : "Unnamed") +
                         " [" + typeStr + "] (" + (addr != null ? addr : "no-mac") + ")");
             }
         }
@@ -4548,7 +4515,7 @@ private void runLab13BluetoothCheckCore() {
     root.addView(lab13StatusText);
 
     lab13DotsView = new TextView(this);
-    lab13DotsView.setText("•");
+    lab13DotsView.setText("â€¢");
     lab13DotsView.setTextColor(0xFF39FF14);
     lab13DotsView.setTextSize(22f);
     lab13DotsView.setGravity(Gravity.CENTER);
@@ -4646,10 +4613,12 @@ private void runLab13BluetoothCheckCore() {
     if (tts != null && tts[0] != null && ttsReady[0] && !isTtsMuted()) {
         try { tts[0].stop(); } catch (Throwable ignore) {}
         tts[0].speak(
-                "Please connect one external Bluetooth device. The test will start automatically.",
-                TextToSpeech.QUEUE_FLUSH,
-                null,
-                "LAB13_WAIT"
+            "Connect one external Bluetooth device. Keep it connected for at least one minute. " +
+            "Do not disconnect during the test, " +
+            "Or, skip this step, to continue with the system Bluetooth connection check.",
+            TextToSpeech.QUEUE_FLUSH,
+            null,
+            "LAB13_GATE"             
         );
     }
 }
@@ -4678,7 +4647,7 @@ private void lab13WaitForDeviceThenStart() {
                 }
 
                 try { lab13Handler.removeCallbacksAndMessages(null); } catch (Throwable ignore) {}
-                startLab13Monitor60s();   // ✅ ONLY HERE
+                startLab13Monitor60s();   // âœ… ONLY HERE
                 return;
             }
 
@@ -4746,8 +4715,8 @@ private void startLab13Monitor60s() {
             dotPhase = (dotPhase + 1) % 4;
             if (lab13DotsView != null) {
                 lab13DotsView.setText(
-                        dotPhase == 1 ? "••" :
-                        dotPhase == 2 ? "•••" : "•"
+                        dotPhase == 1 ? "â€¢â€¢" :
+                        dotPhase == 2 ? "â€¢â€¢â€¢" : "â€¢"
                 );
             }
 
@@ -4872,7 +4841,7 @@ private void lab13FinishAndReport(boolean adapterStable) {
                 for (BluetoothDevice d : list) {
                     String n = null;
                     try { n = (d != null ? d.getName() : null); } catch (Throwable ignore) {}
-                    logInfo("• " + (n != null ? n : "Unnamed"));
+                    logInfo("â€¢ " + (n != null ? n : "Unnamed"));
                 }
             }
         } catch (Throwable ignore) {}
@@ -4892,10 +4861,10 @@ private void lab13FinishAndReport(boolean adapterStable) {
 
     if (adapterStable && lab13HadAnyConnection && frequentDisconnects) {
 
-        // 🔒 LOCKED DIAGNOSIS MESSAGE
+        // ðŸ”’ LOCKED DIAGNOSIS MESSAGE
         logWarn(
                 "The Bluetooth connection shows frequent disconnections,\n" +
-                "while the phone’s Bluetooth subsystem remains stable.\n" +
+                "while the phoneâ€™s Bluetooth subsystem remains stable.\n" +
                 "This indicates a problem with the connected external device."
         );
 

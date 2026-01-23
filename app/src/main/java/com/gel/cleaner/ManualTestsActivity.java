@@ -4364,6 +4364,7 @@ if (tts != null && tts[0] != null && ttsReady[0] && !isTtsMuted()) {
             "LAB13_GATE"
     );
 }
+}
 
 // ============================================================
 // CORE — FULL LAB 13 (UI + Monitoring + Diagnosis)

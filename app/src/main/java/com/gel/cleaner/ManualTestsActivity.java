@@ -2925,7 +2925,7 @@ private void lab1SpeakerTone() {
             } catch (Throwable ignore) {}
 
             // ------------------------------------------------------------
-            // BLOCKED AUDIO PATH → STOP & ASK RE-RUN
+            // BLOCKED AUDIO PATH  STOP & ASK RE-RUN
             // ------------------------------------------------------------
             if (volumeMuted || bluetoothRouted || wiredRouted) {
 
@@ -3043,7 +3043,7 @@ private void lab1SpeakerTone() {
 // LAB 2 — Speaker Frequency Sweep (ADAPTIVE)
 // • Runs independently
 // • Detects real speaker output via mic
-// • If silence is detected → instructs user to run LAB 1
+// • If silence is detected  instructs user to run LAB 1
 // ============================================================
 private void lab2SpeakerSweep() {
 
@@ -3104,7 +3104,7 @@ private void lab2SpeakerSweep() {
                         "without confirmed audio output."
                 );
 
-                logInfo(
+                logWarn(
                         "Please run LAB 1 to verify speaker operation, " +
                         "audio routing, and system volume settings."
                 );
@@ -3964,12 +3964,15 @@ private void lab10WifiConnectivityCheck() {
 
     String band = (freqMhz > 3000) ? "5 GHz" : "2.4 GHz";
 
-    logInfo("SSID: " + ssid);
-    if (bssid != null) logInfo("BSSID: " + bssid);
-    logInfo("Band: " + band +
-            (freqMhz > 0 ? " (" + freqMhz + " MHz)" : ""));
-    logInfo("Link speed: " + speed + " Mbps");
-    logInfo("RSSI: " + rssi + " dBm");
+    logLabelValue("SSID", ssid);
+if (bssid != null)
+    logLabelValue("BSSID", bssid);
+logLabelValue(
+        "Band",
+        band + (freqMhz > 0 ? " (" + freqMhz + " MHz)" : "")
+);
+logLabelValue("Link speed", speed + " Mbps");
+logLabelValue("RSSI", rssi + " dBm");
 
     if ("Unknown".equalsIgnoreCase(ssid)) {
         logWarn("SSID hidden by Android privacy policy.");
@@ -3990,10 +3993,10 @@ private void lab10WifiConnectivityCheck() {
     try {
         DhcpInfo dh = wm.getDhcpInfo();
         if (dh != null) {
-            logInfo("IP: " + ipToStr(dh.ipAddress));
-            logInfo("Gateway: " + ipToStr(dh.gateway));
-            logInfo("DNS1: " + ipToStr(dh.dns1));
-            logInfo("DNS2: " + ipToStr(dh.dns2));
+            logLabelValue("IP",      ipToStr(dh.ipAddress));
+logLabelValue("Gateway", ipToStr(dh.gateway));
+logLabelValue("DNS1",    ipToStr(dh.dns1));
+logLabelValue("DNS2",    ipToStr(dh.dns2));
         } else {
             logWarn("DHCP info not available.");
         }
@@ -4643,36 +4646,47 @@ private void runLab13BluetoothCheckCore() {
     logOk("Bluetooth supported.");
 
     boolean enabled = false;
-    try { enabled = lab13Ba.isEnabled(); } catch (Throwable ignore) {}
-    logInfo("Enabled:");
-    if (enabled) {
-        logOk("Yes");
-    } else {
-        logWarn("No");
-    }
+try { enabled = lab13Ba.isEnabled(); } catch (Throwable ignore) {}
 
-    int state = BluetoothAdapter.STATE_OFF;
-    try { state = lab13Ba.getState(); } catch (Throwable ignore) {}
+logLabelValue(
+        "Enabled",
+        enabled ? "Yes" : "No"
+);
 
-    logInfo("State:");
-    if (state == BluetoothAdapter.STATE_ON) logOk("ON");
-    else if (state == BluetoothAdapter.STATE_TURNING_ON) logWarn("TURNING ON");
-    else if (state == BluetoothAdapter.STATE_TURNING_OFF) logWarn("TURNING OFF");
-    else logWarn("OFF");
+int state = BluetoothAdapter.STATE_OFF;
+try { state = lab13Ba.getState(); } catch (Throwable ignore) {}
 
-    boolean le = false;
-    try {
-        le = getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE);
-    } catch (Throwable ignore) {}
+String stateStr;
+if (state == BluetoothAdapter.STATE_ON) {
+    stateStr = "ON";
+} else if (state == BluetoothAdapter.STATE_TURNING_ON) {
+    stateStr = "TURNING ON";
+} else if (state == BluetoothAdapter.STATE_TURNING_OFF) {
+    stateStr = "TURNING OFF";
+} else {
+    stateStr = "OFF";
+}
 
-    logInfo("BLE Support:");
-    if (le) logOk("Yes"); else logWarn("No");
+logLabelValue(
+        "State",
+        stateStr
+);
 
-    if (!enabled) {
-        logWarn("Bluetooth is OFF — enable Bluetooth and re-run Lab 13.");
-        logLine();
-        return;
-    }
+boolean le = false;
+try {
+    le = getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE);
+} catch (Throwable ignore) {}
+
+logLabelValue(
+        "BLE Support",
+        le ? "Yes" : "No"
+);
+
+if (!enabled) {
+    logWarn("Bluetooth is OFF — enable Bluetooth and re-run Lab 13.");
+    logLine();
+    return;
+}
 
     // ---------- PAIRED DEVICES SNAPSHOT
     try {
@@ -5060,25 +5074,37 @@ private void startLab13Monitor60s() {
             lab13UpdateProgressSegments(lab13Seconds);
 
             // ------------------------------------------------------------
-            // STATUS TEXT
-            // ------------------------------------------------------------
-            if (lab13StatusText != null) {
-                if (!adapterStable) {
-                    lab13StatusText.setText("Bluetooth adapter not stable.");
-                } else if (connected) {
-                    lab13StatusText.setText(
-                            "External device connected — monitoring stability..."
-                    );
-                } else if (lab13HadAnyConnection) {
-                    lab13StatusText.setText(
-                            "External device temporarily unavailable."
-                    );
-                } else {
-                    lab13StatusText.setText(
-                            "Waiting for an external Bluetooth device..."
-                    );
-                }
-            }
+// STATUS TEXT (COLOR-CODED)
+// ------------------------------------------------------------
+if (lab13StatusText != null) {
+
+    if (!adapterStable) {
+
+        lab13StatusText.setText("Bluetooth adapter not stable.");
+        lab13StatusText.setTextColor(0xFFFFD966); // 🟡 yellow (warning)
+
+    } else if (connected) {
+
+        lab13StatusText.setText(
+                "External device connected — monitoring stability..."
+        );
+        lab13StatusText.setTextColor(0xFF39FF14); // 🟢 GEL green (OK)
+
+    } else if (lab13HadAnyConnection) {
+
+        lab13StatusText.setText(
+                "External device temporarily unavailable."
+        );
+        lab13StatusText.setTextColor(0xFFFFD966); // 🟡 yellow (warning)
+
+    } else {
+
+        lab13StatusText.setText(
+                "Waiting for an external Bluetooth device..."
+        );
+        lab13StatusText.setTextColor(0xFFFFD966); // 🟡 yellow (info/wait)
+    }
+}
 
             // ------------------------------------------------------------
             // FINISH
@@ -5176,9 +5202,20 @@ private void lab13FinishAndReport(boolean adapterStable) {
     // report header
     logLine();
     logInfo("LAB 13 — Results (60s monitor)");
-    logInfo("Adapter stable: " + (adapterStable ? "Yes" : "No"));
-    logInfo("Disconnect events: " + lab13DisconnectEvents);
-    logInfo("Reconnect events: " + lab13ReconnectEvents);
+    logLabelValue(
+        "Adapter stable",
+        adapterStable ? "Yes" : "No"
+);
+
+logLabelValue(
+        "Disconnect events",
+        String.valueOf(lab13DisconnectEvents)
+);
+
+logLabelValue(
+        "Reconnect events",
+        String.valueOf(lab13ReconnectEvents)
+);
 
     // list connected devices now
     for (int p : profiles) {

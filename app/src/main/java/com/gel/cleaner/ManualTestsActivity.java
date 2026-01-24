@@ -163,16 +163,20 @@ public void onReceive(Context context, Intent intent) {
     // ------------------------------------------------------------
     if (BluetoothDevice.ACTION_ACL_CONNECTED.equals(action)) {
 
-        lab13HadAnyConnection = true;
+    lab13HadAnyConnection = true;
+
+    if (!lab13MonitoringStarted) {
+        lab13MonitoringStarted = true;
 
         if (lab13StatusText != null) {
-            lab13StatusText.setText("External device connected.");
+            lab13StatusText.setText(
+                "External device connected. Starting stability monitor..."
+            );
         }
 
-        // ⚠️ ΔΕΝ ξεκινάμε monitor εδώ
-        // Το monitor ξεκινά ΜΟΝΟ από το precheck
-        return;
+        startLab13Monitor60s(); // ✅ ΜΟΝΑΔΙΚΟ σημείο εκκίνησης
     }
+}
 
     // ------------------------------------------------------------
     // DEVICE DISCONNECTED (CRITICAL EVENT)
@@ -4592,7 +4596,7 @@ registerReceiver(lab13BtReceiver, f);
 lab13Running = true;
 
 // ------------------------------------------------------------
-// IMMEDIATE CHECK — already connected devices
+// IMMEDIATE CHECK — already connected devices (INFO ONLY)
 // ------------------------------------------------------------
 if (lab13IsAnyExternalConnected()) {
 
@@ -4600,11 +4604,9 @@ if (lab13IsAnyExternalConnected()) {
 
     if (lab13StatusText != null) {
         lab13StatusText.setText(
-                "External device already connected. Starting stability monitor..."
+            "External device already connected. Waiting for stability monitor..."
         );
     }
-
-    startLab13Monitor60s();
 }
 
     // ---------- SHOW GEL DARK-GOLD MONITOR DIALOG
@@ -4772,12 +4774,13 @@ if (tts != null && tts[0] != null && ttsReady[0] && !isTtsMuted()) {
 // ============================================================
 private void startLab13Monitor60s() {
 
+    // 🔒 guard — να μην ξαναξεκινήσει
+    if (lab13MonitoringStarted) return;
+    lab13MonitoringStarted = true;
+
     lab13Running = true;
     lab13StartMs = SystemClock.elapsedRealtime();
     lab13Seconds = 0;
-
-    lab13HadAnyConnection = false;
-    lab13LastConnected = false;
 
     lab13DisconnectEvents = 0;
     lab13ReconnectEvents = 0;
@@ -4786,7 +4789,20 @@ private void startLab13Monitor60s() {
     lab13LastConnected = connectedNow;
     if (connectedNow) lab13HadAnyConnection = true;
 
-    try { lab13Handler.removeCallbacksAndMessages(null); } catch (Throwable ignore) {}
+    // UI update — ΤΩΡΑ ξεκινάμε
+    if (lab13StatusText != null) {
+        lab13StatusText.setText(
+            "Monitoring Bluetooth stability..."
+        );
+    }
+
+    if (lab13CounterText != null) {
+        lab13CounterText.setText("Monitoring: 0 / 60 sec");
+    }
+
+    try {
+        lab13Handler.removeCallbacksAndMessages(null);
+    } catch (Throwable ignore) {}
 
     lab13Handler.post(new Runnable() {
         int dotPhase = 0;

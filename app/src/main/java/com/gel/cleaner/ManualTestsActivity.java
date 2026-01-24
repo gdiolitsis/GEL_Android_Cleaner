@@ -1104,22 +1104,22 @@ private void appendHtml(String html) {
 }
 
 private void logInfo(String msg) {
-    appendHtml("ℹ️ " + safe(msg));
+    appendHtml(" " + safe(msg));
     GELServiceLog.logInfo(msg);
 }
 
 private void logOk(String msg) {
-    appendHtml("<font color='#39FF14'>✅ " + safe(msg) + "</font>");
+    appendHtml("<font color='#39FF14'> " + safe(msg) + "</font>");
     GELServiceLog.logOk(msg);
 }
 
 private void logWarn(String msg) {
-    appendHtml("<font color='#FFD966'>⚠️ " + safe(msg) + "</font>");
+    appendHtml("<font color='#FFD966'> " + safe(msg) + "</font>");
     GELServiceLog.logWarn(msg);
 }
 
 private void logError(String msg) {
-    appendHtml("<font color='#FF5555'>❌ " + safe(msg) + "</font>");
+    appendHtml("<font color='#FF5555'> " + safe(msg) + "</font>");
     GELServiceLog.logError(msg);
 }
 
@@ -2816,135 +2816,340 @@ private void speakLab28TTS() {
 }
 
 // ============================================================
+// AUDIO OUTPUT CONTEXT — LAB 1 SUPPORT
+// ============================================================
+private static class AudioOutputContext {
+
+    boolean volumeMuted;
+    boolean volumeLow;
+
+    boolean bluetoothRouted;
+    boolean wiredRouted;
+
+    int volume;
+    int maxVolume;
+
+    String explain() {
+
+        if (volumeMuted) {
+            return "Media volume is muted (0%).";
+        }
+
+        if (bluetoothRouted) {
+            return "Audio is routed to a Bluetooth device.";
+        }
+
+        if (wiredRouted) {
+            return "Audio is routed to a wired headset or USB audio device.";
+        }
+
+        if (volumeLow) {
+            return "Media volume is very low.";
+        }
+
+        return "Audio output routing and volume appear normal.";
+    }
+}
+
+// ------------------------------------------------------------
+// GET AUDIO OUTPUT CONTEXT
+// ------------------------------------------------------------
+private AudioOutputContext getAudioOutputContext() {
+
+    AudioOutputContext c = new AudioOutputContext();
+
+    AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
+    if (am == null) return c;
+
+    c.volume = am.getStreamVolume(AudioManager.STREAM_MUSIC);
+    c.maxVolume = am.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+
+    c.volumeMuted = (c.volume == 0);
+    c.volumeLow   = (c.volume > 0 && c.volume < (c.maxVolume * 0.6f));
+
+    c.bluetoothRouted =
+            am.isBluetoothA2dpOn() ||
+            am.isBluetoothScoOn();
+
+    c.wiredRouted = am.isWiredHeadsetOn();
+
+    return c;
+}
+
+// ============================================================
 // LABS 1-5: AUDIO & VIBRATION
 // ============================================================
 
 // ============================================================
-// LAB 1 - Speaker Tone Test (AUTO)
+// LAB 1 - Speaker Tone Test (AUTO) — WITH AUDIO PATH CHECK
 // ============================================================
 private void lab1SpeakerTone() {
 
-appendHtml("<br>");  
-logLine();  
-logSection("LAB 1 — Speaker Tone Test");  
-logLine();  
+    appendHtml("<br>");
+    logLine();
+    logSection("LAB 1 — Speaker Tone Test");
+    logLine();
 
-new Thread(() -> {  
+    new Thread(() -> {
 
-    ToneGenerator tg = null;  
+        ToneGenerator tg = null;
 
-    try {  
-        tg = new ToneGenerator(AudioManager.STREAM_MUSIC, 90);  
-        tg.startTone(ToneGenerator.TONE_DTMF_1, 1200);  
-        SystemClock.sleep(1400);  
+        try {
 
-        MicDiagnosticEngine.Result r =  
-                MicDiagnosticEngine.run(this);  
+            // ------------------------------------------------------------
+            // AUDIO PATH PRE-CHECK (NO UI)
+            // ------------------------------------------------------------
+            AudioManager am =
+                    (AudioManager) getSystemService(Context.AUDIO_SERVICE);
 
-        logLabelValue("Mic RMS", String.valueOf((int) r.rms));  
-        logLabelValue("Mic Peak", String.valueOf((int) r.peak));  
-        logLabelValue("Confidence", r.confidence);  
+            boolean volumeMuted = false;
+            boolean bluetoothRouted = false;
+            boolean wiredRouted = false;
 
-        logOk("Speaker output detected");  
+            try {
+                volumeMuted =
+                        am != null &&
+                        am.getStreamVolume(AudioManager.STREAM_MUSIC) == 0;
+            } catch (Throwable ignore) {}
 
-        if ("LOW".equalsIgnoreCase(r.confidence)) {  
+            try {
+                bluetoothRouted =
+                        am != null &&
+                        (am.isBluetoothA2dpOn() || am.isBluetoothScoOn());
+            } catch (Throwable ignore) {}
 
-            logLabelValue(  
-                    "Note",  
-                    r.silenceDetected  
-                            ? "Signal detected at extremely low level. Low confidence may be caused by aggressive noise cancellation, microphone isolation, or device acoustic shielding."  
-                            : "Signal detected successfully, but with low confidence. This may be caused by system noise cancellation, microphone placement, or acoustic design."  
-            );  
+            try {
+                wiredRouted =
+                        am != null &&
+                        am.isWiredHeadsetOn();
+            } catch (Throwable ignore) {}
 
-        } else {  
+            // ------------------------------------------------------------
+            // BLOCKED AUDIO PATH → STOP & ASK RE-RUN
+            // ------------------------------------------------------------
+            if (volumeMuted || bluetoothRouted || wiredRouted) {
 
-            logLabelValue(  
-                    "Note",  
-                    "Speaker signal detected successfully."  
-            );  
-        }  
+                logWarn("Audio output path is not clear.");
 
-    } catch (Throwable t) {  
-        logError("Speaker tone test failed");  
-    } finally {  
-        if (tg != null) tg.release();  
+                if (volumeMuted) {
+                    logWarn("Detected: Media volume is muted (volume = 0).");
+                }
 
-        appendHtml("<br>");  
-        logOk("Lab 1 finished.");  
-        logLine();  
-    }  
+                if (bluetoothRouted) {
+                    logWarn("Detected: Audio is routed to a Bluetooth device.");
+                }
 
-}).start();
+                if (wiredRouted) {
+                    logWarn("Detected: Audio is routed to a wired or USB device.");
+                }
 
+                logInfo(
+                        "Please correct the above condition(s) " +
+                        "and re-run LAB 1 for accurate diagnostics."
+                );
+
+                appendHtml("<br>");
+                logInfo("LAB 1 result: Inconclusive (audio path blocked).");
+                logLine();
+                return;
+            }
+
+            // ------------------------------------------------------------
+            // PLAY TEST TONE
+            // ------------------------------------------------------------
+            tg = new ToneGenerator(AudioManager.STREAM_MUSIC, 90);
+            tg.startTone(ToneGenerator.TONE_DTMF_1, 1200);
+            SystemClock.sleep(1400);
+
+            // ------------------------------------------------------------
+            // MIC ANALYSIS
+            // ------------------------------------------------------------
+            MicDiagnosticEngine.Result r =
+                    MicDiagnosticEngine.run(this);
+
+            logLabelValue("Mic RMS", String.valueOf((int) r.rms));
+            logLabelValue("Mic Peak", String.valueOf((int) r.peak));
+            logLabelValue("Confidence", r.confidence);
+
+            // ------------------------------------------------------------
+            // SILENCE DETECTION (HARD)
+            // ------------------------------------------------------------
+            boolean silenceDetected =
+                    r.silenceDetected ||
+                    r.rms <= 2 ||
+                    r.peak <= 4;
+
+            if (silenceDetected) {
+
+                logError("No acoustic output detected.");
+
+                logInfo(
+                        "Audio path is clear, but no sound was captured " +
+                        "by the microphone during the speaker test."
+                );
+
+                logWarn(
+                        "This may indicate a speaker hardware failure " +
+                        "or severe acoustic isolation."
+                );
+
+                logInfo(
+                        "Recommended: re-run the test once more. " +
+                        "If silence persists, hardware inspection is advised."
+                );
+
+                return;
+            }
+
+            // ------------------------------------------------------------
+            // NORMAL / LOW CONFIDENCE PATH
+            // ------------------------------------------------------------
+            logOk("Speaker output detected.");
+
+            if ("LOW".equalsIgnoreCase(r.confidence)) {
+
+                logLabelValue(
+                        "Note",
+                        "Speaker signal detected with low confidence. " +
+                        "This may be influenced by noise cancellation, " +
+                        "microphone placement, or acoustic design."
+                );
+
+            } else {
+
+                logLabelValue(
+                        "Note",
+                        "Speaker signal detected successfully."
+                );
+            }
+
+        } catch (Throwable t) {
+
+            logError("Speaker tone test failed.");
+
+        } finally {
+
+            if (tg != null) tg.release();
+
+            appendHtml("<br>");
+            logOk("Lab 1 finished.");
+            logLine();
+        }
+
+    }).start();
 }
 
 // ============================================================
-// LAB 2 — Speaker Frequency Sweep
+// LAB 2 — Speaker Frequency Sweep (ADAPTIVE)
+// • Runs independently
+// • Detects real speaker output via mic
+// • If silence is detected → instructs user to run LAB 1
 // ============================================================
 private void lab2SpeakerSweep() {
 
-appendHtml("<br>");  
-logLine();  
-logSection("LAB 2 — Speaker Frequency Sweep");  
-logLine();  
+    appendHtml("<br>");
+    logLine();
+    logSection("LAB 2 — Speaker Frequency Sweep");
+    logLine();
 
-new Thread(() -> {  
+    new Thread(() -> {
 
-    ToneGenerator tg = null;  
+        ToneGenerator tg = null;
 
-    try {  
-        tg = new ToneGenerator(AudioManager.STREAM_MUSIC, 90);  
+        try {
 
-        int[] tones = {  
-                ToneGenerator.TONE_DTMF_1,  
-                ToneGenerator.TONE_DTMF_3,  
-                ToneGenerator.TONE_DTMF_6,  
-                ToneGenerator.TONE_DTMF_9  
-        };  
+            tg = new ToneGenerator(AudioManager.STREAM_MUSIC, 90);
 
-        for (int t : tones) {  
-            tg.startTone(t, 500);  
-            SystemClock.sleep(550);  
-        }  
+            // ----------------------------------------------------
+            // PLAY MULTI-TONE SWEEP
+            // ----------------------------------------------------
+            int[] tones = {
+                    ToneGenerator.TONE_DTMF_1,
+                    ToneGenerator.TONE_DTMF_3,
+                    ToneGenerator.TONE_DTMF_6,
+                    ToneGenerator.TONE_DTMF_9
+            };
 
-        MicDiagnosticEngine.Result r =  
-                MicDiagnosticEngine.run(this);  
+            for (int t : tones) {
+                tg.startTone(t, 500);
+                SystemClock.sleep(550);
+            }
 
-        logLabelValue("Mic RMS", String.valueOf((int) r.rms));  
-        logLabelValue("Mic Peak", String.valueOf((int) r.peak));  
-        logLabelValue("Confidence", r.confidence);  
+            // ----------------------------------------------------
+            // MIC FEEDBACK ANALYSIS
+            // ----------------------------------------------------
+            MicDiagnosticEngine.Result r =
+                    MicDiagnosticEngine.run(this);
 
-        logOk("Frequency sweep executed");  
+            logLabelValue("Mic RMS", String.valueOf((int) r.rms));
+            logLabelValue("Mic Peak", String.valueOf((int) r.peak));
+            logLabelValue("Confidence", r.confidence);
 
-        if ("LOW".equalsIgnoreCase(r.confidence)) {  
+            // ----------------------------------------------------
+            // ADAPTIVE GATE — NO SPEAKER OUTPUT
+            // ----------------------------------------------------
+            boolean noSpeakerOutput =
+                    r.silenceDetected ||
+                    r.rms <= 0 ||
+                    r.peak <= 0;
 
-            logLabelValue(  
-                    "Note",  
-                    r.silenceDetected  
-                            ? "Sweep executed at extremely low level. Low confidence may be caused by aggressive noise cancellation, narrow speaker frequency response, or acoustic isolation."  
-                            : "Sweep executed successfully, but with low confidence. This may be caused by DSP filtering, speaker frequency roll-off, or microphone placement."  
-            );  
+            if (noSpeakerOutput) {
 
-        } else {  
+                logWarn(
+                        "No speaker output was detected during this test."
+                );
 
-            logLabelValue(  
-                    "Note",  
-                    "Frequency sweep detected successfully."  
-            );  
-        }  
+                logWarn(
+                        "LAB 2 cannot evaluate frequency response " +
+                        "without confirmed audio output."
+                );
 
-    } catch (Throwable t) {  
-        logError("Speaker frequency sweep failed");  
-    } finally {  
-        if (tg != null) tg.release();  
+                logInfo(
+                        "Please run LAB 1 to verify speaker operation, " +
+                        "audio routing, and system volume settings."
+                );
 
-        appendHtml("<br>");  
-        logOk("Lab 2 finished.");  
-        logLine();  
-    }  
+                appendHtml("<br>");
+                logLine();
+                return;
+            }
 
-}).start();
+            // ----------------------------------------------------
+            // SPEAKER OUTPUT CONFIRMED — CONTINUE LAB 2
+            // ----------------------------------------------------
+            logOk("Speaker output detected during frequency sweep.");
 
+            if ("LOW".equalsIgnoreCase(r.confidence)) {
+
+                logLabelValue(
+                        "Note",
+                        "Frequency sweep detected at low confidence. " +
+                        "This may be caused by DSP filtering, narrow speaker " +
+                        "frequency response, or microphone placement."
+                );
+
+            } else {
+
+                logLabelValue(
+                        "Note",
+                        "Frequency sweep detected successfully across multiple tones."
+                );
+            }
+
+        } catch (Throwable t) {
+
+            logError("Speaker frequency sweep failed");
+
+        } finally {
+
+            if (tg != null) tg.release();
+
+            appendHtml("<br>");
+            logOk("Lab 2 finished.");
+            logLine();
+        }
+
+    }).start();
 }
 
 /* ============================================================
@@ -5038,31 +5243,28 @@ private void lab13FinishAndReport(boolean adapterStable) {
     // ------------------------------------------------------------
     // CONNECTED DEVICE VERDICT — FINAL (UNIFIED)
     // ------------------------------------------------------------
+
     logLine();
-    logInfo("LAB 13 — Connected Device Verdict");
+logInfo("LAB 13 — Final Verdict");
 
-    if (!lab13HadAnyConnection) {
+if (!lab13MonitoringStarted) {
 
-        logWarn("No active external Bluetooth device was detected during the test window.");
-        logWarn("This usually means that no external device was connected, or Bluetooth was idle during the test.");
+    logWarn(
+        "No valid external Bluetooth monitoring session was completed."
+    );
 
-    } else if (lab13DisconnectEvents >= 1) {
+} else if (lab13DisconnectEvents > 0) {
 
-        logError("An external Bluetooth device was connected, but disconnections were detected during monitoring.");
-        logInfo("Disconnect events detected:");
-        logError("Disconnect count: " + lab13DisconnectEvents);
+    logWarn(
+        "Bluetooth connectivity shows instability during the test period."
+    );
 
-        logWarn(
-                "This points to a possible issue with the external device, " +
-                "signal quality, or usage conditions."
-        );
+} else {
 
-    } else {
-
-        logOk("External Bluetooth connectivity was detected and remained stable during the monitoring period.");
-        logInfo("Disconnect events detected:");
-        logOk("Disconnect count: 0");
-    }
+    logOk(
+        "Bluetooth connectivity is stable."
+    );
+}
 
     appendHtml("<br>");
     logOk("Lab 13 finished.");

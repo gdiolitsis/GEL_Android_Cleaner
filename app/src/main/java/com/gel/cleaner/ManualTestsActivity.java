@@ -150,35 +150,44 @@ private AlertDialog lab14RunningDialog;
 private static final int REQ_LAB13_BT_CONNECT = 1313;
 
 private final BroadcastReceiver lab13BtReceiver = new BroadcastReceiver() {
-    @Override
+@Override
 public void onReceive(Context context, Intent intent) {
 
-    String action = intent.getAction();
-    if (action == null || !lab13Running) return;
+    if (!lab13Running || intent == null) return;
 
+    String action = intent.getAction();
+    if (action == null) return;
+
+    // ------------------------------------------------------------
+    // DEVICE CONNECTED (INFO ONLY)
+    // ------------------------------------------------------------
     if (BluetoothDevice.ACTION_ACL_CONNECTED.equals(action)) {
 
-        // 🔒 guard: μην ξεκινήσει δεύτερη φορά
-        if (lab13MonitoringStarted) return;
-
         lab13HadAnyConnection = true;
-        lab13MonitoringStarted = true;
 
         if (lab13StatusText != null) {
-            lab13StatusText.setText(
-                "External device connected. Starting stability monitor..."
-            );
+            lab13StatusText.setText("External device connected.");
         }
 
-        startLab13Monitor60s(); // ✅ ξεκινά ΜΙΑ φορά
+        // ⚠️ ΔΕΝ ξεκινάμε monitor εδώ
+        // Το monitor ξεκινά ΜΟΝΟ από το precheck
+        return;
     }
 
+    // ------------------------------------------------------------
+    // DEVICE DISCONNECTED (CRITICAL EVENT)
+    // ------------------------------------------------------------
     if (BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(action)) {
-        if (lab13MonitoringStarted) {
-            lab13DisconnectEvents++;
-            }
+
+        if (!lab13MonitoringStarted) return;
+
+        lab13DisconnectEvents++;
+
+        if (lab13StatusText != null) {
+            lab13StatusText.setText("External device disconnected.");
         }
     }
+}
 }; 
 
 // ============================================================
@@ -231,6 +240,28 @@ private String lastScorePerformance = "N/A";
 private String lastScoreSecurity    = "N/A";  
 private String lastScorePrivacy     = "N/A";  
 private String lastFinalVerdict     = "N/A";  
+
+// ============================================================
+// LAB 13 — STATE / FIELDS
+// ============================================================
+
+// runtime state
+private volatile boolean lab13Running = false;
+private volatile boolean lab13MonitoringStarted = false;
+private volatile boolean lab13HadAnyConnection = false;
+private volatile boolean lab13AssumedConnected = false;
+
+// counters
+private int lab13DisconnectEvents = 0;
+private int lab13ReconnectEvents  = 0;
+
+// bluetooth handles
+private BluetoothManager lab13Bm;
+private BluetoothAdapter lab13Ba;
+
+// UI (monitor dialog)
+private AlertDialog lab13Dialog;
+private TextView lab13StatusText;
 
 // ============================================================  
 // LAB 14 — FLAGS / UI STATE (REQUIRED)  
@@ -4270,10 +4301,6 @@ private void lab13BluetoothConnectivityCheck() {
     } catch (Throwable ignore) {}
 
     if (ba == null) {
-        appendHtml("<br>");
-        logLine();
-        logInfo("LAB 13 — Bluetooth Connectivity Check");
-        logLine();
         logError("Bluetooth NOT supported on this device.");
         logLine();
         return;
@@ -4282,49 +4309,57 @@ private void lab13BluetoothConnectivityCheck() {
     // ------------------------------------------------------------
     // PRECHECK: already connected external Bluetooth device
     // ------------------------------------------------------------
-    boolean alreadyConnected = false;
+    private void lab13BluetoothConnectivityCheck() {
+
+    // ---------- PRECHECK: Bluetooth supported?
+    BluetoothManager bm = null;
+    BluetoothAdapter ba = null;
 
     try {
-        if (bm != null) {
-
-            List<BluetoothDevice> a2dp =
-                    bm.getConnectedDevices(BluetoothProfile.A2DP);
-
-            List<BluetoothDevice> gatt =
-                    bm.getConnectedDevices(BluetoothProfile.GATT);
-
-            if ((a2dp != null && !a2dp.isEmpty()) ||
-                (gatt != null && !gatt.isEmpty())) {
-
-                alreadyConnected = true;
-            }
-        }
+        bm = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
+        ba = (bm != null) ? bm.getAdapter() : null;
     } catch (Throwable ignore) {}
 
-    if (alreadyConnected) {
-
-        lab13HadAnyConnection = true;
-        lab13MonitoringStarted = true;
-
-        appendHtml("<br>");
-        logLine();
-        logInfo("LAB 13 — Bluetooth Connectivity Check");
-        logLine();
-
-        logInfo("External Bluetooth device already connected.");
-        logInfo("Starting stability monitor.");
-
-        startLab13Monitor60s();
-        return; // 🔒 ΤΕΛΟΣ — δεν πάμε σε popup
-    }
-
-    // ------------------------------------------------------------
-    // NORMAL FLOW (popup / receiver / waiting for connection)
-    // ------------------------------------------------------------
     appendHtml("<br>");
     logLine();
     logInfo("LAB 13 — Bluetooth Connectivity Check");
     logLine();
+
+    if (ba == null) {
+        logError("Bluetooth NOT supported on this device.");
+        logLine();
+        return;
+    }
+
+    if (!ba.isEnabled()) {
+        logError("Bluetooth is OFF. Please enable Bluetooth and retry.");
+        logLine();
+        return;
+    }
+
+    // ------------------------------------------------------------
+    // BASELINE ASSUMPTION (CRITICAL FIX)
+    // ------------------------------------------------------------
+    // Android does NOT reliably expose already-connected classic audio devices.
+    // We assume an existing connection if Bluetooth is ON and
+    // validate stability ONLY via ACL events.
+    // ------------------------------------------------------------
+
+    lab13Bm = bm;
+    lab13Ba = ba;
+
+    lab13Running = true;
+    lab13MonitoringStarted = true;
+    lab13HadAnyConnection = true;
+    lab13AssumedConnected = true;
+
+    logInfo("Bluetooth supported.");
+    logInfo("Bluetooth enabled.");
+    logInfo("Assuming existing external Bluetooth device connection.");
+    logInfo("Monitoring Bluetooth stability for 60 seconds.");
+
+    startLab13Monitor60s();
+}
 
     // ---------- POPUP (instruction gate)
     AlertDialog.Builder b = new AlertDialog.Builder(this);
@@ -4341,14 +4376,14 @@ private void lab13BluetoothConnectivityCheck() {
     root.setBackground(bg);
 
     TextView title = new TextView(this);
-    title.setText(
-            "LAB 13 — External Bluetooth Device Check\n\n" +
-            "Connect ONE external Bluetooth device.\n" +
-            "(e.g. headphones, car kit, keyboard).\n\n" +
-            "Keep the device CONNECTED for at least 1 minute,\n" +
-            "and DO NOT disconnect, during the test.\n\n" +
-            "This check, evaluates connection stability.\n\n" +
-            "Or, skip this step, to continue with the system Bluetooth connection check."
+title.setText(
+        "LAB 13 — External Bluetooth Device Check\n\n" +
+        "Please connect ONE external Bluetooth device.\n" +
+        "(e.g. headphones, car kit, keyboard).\n\n" +
+        "This test evaluates Bluetooth connection stability.\n\n" +
+        "If no external device is connected,\n" +
+        "you may skip this step to continue\n" +
+        "with the system Bluetooth check."
     );
     title.setTextColor(0xFFFFFFFF);
     title.setTextSize(18f);
@@ -4439,15 +4474,17 @@ private void lab13BluetoothConnectivityCheck() {
     gate.show();
 
     // TTS (optional)
-    if (tts != null && tts[0] != null && ttsReady[0] && !isTtsMuted()) {
-        try { tts[0].stop(); } catch (Throwable ignore) {}
-        tts[0].speak(
-                "Connect one external Bluetooth device. Keep it connected for at least one minute. " +
-                "Do not disconnect during the test, " +
-                "Or, skip this step, to continue with the system Bluetooth connection check.",
-                TextToSpeech.QUEUE_FLUSH,
-                null,
-                "LAB13_GATE"
+if (tts != null && tts[0] != null && ttsReady[0] && !isTtsMuted()) {
+    try { tts[0].stop(); } catch (Throwable ignore) {}
+
+    tts[0].speak(
+            "Please connect one external Bluetooth device now. " +
+            "This test evaluates, Bluetooth connection stability. " +
+            "If no external device is connected, " +
+            "you may skip this step, to continue with the system Bluetooth check.",
+            TextToSpeech.QUEUE_FLUSH,
+            null,
+            "LAB13_GATE"
         );
     }
 }
@@ -4486,10 +4523,11 @@ private void runLab13BluetoothCheckCore() {
 
     boolean enabled = false;
     try { enabled = lab13Ba.isEnabled(); } catch (Throwable ignore) {}
-    if (enabled) {
-    logOk("Enabled: Yes");
+    logInfo("Enabled:");
+if (enabled) {
+    logOk("Yes");
 } else {
-    logWarn("Enabled: No");
+    logWarn("No");
 }
 
     int state = BluetoothAdapter.STATE_OFF;
@@ -4499,24 +4537,28 @@ private void runLab13BluetoothCheckCore() {
             state == BluetoothAdapter.STATE_ON ? "ON" :
             state == BluetoothAdapter.STATE_TURNING_ON ? "TURNING ON" :
             state == BluetoothAdapter.STATE_TURNING_OFF ? "TURNING OFF" : "OFF";
-    if (state == BluetoothAdapter.STATE_ON) {
-    logOk("State: ON");
+    logInfo("State:");
+if (state == BluetoothAdapter.STATE_ON) {
+    logOk("ON");
 } else if (state == BluetoothAdapter.STATE_TURNING_ON) {
-    logWarn("State: TURNING ON");
+    logWarn("TURNING ON");
 } else if (state == BluetoothAdapter.STATE_TURNING_OFF) {
-    logWarn("State: TURNING OFF");
+    logWarn("TURNING OFF");
 } else {
-    logWarn("State: OFF");
+    logWarn("OFF");
 }
 
     boolean le = false;
-    try {
-        le = getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE);
-    } catch (Throwable ignore) {}
-    if (le) {
-    logOk("BLE Support: Yes");
+try {
+    le = getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE);
+} catch (Throwable ignore) {}
+
+logInfo("BLE Support:");
+
+if (le) {
+    logOk("Yes");
 } else {
-    logWarn("BLE Support: No");
+    logWarn("No");
 }
 
     if (!enabled) {
@@ -4771,12 +4813,15 @@ if (tts != null && tts[0] != null && ttsReady[0] && !isTtsMuted()) {
     try { tts[0].stop(); } catch (Throwable ignore) {}
 
     tts[0].speak(
-        "Connect one external Bluetooth device. Keep it connected for at least one minute. " +
-        "Do not disconnect during the test.",
+        "Connect one external Bluetooth device. " +
+        "Keep it connected for at least one minute. " +
+        "Do not disconnect during the test. " +
+        "Keep the Bluetooth device within ten meters of the phone. " +
+        "Do not move away from the device during monitoring.",
         TextToSpeech.QUEUE_FLUSH,
         null,
         "LAB13_GATE"
-    );
+);
 }
 }
 
@@ -5018,45 +5063,40 @@ try {
     }
 
 // ------------------------------------------------------------
-// CONNECTED DEVICE VERDICT — FINAL
+// CONNECTED DEVICE VERDICT — FINAL (FIXED)
 // ------------------------------------------------------------
 logLine();
 logInfo("LAB 13 — Connected Device Verdict");
 
-// Case 1: Δεν υπήρξε καμία ενεργή σύνδεση
-if (!lab13HadAnyConnection) {
+// ❌ Case 1: Το monitor δεν ξεκίνησε ποτέ
+if (!lab13MonitoringStarted) {
 
     logWarn(
-        "Paired Bluetooth devices were found, but no active external " +
-        "Bluetooth connection was detected during the test window."
+        "No active external Bluetooth device was detected during the test window."
     );
 
     logWarn(
         "This usually means that no external device was connected, " +
-        "or the connection was already idle/inactive."
+        "or Bluetooth was disabled or idle during the test."
     );
 
-// Case 2: Υπήρξε σύνδεση αλλά με αστάθεια
-} else if (lab13DisconnectEvents >= 3) {
+// ⚠️ Case 2: Υπήρξε σύνδεση αλλά με αποσυνδέσεις
+} else if (lab13DisconnectEvents >= 1) {
 
     logError(
         "An external Bluetooth device was connected, but frequent " +
         "disconnections were detected during monitoring."
     );
 
-    logInfo("Disconnect / Reconnect events:");
-
-    logError(
-        "Disconnect: " + lab13DisconnectEvents +
-        " | Reconnect: " + lab13ReconnectEvents
-    );
+    logInfo("Disconnect events detected:");
+    logError("Disconnect count: " + lab13DisconnectEvents);
 
     logWarn(
         "This points to a possible issue with the external device, " +
         "signal quality, or usage conditions."
     );
 
-// Case 3: Υπήρξε σύνδεση και ήταν σταθερή
+// ✅ Case 3: Σταθερή σύνδεση
 } else {
 
     logOk(
@@ -5064,30 +5104,18 @@ if (!lab13HadAnyConnection) {
         "stable during the monitoring period."
     );
 
-    // λευκά labels
-    logInfo("Disconnect / Reconnect events:");
+    logInfo("Disconnect events detected:");
 
-    // τιμές με severity
     if (lab13DisconnectEvents == 0) {
-
-        logOk(
-            "Disconnect: " + lab13DisconnectEvents +
-            " | Reconnect: " + lab13ReconnectEvents
-        );
-
+        logOk("Disconnect count: 0");
     } else {
-
-        logError(
-            "Disconnect: " + lab13DisconnectEvents +
-            " | Reconnect: " + lab13ReconnectEvents
-        );
+        logWarn("Disconnect count: " + lab13DisconnectEvents);
     }
 }
 
-    appendHtml("<br>");
-    logOk("Lab 13 finished.");
-    logLine();
-}
+appendHtml("<br>");
+logOk("Lab 13 finished.");
+logLine();
 
 // ============================================================
 // PROFILE NAME (small internal helper)

@@ -1867,6 +1867,7 @@ private TextView lab13DotsView;
 
 private final Handler lab13Handler = new Handler(Looper.getMainLooper());
 private boolean lab13Running = false;
+private boolean lab13MonitoringStarted = false;
 
 private long lab13StartMs = 0L;
 private int lab13Seconds = 0;

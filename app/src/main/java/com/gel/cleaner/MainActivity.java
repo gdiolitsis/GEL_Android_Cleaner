@@ -203,11 +203,6 @@ private void syncReturnButtonText() {
             : "RETURN TO APPLE MODE";
 
     btnReturnAndroid.setText(txt);
-
-    // ✅ DEBUG
-    log("🔎 RETURN SYNC | mode=" + mode + " | setText=" + txt
-            + " | viewId=" + btnReturnAndroid.getId()
-            + " | hash=" + System.identityHashCode(btnReturnAndroid), false);
 }
 
 @Override

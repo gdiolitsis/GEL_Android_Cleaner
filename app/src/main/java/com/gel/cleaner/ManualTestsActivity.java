@@ -153,10 +153,23 @@ private final BroadcastReceiver lab13BtReceiver = new BroadcastReceiver() {
 @Override
 public void onReceive(Context context, Intent intent) {
 
-    if (!lab13Running || intent == null) return;
+    if (intent == null) return;
 
     String action = intent.getAction();
     if (action == null) return;
+
+    if (BluetoothDevice.ACTION_ACL_CONNECTED.equals(action)) {
+
+        if (!lab13MonitoringStarted) {
+            lab13HadAnyConnection = true;
+            startLab13Monitor60s();
+        }
+
+    } else if (BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(action)) {
+
+        // events counted in monitor loop
+    }
+}
 
     // ------------------------------------------------------------
     // DEVICE CONNECTED (INFO ONLY)
@@ -4592,23 +4605,6 @@ f.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
 
 registerReceiver(lab13BtReceiver, f);
 
-// arm lab (ΜΟΝΟ ΕΔΩ)
-lab13Running = true;
-
-// ------------------------------------------------------------
-// IMMEDIATE CHECK — already connected devices (INFO ONLY)
-// ------------------------------------------------------------
-if (lab13IsAnyExternalConnected()) {
-
-    lab13HadAnyConnection = true;
-
-    if (lab13StatusText != null) {
-        lab13StatusText.setText(
-            "External device already connected. Waiting for stability monitor..."
-        );
-    }
-}
-
     // ---------- SHOW GEL DARK-GOLD MONITOR DIALOG
     AlertDialog.Builder b = new AlertDialog.Builder(this);
 
@@ -4728,11 +4724,27 @@ if (lab13IsAnyExternalConnected()) {
 
     lab13Dialog.setCancelable(false);
     lab13Dialog.show();
+    
+    // ------------------------------------------------------------
+// SNAPSHOT CHECK — already connected device (AFTER UI READY)
+// ------------------------------------------------------------
+if (lab13IsAnyExternalConnected()) {
+
+    lab13HadAnyConnection = true;
+
+    if (lab13StatusText != null) {
+        lab13StatusText.setText(
+            "External device already connected. Starting stability monitor..."
+        );
+    }
+
+    startLab13Monitor60s();
+}
 
 // ------------------------------------------------------------
 // WAIT FOR EXTERNAL DEVICE — RECEIVER-BASED
 // ------------------------------------------------------------
-if (lab13StatusText != null)
+if (!lab13MonitoringStarted && lab13StatusText != null)
     lab13StatusText.setText("Waiting for an external Bluetooth device...");
 
 if (lab13CounterText != null)
@@ -4748,9 +4760,6 @@ if (Build.VERSION.SDK_INT >= 31 &&
     );
     return;
 }
-
-// ✅ permission OK → απλώς arm το LAB
-lab13Running = true;
 
     // TTS
 if (tts != null && tts[0] != null && ttsReady[0] && !isTtsMuted()) {

@@ -4739,7 +4739,7 @@ if (!enabled) {
     // ------------------------------------------------------------
     if (lab13SkipExternalTest) {
         logWarn("External Bluetooth device test skipped by user.");
-        logOk("Proceeding with system Bluetooth connection check only.");
+        logOk("Proceeded with system Bluetooth connection check only.");
         appendHtml("<br>");
         logOk("Lab 13 finished.");
         logLine();
@@ -5081,28 +5081,28 @@ if (lab13StatusText != null) {
     if (!adapterStable) {
 
         lab13StatusText.setText("Bluetooth adapter not stable.");
-        lab13StatusText.setTextColor(0xFFFFD966); // 🟡 yellow (warning)
+        lab13StatusText.setTextColor(0xFFFFD966); //  yellow (warning)
 
     } else if (connected) {
 
         lab13StatusText.setText(
                 "External device connected — monitoring stability..."
         );
-        lab13StatusText.setTextColor(0xFF39FF14); // 🟢 GEL green (OK)
+        lab13StatusText.setTextColor(0xFF39FF14); //  GEL green (OK)
 
     } else if (lab13HadAnyConnection) {
 
         lab13StatusText.setText(
                 "External device temporarily unavailable."
         );
-        lab13StatusText.setTextColor(0xFFFFD966); // 🟡 yellow (warning)
+        lab13StatusText.setTextColor(0xFFFFD966); //  yellow (warning)
 
     } else {
 
         lab13StatusText.setText(
                 "Waiting for an external Bluetooth device..."
         );
-        lab13StatusText.setTextColor(0xFFFFD966); // 🟡 yellow (info/wait)
+        lab13StatusText.setTextColor(0xFFFFD966); //  yellow (info/wait)
     }
 }
 
@@ -5240,8 +5240,9 @@ logLabelValue(
 } else if (lab13HadAnyConnection) {
 
     logInfo(
-        "External Bluetooth device was connected during the test, " +
-        "but is currently idle or not actively using a profile."
+        logInfo(
+    "An external Bluetooth device was connected during the test, " +
+    "but it is currently not in active use."
     );
 
 }
@@ -5271,11 +5272,17 @@ logLabelValue(
     }
 
     // root note (optional)
-    if (isDeviceRooted()) {
-        logInfo("Root access: Available (advanced diagnostics possible).");
-    } else {
-        logInfo("Root access: Not available.");
-    }
+        if (isDeviceRooted()) {
+    logLabelValue(
+            "Root access",
+            "Available (advanced diagnostics possible)"
+    );
+} else {
+    logLabelValue(
+            "Root access",
+            "Not available"
+    );
+}
 
     // ------------------------------------------------------------
     // CONNECTED DEVICE VERDICT — FINAL (UNIFIED)

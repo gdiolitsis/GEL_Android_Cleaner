@@ -4453,12 +4453,6 @@ private void showLab13GatePopup() {
 // ============================================================
 private void runLab13BluetoothCheckCore() {
 
-    // ---------- LOG HEADER
-    appendHtml("<br>");
-    logLine();
-    logInfo("LAB 13 — Bluetooth Connectivity Check");
-    logLine();
-
     // ---------- GET BT
     lab13Bm = null;
     lab13Ba = null;
@@ -4629,9 +4623,11 @@ if (lab13IsAnyExternalConnected()) {
     TextView title = new TextView(this);
     title.setText(
             "LAB 13 — Bluetooth Stability Monitor\n\n" +
-            "Keep ONE external device connected.\n" +
-            "Monitoring for 60 seconds.\n" +
-            "Do not disconnect during the test."
+        "Connect one external Bluetooth device. " +
+        "Keep it connected, for at least one minute. " +
+        "Do not disconnect during the test. " +
+        "Keep the Bluetooth device, within ten meters of the phone. " +
+        "Do not move away from the device, during monitoring.",
     );
     title.setTextColor(0xFFFFFFFF);
     title.setTextSize(18f);
@@ -4759,10 +4755,10 @@ if (tts != null && tts[0] != null && ttsReady[0] && !isTtsMuted()) {
 
     tts[0].speak(
         "Connect one external Bluetooth device. " +
-        "Keep it connected for at least one minute. " +
+        "Keep it connected, for at least one minute. " +
         "Do not disconnect during the test. " +
-        "Keep the Bluetooth device within ten meters of the phone. " +
-        "Do not move away from the device during monitoring.",
+        "Keep the Bluetooth device, within ten meters of the phone. " +
+        "Do not move away from the device, during monitoring.",
         TextToSpeech.QUEUE_FLUSH,
         null,
         "LAB13_GATE"

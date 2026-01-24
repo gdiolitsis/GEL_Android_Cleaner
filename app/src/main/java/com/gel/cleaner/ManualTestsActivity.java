@@ -4243,10 +4243,7 @@ logOk(
         "This test does not initiate or verify real call execution."  
 );  
 
-logInfo(  
-    "Call audio routing and microphone/earpiece paths are examined separately (LAB 3)."
-
-);
+logInfo("Call audio routing and microphone/earpiece paths are examined separately (LAB 3).");
 
 appendHtml("<br>");
 logOk("Lab 12 finished.");

@@ -4533,20 +4533,11 @@ if (enabled) {
     int state = BluetoothAdapter.STATE_OFF;
     try { state = lab13Ba.getState(); } catch (Throwable ignore) {}
 
-    String stateStr =
-            state == BluetoothAdapter.STATE_ON ? "ON" :
-            state == BluetoothAdapter.STATE_TURNING_ON ? "TURNING ON" :
-            state == BluetoothAdapter.STATE_TURNING_OFF ? "TURNING OFF" : "OFF";
     logInfo("State:");
-if (state == BluetoothAdapter.STATE_ON) {
-    logOk("ON");
-} else if (state == BluetoothAdapter.STATE_TURNING_ON) {
-    logWarn("TURNING ON");
-} else if (state == BluetoothAdapter.STATE_TURNING_OFF) {
-    logWarn("TURNING OFF");
-} else {
-    logWarn("OFF");
-}
+if (state == BluetoothAdapter.STATE_ON) logOk("ON");
+else if (state == BluetoothAdapter.STATE_TURNING_ON) logWarn("TURNING ON");
+else if (state == BluetoothAdapter.STATE_TURNING_OFF) logWarn("TURNING OFF");
+else logWarn("OFF");
 
     boolean le = false;
 try {
@@ -4554,12 +4545,7 @@ try {
 } catch (Throwable ignore) {}
 
 logInfo("BLE Support:");
-
-if (le) {
-    logOk("Yes");
-} else {
-    logWarn("No");
-}
+if (le) logOk("Yes"); else logWarn("No");
 
     if (!enabled) {
         logWarn("Bluetooth is OFF — enable Bluetooth and re-run Lab 13.");
@@ -4617,8 +4603,8 @@ try {
     // SYSTEM-ONLY MODE (Skip external device test)
     // ------------------------------------------------------------
     if (lab13SkipExternalTest) {
-        logInfo("External Bluetooth device test skipped by user.");
-        logInfo("Proceeding with system Bluetooth connection check only.");
+        logWarn("External Bluetooth device test skipped by user.");
+        logOk("Proceeding with system Bluetooth connection check only.");
         appendHtml("<br>");
         logOk("Lab 13 finished.");
         logLine();
@@ -5116,6 +5102,7 @@ if (!lab13MonitoringStarted) {
 appendHtml("<br>");
 logOk("Lab 13 finished.");
 logLine();
+}
 
 // ============================================================
 // PROFILE NAME (small internal helper)

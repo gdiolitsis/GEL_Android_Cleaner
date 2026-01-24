@@ -4289,9 +4289,11 @@ logLine();
 // (FINAL — STRUCTURED / NO NESTED METHODS / READY COPY-PASTE)
 // ============================================================
 
+// ============================================================
+// LAB 13 — Bluetooth Connectivity Check (ENTRY)
+// ============================================================
 private void lab13BluetoothConnectivityCheck() {
 
-    // ---------- PRECHECK: Bluetooth supported?
     BluetoothManager bm = null;
     BluetoothAdapter ba = null;
 
@@ -4311,15 +4313,16 @@ private void lab13BluetoothConnectivityCheck() {
         return;
     }
 
-    if (!ba.isEnabled()) {
+    boolean enabled = false;
+    try { enabled = ba.isEnabled(); } catch (Throwable ignore) {}
+
+    if (!enabled) {
         logError("Bluetooth is OFF. Please enable Bluetooth and retry.");
         logLine();
         return;
     }
 
-    // ------------------------------------------------------------
-    // RESET LAB 13 STATE (CRITICAL)
-    // ------------------------------------------------------------
+    // RESET STATE
     lab13Bm = bm;
     lab13Ba = ba;
 
@@ -4331,13 +4334,15 @@ private void lab13BluetoothConnectivityCheck() {
     lab13DisconnectEvents = 0;
     lab13ReconnectEvents  = 0;
 
-    // ------------------------------------------------------------
-    // ALWAYS SHOW POPUP (USER DECIDES)
-    // ------------------------------------------------------------
+    // 👉 ΠΑΝΤΑ POPUP
     showLab13GatePopup();
 }
 
-    // ---------- POPUP (instruction gate)
+// ============================================================
+// LAB 13 — GATE POPUP (Skip / Continue)
+// ============================================================
+private void showLab13GatePopup() {
+
     AlertDialog.Builder b = new AlertDialog.Builder(this);
 
     // GEL Dark+Gold custom view (like LAB 15)
@@ -4352,14 +4357,14 @@ private void lab13BluetoothConnectivityCheck() {
     root.setBackground(bg);
 
     TextView title = new TextView(this);
-title.setText(
-        "LAB 13 — External Bluetooth Device Check\n\n" +
-        "Please connect ONE external Bluetooth device.\n" +
-        "(e.g. headphones, car kit, keyboard).\n\n" +
-        "This test evaluates Bluetooth connection stability.\n\n" +
-        "If no external device is connected,\n" +
-        "you may skip this step to continue\n" +
-        "with the system Bluetooth check."
+    title.setText(
+            "LAB 13 — External Bluetooth Device Check\n\n" +
+            "Please connect ONE external Bluetooth device.\n" +
+            "(e.g. headphones, car kit, keyboard).\n\n" +
+            "This test evaluates Bluetooth connection stability.\n\n" +
+            "If no external device is connected,\n" +
+            "you may skip this step to continue\n" +
+            "with the system Bluetooth check."
     );
     title.setTextColor(0xFFFFFFFF);
     title.setTextSize(18f);
@@ -4370,7 +4375,7 @@ title.setText(
 
     // Small note line
     TextView note = new TextView(this);
-    note.setText("Tip: if Bluetooth is OFF, enable it first.");
+    note.setText("Tip: keep the Bluetooth device within 10 meters.");
     note.setTextColor(0xFFAAAAAA);
     note.setTextSize(14f);
     note.setGravity(Gravity.CENTER);
@@ -4428,39 +4433,34 @@ title.setText(
     }
 
     cancelBtn.setOnClickListener(v -> {
-        try {
-            if (tts != null && tts[0] != null) tts[0].stop();
-        } catch (Throwable ignore) {}
-
-        lab13SkipExternalTest = true;   
+        try { if (tts != null && tts[0] != null) tts[0].stop(); } catch (Throwable ignore) {}
+        lab13SkipExternalTest = true;
         gate.dismiss();
         runLab13BluetoothCheckCore();   // system-only
     });
 
     contBtn.setOnClickListener(v -> {
-        try {
-            if (tts != null && tts[0] != null) tts[0].stop();
-        } catch (Throwable ignore) {}
-
-        lab13SkipExternalTest = false; 
+        try { if (tts != null && tts[0] != null) tts[0].stop(); } catch (Throwable ignore) {}
+        lab13SkipExternalTest = false;
         gate.dismiss();
         runLab13BluetoothCheckCore();   // full test
     });
 
+    gate.setCancelable(true);
     gate.show();
 
     // TTS (optional)
-if (tts != null && tts[0] != null && ttsReady[0] && !isTtsMuted()) {
-    try { tts[0].stop(); } catch (Throwable ignore) {}
+    if (tts != null && tts[0] != null && ttsReady[0] && !isTtsMuted()) {
+        try { tts[0].stop(); } catch (Throwable ignore) {}
 
-    tts[0].speak(
-            "Please connect one external Bluetooth device now. " +
-            "This test evaluates, Bluetooth connection stability. " +
-            "If no external device is connected, " +
-            "you may skip this step, to continue with the system Bluetooth check.",
-            TextToSpeech.QUEUE_FLUSH,
-            null,
-            "LAB13_GATE"
+        tts[0].speak(
+                "Please connect one external Bluetooth device now. " +
+                "This test evaluates Bluetooth connection stability. " +
+                "If no external device is connected, you may skip this step " +
+                "to continue with the system Bluetooth check.",
+                TextToSpeech.QUEUE_FLUSH,
+                null,
+                "LAB13_GATE"
         );
     }
 }

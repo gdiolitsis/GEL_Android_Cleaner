@@ -150,62 +150,28 @@ private AlertDialog lab14RunningDialog;
 private static final int REQ_LAB13_BT_CONNECT = 1313;
 
 private final BroadcastReceiver lab13BtReceiver = new BroadcastReceiver() {
-@Override
-public void onReceive(Context context, Intent intent) {
 
-    if (intent == null) return;
+    @Override
+    public void onReceive(Context context, Intent intent) {
 
-    String action = intent.getAction();
-    if (action == null) return;
+        if (intent == null) return;
 
-    if (BluetoothDevice.ACTION_ACL_CONNECTED.equals(action)) {
+        String action = intent.getAction();
+        if (action == null) return;
 
-        if (!lab13MonitoringStarted) {
-            lab13HadAnyConnection = true;
-            startLab13Monitor60s();
-        }
+        if (BluetoothDevice.ACTION_ACL_CONNECTED.equals(action)) {
 
-    } else if (BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(action)) {
+            if (!lab13MonitoringStarted) {
+                lab13HadAnyConnection = true;
+                startLab13Monitor60s();
+            }
 
-        // events counted in monitor loop
-    }
-}
+        } else if (BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(action)) {
 
-    // ------------------------------------------------------------
-    // DEVICE CONNECTED (INFO ONLY)
-    // ------------------------------------------------------------
-    if (BluetoothDevice.ACTION_ACL_CONNECTED.equals(action)) {
-
-    lab13HadAnyConnection = true;
-
-    if (!lab13MonitoringStarted) {
-        lab13MonitoringStarted = true;
-
-        if (lab13StatusText != null) {
-            lab13StatusText.setText(
-                "External device connected. Starting stability monitor..."
-            );
-        }
-
-        startLab13Monitor60s(); // ✅ ΜΟΝΑΔΙΚΟ σημείο εκκίνησης
-    }
-}
-
-    // ------------------------------------------------------------
-    // DEVICE DISCONNECTED (CRITICAL EVENT)
-    // ------------------------------------------------------------
-    if (BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(action)) {
-
-        if (!lab13MonitoringStarted) return;
-
-        lab13DisconnectEvents++;
-
-        if (lab13StatusText != null) {
-            lab13StatusText.setText("External device disconnected.");
+            // disconnects are detected inside monitor loop
         }
     }
-}
-}; 
+};
 
 // ============================================================
 // GLOBAL TTS (for labs that need shared access)

@@ -4300,26 +4300,6 @@ private void lab13BluetoothConnectivityCheck() {
         ba = (bm != null) ? bm.getAdapter() : null;
     } catch (Throwable ignore) {}
 
-    if (ba == null) {
-        logError("Bluetooth NOT supported on this device.");
-        logLine();
-        return;
-    }
-
-    // ------------------------------------------------------------
-    // PRECHECK: already connected external Bluetooth device
-    // ------------------------------------------------------------
-    private void lab13BluetoothConnectivityCheck() {
-
-    // ---------- PRECHECK: Bluetooth supported?
-    BluetoothManager bm = null;
-    BluetoothAdapter ba = null;
-
-    try {
-        bm = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
-        ba = (bm != null) ? bm.getAdapter() : null;
-    } catch (Throwable ignore) {}
-
     appendHtml("<br>");
     logLine();
     logInfo("LAB 13 — Bluetooth Connectivity Check");
@@ -4338,27 +4318,23 @@ private void lab13BluetoothConnectivityCheck() {
     }
 
     // ------------------------------------------------------------
-    // BASELINE ASSUMPTION (CRITICAL FIX)
+    // RESET LAB 13 STATE (CRITICAL)
     // ------------------------------------------------------------
-    // Android does NOT reliably expose already-connected classic audio devices.
-    // We assume an existing connection if Bluetooth is ON and
-    // validate stability ONLY via ACL events.
-    // ------------------------------------------------------------
-
     lab13Bm = bm;
     lab13Ba = ba;
 
-    lab13Running = true;
-    lab13MonitoringStarted = true;
-    lab13HadAnyConnection = true;
-    lab13AssumedConnected = true;
+    lab13Running = false;
+    lab13MonitoringStarted = false;
+    lab13HadAnyConnection = false;
+    lab13AssumedConnected = false;
 
-    logInfo("Bluetooth supported.");
-    logInfo("Bluetooth enabled.");
-    logInfo("Assuming existing external Bluetooth device connection.");
-    logInfo("Monitoring Bluetooth stability for 60 seconds.");
+    lab13DisconnectEvents = 0;
+    lab13ReconnectEvents  = 0;
 
-    startLab13Monitor60s();
+    // ------------------------------------------------------------
+    // ALWAYS SHOW POPUP (USER DECIDES)
+    // ------------------------------------------------------------
+    showLab13GatePopup();
 }
 
     // ---------- POPUP (instruction gate)

@@ -4627,8 +4627,9 @@ if (lab13IsAnyExternalConnected()) {
         "Keep it connected, for at least one minute. " +
         "Do not disconnect during the test. " +
         "Keep the Bluetooth device, within ten meters of the phone. " +
-        "Do not move away from the device, during monitoring.",
+        "Do not move away from the device, during monitoring."
     );
+    
     title.setTextColor(0xFFFFFFFF);
     title.setTextSize(18f);
     title.setTypeface(null, Typeface.BOLD);

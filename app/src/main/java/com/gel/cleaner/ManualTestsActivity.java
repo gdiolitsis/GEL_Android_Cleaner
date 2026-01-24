@@ -1409,35 +1409,35 @@ try { if (br != null) br.close(); } catch (Throwable ignore) {}
 // ------------------------------------------------------------
 // LAB 15 thermal correlation — FIXED (LABEL WHITE, VALUES GREEN)
 // ------------------------------------------------------------
-private void logLab15ThermalCorrelation() {
-logLab15ThermalCorrelation(Float.NaN, Float.NaN, Float.NaN);
-}
-
 private void logLab15ThermalCorrelation(
-float battTempStart,
-float battTempPeak,
-float battTempEnd
+        float battTempStart,
+        float battTempPeak,
+        float battTempEnd
 ) {
-if (txtLog == null) {
-logInfo(String.format(
-Locale.US,
-"Thermal correlation (charging): start %.1f C -> peak %.1f C -> end %.1f C"
-battTempStart,
-(Float.isNaN(battTempPeak) ? battTempEnd : battTempPeak),
-battTempEnd
-));
-return;
+
+    if (txtLog == null) {
+        logInfo(String.format(
+                Locale.US,
+                "Thermal correlation (charging): start %.1f°C -> peak %.1f°C -> end %.1f°C",
+                battTempStart,
+                (Float.isNaN(battTempPeak) ? battTempEnd : battTempPeak),
+                battTempEnd
+        ));
+        return;
+    }
+
+    String label = "Thermal correlation (charging): ";
+
+    String values = String.format(
+            Locale.US,
+            "start %.1f°C -> peak %.1f°C -> end %.1f°C",
+            battTempStart,
+            (Float.isNaN(battTempPeak) ? battTempEnd : battTempPeak),
+            battTempEnd
+    );
+
+    logInfo(label + values);
 }
-
-String label = "Thermal correlation (charging): ";  
-
-String values = String.format(  
-        Locale.US,  
-        "start %.1f°C -> peak %.1f°C -> end %.1f°C",  
-        battTempStart,  
-        (Float.isNaN(battTempPeak) ? battTempEnd : battTempPeak),  
-        battTempEnd  
-);  
 
 SpannableString sp = new SpannableString(label + values);  
 
@@ -1475,9 +1475,9 @@ boolean strong = "Strong".equalsIgnoreCase(d);
 boolean normal = "Normal".equalsIgnoreCase(d);  
 boolean weak   = "Weak".equalsIgnoreCase(d);  
 
-appendHtml((strong ? " " : "⚠️ ") + "<font color='#FFFFFF'>Strong</font>");  
-appendHtml((normal ? " " : "⚠️ ") + "<font color='#FFFFFF'>Normal</font>");  
-appendHtml((weak   ? " " : "⚠️ ") + "<font color='#FFFFFF'>Weak</font>");  
+appendHtml((strong ? " " : " ") + "<font color='#FFFFFF'>Strong</font>");  
+appendHtml((normal ? " " : " ") + "<font color='#FFFFFF'>Normal</font>");  
+appendHtml((weak   ? " " : " ") + "<font color='#FFFFFF'>Weak</font>");  
 
 if (strong) logOk("Health Map: Strong");  
 else if (normal) logWarn("Health Map: Normal");  
@@ -2783,15 +2783,15 @@ private String getLab28TextEN() {
 
 private String getLab28TextGR() {
     return
-        "⚠️ ⚠️⚠️⚠️⚠️⚠️ ⚠️⚠️⚠️⚠️⚠️ ⚠️⚠️⚠️⚠️, ⚠️⚠️⚠️⚠️ ⚠️⚠️ ⚠️ ⚠️ labs ⚠️⚠️ ⚠️ ⚠️⚠️ ⚠️ ⚠️⚠️. " +
-        "⚠️⚠️ ⚠️ ⚠️⚠️⚠️⚠️⚠️ ⚠️⚠️ ⚠️⚠️ ⚠️⚠️⚠️ ⚠️⚠️⚠️⚠️⚠️. " +
-        "⚠️ ⚠️⚠️⚠️⚠️⚠️⚠️ ⚠️⚠️⚠️ ⚠️⚠️⚠️ ⚠️ ⚠️ ⚠️⚠️⚠️⚠️⚠️⚠️ ⚠️⚠️⚠️⚠️⚠️ ⚠️⚠️⚠️⚠️⚠️. " +
-        "⚠️ ⚠️⚠️⚠️⚠️⚠️⚠️ ⚠️⚠️⚠️ ⚠️ ⚠️⚠️⚠️⚠️ ⚠️⚠️⚠️ ⚠️⚠️⚠️⚠️⚠️⚠️ " +
-        "⚠️ ⚠️⚠️⚠️⚠️⚠️ ⚠️ ⚠️⚠️⚠️⚠️⚠️⚠️ ⚠️⚠️⚠️, " +
-        "⚠️⚠️ ⚠️⚠️⚠️⚠️, ⚠️⚠️⚠️ ⚠️⚠️⚠️⚠️⚠️⚠️⚠️  ⚠️⚠️⚠️ ⚠️⚠️⚠️. " +
-        "⚠️⚠️⚠️⚠️⚠️⚠️⚠️ ⚠️ ⚠️⚠️ ⚠️ ⚠️⚠️⚠️ ⚠️⚠️⚠️⚠️⚠️⚠️, ⚠️ ⚠️ ⚠️⚠️⚠️ ⚠️⚠️⚠️⚠️. " +
-        "⚠️ ⚠️⚠️⚠️⚠️ ⚠️⚠️⚠️⚠️, ⚠️⚠️⚠️⚠️⚠️ ⚠️⚠️ ⚠️ ⚠️⚠️⚠️ ⚠️⚠️⚠️ " +
-        "⚠️ ⚠️⚠️⚠️⚠️⚠️⚠️⚠️ ⚠️⚠️⚠️⚠️⚠️⚠️ ⚠️⚠️⚠️.";
+        "   ,     labs     . " +
+        "      . " +
+        "        . " +
+        "       " +
+        "    , " +
+        " ,     . " +
+        "     ,    . " +
+        "  ,      " +
+        "   .";
 }
 
 // ============================================================
@@ -3235,7 +3235,7 @@ runOnUiThread(() -> {
     root.addView(muteBox);  
 
     // ==========================  
-    // ⚠️ START BUTTON
+    //  START BUTTON
     // ==========================  
     Button start = new Button(this);  
     start.setText("START TEST");  
@@ -5134,7 +5134,7 @@ private void abortLab13ByUser() {
 private void lab14BatteryHealthStressTest() {
 
 if (lab14Running) {  
-    logWarn("⚠️ LAB 14 already running.");  
+    logWarn(" LAB 14 already running.");  
     return;  
 }  
 lab14Running = true;  
@@ -5220,12 +5220,12 @@ Runtime.getRuntime().availableProcessors() +
 if (cpuTempStart != null)
 logOk(String.format(Locale.US, "… CPU temperature (start): %.1f°C", cpuTempStart));
 else
-logWarn("⚠️ CPU temperature (start): N/A");
+logWarn(" CPU temperature (start): N/A");
 
 if (gpuTempStart != null)
 logOk(String.format(Locale.US, "… GPU temperature (start): %.1f°C", gpuTempStart));
 else
-logWarn("⚠️ GPU temperature (start): N/A");
+logWarn(" GPU temperature (start): N/A");
 
 // System thermal domains (informational, like old LAB)
 logOk("… Thermal domains: CPU / GPU / SKIN / PMIC / BATT");
@@ -5333,7 +5333,7 @@ final TextView statusText = new TextView(this);
         } catch (Throwable ignore) {}  
         lab14Dialog = null;  
 
-        logWarn("⚠️ LAB 14 cancelled by user.");  
+        logWarn(" LAB 14 cancelled by user.");  
     });  
 
     root.addView(exitBtn);  
@@ -5407,7 +5407,7 @@ final TextView statusText = new TextView(this);
             final Lab14Engine.GelBatterySnapshot snapEnd = engine.readSnapshot();  
 
             if (snapEnd.chargeNowMah <= 0) {  
-                logWarn("⚠️ Unable to read final charge counter.");  
+                logWarn(" Unable to read final charge counter.");  
                 return;  
             }  
 
@@ -5649,8 +5649,8 @@ Locale.US,
 mahPerHour
 ));
 } else {
-logWarn("⚠️ Invalid (counter anomaly or no drop)");
-logWarn("⚠️ Counter anomaly detected (PMIC / system-level behavior). Repeat test after system reboot");
+logWarn(" Invalid (counter anomaly or no drop)");
+logWarn(" Counter anomaly detected (PMIC / system-level behavior). Repeat test after system reboot");
 }
 
 // SCORE (Î±ÏÎ¹Î¸Î¼ÏŒÏ‚ + runs)
@@ -5681,7 +5681,7 @@ logOk(String.format(
 } else {
 
 logInfo("Battery aging index:");  
-logWarn("⚠️ Insufficient data");
+logWarn(" Insufficient data");
 
 }
 
@@ -5754,7 +5754,7 @@ logLine();
 private void lab15ChargingSystemSmart() {
 
 if (lab15Running) {  
-    logWarn("⚠️ LAB 15 already running.");  
+    logWarn(" LAB 15 already running.");  
     return;  
 }  
 
@@ -6149,7 +6149,7 @@ ui.post(new Runnable() {
                 logOk("… NORMAL");  
                 lab15_strengthWeak = false;  
             } else if (mahPerMin >= 5.0) {  
-                logWarn("⚠️ MODERATE");  
+                logWarn(" MODERATE");  
                 lab15_strengthWeak = true;  
             } else {  
                 logError(" WEAK");  
@@ -6158,7 +6158,7 @@ ui.post(new Runnable() {
 
         } else {  
             logInfo("Charging strength:");  
-            logWarn("⚠️ Unable to estimate accurately.");  
+            logWarn(" Unable to estimate accurately.");  
             lab15_strengthKnown = false;  
             lab15_strengthWeak  = true;  
         }  
@@ -6171,8 +6171,8 @@ if (!lab15OverTempDuringCharge && !lab15FlapUnstable && !lab15_strengthWeak) {
 logOk("… Charging system OK. No cleaning or replacement required.");
 logOk("… Charging stability OK.");
 } else {
-logWarn("⚠️ Charging system shows potential issues.");
-logWarn("⚠️ Further inspection or repeat test recommended.");
+logWarn(" Charging system shows potential issues.");
+logWarn(" Further inspection or repeat test recommended.");
 }
 
         // ------------------------------------------------------------  
@@ -6196,7 +6196,7 @@ try {
             (batteryHealthy || thermalPressure)) {  
 
         lab15_systemLimited = true;  
-        logWarn("⚠️ System-limited (not battery)");  
+        logWarn(" System-limited (not battery)");  
         logOk("Likely cause: thermal / PMIC protection limiting current.");  
 
     } else {  
@@ -6341,8 +6341,8 @@ if (peakTemp > 0) {
 boolean hiddenRisk = detectHiddenThermalAnomaly(55f);  
 
 if (hiddenRisk) {  
-    logWarn("⚠️ Elevated temperature detected in non-displayed system components.");  
-    logWarn("⚠️ Thermal protection mechanisms may activate.");  
+    logWarn(" Elevated temperature detected in non-displayed system components.");  
+    logWarn(" Thermal protection mechanisms may activate.");  
 } else {  
     logOk("All critical thermal sensors were monitored during this test.");  
 }  
@@ -6661,7 +6661,7 @@ try {
 
         if (lab14Unstable) {  
             logLine();  
-            logWarn("⚠️ Measurement reliability warning:");  
+            logWarn(" Measurement reliability warning:");  
             logWarn("Battery measurements show instability.");  
             logWarn("This suggests unstable power measurement (PMIC / fuel gauge),");  
             logOk("not a confirmed battery failure.");  
@@ -6676,7 +6676,7 @@ try {
         } else {  
 
             if (batteryLooksFineButThermalBad) {  
-                logWarn("⚠️ Battery health looks OK, but device thermal behaviour is risky.");  
+                logWarn(" Battery health looks OK, but device thermal behaviour is risky.");  
                 logInfo("Recommendation:");  
                 logWarn("Inspect cooling path and thermal interfaces.");  
                 logInfo("Possible causes:");  
@@ -6685,18 +6685,18 @@ try {
 
             if (chargingWeakOrThrottled) {  
                 if (lab15SystemLimited) {  
-                    logWarn("⚠️ Charging appears system-limited (protection logic).");  
+                    logWarn(" Charging appears system-limited (protection logic).");  
                     logInfo("Possible causes:");  
                     logWarn("Overheating, PMIC limiting current.");  
                 } else if (lab15Charge < 60) {  
-                    logWarn("⚠️ Charging performance is weak.");  
+                    logWarn(" Charging performance is weak.");  
                     logInfo("Possible causes:");  
                     logWarn("Cable / adapter quality, charging port wear, battery impedance.");  
                 }  
             }  
 
             if (batteryBadButThermalOk) {  
-                logWarn("⚠️ Battery health is weak while thermals are OK.");  
+                logWarn(" Battery health is weak while thermals are OK.");  
                 logInfo("Likely cause:");  
                 logWarn("Battery aging / capacity loss.");  
             }  
@@ -6974,7 +6974,7 @@ if (snap.cachedKb > 0) {
 
     } else if (pressure) {  
 
-        logWarn("⚠️ Storage under pressure.");  
+        logWarn(" Storage under pressure.");  
         logWarn("System may feel slower when handling files and updates.");  
 
     } else {  
@@ -7011,7 +7011,7 @@ if (snap.cachedKb > 0) {
 
         if (wearSignals) {  
 
-            logWarn("⚠️ Internal signs of long-term storage wear detected.");  
+            logWarn(" Internal signs of long-term storage wear detected.");  
             logInfo("This does NOT indicate failure.");  
             logOk("Flash memory wear increases gradually over time.");  
 
@@ -7021,7 +7021,7 @@ if (snap.cachedKb > 0) {
         }  
 
         if (reservedPressure) {  
-            logWarn("⚠️ System reserved space is being compressed.");  
+            logWarn(" System reserved space is being compressed.");  
             logInfo("Android may limit background tasks to protect stability.");  
         }  
 
@@ -7038,7 +7038,7 @@ if (snap.cachedKb > 0) {
     if (critical) {  
         logError(" Immediate cleanup strongly recommended.");  
     } else if (pressure) {  
-        logWarn("⚠️ Cleanup recommended to restore smooth performance.");  
+        logWarn(" Cleanup recommended to restore smooth performance.");  
     } else {  
         logOk("… No action required.");  
     }  
@@ -7103,7 +7103,7 @@ try {
         logWarn("User experience: strong lag, reloads, UI stutter.");  
 
     } else if (pctFree < 15) {  
-        logWarn("⚠️ High RAM pressure detected.");  
+        logWarn(" High RAM pressure detected.");  
         logWarn("Multitasking may be unstable under load.");  
 
     } else if (pctFree < 25) {  
@@ -7147,7 +7147,7 @@ try {
 
     // ---------------- LOW MEMORY STATE ----------------  
     if (mi.lowMemory) {  
-        logWarn("⚠️ Android reports low-memory state.");  
+        logWarn(" Android reports low-memory state.");  
         logWarn("System protection mechanisms are active.");  
     }  
 
@@ -7162,7 +7162,7 @@ try {
         boolean swapActive = isSwapActiveSafe();   // generic swap  
 
         if (zramActive || swapActive) {  
-            logWarn("⚠️ Memory compression / swap detected.");  
+            logWarn(" Memory compression / swap detected.");  
             logInfo("System is extending RAM using CPU cycles.");  
             logOk("This improves stability but may reduce performance.");  
         } else {  
@@ -7219,13 +7219,13 @@ private void lab20UptimeHints() {
         // ----------------------------------------------------
         if (veryRecentReboot) {
 
-            logWarn("⚠️ Recent reboot detected.");
+            logWarn(" Recent reboot detected.");
             logWarn("Some issues may be temporarily masked (memory, thermal, background load).");
             logInfo("Diagnostics are valid, but not fully representative yet.");
 
         } else if (veryLongUptime) {
 
-            logWarn("⚠️ Long uptime detected.");
+            logWarn(" Long uptime detected.");
             logWarn("Background processes and memory pressure may accumulate over time.");
 
             if (extremeUptime) {
@@ -7253,14 +7253,14 @@ private void lab20UptimeHints() {
             frequentReboots = detectFrequentRebootsHint();   // â­ ASSIGN, ÏŒÏ‡Î¹ Î½Î­Î± Î´Î®Î»Ï‰ÏƒÎ·
 
             if (frequentReboots) {
-                logWarn("⚠️ Repeated reboot pattern detected.");
+                logWarn(" Repeated reboot pattern detected.");
                 logWarn("This may indicate instability, crashes or watchdog resets.");
             } else {
                 logOk("No abnormal reboot patterns detected.");
             }
 
             if (!lowMemoryPressure) {
-                logWarn("⚠️ Memory pressure events detected during uptime.");
+                logWarn(" Memory pressure events detected during uptime.");
                 logInfo("System may be aggressively managing apps in background.");
             } else {
                 logOk("No significant memory pressure signals detected.");
@@ -7931,9 +7931,9 @@ logOk("• ADB Pairing is not active.");
 }
 
 if (risk >= 60)
-logError("⚠️Â  Very high risk — disable ADB features immediately!");
+logError("Â  Very high risk — disable ADB features immediately!");
 else if (risk >= 30)
-logWarn("⚠️Â  Partial exposure — review ADB settings.");
+logWarn("Â  Partial exposure — review ADB settings.");
 else
 logOk("ï¸ Risk level acceptable.");
 
@@ -8890,7 +8890,7 @@ if (redundancy) riskPoints += 1;
 logInfo("Human verdict:");  
   
 if (riskPoints >= 8) {  
-logWarn("⚠️ High app pressure detected.");  
+logWarn(" High app pressure detected.");  
 logWarn("This increases the probability of lag, or background drain over time.");  
 logInfo("What this means (simple terms):");  
 logWarn("Your phone runs many apps with background or high-permission capabilities.");  
@@ -8898,7 +8898,7 @@ logOk("This is common on power-user devices and is NOT a hardware fault.");
 logOk("Recommendation: keep only what you really use and reduce duplicates if you want extra smoothness.");  
 
 } else if (riskPoints >= 5) {  
-    logWarn("⚠️ Moderate app pressure detected.");  
+    logWarn(" Moderate app pressure detected.");  
     logWarn("Performance may degrade over time depending on usage patterns.");  
     logInfo("What this means (simple terms):");  
     logOk("Several apps can run or react in the background, even if you don’t open them daily.");  
@@ -8972,7 +8972,7 @@ if (rooted) {
     } catch (Throwable ignore) {}  
 
     if (orphanDirs > 0) {  
-        logWarn("⚠️ Leftover app data detected (orphan folders).");  
+        logWarn(" Leftover app data detected (orphan folders).");  
         logOk("Count: " + orphanDirs + " | Approx size: " + humanBytes(orphanBytes));  
         logInfo("Human meaning:");  
         logOk("Uninstalled apps may have left data behind. Not dangerous, but adds clutter.");  
@@ -8985,7 +8985,7 @@ if (rooted) {
         File cache = new File("/data/cache");  
         long cacheSz = dirSizeBestEffortRoot(cache);  
         if (cacheSz > (700L * 1024L * 1024L)) {  
-            logWarn("⚠️ System cache is very large (" + humanBytes(cacheSz) + ").");  
+            logWarn(" System cache is very large (" + humanBytes(cacheSz) + ").");  
             logOk("This can contribute to storage pressure on some devices.");  
         } else if (cacheSz > (350L * 1024L * 1024L)) {  
             logInfo("System cache size: " + humanBytes(cacheSz) + " (moderate).");  
@@ -9314,8 +9314,8 @@ return (i >= 0 && i < p.length() - 1) ? p.substring(i + 1) : p;
 // ============================================================
 // LAB 28 — Hardware Stability & Interconnect Integrity
 // TECHNICIAN MODE — SYMPTOM-BASED TRIAGE ONLY
-// ⚠️ This lab does NOT diagnose hardware faults.
-// ⚠️ Does NOT confirm soldering defects.
+//  This lab does NOT diagnose hardware faults.
+//  Does NOT confirm soldering defects.
 // ============================================================
 private void lab28HardwareStability() {
 
@@ -9328,7 +9328,7 @@ private void lab28HardwareStability() {
     // ------------------------------------------------------------
     // POPUP — TECHNICIAN WARNING (with TTS + Language + Mute)
     // ------------------------------------------------------------
-    // ⚠️ helper method (showLab28Popup) Î²ÏÎ¯ÏƒÎºÎµÏ„Î±Î¹ ÏƒÏ„Î± helpers Ï„Î¿Ï… activity
+    //  helper method (showLab28Popup) Î²ÏÎ¯ÏƒÎºÎµÏ„Î±Î¹ ÏƒÏ„Î± helpers Ï„Î¿Ï… activity
     showLab28Popup();
 
     // ============================================================
@@ -9486,7 +9486,7 @@ private void lab28HardwareStability() {
     logInfo("Technician note:");
 
     if (finalScore >= 60) {
-        logWarn("⚠️ Multi-source instability pattern detected.");
+        logWarn(" Multi-source instability pattern detected.");
         logWarn("Symptoms MAY be consistent with intermittent contact issues.");
         logWarn("This includes POSSIBLE loose connectors or unstable interconnect paths.");
         logInfo("Important:");
@@ -9496,7 +9496,7 @@ private void lab28HardwareStability() {
         logOk("Professional physical inspection and bench testing recommended.");
     }
     else if (finalScore >= 30) {
-        logWarn("⚠️ Some instability patterns detected.");
+        logWarn(" Some instability patterns detected.");
         logInfo("Evidence suggests mixed origin (hardware + software possible).");
         logOk("Hardware intervention is NOT indicated at this stage.");
     }
@@ -10145,7 +10145,7 @@ private String finalVerdict(int health, int sec, int priv, int perf) {
         if (sec < 55 || priv < 55) {
             return
                 " Device condition is healthy.\n" +
-                "⚠️ Privacy or security risks detected.\n" +
+                " Privacy or security risks detected.\n" +
                 "User review recommended.";
         }
 
@@ -10162,7 +10162,7 @@ private String finalVerdict(int health, int sec, int priv, int perf) {
         if (sec < 55 || priv < 55) {
             return
                 " Device condition shows moderate degradation.\n" +
-                "⚠️ Privacy or security risks detected.\n" +
+                " Privacy or security risks detected.\n" +
                 "User review recommended.";
         }
 
@@ -10177,7 +10177,7 @@ private String finalVerdict(int health, int sec, int priv, int perf) {
 // ============================================================
 return
     " Device condition shows instability.\n" +
-    "⚠️ Degradation detected without a clear software cause.\n" +
+    " Degradation detected without a clear software cause.\n" +
     "Cause not confirmed.\n" +
     "Classification: Unattributed system instability.\n" +
     "Further diagnostics recommended.";
@@ -10219,7 +10219,7 @@ StringBuilder warnings = new StringBuilder();
 for (String l : lines) {  
     String low = l.toLowerCase(Locale.US);  
 
-    if (low.contains("⚠️") || low.contains("warning")) {  
+    if (low.contains("") || low.contains("warning")) {  
         warnings.append(l).append("\n");  
     }  
     if (low.contains("") || low.contains("error")) {  

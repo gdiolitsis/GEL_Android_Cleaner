@@ -171,7 +171,7 @@ private final BroadcastReceiver lab13BtReceiver = new BroadcastReceiver() {
                     );
                 }
 
-                // ðŸ”¥ CRITICAL: start monitor NOW
+                //  CRITICAL: start monitor NOW
                 startLab13Monitor60s();
             }
         }
@@ -419,17 +419,17 @@ protected void onCreate(@Nullable Bundle savedInstanceState) {
 super.onCreate(savedInstanceState);
 
 prefs = getSharedPreferences("GEL_DIAG", MODE_PRIVATE);  
-p     = prefs;   // ❌ ALIAS — ÏŒÎ»Î± Ï„Î± labs/helpers Î´Î¿Ï…Î»ÎµÏÎ¿Ï…Î½ Î¼Îµ p  
+p     = prefs;  
 
 ui = new Handler(Looper.getMainLooper());
 
 // ============================================================
-// ðŸ”Š GLOBAL TTS INIT — ONE TIME ONLY (SAFE)
+// GLOBAL TTS INIT — ONE TIME ONLY (SAFE)
 // ============================================================
 tts[0] = new TextToSpeech(this, status -> {
 if (status == TextToSpeech.SUCCESS) {
 
-if (tts[0] == null) return;   // ðŸ›¡ï¸ guard  
+if (tts[0] == null) return; 
 
     int res = tts[0].setLanguage(Locale.US);  
 
@@ -615,7 +615,7 @@ btnExport.setAllCaps(false);
 btnExport.setTextColor(0xFFFFFFFF);
 btnExport.setBackgroundResource(R.drawable.gel_btn_outline_selector);
 
-// ❌ OVERRIDE THEME / DRAWABLE
+//  OVERRIDE THEME / DRAWABLE
 btnExport.setMinHeight(0);
 btnExport.setMinimumHeight(0);
 btnExport.setPadding(dp(16), dp(14), dp(16), dp(14));
@@ -644,15 +644,10 @@ setContentView(scroll);
 // SERVICE LOG — INIT (Android Manual Tests)
 // ============================================================
 
-// ⚠️ Î”Î•Î ÎºÎ±Î¸Î±ÏÎ¯Î¶Î¿Ï…Î¼Îµ ÎµÎ´ÏŽ Ï„Î¿ Service Log
-// Î¤Î¿ clear Î³Î¯Î½ÎµÏ„Î±Î¹ ÎœÎŸÎÎŸ ÏƒÎµ Export Î® New Session
-
 if (!serviceLogInit) {
 
-// SECTION HEADER (Î³ÏÎ¬Ï†ÎµÏ„Î±Î¹ ÎœÎ™Î‘ Ï†Î¿ÏÎ¬ Î±Î½Î¬ session)  
 GELServiceLog.section("Android Manual Tests — Hardware Diagnostics");  
 
-// Intro entry Î³Î¹Î± Ï„Î¿ service report  
 logLine();  
 logInfo(getString(R.string.manual_log_desc));  
 
@@ -674,11 +669,11 @@ protected void onPause() {
     restoreLab3Audio();
 
     // ==========================
-    // TTS STOP (Î³Î¹Î± ÏŒÎ»Î± Ï„Î± popups)
+    // TTS STOP
     // ==========================
     try {
         if (tts != null && tts[0] != null) {
-            tts[0].stop();   // ðŸ”‡ ÎºÏŒÎ²ÎµÎ¹ ÎºÎ¬Î¸Îµ Ï†Ï‰Î½Î®
+            tts[0].stop();   
         }
     } catch (Throwable ignore) {}
 
@@ -713,7 +708,7 @@ private void logGreen(String msg)  { logOk(msg); }
 private void logRed(String msg)    { logError(msg); }  
 
 private void logSection(String msg) {  
-logInfo(msg); // ÎœÎŸÎÎŸ Ï„Î¯Ï„Î»Î¿Ï‚, Ï„Î¯Ï€Î¿Ï„Î± Î¬Î»Î»Î¿
+logInfo(msg); 
 
 }
 
@@ -782,10 +777,8 @@ LinearLayout.LayoutParams lp =
 lp.setMargins(0, dp(4), 0, dp(4));
 b.setLayoutParams(lp);
 
-// ÎºÏÎ±Ï„Î¬Î¼Îµ minimum ÏÏˆÎ¿Ï‚ Î³Î¹Î± Î¿Î¼Î¿Î¹Î¿Î¼Î¿ÏÏ†Î¯Î±
 b.setMinHeight(dp(48));
 
-// ÎµÏ€Î¹Ï„ÏÎ­Ï€Î¿Ï…Î¼Îµ Ï€Î¿Î»Î»Î­Ï‚ Î³ÏÎ±Î¼Î¼Î­Ï‚ ÏŒÏ„Î±Î½ Ï‡ÏÎµÎ¹Î¬Î¶ÎµÏ„Î±Î¹
 b.setSingleLine(false);
 b.setMaxLines(2);
 b.setEllipsize(null);
@@ -873,7 +866,7 @@ runOnUiThread(() -> {
     LinearLayout root = new LinearLayout(this);  
     root.setOrientation(LinearLayout.VERTICAL);  
     root.setPadding(dp(28), dp(24), dp(28), dp(24));  
-    root.setMinimumWidth(dp(300));   // ðŸ‘ˆ Ï€Î¹Î¿ Ï†Î±ÏÎ´Ï popup  
+    root.setMinimumWidth(dp(300)); 
 
     GradientDrawable bg = new GradientDrawable();  
     bg.setColor(0xFF101010);  
@@ -898,7 +891,7 @@ runOnUiThread(() -> {
 
     LinearLayout.LayoutParams btnLp =  
             new LinearLayout.LayoutParams(0, dp(52), 1f);  
-    btnLp.setMargins(dp(8), 0, dp(8), 0);   // ðŸ‘ˆ ÎºÎµÎ½ÏŒ Î±Î½Î¬Î¼ÎµÏƒÎ± ÏƒÏ„Î± ÎºÎ¿Ï…Î¼Ï€Î¹Î¬  
+    btnLp.setMargins(dp(8), 0, dp(8), 0); 
 
     // ---------- NO BUTTON ----------  
     Button noBtn = new Button(this);  
@@ -907,7 +900,7 @@ runOnUiThread(() -> {
     noBtn.setTextColor(0xFFFFFFFF);  
 
     GradientDrawable noBg = new GradientDrawable();  
-    noBg.setColor(0xFF8B0000);           // Î²Î±Î¸Ï ÎºÏŒÎºÎºÎ¹Î½Î¿  
+    noBg.setColor(0xFF8B0000);  
     noBg.setCornerRadius(dp(14));  
     noBg.setStroke(dp(3), 0xFFFFD700);  
     noBtn.setBackground(noBg);  
@@ -920,7 +913,7 @@ runOnUiThread(() -> {
     yesBtn.setTextColor(0xFFFFFFFF);  
 
     GradientDrawable yesBg = new GradientDrawable();  
-    yesBg.setColor(0xFF0B5F3B);          // Î²Î±Î¸Ï Ï€ÏÎ¬ÏƒÎ¹Î½Î¿  
+    yesBg.setColor(0xFF0B5F3B);  
     yesBg.setCornerRadius(dp(14));  
     yesBg.setStroke(dp(3), 0xFFFFD700);  
     yesBtn.setBackground(yesBg);  
@@ -1102,41 +1095,41 @@ return s;
 // LOGGING — GEL CANONICAL (UI + SERVICE REPORT)
 // ============================================================
 private void appendHtml(String html) {
-ui.post(() -> {
-CharSequence cur = txtLog.getText();
-CharSequence add = Html.fromHtml(html + "<br>");
-txtLog.setText(TextUtils.concat(cur, add));
-scroll.post(() -> scroll.fullScroll(ScrollView.FOCUS_DOWN));
-});
+    ui.post(() -> {
+        CharSequence cur = txtLog.getText();
+        CharSequence add = Html.fromHtml(html + "<br>");
+        txtLog.setText(TextUtils.concat(cur, add));
+        scroll.post(() -> scroll.fullScroll(ScrollView.FOCUS_DOWN));
+    });
 }
 
 private void logInfo(String msg) {
-String s = "â„¹ï¸ " + safe(msg);
-appendHtml(s);
-GELServiceLog.logInfo(msg);
+    String s = "[INFO] " + safe(msg);
+    appendHtml(s);
+    GELServiceLog.logInfo(msg);
 }
 
 private void logOk(String msg) {
-String s = "✅” " + safe(msg);
-appendHtml("<font color='#39FF14'>" + s + "</font>");
-GELServiceLog.logOk(msg);
+    String s = "[OK] " + safe(msg);
+    appendHtml("<font color='#39FF14'>" + s + "</font>");
+    GELServiceLog.logOk(msg);
 }
 
 private void logWarn(String msg) {
-String s = "âš  " + safe(msg);
-appendHtml("<font color='#FFD966'>" + s + "</font>");
-GELServiceLog.logWarn(msg);
+    String s = "[WARN] " + safe(msg);
+    appendHtml("<font color='#FFD966'>" + s + "</font>");
+    GELServiceLog.logWarn(msg);
 }
 
 private void logError(String msg) {
-String s = "✅– " + safe(msg);
-appendHtml("<font color='#FF5555'>" + s + "</font>");
-GELServiceLog.logError(msg);
+    String s = "[ERROR] " + safe(msg);
+    appendHtml("<font color='#FF5555'>" + s + "</font>");
+    GELServiceLog.logError(msg);
 }
 
 private void logLine() {
-appendHtml("--------------------------------------------------");
-GELServiceLog.logLine();
+    appendHtml("--------------------------------------------------");
+    GELServiceLog.logLine();
 }
 
 // ------------------------------------------------------------
@@ -1216,12 +1209,12 @@ return -1f;
 // ------------------------------------------------------------
 private long normalizeMah(long raw) {
 if (raw <= 0) return -1;
-if (raw > 200000) return raw / 1000; // Î¼Ah â†’ mAh
+if (raw > 200000) return raw / 1000;
 return raw;                          // already mAh
 }
 
 // ------------------------------------------------------------
-// Battery temperature (Â°C) — SAFE
+// Battery temperature — SAFE
 // ------------------------------------------------------------
 private float getBatteryTemperature() {
 try {
@@ -1231,7 +1224,7 @@ if (i == null) return 0f;
 int raw = i.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);  
     if (raw <= 0) return 0f;  
 
-    return raw / 10f; // tenths of Â°C  
+    return raw / 10f; 
 } catch (Throwable t) {  
     return 0f;  
 }
@@ -1297,7 +1290,7 @@ try {
         return bi;  
     }  
 
-    // Charge counter (Î¼Ah â†’ mAh)  
+    // Charge counter
     long cc_uAh =  
             bm.getLongProperty(  
                     BatteryManager.BATTERY_PROPERTY_CHARGE_COUNTER  
@@ -1305,8 +1298,8 @@ try {
 
     bi.currentChargeMah = normalizeMah(cc_uAh);  
 
-    // â— SAFE FULL CAPACITY — NOT via CHARGE_FULL (API trap)  
-    bi.estimatedFullMah = -1; // handled elsewhere (LAB 14 engine / heuristics)  
+    // SAFE FULL CAPACITY — NOT via CHARGE_FULL (API trap)  
+    bi.estimatedFullMah = -1; 
 
     if (bi.currentChargeMah <= 0)  
         bi.currentChargeMah = -1;  
@@ -1428,7 +1421,7 @@ float battTempEnd
 if (txtLog == null) {
 logInfo(String.format(
 Locale.US,
-"Thermal correlation (charging): start %.1fÂ°C -> peak %.1fÂ°C -> end %.1fÂ°C",
+"Thermal correlation (charging): start %.1f C -> peak %.1f C -> end %.1f C"
 battTempStart,
 (Float.isNaN(battTempPeak) ? battTempEnd : battTempPeak),
 battTempEnd
@@ -1440,7 +1433,7 @@ String label = "Thermal correlation (charging): ";
 
 String values = String.format(  
         Locale.US,  
-        "start %.1fÂ°C -> peak %.1fÂ°C -> end %.1fÂ°C",  
+        "start %.1f°C -> peak %.1f°C -> end %.1f°C",  
         battTempStart,  
         (Float.isNaN(battTempPeak) ? battTempEnd : battTempPeak),  
         battTempEnd  
@@ -1482,9 +1475,9 @@ boolean strong = "Strong".equalsIgnoreCase(d);
 boolean normal = "Normal".equalsIgnoreCase(d);  
 boolean weak   = "Weak".equalsIgnoreCase(d);  
 
-appendHtml((strong ? "✅” " : "â˜ ") + "<font color='#FFFFFF'>Strong</font>");  
-appendHtml((normal ? "✅” " : "â˜ ") + "<font color='#FFFFFF'>Normal</font>");  
-appendHtml((weak   ? "✅” " : "â˜ ") + "<font color='#FFFFFF'>Weak</font>");  
+appendHtml((strong ? " " : "⚠️ ") + "<font color='#FFFFFF'>Strong</font>");  
+appendHtml((normal ? " " : "⚠️ ") + "<font color='#FFFFFF'>Normal</font>");  
+appendHtml((weak   ? " " : "⚠️ ") + "<font color='#FFFFFF'>Weak</font>");  
 
 if (strong) logOk("Health Map: Strong");  
 else if (normal) logWarn("Health Map: Normal");  
@@ -1545,7 +1538,6 @@ title.setTextSize(18f);
 title.setTypeface(null, Typeface.BOLD);
 title.setPadding(0, 0, 0, dp(12));
 
-// ðŸ”§ FIX Î³Î¹Î± Ï€Î¿Î»Î»Î±Ï€Î»Î­Ï‚ Î³ÏÎ±Î¼Î¼Î­Ï‚
 title.setSingleLine(false);
 title.setMaxLines(Integer.MAX_VALUE);
 title.setEllipsize(null);
@@ -1569,7 +1561,7 @@ msg.setLineSpacing(0f, 1.2f);
 root.addView(msg);
 
 // ==========================
-// ðŸ”• MUTE TOGGLE — GLOBAL
+// MUTE TOGGLE — GLOBAL
 // ==========================
 CheckBox muteBox = new CheckBox(this);
 muteBox.setChecked(isTtsMuted());
@@ -1578,11 +1570,10 @@ muteBox.setTextColor(0xFFDDDDDD);
 muteBox.setGravity(Gravity.CENTER);
 muteBox.setPadding(0, dp(10), 0, dp(10));
 
-// â¬‡ï¸ Î Î¡Î©Î¤Î‘ Î¼Ï€Î±Î¯Î½ÎµÎ¹ Ï„Î¿ mute
 root.addView(muteBox);
 
 // ==========================
-// ðŸ”‡ MUTE LOGIC — GLOBAL
+// MUTE LOGIC — GLOBAL
 // ==========================
 muteBox.setOnCheckedChangeListener((v, checked) -> {
 setTtsMuted(checked);
@@ -1617,11 +1608,10 @@ dp(52)
 lpBtn.setMargins(0, dp(18), 0, 0);
 btnContinue.setLayoutParams(lpBtn);
 
-// â¬‡ï¸ ÎœÎ•Î¤Î‘ Î¼Ï€Î±Î¯Î½ÎµÎ¹ Ï„Î¿ ÎºÎ¿Ï…Î¼Ï€Î¯
 root.addView(btnContinue);
 
 // ============================================================  
-// ðŸ”Š TTS — PLAY (GLOBAL ENGINE)  
+// TTS — PLAY (GLOBAL ENGINE)  
 // ============================================================  
 try {  
     if (tts != null && tts[0] != null && ttsReady[0] && !isTtsMuted()) {  
@@ -1940,7 +1930,7 @@ ui.post(() -> {
 // ------------------------------------------------------------
 private String formatTemp(float temp) {
 if (Float.isNaN(temp)) return "N/A";
-return String.format(Locale.US, "%.1fÂ°C", temp);
+return String.format(Locale.US, "%.1f°C", temp);
 }
 
 // ------------------------------------------------------------
@@ -2045,17 +2035,14 @@ return out;
 // ------------------------------------------------------------
 private void logTempInline(String label, float c) {
 
-String base = String.format(Locale.US, "%s: %.1fÂ°C", label, c);  
+String base = String.format(Locale.US, "%s: %.1f°C", label, c);  
 
-// COOL + NORMAL â†’ Î Î¡Î‘Î£Î™ÎÎŸ  
 if (c < 45f) {  
     logOk(base + " (NORMAL)");  
 }  
-// WARM â†’ ÎšÎ™Î¤Î¡Î™ÎÎŸ  
 else if (c < 55f) {  
     logWarn(base + " (WARM)");  
 }  
-// HOT â†’ ÎšÎŸÎšÎšÎ™ÎÎŸ  
 else {  
     logError(base + " (HOT)");  
 }
@@ -2083,14 +2070,13 @@ try {
 
             String t = type.toLowerCase(Locale.US);  
 
-            // â›” skip sensors we already display  
             if (t.contains("battery") ||  
                 t.contains("cpu") ||  
                 t.contains("gpu")) {  
                 continue;  
             }  
 
-            // ⚠️ hidden / system sensor exceeded threshold  
+            // hidden / system sensor exceeded threshold  
             if (c >= thresholdC) {  
                 return true;  
             }  
@@ -2315,7 +2301,6 @@ if (total <= 0) return false;
 
 int pctFree = (int) ((free * 100L) / total);  
 
-    // Extreme pressure â†’ fragmentation & GC stress indicator  
     return pctFree < 5;  
 } catch (Throwable t) {  
     return false;  
@@ -2564,7 +2549,7 @@ private boolean detectPowerInstability() {
 }
 
 // ============================================================
-// LAB 28 — TECHNICIAN POPUP (STYLE + MUTE + LANG + TTS)  ✅…FIXED
+// LAB 28 — TECHNICIAN POPUP (STYLE + MUTE + LANG + TTS)  …FIXED
 // ============================================================
 
 private boolean lab28Muted = false;
@@ -2622,7 +2607,7 @@ private void showLab28Popup() {
         controls.setPadding(0, dp(16), 0, dp(10));
 
         // ==========================
-        // ðŸ”• MUTE BUTTON
+        //    MUTE BUTTON
         // ==========================
         Button muteBtn = new Button(ManualTestsActivity.this);
         muteBtn.setText(lab28Muted ? "Unmute" : "Mute");
@@ -2653,7 +2638,7 @@ private void showLab28Popup() {
         });
 
         // ==========================
-        // ðŸŒ LANGUAGE SPINNER
+        //  LANGUAGE SPINNER
         // ==========================
         Spinner langSpinner = new Spinner(ManualTestsActivity.this);
 
@@ -2666,7 +2651,6 @@ private void showLab28Popup() {
         langAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         langSpinner.setAdapter(langAdapter);
         
-        // Î±ÏÏ‡Î¹ÎºÎ® Î³Î»ÏŽÏƒÏƒÎ±
         if ("GR".equals(lab28Lang)) {
             langSpinner.setSelection(1);
             msg.setText(getLab28TextGR());
@@ -2695,7 +2679,7 @@ private void showLab28Popup() {
         });
 
         // ==========================
-        // ðŸŒ LANGUAGE BOX (RIGHT)
+        //  LANGUAGE BOX (RIGHT)
         // ==========================
         LinearLayout langBox = new LinearLayout(ManualTestsActivity.this);
         langBox.setOrientation(LinearLayout.HORIZONTAL);
@@ -2799,16 +2783,15 @@ private String getLab28TextEN() {
 
 private String getLab28TextGR() {
     return
-        
-        "Î“Î¹Î± Î¼ÎµÎ³Î±Î»ÏÏ„ÎµÏÎ· Î´Î¹Î±Î³Î½Ï‰ÏƒÏ„Î¹ÎºÎ® Î±ÎºÏÎ¯Î²ÎµÎ¹Î±, ÎµÎºÏ„ÎµÎ»Î­ÏƒÏ„Îµ Ï€ÏÏŽÏ„Î± ÏŒÎ»Î± Ï„Î± labs Ï€ÏÎ¹Î½ Î±Ï€ÏŒ Î±Ï…Ï„ÏŒ Ï„Î¿ Ï„ÎµÏƒÏ„." +
-        "Î‘Ï…Ï„ÏŒ Ï„Î¿ ÎµÏÎ³Î±ÏƒÏ„Î®ÏÎ¹Î¿ ÎºÎ¬Î½ÎµÎ¹ Î¼ÏŒÎ½Î¿ Î±Î½Î¬Î»Ï…ÏƒÎ· ÏƒÏ…Î¼Ï€Ï„Ï‰Î¼Î¬Ï„Ï‰Î½. " +
-        "Î”ÎµÎ½ Î´Î¹Î±Î³Î¹Î³Î½ÏŽÏƒÎºÎµÎ¹ Î²Î»Î¬Î²ÎµÏ‚ Ï…Î»Î¹ÎºÎ¿Ï ÎºÎ±Î¹ Î´ÎµÎ½ ÎµÏ€Î¹Î²ÎµÎ²Î±Î¹ÏŽÎ½ÎµÎ¹ Ï€ÏÎ¿Î²Î»Î®Î¼Î±Ï„Î± ÏƒÏ…Î³ÎºÏŒÎ»Î»Î·ÏƒÎ·Ï‚. " +
-        "Î¤Î± Î±Ï€Î¿Ï„ÎµÎ»Î­ÏƒÎ¼Î±Ï„Î± Î¼Ï€Î¿ÏÎµÎ¯ Î½Î± Î´ÎµÎ¯Ï‡Î½Î¿Ï…Î½ Î¼Î¿Ï„Î¯Î²Î± ÏƒÏ…Î¼Ï€ÎµÏÎ¹Ï†Î¿ÏÎ¬Ï‚ " +
-        "Ï€Î¿Ï… ÏƒÏ‡ÎµÏ„Î¯Î¶Î¿Î½Ï„Î±Î¹ Î¼Îµ Î´Î¹Î±ÎºÎ¿Ï€Ï„ÏŒÎ¼ÎµÎ½ÎµÏ‚ ÎµÏ€Î±Ï†Î­Ï‚, " +
-        "ÏŒÏ€Ï‰Ï‚ Î±ÏƒÏ„Î¬Î¸ÎµÎ¹Î±, Ï„Ï…Ï‡Î±Î¯ÎµÏ‚ ÎµÏ€Î±Î½ÎµÎºÎºÎ¹Î½Î®ÏƒÎµÎ¹Ï‚ Î® Ï€Ï„ÏŽÏƒÎµÎ¹Ï‚ ÏƒÎ®Î¼Î±Ï„Î¿Ï‚. " +
-        "Î§ÏÎ·ÏƒÎ¹Î¼Î¿Ï€Î¿Î¹Î®ÏƒÏ„Îµ Ï„Î¿ Î¼ÏŒÎ½Î¿ Î³Î¹Î± Î´Î¹Î±Î»Î¿Î³Î® Ï€ÎµÏÎ¹ÏƒÏ„Î±Ï„Î¹ÎºÏŽÎ½, ÏŒÏ‡Î¹ Î³Î¹Î± Ï„ÎµÎ»Î¹ÎºÎ® Î´Î¹Î¬Î³Î½Ï‰ÏƒÎ·. " +
-        "Î‘Î½ Ï…Ï€Î¬ÏÏ‡Î¿Ï…Î½ ÎµÎ½Î´ÎµÎ¯Î¾ÎµÎ¹Ï‚, Ï€ÏÎ¿Ï‡Ï‰ÏÎ®ÏƒÏ„Îµ Î¼ÏŒÎ½Î¿ ÏƒÎµ Ï†Ï…ÏƒÎ¹ÎºÏŒ Î­Î»ÎµÎ³Ï‡Î¿ " +
-        "ÎºÎ±Î¹ ÎµÏ€Î±Î³Î³ÎµÎ»Î¼Î±Ï„Î¹ÎºÎ­Ï‚ ÎµÏÎ³Î±ÏƒÏ„Î·ÏÎ¹Î±ÎºÎ­Ï‚ Î´Î¿ÎºÎ¹Î¼Î­Ï‚.";
+        "⚠️ ⚠️⚠️⚠️⚠️⚠️ ⚠️⚠️⚠️⚠️⚠️ ⚠️⚠️⚠️⚠️, ⚠️⚠️⚠️⚠️ ⚠️⚠️ ⚠️ ⚠️ labs ⚠️⚠️ ⚠️ ⚠️⚠️ ⚠️ ⚠️⚠️. " +
+        "⚠️⚠️ ⚠️ ⚠️⚠️⚠️⚠️⚠️ ⚠️⚠️ ⚠️⚠️ ⚠️⚠️⚠️ ⚠️⚠️⚠️⚠️⚠️. " +
+        "⚠️ ⚠️⚠️⚠️⚠️⚠️⚠️ ⚠️⚠️⚠️ ⚠️⚠️⚠️ ⚠️ ⚠️ ⚠️⚠️⚠️⚠️⚠️⚠️ ⚠️⚠️⚠️⚠️⚠️ ⚠️⚠️⚠️⚠️⚠️. " +
+        "⚠️ ⚠️⚠️⚠️⚠️⚠️⚠️ ⚠️⚠️⚠️ ⚠️ ⚠️⚠️⚠️⚠️ ⚠️⚠️⚠️ ⚠️⚠️⚠️⚠️⚠️⚠️ " +
+        "⚠️ ⚠️⚠️⚠️⚠️⚠️ ⚠️ ⚠️⚠️⚠️⚠️⚠️⚠️ ⚠️⚠️⚠️, " +
+        "⚠️⚠️ ⚠️⚠️⚠️⚠️, ⚠️⚠️⚠️ ⚠️⚠️⚠️⚠️⚠️⚠️⚠️  ⚠️⚠️⚠️ ⚠️⚠️⚠️. " +
+        "⚠️⚠️⚠️⚠️⚠️⚠️⚠️ ⚠️ ⚠️⚠️ ⚠️ ⚠️⚠️⚠️ ⚠️⚠️⚠️⚠️⚠️⚠️, ⚠️ ⚠️ ⚠️⚠️⚠️ ⚠️⚠️⚠️⚠️. " +
+        "⚠️ ⚠️⚠️⚠️⚠️ ⚠️⚠️⚠️⚠️, ⚠️⚠️⚠️⚠️⚠️ ⚠️⚠️ ⚠️ ⚠️⚠️⚠️ ⚠️⚠️⚠️ " +
+        "⚠️ ⚠️⚠️⚠️⚠️⚠️⚠️⚠️ ⚠️⚠️⚠️⚠️⚠️⚠️ ⚠️⚠️⚠️.";
 }
 
 // ============================================================
@@ -2876,7 +2859,6 @@ new Thread(() -> {
 
         logOk("Speaker output detected");  
 
-        // ðŸ”§ FIX: Explain LOW confidence explicitly  
         if ("LOW".equalsIgnoreCase(r.confidence)) {  
 
             logLabelValue(  
@@ -2946,7 +2928,6 @@ new Thread(() -> {
 
         logOk("Frequency sweep executed");  
 
-        // ðŸ”§ FIX: Explain LOW confidence explicitly  
         if ("LOW".equalsIgnoreCase(r.confidence)) {  
 
             logLabelValue(  
@@ -3016,7 +2997,6 @@ try {
 
 SystemClock.sleep(300);  
 
-// 1ï¸âƒ£ Î Î¡Î©Î¤ÎŸ POPUP — ÎŸÎ”Î—Î“Î™Î‘  
 runOnUiThread(() -> {  
 
     AlertDialog.Builder b =  
@@ -3050,9 +3030,9 @@ ok.setTextColor(0xFFFFFFFF);
 
 // DARK GREEN BUTTON (GEL style)
 GradientDrawable okBg = new GradientDrawable();
-okBg.setColor(0xFF0B5F3B);          // ÏƒÎºÎ¿ÏÏÎ¿ Ï€ÏÎ¬ÏƒÎ¹Î½Î¿
+okBg.setColor(0xFF0B5F3B);          
 okBg.setCornerRadius(dp(14));
-okBg.setStroke(dp(3), 0xFFFFD700); // Ï‡ÏÏ…ÏƒÏŒ Ï€ÎµÏÎ¯Î³ÏÎ±Î¼Î¼Î±
+okBg.setStroke(dp(3), 0xFFFFD700); 
 ok.setBackground(okBg);
 
 root.addView(ok);
@@ -3066,7 +3046,6 @@ b.setView(root);
     ok.setOnClickListener(v -> {  
         d.dismiss();  
 
-        // 2ï¸âƒ£ Î Î‘Î™Î–ÎŸÎ¥Î ÎŸÎ™ Î¤ÎŸÎÎŸÎ™ (Î‘ÎšÎŸÎ¥Î£Î¤Î™ÎšÎŸ)  
         new Thread(() -> {  
             try {  
                 logInfo("Playing earpiece test tones.");  
@@ -3082,7 +3061,6 @@ b.setView(root);
             } catch (Throwable t) {  
                 logError("Tone playback failed.");  
             } finally {  
-                // 3ï¸âƒ£ Î”Î•Î¥Î¤Î•Î¡ÎŸ POPUP — YES / NO (Î¥Î Î‘Î¡Î§ÎŸÎ HELPER)  
                 askUserEarpieceConfirmation();  
             }  
         }).start();  
@@ -3246,7 +3224,7 @@ runOnUiThread(() -> {
     root.addView(msg);  
 
     // ==========================  
-    // ðŸ”• MUTE TOGGLE  
+    //  MUTE TOGGLE  
     // ==========================  
     CheckBox muteBox = new CheckBox(this);  
     muteBox.setChecked(ttsMuted[0]);  
@@ -3257,7 +3235,7 @@ runOnUiThread(() -> {
     root.addView(muteBox);  
 
     // ==========================  
-    // â–¶ï¸ START BUTTON  
+    // ⚠️ START BUTTON
     // ==========================  
     Button start = new Button(this);  
     start.setText("START TEST");  
@@ -3272,7 +3250,7 @@ runOnUiThread(() -> {
     root.addView(start);  
 
     // ==========================  
-    // ðŸ”‡ MUTE LOGIC — GLOBAL  
+    // MUTE LOGIC — GLOBAL  
     // ==========================  
     muteBox.setOnCheckedChangeListener((v, checked) -> {  
         ttsMuted[0] = checked;  
@@ -3293,7 +3271,7 @@ runOnUiThread(() -> {
     d.show();  
 
     // ==========================  
-    // ðŸ”Š TTS — SPEAK AFTER SHOW  
+    // TTS — SPEAK AFTER SHOW  
     // ==========================  
     if (tts != null && tts[0] != null && ttsReady[0] && !ttsMuted[0]) {  
         tts[0].stop();  
@@ -3366,7 +3344,7 @@ runOnUiThread(() -> {
     root.addView(msg);  
 
     // ==========================  
-    // ðŸ”• MUTE TOGGLE  
+    // MUTE TOGGLE  
     // ==========================  
     CheckBox muteBox = new CheckBox(this);  
     muteBox.setChecked(ttsMuted[0]);  
@@ -3377,7 +3355,7 @@ runOnUiThread(() -> {
     root.addView(muteBox);  
 
     // ==========================  
-    // â–¶ï¸ START BUTTON  
+    // START BUTTON  
     // ==========================  
     Button start = new Button(this);  
     start.setText("START TEST");  
@@ -3392,7 +3370,7 @@ runOnUiThread(() -> {
     root.addView(start);  
 
     // ==========================  
-    // ðŸ”‡ MUTE LOGIC — GLOBAL  
+    // MUTE LOGIC — GLOBAL  
     // ==========================  
     muteBox.setOnCheckedChangeListener((v, checked) -> {  
         ttsMuted[0] = checked;  
@@ -3413,7 +3391,7 @@ runOnUiThread(() -> {
     d.show();  
 
     // ==========================  
-    // ðŸ”Š TTS — SPEAK AFTER SHOW  
+    //  TTS — SPEAK AFTER SHOW  
     // ==========================  
     if (tts != null && tts[0] != null && ttsReady[0] && !ttsMuted[0]) {  
         tts[0].stop();  
@@ -3486,7 +3464,7 @@ runOnUiThread(() -> {
     root.addView(msg);  
 
     // ==========================  
-    // ðŸ”• MUTE TOGGLE  
+    // MUTE TOGGLE  
     // ==========================  
     CheckBox muteBox = new CheckBox(this);  
     muteBox.setChecked(ttsMuted[0]);  
@@ -3497,7 +3475,7 @@ runOnUiThread(() -> {
     root.addView(muteBox);  
 
     // ==========================  
-    // â–¶ï¸ START BUTTON  
+    // START BUTTON  
     // ==========================  
     Button start = new Button(this);  
     start.setText("START TEST");  
@@ -3512,7 +3490,7 @@ runOnUiThread(() -> {
     root.addView(start);  
 
     // ==========================  
-    // ðŸ”‡ MUTE LOGIC — GLOBAL  
+    // MUTE LOGIC — GLOBAL  
     // ==========================  
     muteBox.setOnCheckedChangeListener((v, checked) -> {  
         ttsMuted[0] = checked;  
@@ -3533,7 +3511,7 @@ runOnUiThread(() -> {
     d.show();  
 
     // ==========================  
-    // ðŸ”Š TTS — SPEAK AFTER SHOW  
+    // TTS — SPEAK AFTER SHOW  
     // ==========================  
     if (tts != null && tts[0] != null && ttsReady[0] && !ttsMuted[0]) {  
         tts[0].stop();  
@@ -3849,12 +3827,8 @@ public void onRequestPermissionsResult(
         if (grantResults.length > 0 &&
             grantResults[0] == PackageManager.PERMISSION_GRANTED) {
 
-            // ✅… Î±Ï€Î»ÏŽÏ‚ ÎµÎ½ÎµÏÎ³Î¿Ï€Î¿Î¹Î¿ÏÎ¼Îµ Ï„Î¿ LAB
             lab13Running = true;
-
-            // receiver ÎµÎ¯Î½Î±Î¹ Î—Î”Î— registered
-            // Ï€ÎµÏÎ¹Î¼Î­Î½Î¿Ï…Î¼Îµ ACTION_ACL_CONNECTED
-
+            
         } else {
 
             lab13Running = false;
@@ -4319,7 +4293,6 @@ private void lab13BluetoothConnectivityCheck() {
     lab13DisconnectEvents = 0;
     lab13ReconnectEvents  = 0;
 
-    // ðŸ‘‰ Î Î‘ÎÎ¤Î‘ POPUP
     showLab13GatePopup();
 }
 
@@ -4778,7 +4751,6 @@ private void runLab13BluetoothCheckCore() {
 // ============================================================
 private void startLab13Monitor60s() {
 
-    // ❌ guard — Î½Î± Î¼Î·Î½ Î¾Î±Î½Î±Î¾ÎµÎºÎ¹Î½Î®ÏƒÎµÎ¹
     if (lab13MonitoringStarted) return;
     lab13MonitoringStarted = true;
 
@@ -4795,12 +4767,10 @@ private void startLab13Monitor60s() {
     // HARD SYNC — receiver + snapshot (INITIAL)
     // ------------------------------------------------------------
     if (lab13ReceiverSawConnection && !connectedNow) {
-        // receiver ÎµÎ¯Î´Îµ ÏƒÏÎ½Î´ÎµÏƒÎ· Î±Î»Î»Î¬ profile Î´ÎµÎ½ Î­Ï‡ÎµÎ¹ Ï€ÏÎ¿Î»Î¬Î²ÎµÎ¹
         connectedNow = true;
     }
 
     if (lab13ReceiverSawDisconnection && connectedNow) {
-        // receiver ÎµÎ¯Î´Îµ disconnect, Î´Î¯Î½Î¿Ï…Î¼Îµ Ï€ÏÎ¿Ï„ÎµÏÎ±Î¹ÏŒÏ„Î·Ï„Î± ÏƒÏ„Î¿ event
         connectedNow = false;
     }
 
@@ -4810,7 +4780,6 @@ private void startLab13Monitor60s() {
     lab13LastConnected = connectedNow;
     if (connectedNow) lab13HadAnyConnection = true;
 
-    // UI update — Î¤Î©Î¡Î‘ Î¾ÎµÎºÎ¹Î½Î¬Î¼Îµ
     if (lab13StatusText != null) {
         lab13StatusText.setText("Monitoring Bluetooth stability...");
     }
@@ -4860,12 +4829,10 @@ private void startLab13Monitor60s() {
             // ------------------------------------------------------------
             // TRANSITION LOGIC (CORRECT)
             // ------------------------------------------------------------
-            // Î Î¡Î©Î¤Î— ÏƒÏÎ½Î´ÎµÏƒÎ· â‰  reconnect
             if (!lab13LastConnected && connected && lab13Seconds > 0) {
                 lab13ReconnectEvents++;
             }
 
-            // Ï€ÏÎ±Î³Î¼Î±Ï„Î¹ÎºÏŒ disconnect
             if (lab13LastConnected && !connected) {
                 lab13DisconnectEvents++;
             }
@@ -5057,7 +5024,7 @@ private void lab13FinishAndReport(boolean adapterStable) {
 
     if (adapterStable && lab13HadAnyConnection && frequentDisconnects) {
 
-        // ❌ LOCKED DIAGNOSIS MESSAGE
+        // LOCKED DIAGNOSIS MESSAGE
         logWarn(
                 "The Bluetooth connection shows frequent disconnections,\n" +
                 "while the phone’s Bluetooth subsystem remains stable.\n" +
@@ -5086,13 +5053,11 @@ private void lab13FinishAndReport(boolean adapterStable) {
     logLine();
     logInfo("LAB 13 — Connected Device Verdict");
 
-    // ❌ Case 1: Î”ÎµÎ½ Ï…Ï€Î®ÏÎ¾Îµ Ï€Î¿Ï„Î­ ÏƒÏÎ½Î´ÎµÏƒÎ·
     if (!lab13HadAnyConnection) {
 
         logWarn("No active external Bluetooth device was detected during the test window.");
         logWarn("This usually means that no external device was connected, or Bluetooth was idle during the test.");
 
-    // ⚠️ Case 2: Î¥Ï€Î®ÏÎ¾Îµ ÏƒÏÎ½Î´ÎµÏƒÎ· Î±Î»Î»Î¬ Î¼Îµ Î±Ï€Î¿ÏƒÏ…Î½Î´Î­ÏƒÎµÎ¹Ï‚
     } else if (lab13DisconnectEvents >= 1) {
 
         logError("An external Bluetooth device was connected, but disconnections were detected during monitoring.");
@@ -5104,7 +5069,6 @@ private void lab13FinishAndReport(boolean adapterStable) {
                 "signal quality, or usage conditions."
         );
 
-    // ✅… Case 3: Î£Ï„Î±Î¸ÎµÏÎ® ÏƒÏÎ½Î´ÎµÏƒÎ·
     } else {
 
         logOk("External Bluetooth connectivity was detected and remained stable during the monitoring period.");
@@ -5150,7 +5114,7 @@ private void abortLab13ByUser() {
     try { if (tts != null && tts[0] != null) tts[0].stop(); } catch (Throwable ignore) {}
 
     // ------------------------------------------------------------
-    // ABORT LOG (ÎœÎŸÎÎŸ Î•Î”Î©)
+    // ABORT LOG
     // ------------------------------------------------------------
     appendHtml("<br>");
     logWarn("Lab 13 aborted by user.");
@@ -5161,9 +5125,9 @@ private void abortLab13ByUser() {
 // ============================================================
 // LAB 14 — Battery Health Stress Test
 // FINAL — SNAPSHOT ONLY — UI MATCHES LAB 15
-// ✅” Confidence NOT in intro
-// ✅” Confidence calculated AFTER stress + shown with Aging + Final Score
-// ✅” One confidence only — no contradictions
+//  Confidence NOT in intro
+//  Confidence calculated AFTER stress + shown with Aging + Final Score
+//  One confidence only — no contradictions
 //
 // NOTE (GEL RULE): When you ask for full lab, I must return full lab copy-paste.
 // ============================================================
@@ -5185,13 +5149,13 @@ try {
     final Lab14Engine.GelBatterySnapshot snapStart = engine.readSnapshot();  
 
     if (snapStart.charging) {  
-        logError("❌ Stress test requires device NOT charging.");  
+        logError(" Stress test requires device NOT charging.");  
         lab14Running = false;  
         return;  
     }  
 
     if (snapStart.chargeNowMah <= 0) {  
-        logError("❌ Charge Counter unavailable. LAB 14 cannot run.");  
+        logError(" Charge Counter unavailable. LAB 14 cannot run.");  
         lab14Running = false;  
         return;  
     }  
@@ -5216,55 +5180,55 @@ try {
                     : -1;
 
 // ------------------------------------------------------------
-// 2) LOG HEADER (FULL INFO — SERVICE / OLD LAB STYLE) ✅…
+// 2) LOG HEADER (FULL INFO — SERVICE / OLD LAB STYLE) …
 // ------------------------------------------------------------
 
 appendHtml("<br>");
 logLine();
-logInfo("✅… LAB 14 — Battery Health Stress Test");
+logInfo("… LAB 14 — Battery Health Stress Test");
 logLine();
 
-logInfo("✅… Mode: " + (rooted ? "Advanced (Rooted)" : "Standard (Unrooted)"));
-logInfo("✅… Duration: " + durationSec + " sec (laboratory mode)");
-logInfo("✅… Stress profile: GEL C Mode (aggressive CPU burn + brightness MAX)");
+logInfo("… Mode: " + (rooted ? "Advanced (Rooted)" : "Standard (Unrooted)"));
+logInfo("… Duration: " + durationSec + " sec (laboratory mode)");
+logInfo("… Stress profile: GEL C Mode (aggressive CPU burn + brightness MAX)");
 
 logInfo(String.format(
 Locale.US,
-"✅… Start conditions: charge=%d mAh, status=Discharging, temp=%.1fÂ°C",
+"… Start conditions: charge=%d mAh, status=Discharging, temp=%.1f°C",
 startMah,
 (Float.isNaN(tempStart) ? 0f : tempStart)
 ));
 
-logInfo("✅… Data source: " + snapStart.source);
+logInfo("… Data source: " + snapStart.source);
 
 // Capacity baseline
 if (baselineFullMah > 0)
-logInfo("✅… Battery capacity baseline (counter-based): " + baselineFullMah + " mAh");
+logInfo("… Battery capacity baseline (counter-based): " + baselineFullMah + " mAh");
 else
-logInfo("✅… Battery capacity baseline (counter-based): N/A");
+logInfo("… Battery capacity baseline (counter-based): N/A");
 
 // Cycles
-logInfo("✅… Cycle count: " + (cycles > 0 ? String.valueOf(cycles) : "N/A"));
+logInfo("… Cycle count: " + (cycles > 0 ? String.valueOf(cycles) : "N/A"));
 
 // Stress environment (explicit — ÏŒÏ€Ï‰Ï‚ ÏƒÏ„Î¿ Ï€Î±Î»Î¹ÏŒ lab)
-logInfo("✅… Screen state: brightness forced to MAX, screen lock ON");
-logInfo("✅… CPU stress threads: " +
+logInfo("… Screen state: brightness forced to MAX, screen lock ON");
+logInfo("… CPU stress threads: " +
 Runtime.getRuntime().availableProcessors() +
 " (cores=" + Runtime.getRuntime().availableProcessors() + ")");
 
 // Thermal snapshot availability (START)
 if (cpuTempStart != null)
-logOk(String.format(Locale.US, "✅… CPU temperature (start): %.1fÂ°C", cpuTempStart));
+logOk(String.format(Locale.US, "… CPU temperature (start): %.1f°C", cpuTempStart));
 else
 logWarn("⚠️ CPU temperature (start): N/A");
 
 if (gpuTempStart != null)
-logOk(String.format(Locale.US, "✅… GPU temperature (start): %.1fÂ°C", gpuTempStart));
+logOk(String.format(Locale.US, "… GPU temperature (start): %.1f°C", gpuTempStart));
 else
 logWarn("⚠️ GPU temperature (start): N/A");
 
 // System thermal domains (informational, like old LAB)
-logOk("✅… Thermal domains: CPU / GPU / SKIN / PMIC / BATT");
+logOk("… Thermal domains: CPU / GPU / SKIN / PMIC / BATT");
 
 logLine();
 
@@ -5513,7 +5477,7 @@ conf.percent < 60;       // unstable repeated runs
                 idx += Math.min(55.0, d / 800.0 * 55.0);  
 
                 // thermal component (0..25)  
-                // +3Â°C => 0, +10Â°C => ~18, +14Â°C => 25  
+                // +3°C => 0, +10°C => ~18, +14°C => 25  
                 double tr = Math.max(0.0, tempRise - 3.0);  
                 idx += Math.min(25.0, tr / 11.0 * 25.0);  
 
@@ -5620,7 +5584,7 @@ logInfo("LAB 14 - Stress result");
 logInfo("End temperature:");
 logOk(String.format(
 Locale.US,
-"%.1fÂ°C",
+"%.1f°C",
 endBatteryTemp
 ));
 
@@ -5635,7 +5599,7 @@ if (delta >= 3.0f) {
 // Î¿Ï…ÏƒÎ¹Î±ÏƒÏ„Î¹ÎºÎ® Î¸ÎµÏÎ¼Î¹ÎºÎ® Î¬Î½Î¿Î´Î¿Ï‚
 logWarn(String.format(
 Locale.US,
-"+%.1fÂ°C",
+"+%.1f°C",
 delta
 ));
 
@@ -5643,7 +5607,7 @@ delta
 // Ï†Ï…ÏƒÎ¹Î¿Î»Î¿Î³Î¹ÎºÎ® Î¬Î½Î¿Î´Î¿Ï‚ Î±Ï€ÏŒ stress
 logOk(String.format(
 Locale.US,
-"+%.1fÂ°C",
+"+%.1f°C",
 delta
 ));
 
@@ -5651,7 +5615,7 @@ delta
 // Ï€Ï„ÏŽÏƒÎ· Î¸ÎµÏÎ¼Î¿ÎºÏÎ±ÏƒÎ¯Î±Ï‚ (ÎºÎ±Î»ÏŒ)
 logOk(String.format(
 Locale.US,
-"%.1fÂ°C",
+"%.1f°C",
 delta
 ));
 
@@ -5659,7 +5623,7 @@ delta
 // Ï€ÏÎ±ÎºÏ„Î¹ÎºÎ¬ ÏƒÏ„Î±Î¸ÎµÏÏŒ
 logOk(String.format(
 Locale.US,
-"%.1fÂ°C",
+"%.1f°C",
 delta
 ));
 }
@@ -5681,7 +5645,7 @@ logInfo("Drain rate:");
 if (validDrain) {
 logOk(String.format(
 Locale.US,
-"✅… %.0f mAh/hour (counter-based)",
+"… %.0f mAh/hour (counter-based)",
 mahPerHour
 ));
 } else {
@@ -5693,7 +5657,7 @@ logWarn("⚠️ Counter anomaly detected (PMIC / system-level behavior). Repeat 
 logInfo("Measurement consistency score:");
 logOk(String.format(
 Locale.US,
-"✅… %d%% (%d valid runs)",
+"… %d%% (%d valid runs)",
 conf.percent,
 conf.validRuns
 ));
@@ -5709,7 +5673,7 @@ if (agingIndex >= 0) {
 logInfo("Battery aging index:");  
 logOk(String.format(  
         Locale.US,  
-        "✅… %d/100 — %s",  
+        "… %d/100 — %s",  
         agingIndex,  
         agingInterp  
 ));
@@ -5725,7 +5689,7 @@ logWarn("⚠️ Insufficient data");
 // Aging analysis
 // ----------------------------------------------------
 logInfo("Aging analysis:");
-logOk("✅… " + aging.description);
+logOk("… " + aging.description);
 
 // ----------------------------------------------------
 // Final Score
@@ -5733,7 +5697,7 @@ logOk("✅… " + aging.description);
 logInfo("Final battery health score:");
 logOk(String.format(
 Locale.US,
-"✅… %d%% (%s)",
+"… %d%% (%s)",
 finalScore,
 finalLabel
 ));
@@ -5756,9 +5720,9 @@ p.edit()
 .putLong("lab14_last_ts", System.currentTimeMillis())
 .apply();
 
-logOk("✅… LAB 14 result stored successfully.");
+logOk("… LAB 14 result stored successfully.");
 
-// 11) RUN-BASED CONFIDENCE (THE ONLY "CONFIDENCE") ✅…
+// 11) RUN-BASED CONFIDENCE (THE ONLY "CONFIDENCE") …
 logLab14Confidence();
 
 appendHtml("<br>");
@@ -5778,7 +5742,7 @@ logLine();
     lab14Dialog = null;  
 
     lab14Running = false;  
-    logError("❌ LAB 14 failed unexpectedly.");  
+    logError(" LAB 14 failed unexpectedly.");  
 }
 
 }
@@ -5883,7 +5847,7 @@ lab15ProgressBar.addView(seg);
 root.addView(lab15ProgressBar);
 
 // ==========================
-// ðŸ”• MUTE TOGGLE (LAB 15 — GLOBAL)
+//  MUTE TOGGLE (LAB 15 — GLOBAL)
 // ==========================
 CheckBox muteBox = new CheckBox(this);
 muteBox.setChecked(isTtsMuted());   // â¬…ï¸ Î¼ÏŒÎ½Î¿ GLOBAL ÎºÎ±Ï„Î¬ÏƒÏ„Î±ÏƒÎ·
@@ -5896,7 +5860,7 @@ muteBox.setPadding(0, dp(10), 0, dp(10));
 root.addView(muteBox);
 
 // ==========================
-// ðŸ”‡ MUTE LOGIC — GLOBAL
+//  MUTE LOGIC — GLOBAL
 // ==========================
 muteBox.setOnCheckedChangeListener((v, checked) -> {
 
@@ -5905,7 +5869,7 @@ setTtsMuted(checked);
 
 // ÎºÏŒÏˆÎµ Î¬Î¼ÎµÏƒÎ± Ï„Î¿Î½ Î®Ï‡Î¿ Î±Î½ Î¼Ï€Î®ÎºÎµ mute  
 if (checked && tts != null && tts[0] != null) {  
-    tts[0].stop();   // ✅” Î¼ÏŒÎ½Î¿ stop — ÎŸÎ§Î™ shutdown  
+    tts[0].stop();   //  Î¼ÏŒÎ½Î¿ stop — ÎŸÎ§Î™ shutdown  
 }
 
 });
@@ -5939,7 +5903,7 @@ exitBtn.setLayoutParams(lpExit);
 exitBtn.setOnClickListener(v -> {
 try {
 if (tts != null && tts[0] != null) {
-tts[0].stop();   // ✅” Î¼ÏŒÎ½Î¿ stop
+tts[0].stop();   //  Î¼ÏŒÎ½Î¿ stop
 }
 } catch (Throwable ignore) {}
 abortLab15ByUser();
@@ -5962,7 +5926,7 @@ lab15Dialog.getWindow()
 lab15Dialog.show();
 
 // ============================================================
-// ðŸ”Š TTS — SPEAK AFTER SHOW (FINAL / GLOBAL)
+//  TTS — SPEAK AFTER SHOW (FINAL / GLOBAL)
 // ============================================================
 if (tts != null && tts[0] != null && ttsReady[0] && !isTtsMuted()) {
 
@@ -6029,7 +5993,7 @@ ui.post(new Runnable() {
 
                 lab15StatusText.setText("Charging state detected.");  
                 lab15StatusText.setTextColor(0xFF39FF14);  
-                logOk("✅… Charging state detected.");  
+                logOk("… Charging state detected.");  
             }  
 
         } else if (wasCharging[0]) {  
@@ -6049,8 +6013,8 @@ ui.post(new Runnable() {
                 lab15StatusText.setText("Charging disconnected.");  
                 lab15StatusText.setTextColor(0xFFFF4444);  
 
-                logError("❌ Charger disconnected for more than 5 seconds.");  
-                logError("❌ Charging test aborted.");  
+                logError(" Charger disconnected for more than 5 seconds.");  
+                logError(" Charging test aborted.");  
 
                 try {  
                     if (lab15Dialog != null && lab15Dialog.isShowing())  
@@ -6114,7 +6078,7 @@ ui.post(new Runnable() {
         logInfo("Battery temperature:");  
         logOk(String.format(  
                 Locale.US,  
-                "✅… %.1fÂ°C",  
+                "… %.1f°C",  
                 lab15BattTempEnd  
         ));  
 
@@ -6134,13 +6098,13 @@ ui.post(new Runnable() {
         if (lab15OverTempDuringCharge) {  
             logError(String.format(  
                     Locale.US,  
-                    "❌ HOT (Î”T +%.1fÂ°C) — Elevated temperature detected.",  
+                    " HOT (Î”T +%.1f°C) — Elevated temperature detected.",  
                     Math.max(0f, dtCharge)  
             ));  
         } else {  
             logOk(String.format(  
                     Locale.US,  
-                    "✅… OK (Î”T +%.1fÂ°C) — Normal thermal behavior during charging.",  
+                    "… OK (Î”T +%.1f°C) — Normal thermal behavior during charging.",  
                     Math.max(0f, dtCharge)  
             ));  
         }  
@@ -6149,8 +6113,8 @@ ui.post(new Runnable() {
         // Connection stability  
         // ------------------------------------------------------------  
         logInfo("Charging connection:");  
-        if (lab15FlapUnstable) logError("❌ Unstable (plug/unplug behavior detected).");  
-        else logOk("✅… Appears stable. No abnormal plug/unplug behavior detected.");
+        if (lab15FlapUnstable) logError(" Unstable (plug/unplug behavior detected).");  
+        else logOk("… Appears stable. No abnormal plug/unplug behavior detected.");
 
 // ------------------------------------------------------------  
         // CHARGING INPUT & STRENGTH (mAh/min)  
@@ -6171,7 +6135,7 @@ ui.post(new Runnable() {
             logInfo("Charging input:");  
             logOk(String.format(  
                     Locale.US,  
-                    "✅… +%d mAh in %.1f min (%.1f mAh/min)",  
+                    "… +%d mAh in %.1f min (%.1f mAh/min)",  
                     deltaMah,  
                     minutes,  
                     mahPerMin  
@@ -6179,16 +6143,16 @@ ui.post(new Runnable() {
 
             logInfo("Charging strength:");  
             if (mahPerMin >= 20.0) {  
-                logOk("✅… STRONG");  
+                logOk("… STRONG");  
                 lab15_strengthWeak = false;  
             } else if (mahPerMin >= 10.0) {  
-                logOk("✅… NORMAL");  
+                logOk("… NORMAL");  
                 lab15_strengthWeak = false;  
             } else if (mahPerMin >= 5.0) {  
                 logWarn("⚠️ MODERATE");  
                 lab15_strengthWeak = true;  
             } else {  
-                logError("❌ WEAK");  
+                logError(" WEAK");  
                 lab15_strengthWeak = true;  
             }  
 
@@ -6204,8 +6168,8 @@ ui.post(new Runnable() {
 // ------------------------------------------------------------
 logInfo("LAB decision:");
 if (!lab15OverTempDuringCharge && !lab15FlapUnstable && !lab15_strengthWeak) {
-logOk("✅… Charging system OK. No cleaning or replacement required.");
-logOk("✅… Charging stability OK.");
+logOk("… Charging system OK. No cleaning or replacement required.");
+logOk("… Charging stability OK.");
 } else {
 logWarn("⚠️ Charging system shows potential issues.");
 logWarn("⚠️ Further inspection or repeat test recommended.");
@@ -6236,10 +6200,10 @@ try {
         logOk("Likely cause: thermal / PMIC protection limiting current.");  
 
     } else {  
-        logOk("✅… Operating normally (no system-level current throttling).");  
+        logOk("… Operating normally (no system-level current throttling).");  
     }  
 
-} catch (Throwable ignore) {}  // ✅… ÎšÎ›Î•Î™Î£Î™ÎœÎŸ TRY/CATCH
+} catch (Throwable ignore) {}  // … ÎšÎ›Î•Î™Î£Î™ÎœÎŸ TRY/CATCH
 
 // ------------------------------------------------------------
 // SUMMARY FLAG (SAFE)
@@ -6353,19 +6317,19 @@ if (peakTemp > 0) {
     if (peakTemp >= 55f) {  
         logWarn(String.format(  
                 Locale.US,  
-                "%.1fÂ°C at %s",  
+                "%.1f°C at %s",  
                 peakTemp, peakSrc  
         ));  
     } else if (peakTemp >= 45f) {  
         logInfo(String.format(  
                 Locale.US,  
-                "%.1fÂ°C at %s",  
+                "%.1f°C at %s",  
                 peakTemp, peakSrc  
         ));  
     } else {  
         logOk(String.format(  
                 Locale.US,  
-                "%.1fÂ°C at %s",  
+                "%.1f°C at %s",  
                 peakTemp, peakSrc  
         ));  
     }  
@@ -6705,7 +6669,7 @@ try {
 
         if (!overallDeviceConcern) {  
 
-            logOk("✅… No critical issues detected. Battery + charging + thermal look stable.");  
+            logOk("… No critical issues detected. Battery + charging + thermal look stable.");  
             logInfo("Note:");  
             logOk("Internal chips and critical peripherals were monitored.");  
 
@@ -6738,7 +6702,7 @@ try {
             }  
 
             if (lab14Health < 70f && thermalDanger) {  
-                logError("❌ Combined risk detected (battery + thermal). Technician inspection strongly recommended.");  
+                logError(" Combined risk detected (battery + thermal). Technician inspection strongly recommended.");  
             }  
         }
 
@@ -6815,7 +6779,7 @@ msg.setPadding(0, 0, 0, dp(18));
 box.addView(msg);  
 
 // ==========================  
-// ðŸ”• MUTE TOGGLE (GLOBAL)  
+//  MUTE TOGGLE (GLOBAL)  
 // ==========================  
 CheckBox muteBox = new CheckBox(this);  
 muteBox.setChecked(isTtsMuted());  
@@ -6855,7 +6819,7 @@ if (popup.getWindow() != null) {
 
 // ==========================
 
-// ðŸ”‡ MUTE LOGIC — GLOBAL
+//  MUTE LOGIC — GLOBAL
 // ==========================
 muteBox.setOnCheckedChangeListener((v, checked) -> {
 
@@ -6864,13 +6828,13 @@ setTtsMuted(checked);
 
 // ÎºÏŒÏˆÎµ Î¬Î¼ÎµÏƒÎ± Ï„Î¿Î½ Î®Ï‡Î¿ Î±Î½ Î¼Ï€Î®ÎºÎµ mute  
 if (checked && tts != null && tts[0] != null) {  
-    tts[0].stop();   // ✅” Î¼ÏŒÎ½Î¿ stop  
+    tts[0].stop();   //  Î¼ÏŒÎ½Î¿ stop  
 }
 
 });
 
 // ==========================
-// ðŸ”Š TTS — PLAY (GLOBAL ENGINE)
+//  TTS — PLAY (GLOBAL ENGINE)
 // ==========================
 if (tts != null && tts[0] != null && ttsReady[0] && !isTtsMuted()) {
 
@@ -6894,7 +6858,7 @@ ok.setOnClickListener(v -> {
 
     try {  
         if (tts[0] != null) {  
-            tts[0].stop();   // ✅” Î¼ÏŒÎ½Î¿ stop — ÏŒÏ‡Î¹ shutdown ÎµÎ´ÏŽ  
+            tts[0].stop();   //  Î¼ÏŒÎ½Î¿ stop — ÏŒÏ‡Î¹ shutdown ÎµÎ´ÏŽ  
         }  
     } catch (Throwable ignore) {}  
 
@@ -7004,7 +6968,7 @@ if (snap.cachedKb > 0) {
 
     if (critical) {  
 
-        logError("❌ Storage critically low.");  
+        logError(" Storage critically low.");  
         logError("System stability may be affected.");  
         logWarn("Apps may crash, updates may fail, UI may slow down.");  
 
@@ -7015,7 +6979,7 @@ if (snap.cachedKb > 0) {
 
     } else {  
 
-        logOk("✅… Storage level is healthy for daily usage.");  
+        logOk("… Storage level is healthy for daily usage.");  
     }  
 
     // ------------------------------------------------------------  
@@ -7072,11 +7036,11 @@ if (snap.cachedKb > 0) {
     logInfo("Storage summary:");  
 
     if (critical) {  
-        logError("❌ Immediate cleanup strongly recommended.");  
+        logError(" Immediate cleanup strongly recommended.");  
     } else if (pressure) {  
         logWarn("⚠️ Cleanup recommended to restore smooth performance.");  
     } else {  
-        logOk("✅… No action required.");  
+        logOk("… No action required.");  
     }  
 
 } catch (Throwable t) {  
@@ -7095,10 +7059,10 @@ logLine();
 // LAB 19 — Live RAM Health Snapshot
 // FINAL — HUMAN • REAL-TIME • ROOT-AWARE • NO GUESSING
 //
-// ✅” Instant snapshot (not stress / not forecast)
-// ✅” Explains what the system is doing NOW
-// ✅” Root-aware (extra insight, never fake)
-// ✅” No cleaning myths, no placebo claims
+//  Instant snapshot (not stress / not forecast)
+//  Explains what the system is doing NOW
+//  Root-aware (extra insight, never fake)
+//  No cleaning myths, no placebo claims
 // ============================================================
 private void lab19RamSnapshot() {
 
@@ -7134,7 +7098,7 @@ try {
 
     // ---------------- HUMAN INTERPRETATION ----------------  
     if (pctFree < 8) {  
-        logError("❌ Critical RAM pressure.");  
+        logError(" Critical RAM pressure.");  
         logError("System is actively killing background apps to survive.");  
         logWarn("User experience: strong lag, reloads, UI stutter.");  
 
@@ -7147,7 +7111,7 @@ try {
         logInfo("This is normal during heavy apps or gaming.");  
 
     } else {  
-        logOk("✅… RAM level is healthy at this moment.");  
+        logOk("… RAM level is healthy at this moment.");  
     }  
     
     // ---------------- MEMORY PRESSURE INDICATORS ----------------
@@ -7265,7 +7229,7 @@ private void lab20UptimeHints() {
             logWarn("Background processes and memory pressure may accumulate over time.");
 
             if (extremeUptime) {
-                logError("❌ Extremely long uptime (>14 days).");
+                logError(" Extremely long uptime (>14 days).");
                 logError("Strongly recommended: reboot before drawing final conclusions.");
             } else {
                 logInfo("Recommendation:");
@@ -7274,7 +7238,7 @@ private void lab20UptimeHints() {
 
         } else {
 
-            logOk("✅… Uptime is within a healthy range for diagnostics.");
+            logOk("… Uptime is within a healthy range for diagnostics.");
         }
 
         // ----------------------------------------------------
@@ -7971,7 +7935,7 @@ logError("⚠️Â  Very high risk — disable ADB features immediately!");
 else if (risk >= 30)
 logWarn("⚠️Â  Partial exposure — review ADB settings.");
 else
-logOk("✅”ï¸ Risk level acceptable.");
+logOk("ï¸ Risk level acceptable.");
 
 appendHtml("<br>");
 logOk("LAB 23 finished.");
@@ -8277,7 +8241,7 @@ appendHtml("<br>");
 logOk("Lab 24 finished.");
 logLine();
 
-} // ✅… Î¤Î•Î›ÎŸÎ£ ÎœÎ•Î˜ÎŸÎ”ÎŸÎ¥
+} // … Î¤Î•Î›ÎŸÎ£ ÎœÎ•Î˜ÎŸÎ”ÎŸÎ¥
 
 // ============================================================
 // LAB 24 — INTERNAL HELPERS
@@ -8493,9 +8457,9 @@ if (risk > 100) risk = 100;
 
 // COLOR INDICATOR
 String riskColor =
-(risk <= 20) ? "🟩" :
-(risk <= 50) ? "🟨" :
-(risk <= 80) ? "🟧" : "🟥";
+(risk <= 20) ? "" :
+(risk <= 50) ? "" :
+(risk <= 80) ? "" : "";
 
 logInfo("Crash events:");
 if (crashCount > 0) logWarn(String.valueOf(crashCount));
@@ -8535,10 +8499,10 @@ appEvents.entrySet()
         .sorted((a, b) -> b.getValue() - a.getValue())    
         .limit(5)    
         .forEach(e -> {    
-            String c = (e.getValue() >= 10) ? "🟥" :    
-                       (e.getValue() >= 5)  ? "🟧" :    
-                       (e.getValue() >= 2)  ? "🟨" :    
-                                              "🟩";    
+            String c = (e.getValue() >= 10) ? "" :    
+                       (e.getValue() >= 5)  ? "" :    
+                       (e.getValue() >= 2)  ? "" :    
+                                              "";    
             logInfo(" " + c + " " + e.getKey() + " â†’ " + e.getValue() + " events");    
         });
 
@@ -8611,12 +8575,12 @@ return (s == null || s.trim().isEmpty()) ? "(no data)" : s;
 // LAB 26 — Installed Apps Footprint & System Load Intelligence
 // FINAL — LOCKED — PRODUCTION-GRADE — HUMAN OUTPUT — ROOT AWARE
 //
-// ✅” Honest diagnostics (no lies, no â€œmagicâ€)
-// ✅” Normal vs Risk vs Critical verdicts
-// ✅” Detects: app pressure, background-capable apps, permission load,
+//  Honest diagnostics (no lies, no â€œmagicâ€)
+//  Normal vs Risk vs Critical verdicts
+//  Detects: app pressure, background-capable apps, permission load,
 //            redundancy, â€œheavy offendersâ€ (by capabilities),
 //            root-only leftovers (orphan data dirs), cache pressure signals
-// ✅” Root-aware: deeper scan ONLY when rooted, otherwise safe-mode
+//  Root-aware: deeper scan ONLY when rooted, otherwise safe-mode
 //
 // NOTE (GEL RULE): Full lab block returned for copy-paste.
 // ============================================================
@@ -8941,7 +8905,7 @@ logOk("Recommendation: keep only what you really use and reduce duplicates if yo
     logOk("Recommendation: review redundant apps and background-heavy categories.");  
 
 } else {  
-    logOk("✅App footprint looks healthy for daily usage.");  
+    logOk("App footprint looks healthy for daily usage.");  
     logOk("No strong indicators of app-driven system overload detected.");  
 }  
 
@@ -9176,9 +9140,9 @@ String[] req = p.requestedPermissions;
 
             String appLabel = safeLabel(pm, p.packageName);    
             String color =    
-                    (appScore >= 60) ? "🟥" :    
-                    (appScore >= 30) ? "🟧" :    
-                    (appScore >= 15) ? "🟨" : "🟩";    
+                    (appScore >= 60) ? "" :    
+                    (appScore >= 30) ? "" :    
+                    (appScore >= 15) ? "" : "";    
 
             details.add(color + " " + appLabel + " (" + p.packageName + ")"    
                     + " — Risk=" + appScore + "\n" + sb.toString());    
@@ -9199,9 +9163,9 @@ logError("Permissions scan error: " + e.getMessage());
 int maxRiskRef = 300; // theoretical max
 int riskPct = Math.min(100, (riskTotal * 100) / maxRiskRef);
 String riskColor =
-(riskPct <= 20) ? "🟩" :
-(riskPct <= 50) ? "🟨" :
-(riskPct <= 80) ? "🟧" : "🟥";
+(riskPct <= 20) ? "" :
+(riskPct <= 50) ? "" :
+(riskPct <= 80) ? "" : "";
 
 logInfo("Apps scanned:");
 logOk(String.valueOf(totalApps));
@@ -9244,8 +9208,8 @@ appRisk.entrySet()
         .forEach(e -> {    
             String c =    
                     (e.getValue() >= 60) ? "??" :    
-                    (e.getValue() >= 30) ? "🟧" :    
-                    (e.getValue() >= 15) ? "🟨" : "🟩";    
+                    (e.getValue() >= 30) ? "" :    
+                    (e.getValue() >= 15) ? "" : "";    
 
             logInfo(" " + c + " " + safeLabel(pm, e.getKey())    
                     + " — Risk " + e.getValue());    
@@ -9741,22 +9705,22 @@ logInfo("AUTO Breakdown:");
 logInfo("Thermals: " + thermalFlag + " " + thermalScore + "%");  
 if (zones == null || zones.isEmpty()) {  
     logWarn("• No thermal zones readable. Using Battery temp only: " +  
-            String.format(Locale.US, "Â°C", battTemp));  
+            String.format(Locale.US, "°C", battTemp));  
 } else {  
     logInfo("• Zones=" + zones.size() +
-        " | max=" + fmt1(maxThermal) + "Â°C" +
-        " | avg=" + fmt1(avgThermal) + "Â°C");
-if (cpu != null)  logInfo("• CPU="  + fmt1(cpu)  + "Â°C");
-if (gpu != null)  logInfo("• GPU="  + fmt1(gpu)  + "Â°C");
-if (pmic != null) logInfo("• PMIC=" + fmt1(pmic) + "Â°C");
-if (skin != null) logInfo("• Skin=" + fmt1(skin) + "Â°C");
-logInfo("• Battery=" + fmt1(battTemp) + "Â°C");
+        " | max=" + fmt1(maxThermal) + "°C" +
+        " | avg=" + fmt1(avgThermal) + "°C");
+if (cpu != null)  logInfo("• CPU="  + fmt1(cpu)  + "°C");
+if (gpu != null)  logInfo("• GPU="  + fmt1(gpu)  + "°C");
+if (pmic != null) logInfo("• PMIC=" + fmt1(pmic) + "°C");
+if (skin != null) logInfo("• Skin=" + fmt1(skin) + "°C");
+logInfo("• Battery=" + fmt1(battTemp) + "°C");
 }
 
 // Battery
 logInfo("Battery: " + batteryFlag + " " + batteryScore + "%");
 logInfo("• Level=" + (battPct >= 0 ? fmt1(battPct) + "%" : "Unknown") +
-" | Temp=" + fmt1(battTemp) + "Ã‚Â°C | Charging=" + charging);
+" | Temp=" + fmt1(battTemp) + "Ã‚°C | Charging=" + charging);
 
 // Storage
 logInfo("Storage: " + storageFlag + " " + storageScore + "%");
@@ -9809,8 +9773,8 @@ logInfo("Security Score:      " + securityScore + "% " + securityFlag);
 logInfo("Privacy Score:       " + privacyScore + "% " + privacyFlag);
 
 String verdict = finalVerdict(deviceHealthScore, securityScore, privacyScore, performanceScore);
-if (verdict.startsWith("🟩")) logOk(verdict);
-else if (verdict.startsWith("🟨")) logWarn(verdict);
+if (verdict.startsWith("")) logOk(verdict);
+else if (verdict.startsWith("")) logWarn(verdict);
 else logError(verdict);
 
 appendHtml("<br>");
@@ -10166,9 +10130,9 @@ return s;
 }
 
 private String colorFlagFromScore(int s) {
-if (s >= 80) return "🟩";
-if (s >= 55) return "🟨";
-return "🟥";
+if (s >= 80) return "";
+if (s >= 55) return "";
+return "";
 }
 
 private String finalVerdict(int health, int sec, int priv, int perf) {
@@ -10180,13 +10144,13 @@ private String finalVerdict(int health, int sec, int priv, int perf) {
 
         if (sec < 55 || priv < 55) {
             return
-                "🟩 Device condition is healthy.\n" +
+                " Device condition is healthy.\n" +
                 "⚠️ Privacy or security risks detected.\n" +
                 "User review recommended.";
         }
 
         return
-            "🟩 Device condition is healthy.\n" +
+            " Device condition is healthy.\n" +
             "No servicing required.";
     }
 
@@ -10197,13 +10161,13 @@ private String finalVerdict(int health, int sec, int priv, int perf) {
 
         if (sec < 55 || priv < 55) {
             return
-                "🟨 Device condition shows moderate degradation.\n" +
+                " Device condition shows moderate degradation.\n" +
                 "⚠️ Privacy or security risks detected.\n" +
                 "User review recommended.";
         }
 
         return
-            "🟨 Device condition shows moderate degradation.\n" +
+            " Device condition shows moderate degradation.\n" +
             "Further monitoring recommended.";
     }
 
@@ -10212,7 +10176,7 @@ private String finalVerdict(int health, int sec, int priv, int perf) {
 // (NO hardware claim — evidence-based wording)
 // ============================================================
 return
-    "🟥 Device condition shows instability.\n" +
+    " Device condition shows instability.\n" +
     "⚠️ Degradation detected without a clear software cause.\n" +
     "Cause not confirmed.\n" +
     "Classification: Unattributed system instability.\n" +
@@ -10258,7 +10222,7 @@ for (String l : lines) {
     if (low.contains("⚠️") || low.contains("warning")) {  
         warnings.append(l).append("\n");  
     }  
-    if (low.contains("❌") || low.contains("error")) {  
+    if (low.contains("") || low.contains("error")) {  
         warnings.append(l).append("\n");  
     }  
 }  

@@ -176,9 +176,10 @@ public void onReceive(Context context, Intent intent) {
     if (BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(action)) {
         if (lab13MonitoringStarted) {
             lab13DisconnectEvents++;
+            }
         }
     }
-}
+}; 
 
 // ============================================================
 // GLOBAL TTS (for labs that need shared access)

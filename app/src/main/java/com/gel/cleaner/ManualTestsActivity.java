@@ -4270,49 +4270,61 @@ private void lab13BluetoothConnectivityCheck() {
     } catch (Throwable ignore) {}
 
     if (ba == null) {
-    	
-// ------------------------------------------------------------
-// PRECHECK: already connected external Bluetooth device
-// ------------------------------------------------------------
-boolean alreadyConnected = false;
-
-try {
-    if (bm != null) {
-
-        List<BluetoothDevice> a2dp =
-                bm.getConnectedDevices(BluetoothProfile.A2DP);
-
-        List<BluetoothDevice> gatt =
-                bm.getConnectedDevices(BluetoothProfile.GATT);
-
-        if ((a2dp != null && !a2dp.isEmpty()) ||
-            (gatt != null && !gatt.isEmpty())) {
-
-            alreadyConnected = true;
-        }
+        appendHtml("<br>");
+        logLine();
+        logInfo("LAB 13 — Bluetooth Connectivity Check");
+        logLine();
+        logError("Bluetooth NOT supported on this device.");
+        logLine();
+        return;
     }
-} catch (Throwable ignore) {}
 
-if (alreadyConnected) {
+    // ------------------------------------------------------------
+    // PRECHECK: already connected external Bluetooth device
+    // ------------------------------------------------------------
+    boolean alreadyConnected = false;
 
-    lab13HadAnyConnection = true;
-    lab13MonitoringStarted = true;
+    try {
+        if (bm != null) {
 
-    logInfo("External Bluetooth device already connected.");
-    logInfo("Starting stability monitor.");
+            List<BluetoothDevice> a2dp =
+                    bm.getConnectedDevices(BluetoothProfile.A2DP);
 
-    startLab13Monitor60s();
+            List<BluetoothDevice> gatt =
+                    bm.getConnectedDevices(BluetoothProfile.GATT);
 
-    return; // 🔒 ΤΕΛΟΣ εδώ — ΜΗΝ πέσεις στο error path
-}
+            if ((a2dp != null && !a2dp.isEmpty()) ||
+                (gatt != null && !gatt.isEmpty())) {
 
-// ------------------------------------------------------------
-// NORMAL FLOW CONTINUES (popup / receiver / etc)
-// ------------------------------------------------------------
-appendHtml("<br>");
-logLine();
-logInfo("LAB 13 — Bluetooth Connectivity Check");
-logLine();
+                alreadyConnected = true;
+            }
+        }
+    } catch (Throwable ignore) {}
+
+    if (alreadyConnected) {
+
+        lab13HadAnyConnection = true;
+        lab13MonitoringStarted = true;
+
+        appendHtml("<br>");
+        logLine();
+        logInfo("LAB 13 — Bluetooth Connectivity Check");
+        logLine();
+
+        logInfo("External Bluetooth device already connected.");
+        logInfo("Starting stability monitor.");
+
+        startLab13Monitor60s();
+        return; // 🔒 ΤΕΛΟΣ — δεν πάμε σε popup
+    }
+
+    // ------------------------------------------------------------
+    // NORMAL FLOW (popup / receiver / waiting for connection)
+    // ------------------------------------------------------------
+    appendHtml("<br>");
+    logLine();
+    logInfo("LAB 13 — Bluetooth Connectivity Check");
+    logLine();
 
     // ---------- POPUP (instruction gate)
     AlertDialog.Builder b = new AlertDialog.Builder(this);

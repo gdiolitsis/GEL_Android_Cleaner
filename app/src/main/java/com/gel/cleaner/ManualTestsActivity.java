@@ -242,7 +242,7 @@ private String lastScorePrivacy     = "N/A";
 private String lastFinalVerdict     = "N/A";  
 
 // ============================================================
-// LAB 13 — STATE / FIELDS
+// LAB 13 — STATE / FIELDS (FINAL)
 // ============================================================
 
 // runtime state
@@ -250,10 +250,16 @@ private volatile boolean lab13Running = false;
 private volatile boolean lab13MonitoringStarted = false;
 private volatile boolean lab13HadAnyConnection = false;
 private volatile boolean lab13AssumedConnected = false;
+private boolean lab13LastConnected = false;
 
 // counters
 private int lab13DisconnectEvents = 0;
 private int lab13ReconnectEvents  = 0;
+private int lab13Seconds = 0;
+private long lab13StartMs = 0L;
+
+// flags
+private boolean lab13SkipExternalTest = false;
 
 // bluetooth handles
 private BluetoothManager lab13Bm;
@@ -262,6 +268,13 @@ private BluetoothAdapter lab13Ba;
 // UI (monitor dialog)
 private AlertDialog lab13Dialog;
 private TextView lab13StatusText;
+private TextView lab13CounterText;
+private TextView lab13DotsView;
+private LinearLayout lab13ProgressBar;
+
+// handler
+private final Handler lab13Handler =
+        new Handler(Looper.getMainLooper());
 
 // ============================================================  
 // LAB 14 — FLAGS / UI STATE (REQUIRED)  
@@ -1886,33 +1899,6 @@ new Thread(() -> {
 private void stopCpuBurn() {
 __cpuBurn = false;
 }
-
-// --------------------------
-// LAB 13 STATE (FIELDS)
-// --------------------------
-private AlertDialog lab13Dialog;
-private TextView lab13StatusText;
-private TextView lab13CounterText;
-private LinearLayout lab13ProgressBar;
-private TextView lab13DotsView;
-
-private final Handler lab13Handler = new Handler(Looper.getMainLooper());
-private boolean lab13Running = false;
-private boolean lab13MonitoringStarted = false;
-
-private long lab13StartMs = 0L;
-private int lab13Seconds = 0;
-
-private boolean lab13HadAnyConnection = false;
-private boolean lab13LastConnected = false;
-
-private int lab13DisconnectEvents = 0;
-private int lab13ReconnectEvents = 0;
-// Skip external device test (system Bluetooth check only)
-private boolean lab13SkipExternalTest = false;
-
-private BluetoothManager lab13Bm;
-private BluetoothAdapter lab13Ba;
 
 // ------------------------------------------------------------
 // LAB 15 USER ABORT — required by Exit button
@@ -4289,9 +4275,6 @@ logLine();
 // (FINAL — STRUCTURED / NO NESTED METHODS / READY COPY-PASTE)
 // ============================================================
 
-// ============================================================
-// LAB 13 — Bluetooth Connectivity Check (ENTRY)
-// ============================================================
 private void lab13BluetoothConnectivityCheck() {
 
     BluetoothManager bm = null;

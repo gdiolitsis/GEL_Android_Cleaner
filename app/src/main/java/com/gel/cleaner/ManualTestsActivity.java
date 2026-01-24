@@ -171,7 +171,7 @@ private final BroadcastReceiver lab13BtReceiver = new BroadcastReceiver() {
                     );
                 }
 
-                // 🔥 CRITICAL: start monitor NOW
+                // ðŸ”¥ CRITICAL: start monitor NOW
                 startLab13Monitor60s();
             }
         }
@@ -419,17 +419,17 @@ protected void onCreate(@Nullable Bundle savedInstanceState) {
 super.onCreate(savedInstanceState);
 
 prefs = getSharedPreferences("GEL_DIAG", MODE_PRIVATE);  
-p     = prefs;   // 🔒 ALIAS — όλα τα labs/helpers δουλεύουν με p  
+p     = prefs;   // ❌ ALIAS — ÏŒÎ»Î± Ï„Î± labs/helpers Î´Î¿Ï…Î»ÎµÏÎ¿Ï…Î½ Î¼Îµ p  
 
 ui = new Handler(Looper.getMainLooper());
 
 // ============================================================
-// 🔊 GLOBAL TTS INIT — ONE TIME ONLY (SAFE)
+// ðŸ”Š GLOBAL TTS INIT — ONE TIME ONLY (SAFE)
 // ============================================================
 tts[0] = new TextToSpeech(this, status -> {
 if (status == TextToSpeech.SUCCESS) {
 
-if (tts[0] == null) return;   // 🛡️ guard  
+if (tts[0] == null) return;   // ðŸ›¡ï¸ guard  
 
     int res = tts[0].setLanguage(Locale.US);  
 
@@ -502,7 +502,7 @@ root.setBackgroundColor(0xFF101010); // GEL black
     root.addView(lab14DotsView);  
 
     // ============================================================  
-    // SECTION 1: AUDIO & VIBRATION — LABS 1–5  
+    // SECTION 1: AUDIO & VIBRATION — LABS 1â€“5  
     // ============================================================  
     LinearLayout body1 = makeSectionBody();  
     Button header1 = makeSectionHeader(getString(R.string.manual_cat_1), body1);  
@@ -516,7 +516,7 @@ root.setBackgroundColor(0xFF101010); // GEL black
     body1.addView(makeTestButton("5. Vibration Motor Test", this::lab5Vibration));  
 
     // ============================================================  
-    // SECTION 2: DISPLAY & SENSORS — LABS 6–9  
+    // SECTION 2: DISPLAY & SENSORS — LABS 6â€“9  
     // ============================================================  
     LinearLayout body2 = makeSectionBody();  
     Button header2 = makeSectionHeader(getString(R.string.manual_cat_2), body2);  
@@ -529,7 +529,7 @@ root.setBackgroundColor(0xFF101010); // GEL black
     body2.addView(makeTestButton("9. Sensors Check", this::lab9SensorsCheck));  
 
     // ============================================================  
-    // SECTION 3: WIRELESS & CONNECTIVITY — LABS 10–13  
+    // SECTION 3: WIRELESS & CONNECTIVITY — LABS 10â€“13  
     // ============================================================  
     LinearLayout body3 = makeSectionBody();  
     Button header3 = makeSectionHeader(getString(R.string.manual_cat_3), body3);  
@@ -541,7 +541,7 @@ root.setBackgroundColor(0xFF101010); // GEL black
     body3.addView(makeTestButton("12. Call Function Interpretation", this::lab12CallFunctionInterpretation));  
     body3.addView(makeTestButton("13. Bluetooth Connectivity Check",this::lab13BluetoothConnectivityCheck));
     // ============================================================  
-    // SECTION 4: BATTERY & THERMAL — LABS 14–17  
+    // SECTION 4: BATTERY & THERMAL — LABS 14â€“17  
     // ============================================================  
     LinearLayout body4 = makeSectionBody();  
     Button header4 = makeSectionHeader(getString(R.string.manual_cat_4), body4);  
@@ -555,7 +555,7 @@ root.setBackgroundColor(0xFF101010); // GEL black
     body4.addView(makeTestButtonGreenGold("17. Intelligent System Health Analysis",this::lab17RunAuto));  
 
     // ============================================================  
-    // SECTION 5: STORAGE & PERFORMANCE — LABS 18–20  
+    // SECTION 5: STORAGE & PERFORMANCE — LABS 18â€“20  
     // ============================================================  
     LinearLayout body5 = makeSectionBody();  
     Button header5 = makeSectionHeader(getString(R.string.manual_cat_5), body5);  
@@ -567,7 +567,7 @@ root.setBackgroundColor(0xFF101010); // GEL black
     body5.addView(makeTestButton("20. Uptime & Reboot Pattern Analysis", this::lab20UptimeHints));  
 
     // ============================================================  
-    // SECTION 6: SECURITY & SYSTEM HEALTH — LABS 21–24  
+    // SECTION 6: SECURITY & SYSTEM HEALTH — LABS 21â€“24  
     // ============================================================  
     LinearLayout body6 = makeSectionBody();  
     Button header6 = makeSectionHeader(getString(R.string.manual_cat_6), body6);  
@@ -580,7 +580,7 @@ root.setBackgroundColor(0xFF101010); // GEL black
     body6.addView(makeTestButton("24. Root / Bootloader Suspicion", this::lab24RootSuspicion));  
 
     // ============================================================  
-    // SECTION 7: ADVANCED / LOGS — LABS 25–29  
+    // SECTION 7: ADVANCED / LOGS — LABS 25â€“29  
     // ============================================================  
     LinearLayout body7 = makeSectionBody();  
     Button header7 = makeSectionHeader(getString(R.string.manual_cat_7), body7);  
@@ -615,7 +615,7 @@ btnExport.setAllCaps(false);
 btnExport.setTextColor(0xFFFFFFFF);
 btnExport.setBackgroundResource(R.drawable.gel_btn_outline_selector);
 
-// 🔒 OVERRIDE THEME / DRAWABLE
+// ❌ OVERRIDE THEME / DRAWABLE
 btnExport.setMinHeight(0);
 btnExport.setMinimumHeight(0);
 btnExport.setPadding(dp(16), dp(14), dp(16), dp(14));
@@ -644,15 +644,15 @@ setContentView(scroll);
 // SERVICE LOG — INIT (Android Manual Tests)
 // ============================================================
 
-// ⚠️ ΔΕΝ καθαρίζουμε εδώ το Service Log
-// Το clear γίνεται ΜΟΝΟ σε Export ή New Session
+// ⚠️ Î”Î•Î ÎºÎ±Î¸Î±ÏÎ¯Î¶Î¿Ï…Î¼Îµ ÎµÎ´ÏŽ Ï„Î¿ Service Log
+// Î¤Î¿ clear Î³Î¯Î½ÎµÏ„Î±Î¹ ÎœÎŸÎÎŸ ÏƒÎµ Export Î® New Session
 
 if (!serviceLogInit) {
 
-// SECTION HEADER (γράφεται ΜΙΑ φορά ανά session)  
+// SECTION HEADER (Î³ÏÎ¬Ï†ÎµÏ„Î±Î¹ ÎœÎ™Î‘ Ï†Î¿ÏÎ¬ Î±Î½Î¬ session)  
 GELServiceLog.section("Android Manual Tests — Hardware Diagnostics");  
 
-// Intro entry για το service report  
+// Intro entry Î³Î¹Î± Ï„Î¿ service report  
 logLine();  
 logInfo(getString(R.string.manual_log_desc));  
 
@@ -674,11 +674,11 @@ protected void onPause() {
     restoreLab3Audio();
 
     // ==========================
-    // TTS STOP (για όλα τα popups)
+    // TTS STOP (Î³Î¹Î± ÏŒÎ»Î± Ï„Î± popups)
     // ==========================
     try {
         if (tts != null && tts[0] != null) {
-            tts[0].stop();   // 🔇 κόβει κάθε φωνή
+            tts[0].stop();   // ðŸ”‡ ÎºÏŒÎ²ÎµÎ¹ ÎºÎ¬Î¸Îµ Ï†Ï‰Î½Î®
         }
     } catch (Throwable ignore) {}
 
@@ -713,7 +713,7 @@ private void logGreen(String msg)  { logOk(msg); }
 private void logRed(String msg)    { logError(msg); }  
 
 private void logSection(String msg) {  
-logInfo(msg); // ΜΟΝΟ τίτλος, τίποτα άλλο
+logInfo(msg); // ÎœÎŸÎÎŸ Ï„Î¯Ï„Î»Î¿Ï‚, Ï„Î¯Ï€Î¿Ï„Î± Î¬Î»Î»Î¿
 
 }
 
@@ -782,10 +782,10 @@ LinearLayout.LayoutParams lp =
 lp.setMargins(0, dp(4), 0, dp(4));
 b.setLayoutParams(lp);
 
-// κρατάμε minimum ύψος για ομοιομορφία
+// ÎºÏÎ±Ï„Î¬Î¼Îµ minimum ÏÏˆÎ¿Ï‚ Î³Î¹Î± Î¿Î¼Î¿Î¹Î¿Î¼Î¿ÏÏ†Î¯Î±
 b.setMinHeight(dp(48));
 
-// επιτρέπουμε πολλές γραμμές όταν χρειάζεται
+// ÎµÏ€Î¹Ï„ÏÎ­Ï€Î¿Ï…Î¼Îµ Ï€Î¿Î»Î»Î­Ï‚ Î³ÏÎ±Î¼Î¼Î­Ï‚ ÏŒÏ„Î±Î½ Ï‡ÏÎµÎ¹Î¬Î¶ÎµÏ„Î±Î¹
 b.setSingleLine(false);
 b.setMaxLines(2);
 b.setEllipsize(null);
@@ -873,7 +873,7 @@ runOnUiThread(() -> {
     LinearLayout root = new LinearLayout(this);  
     root.setOrientation(LinearLayout.VERTICAL);  
     root.setPadding(dp(28), dp(24), dp(28), dp(24));  
-    root.setMinimumWidth(dp(300));   // 👈 πιο φαρδύ popup  
+    root.setMinimumWidth(dp(300));   // ðŸ‘ˆ Ï€Î¹Î¿ Ï†Î±ÏÎ´Ï popup  
 
     GradientDrawable bg = new GradientDrawable();  
     bg.setColor(0xFF101010);  
@@ -898,7 +898,7 @@ runOnUiThread(() -> {
 
     LinearLayout.LayoutParams btnLp =  
             new LinearLayout.LayoutParams(0, dp(52), 1f);  
-    btnLp.setMargins(dp(8), 0, dp(8), 0);   // 👈 κενό ανάμεσα στα κουμπιά  
+    btnLp.setMargins(dp(8), 0, dp(8), 0);   // ðŸ‘ˆ ÎºÎµÎ½ÏŒ Î±Î½Î¬Î¼ÎµÏƒÎ± ÏƒÏ„Î± ÎºÎ¿Ï…Î¼Ï€Î¹Î¬  
 
     // ---------- NO BUTTON ----------  
     Button noBtn = new Button(this);  
@@ -907,7 +907,7 @@ runOnUiThread(() -> {
     noBtn.setTextColor(0xFFFFFFFF);  
 
     GradientDrawable noBg = new GradientDrawable();  
-    noBg.setColor(0xFF8B0000);           // βαθύ κόκκινο  
+    noBg.setColor(0xFF8B0000);           // Î²Î±Î¸Ï ÎºÏŒÎºÎºÎ¹Î½Î¿  
     noBg.setCornerRadius(dp(14));  
     noBg.setStroke(dp(3), 0xFFFFD700);  
     noBtn.setBackground(noBg);  
@@ -920,7 +920,7 @@ runOnUiThread(() -> {
     yesBtn.setTextColor(0xFFFFFFFF);  
 
     GradientDrawable yesBg = new GradientDrawable();  
-    yesBg.setColor(0xFF0B5F3B);          // βαθύ πράσινο  
+    yesBg.setColor(0xFF0B5F3B);          // Î²Î±Î¸Ï Ï€ÏÎ¬ÏƒÎ¹Î½Î¿  
     yesBg.setCornerRadius(dp(14));  
     yesBg.setStroke(dp(3), 0xFFFFD700);  
     yesBtn.setBackground(yesBg);  
@@ -1111,25 +1111,25 @@ scroll.post(() -> scroll.fullScroll(ScrollView.FOCUS_DOWN));
 }
 
 private void logInfo(String msg) {
-String s = "ℹ️ " + safe(msg);
+String s = "â„¹ï¸ " + safe(msg);
 appendHtml(s);
 GELServiceLog.logInfo(msg);
 }
 
 private void logOk(String msg) {
-String s = "✔ " + safe(msg);
+String s = "✅” " + safe(msg);
 appendHtml("<font color='#39FF14'>" + s + "</font>");
 GELServiceLog.logOk(msg);
 }
 
 private void logWarn(String msg) {
-String s = "⚠ " + safe(msg);
+String s = "âš  " + safe(msg);
 appendHtml("<font color='#FFD966'>" + s + "</font>");
 GELServiceLog.logWarn(msg);
 }
 
 private void logError(String msg) {
-String s = "✖ " + safe(msg);
+String s = "✅– " + safe(msg);
 appendHtml("<font color='#FF5555'>" + s + "</font>");
 GELServiceLog.logError(msg);
 }
@@ -1212,16 +1212,16 @@ return -1f;
 // ============================================================
 
 // ------------------------------------------------------------
-// NORMALIZE mAh / μAh (shared)
+// NORMALIZE mAh / Î¼Ah (shared)
 // ------------------------------------------------------------
 private long normalizeMah(long raw) {
 if (raw <= 0) return -1;
-if (raw > 200000) return raw / 1000; // μAh → mAh
+if (raw > 200000) return raw / 1000; // Î¼Ah â†’ mAh
 return raw;                          // already mAh
 }
 
 // ------------------------------------------------------------
-// Battery temperature (°C) — SAFE
+// Battery temperature (Â°C) — SAFE
 // ------------------------------------------------------------
 private float getBatteryTemperature() {
 try {
@@ -1231,7 +1231,7 @@ if (i == null) return 0f;
 int raw = i.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);  
     if (raw <= 0) return 0f;  
 
-    return raw / 10f; // tenths of °C  
+    return raw / 10f; // tenths of Â°C  
 } catch (Throwable t) {  
     return 0f;  
 }
@@ -1297,7 +1297,7 @@ try {
         return bi;  
     }  
 
-    // Charge counter (μAh → mAh)  
+    // Charge counter (Î¼Ah â†’ mAh)  
     long cc_uAh =  
             bm.getLongProperty(  
                     BatteryManager.BATTERY_PROPERTY_CHARGE_COUNTER  
@@ -1305,7 +1305,7 @@ try {
 
     bi.currentChargeMah = normalizeMah(cc_uAh);  
 
-    // ❗ SAFE FULL CAPACITY — NOT via CHARGE_FULL (API trap)  
+    // â— SAFE FULL CAPACITY — NOT via CHARGE_FULL (API trap)  
     bi.estimatedFullMah = -1; // handled elsewhere (LAB 14 engine / heuristics)  
 
     if (bi.currentChargeMah <= 0)  
@@ -1428,7 +1428,7 @@ float battTempEnd
 if (txtLog == null) {
 logInfo(String.format(
 Locale.US,
-"Thermal correlation (charging): start %.1f°C -> peak %.1f°C -> end %.1f°C",
+"Thermal correlation (charging): start %.1fÂ°C -> peak %.1fÂ°C -> end %.1fÂ°C",
 battTempStart,
 (Float.isNaN(battTempPeak) ? battTempEnd : battTempPeak),
 battTempEnd
@@ -1440,7 +1440,7 @@ String label = "Thermal correlation (charging): ";
 
 String values = String.format(  
         Locale.US,  
-        "start %.1f°C -> peak %.1f°C -> end %.1f°C",  
+        "start %.1fÂ°C -> peak %.1fÂ°C -> end %.1fÂ°C",  
         battTempStart,  
         (Float.isNaN(battTempPeak) ? battTempEnd : battTempPeak),  
         battTempEnd  
@@ -1482,9 +1482,9 @@ boolean strong = "Strong".equalsIgnoreCase(d);
 boolean normal = "Normal".equalsIgnoreCase(d);  
 boolean weak   = "Weak".equalsIgnoreCase(d);  
 
-appendHtml((strong ? "✔ " : "☐ ") + "<font color='#FFFFFF'>Strong</font>");  
-appendHtml((normal ? "✔ " : "☐ ") + "<font color='#FFFFFF'>Normal</font>");  
-appendHtml((weak   ? "✔ " : "☐ ") + "<font color='#FFFFFF'>Weak</font>");  
+appendHtml((strong ? "✅” " : "â˜ ") + "<font color='#FFFFFF'>Strong</font>");  
+appendHtml((normal ? "✅” " : "â˜ ") + "<font color='#FFFFFF'>Normal</font>");  
+appendHtml((weak   ? "✅” " : "â˜ ") + "<font color='#FFFFFF'>Weak</font>");  
 
 if (strong) logOk("Health Map: Strong");  
 else if (normal) logWarn("Health Map: Normal");  
@@ -1545,7 +1545,7 @@ title.setTextSize(18f);
 title.setTypeface(null, Typeface.BOLD);
 title.setPadding(0, 0, 0, dp(12));
 
-// 🔧 FIX για πολλαπλές γραμμές
+// ðŸ”§ FIX Î³Î¹Î± Ï€Î¿Î»Î»Î±Ï€Î»Î­Ï‚ Î³ÏÎ±Î¼Î¼Î­Ï‚
 title.setSingleLine(false);
 title.setMaxLines(Integer.MAX_VALUE);
 title.setEllipsize(null);
@@ -1569,7 +1569,7 @@ msg.setLineSpacing(0f, 1.2f);
 root.addView(msg);
 
 // ==========================
-// 🔕 MUTE TOGGLE — GLOBAL
+// ðŸ”• MUTE TOGGLE — GLOBAL
 // ==========================
 CheckBox muteBox = new CheckBox(this);
 muteBox.setChecked(isTtsMuted());
@@ -1578,11 +1578,11 @@ muteBox.setTextColor(0xFFDDDDDD);
 muteBox.setGravity(Gravity.CENTER);
 muteBox.setPadding(0, dp(10), 0, dp(10));
 
-// ⬇️ ΠΡΩΤΑ μπαίνει το mute
+// â¬‡ï¸ Î Î¡Î©Î¤Î‘ Î¼Ï€Î±Î¯Î½ÎµÎ¹ Ï„Î¿ mute
 root.addView(muteBox);
 
 // ==========================
-// 🔇 MUTE LOGIC — GLOBAL
+// ðŸ”‡ MUTE LOGIC — GLOBAL
 // ==========================
 muteBox.setOnCheckedChangeListener((v, checked) -> {
 setTtsMuted(checked);
@@ -1617,11 +1617,11 @@ dp(52)
 lpBtn.setMargins(0, dp(18), 0, 0);
 btnContinue.setLayoutParams(lpBtn);
 
-// ⬇️ ΜΕΤΑ μπαίνει το κουμπί
+// â¬‡ï¸ ÎœÎ•Î¤Î‘ Î¼Ï€Î±Î¯Î½ÎµÎ¹ Ï„Î¿ ÎºÎ¿Ï…Î¼Ï€Î¯
 root.addView(btnContinue);
 
 // ============================================================  
-// 🔊 TTS — PLAY (GLOBAL ENGINE)  
+// ðŸ”Š TTS — PLAY (GLOBAL ENGINE)  
 // ============================================================  
 try {  
     if (tts != null && tts[0] != null && ttsReady[0] && !isTtsMuted()) {  
@@ -1940,7 +1940,7 @@ ui.post(() -> {
 // ------------------------------------------------------------
 private String formatTemp(float temp) {
 if (Float.isNaN(temp)) return "N/A";
-return String.format(Locale.US, "%.1f°C", temp);
+return String.format(Locale.US, "%.1fÂ°C", temp);
 }
 
 // ------------------------------------------------------------
@@ -2045,17 +2045,17 @@ return out;
 // ------------------------------------------------------------
 private void logTempInline(String label, float c) {
 
-String base = String.format(Locale.US, "%s: %.1f°C", label, c);  
+String base = String.format(Locale.US, "%s: %.1fÂ°C", label, c);  
 
-// COOL + NORMAL → ΠΡΑΣΙΝΟ  
+// COOL + NORMAL â†’ Î Î¡Î‘Î£Î™ÎÎŸ  
 if (c < 45f) {  
     logOk(base + " (NORMAL)");  
 }  
-// WARM → ΚΙΤΡΙΝΟ  
+// WARM â†’ ÎšÎ™Î¤Î¡Î™ÎÎŸ  
 else if (c < 55f) {  
     logWarn(base + " (WARM)");  
 }  
-// HOT → ΚΟΚΚΙΝΟ  
+// HOT â†’ ÎšÎŸÎšÎšÎ™ÎÎŸ  
 else {  
     logError(base + " (HOT)");  
 }
@@ -2083,7 +2083,7 @@ try {
 
             String t = type.toLowerCase(Locale.US);  
 
-            // ⛔ skip sensors we already display  
+            // â›” skip sensors we already display  
             if (t.contains("battery") ||  
                 t.contains("cpu") ||  
                 t.contains("gpu")) {  
@@ -2315,7 +2315,7 @@ if (total <= 0) return false;
 
 int pctFree = (int) ((free * 100L) / total);  
 
-    // Extreme pressure → fragmentation & GC stress indicator  
+    // Extreme pressure â†’ fragmentation & GC stress indicator  
     return pctFree < 5;  
 } catch (Throwable t) {  
     return false;  
@@ -2564,7 +2564,7 @@ private boolean detectPowerInstability() {
 }
 
 // ============================================================
-// LAB 28 — TECHNICIAN POPUP (STYLE + MUTE + LANG + TTS)  ✅FIXED
+// LAB 28 — TECHNICIAN POPUP (STYLE + MUTE + LANG + TTS)  ✅…FIXED
 // ============================================================
 
 private boolean lab28Muted = false;
@@ -2622,7 +2622,7 @@ private void showLab28Popup() {
         controls.setPadding(0, dp(16), 0, dp(10));
 
         // ==========================
-        // 🔕 MUTE BUTTON
+        // ðŸ”• MUTE BUTTON
         // ==========================
         Button muteBtn = new Button(ManualTestsActivity.this);
         muteBtn.setText(lab28Muted ? "Unmute" : "Mute");
@@ -2653,7 +2653,7 @@ private void showLab28Popup() {
         });
 
         // ==========================
-        // 🌐 LANGUAGE SPINNER
+        // ðŸŒ LANGUAGE SPINNER
         // ==========================
         Spinner langSpinner = new Spinner(ManualTestsActivity.this);
 
@@ -2666,7 +2666,7 @@ private void showLab28Popup() {
         langAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         langSpinner.setAdapter(langAdapter);
         
-        // αρχική γλώσσα
+        // Î±ÏÏ‡Î¹ÎºÎ® Î³Î»ÏŽÏƒÏƒÎ±
         if ("GR".equals(lab28Lang)) {
             langSpinner.setSelection(1);
             msg.setText(getLab28TextGR());
@@ -2695,7 +2695,7 @@ private void showLab28Popup() {
         });
 
         // ==========================
-        // 🌐 LANGUAGE BOX (RIGHT)
+        // ðŸŒ LANGUAGE BOX (RIGHT)
         // ==========================
         LinearLayout langBox = new LinearLayout(ManualTestsActivity.this);
         langBox.setOrientation(LinearLayout.HORIZONTAL);
@@ -2800,15 +2800,15 @@ private String getLab28TextEN() {
 private String getLab28TextGR() {
     return
         
-        "Για μεγαλύτερη διαγνωστική ακρίβεια, εκτελέστε πρώτα όλα τα labs πριν από αυτό το τεστ." +
-        "Αυτό το εργαστήριο κάνει μόνο ανάλυση συμπτωμάτων. " +
-        "Δεν διαγιγνώσκει βλάβες υλικού και δεν επιβεβαιώνει προβλήματα συγκόλλησης. " +
-        "Τα αποτελέσματα μπορεί να δείχνουν μοτίβα συμπεριφοράς " +
-        "που σχετίζονται με διακοπτόμενες επαφές, " +
-        "όπως αστάθεια, τυχαίες επανεκκινήσεις ή πτώσεις σήματος. " +
-        "Χρησιμοποιήστε το μόνο για διαλογή περιστατικών, όχι για τελική διάγνωση. " +
-        "Αν υπάρχουν ενδείξεις, προχωρήστε μόνο σε φυσικό έλεγχο " +
-        "και επαγγελματικές εργαστηριακές δοκιμές.";
+        "Î“Î¹Î± Î¼ÎµÎ³Î±Î»ÏÏ„ÎµÏÎ· Î´Î¹Î±Î³Î½Ï‰ÏƒÏ„Î¹ÎºÎ® Î±ÎºÏÎ¯Î²ÎµÎ¹Î±, ÎµÎºÏ„ÎµÎ»Î­ÏƒÏ„Îµ Ï€ÏÏŽÏ„Î± ÏŒÎ»Î± Ï„Î± labs Ï€ÏÎ¹Î½ Î±Ï€ÏŒ Î±Ï…Ï„ÏŒ Ï„Î¿ Ï„ÎµÏƒÏ„." +
+        "Î‘Ï…Ï„ÏŒ Ï„Î¿ ÎµÏÎ³Î±ÏƒÏ„Î®ÏÎ¹Î¿ ÎºÎ¬Î½ÎµÎ¹ Î¼ÏŒÎ½Î¿ Î±Î½Î¬Î»Ï…ÏƒÎ· ÏƒÏ…Î¼Ï€Ï„Ï‰Î¼Î¬Ï„Ï‰Î½. " +
+        "Î”ÎµÎ½ Î´Î¹Î±Î³Î¹Î³Î½ÏŽÏƒÎºÎµÎ¹ Î²Î»Î¬Î²ÎµÏ‚ Ï…Î»Î¹ÎºÎ¿Ï ÎºÎ±Î¹ Î´ÎµÎ½ ÎµÏ€Î¹Î²ÎµÎ²Î±Î¹ÏŽÎ½ÎµÎ¹ Ï€ÏÎ¿Î²Î»Î®Î¼Î±Ï„Î± ÏƒÏ…Î³ÎºÏŒÎ»Î»Î·ÏƒÎ·Ï‚. " +
+        "Î¤Î± Î±Ï€Î¿Ï„ÎµÎ»Î­ÏƒÎ¼Î±Ï„Î± Î¼Ï€Î¿ÏÎµÎ¯ Î½Î± Î´ÎµÎ¯Ï‡Î½Î¿Ï…Î½ Î¼Î¿Ï„Î¯Î²Î± ÏƒÏ…Î¼Ï€ÎµÏÎ¹Ï†Î¿ÏÎ¬Ï‚ " +
+        "Ï€Î¿Ï… ÏƒÏ‡ÎµÏ„Î¯Î¶Î¿Î½Ï„Î±Î¹ Î¼Îµ Î´Î¹Î±ÎºÎ¿Ï€Ï„ÏŒÎ¼ÎµÎ½ÎµÏ‚ ÎµÏ€Î±Ï†Î­Ï‚, " +
+        "ÏŒÏ€Ï‰Ï‚ Î±ÏƒÏ„Î¬Î¸ÎµÎ¹Î±, Ï„Ï…Ï‡Î±Î¯ÎµÏ‚ ÎµÏ€Î±Î½ÎµÎºÎºÎ¹Î½Î®ÏƒÎµÎ¹Ï‚ Î® Ï€Ï„ÏŽÏƒÎµÎ¹Ï‚ ÏƒÎ®Î¼Î±Ï„Î¿Ï‚. " +
+        "Î§ÏÎ·ÏƒÎ¹Î¼Î¿Ï€Î¿Î¹Î®ÏƒÏ„Îµ Ï„Î¿ Î¼ÏŒÎ½Î¿ Î³Î¹Î± Î´Î¹Î±Î»Î¿Î³Î® Ï€ÎµÏÎ¹ÏƒÏ„Î±Ï„Î¹ÎºÏŽÎ½, ÏŒÏ‡Î¹ Î³Î¹Î± Ï„ÎµÎ»Î¹ÎºÎ® Î´Î¹Î¬Î³Î½Ï‰ÏƒÎ·. " +
+        "Î‘Î½ Ï…Ï€Î¬ÏÏ‡Î¿Ï…Î½ ÎµÎ½Î´ÎµÎ¯Î¾ÎµÎ¹Ï‚, Ï€ÏÎ¿Ï‡Ï‰ÏÎ®ÏƒÏ„Îµ Î¼ÏŒÎ½Î¿ ÏƒÎµ Ï†Ï…ÏƒÎ¹ÎºÏŒ Î­Î»ÎµÎ³Ï‡Î¿ " +
+        "ÎºÎ±Î¹ ÎµÏ€Î±Î³Î³ÎµÎ»Î¼Î±Ï„Î¹ÎºÎ­Ï‚ ÎµÏÎ³Î±ÏƒÏ„Î·ÏÎ¹Î±ÎºÎ­Ï‚ Î´Î¿ÎºÎ¹Î¼Î­Ï‚.";
 }
 
 // ============================================================
@@ -2876,7 +2876,7 @@ new Thread(() -> {
 
         logOk("Speaker output detected");  
 
-        // 🔧 FIX: Explain LOW confidence explicitly  
+        // ðŸ”§ FIX: Explain LOW confidence explicitly  
         if ("LOW".equalsIgnoreCase(r.confidence)) {  
 
             logLabelValue(  
@@ -2946,7 +2946,7 @@ new Thread(() -> {
 
         logOk("Frequency sweep executed");  
 
-        // 🔧 FIX: Explain LOW confidence explicitly  
+        // ðŸ”§ FIX: Explain LOW confidence explicitly  
         if ("LOW".equalsIgnoreCase(r.confidence)) {  
 
             logLabelValue(  
@@ -2980,7 +2980,7 @@ new Thread(() -> {
 
 /* ============================================================
 LAB 3 — Earpiece Audio Path Check (MANUAL)
-FINAL — dialog → tones → confirmation
+FINAL — dialog â†’ tones â†’ confirmation
 ============================================================ */
 private void lab3EarpieceManual() {
 
@@ -3016,7 +3016,7 @@ try {
 
 SystemClock.sleep(300);  
 
-// 1️⃣ ΠΡΩΤΟ POPUP — ΟΔΗΓΙΑ  
+// 1ï¸âƒ£ Î Î¡Î©Î¤ÎŸ POPUP — ÎŸÎ”Î—Î“Î™Î‘  
 runOnUiThread(() -> {  
 
     AlertDialog.Builder b =  
@@ -3050,9 +3050,9 @@ ok.setTextColor(0xFFFFFFFF);
 
 // DARK GREEN BUTTON (GEL style)
 GradientDrawable okBg = new GradientDrawable();
-okBg.setColor(0xFF0B5F3B);          // σκούρο πράσινο
+okBg.setColor(0xFF0B5F3B);          // ÏƒÎºÎ¿ÏÏÎ¿ Ï€ÏÎ¬ÏƒÎ¹Î½Î¿
 okBg.setCornerRadius(dp(14));
-okBg.setStroke(dp(3), 0xFFFFD700); // χρυσό περίγραμμα
+okBg.setStroke(dp(3), 0xFFFFD700); // Ï‡ÏÏ…ÏƒÏŒ Ï€ÎµÏÎ¯Î³ÏÎ±Î¼Î¼Î±
 ok.setBackground(okBg);
 
 root.addView(ok);
@@ -3066,7 +3066,7 @@ b.setView(root);
     ok.setOnClickListener(v -> {  
         d.dismiss();  
 
-        // 2️⃣ ΠΑΙΖΟΥΝ ΟΙ ΤΟΝΟΙ (ΑΚΟΥΣΤΙΚΟ)  
+        // 2ï¸âƒ£ Î Î‘Î™Î–ÎŸÎ¥Î ÎŸÎ™ Î¤ÎŸÎÎŸÎ™ (Î‘ÎšÎŸÎ¥Î£Î¤Î™ÎšÎŸ)  
         new Thread(() -> {  
             try {  
                 logInfo("Playing earpiece test tones.");  
@@ -3082,7 +3082,7 @@ b.setView(root);
             } catch (Throwable t) {  
                 logError("Tone playback failed.");  
             } finally {  
-                // 3️⃣ ΔΕΥΤΕΡΟ POPUP — YES / NO (ΥΠΑΡΧΟΝ HELPER)  
+                // 3ï¸âƒ£ Î”Î•Î¥Î¤Î•Î¡ÎŸ POPUP — YES / NO (Î¥Î Î‘Î¡Î§ÎŸÎ HELPER)  
                 askUserEarpieceConfirmation();  
             }  
         }).start();  
@@ -3246,7 +3246,7 @@ runOnUiThread(() -> {
     root.addView(msg);  
 
     // ==========================  
-    // 🔕 MUTE TOGGLE  
+    // ðŸ”• MUTE TOGGLE  
     // ==========================  
     CheckBox muteBox = new CheckBox(this);  
     muteBox.setChecked(ttsMuted[0]);  
@@ -3257,7 +3257,7 @@ runOnUiThread(() -> {
     root.addView(muteBox);  
 
     // ==========================  
-    // ▶️ START BUTTON  
+    // â–¶ï¸ START BUTTON  
     // ==========================  
     Button start = new Button(this);  
     start.setText("START TEST");  
@@ -3272,7 +3272,7 @@ runOnUiThread(() -> {
     root.addView(start);  
 
     // ==========================  
-    // 🔇 MUTE LOGIC — GLOBAL  
+    // ðŸ”‡ MUTE LOGIC — GLOBAL  
     // ==========================  
     muteBox.setOnCheckedChangeListener((v, checked) -> {  
         ttsMuted[0] = checked;  
@@ -3293,7 +3293,7 @@ runOnUiThread(() -> {
     d.show();  
 
     // ==========================  
-    // 🔊 TTS — SPEAK AFTER SHOW  
+    // ðŸ”Š TTS — SPEAK AFTER SHOW  
     // ==========================  
     if (tts != null && tts[0] != null && ttsReady[0] && !ttsMuted[0]) {  
         tts[0].stop();  
@@ -3366,7 +3366,7 @@ runOnUiThread(() -> {
     root.addView(msg);  
 
     // ==========================  
-    // 🔕 MUTE TOGGLE  
+    // ðŸ”• MUTE TOGGLE  
     // ==========================  
     CheckBox muteBox = new CheckBox(this);  
     muteBox.setChecked(ttsMuted[0]);  
@@ -3377,7 +3377,7 @@ runOnUiThread(() -> {
     root.addView(muteBox);  
 
     // ==========================  
-    // ▶️ START BUTTON  
+    // â–¶ï¸ START BUTTON  
     // ==========================  
     Button start = new Button(this);  
     start.setText("START TEST");  
@@ -3392,7 +3392,7 @@ runOnUiThread(() -> {
     root.addView(start);  
 
     // ==========================  
-    // 🔇 MUTE LOGIC — GLOBAL  
+    // ðŸ”‡ MUTE LOGIC — GLOBAL  
     // ==========================  
     muteBox.setOnCheckedChangeListener((v, checked) -> {  
         ttsMuted[0] = checked;  
@@ -3413,7 +3413,7 @@ runOnUiThread(() -> {
     d.show();  
 
     // ==========================  
-    // 🔊 TTS — SPEAK AFTER SHOW  
+    // ðŸ”Š TTS — SPEAK AFTER SHOW  
     // ==========================  
     if (tts != null && tts[0] != null && ttsReady[0] && !ttsMuted[0]) {  
         tts[0].stop();  
@@ -3486,7 +3486,7 @@ runOnUiThread(() -> {
     root.addView(msg);  
 
     // ==========================  
-    // 🔕 MUTE TOGGLE  
+    // ðŸ”• MUTE TOGGLE  
     // ==========================  
     CheckBox muteBox = new CheckBox(this);  
     muteBox.setChecked(ttsMuted[0]);  
@@ -3497,7 +3497,7 @@ runOnUiThread(() -> {
     root.addView(muteBox);  
 
     // ==========================  
-    // ▶️ START BUTTON  
+    // â–¶ï¸ START BUTTON  
     // ==========================  
     Button start = new Button(this);  
     start.setText("START TEST");  
@@ -3512,7 +3512,7 @@ runOnUiThread(() -> {
     root.addView(start);  
 
     // ==========================  
-    // 🔇 MUTE LOGIC — GLOBAL  
+    // ðŸ”‡ MUTE LOGIC — GLOBAL  
     // ==========================  
     muteBox.setOnCheckedChangeListener((v, checked) -> {  
         ttsMuted[0] = checked;  
@@ -3533,7 +3533,7 @@ runOnUiThread(() -> {
     d.show();  
 
     // ==========================  
-    // 🔊 TTS — SPEAK AFTER SHOW  
+    // ðŸ”Š TTS — SPEAK AFTER SHOW  
     // ==========================  
     if (tts != null && tts[0] != null && ttsReady[0] && !ttsMuted[0]) {  
         tts[0].stop();  
@@ -3849,11 +3849,11 @@ public void onRequestPermissionsResult(
         if (grantResults.length > 0 &&
             grantResults[0] == PackageManager.PERMISSION_GRANTED) {
 
-            // ✅ απλώς ενεργοποιούμε το LAB
+            // ✅… Î±Ï€Î»ÏŽÏ‚ ÎµÎ½ÎµÏÎ³Î¿Ï€Î¿Î¹Î¿ÏÎ¼Îµ Ï„Î¿ LAB
             lab13Running = true;
 
-            // receiver είναι ΗΔΗ registered
-            // περιμένουμε ACTION_ACL_CONNECTED
+            // receiver ÎµÎ¯Î½Î±Î¹ Î—Î”Î— registered
+            // Ï€ÎµÏÎ¹Î¼Î­Î½Î¿Ï…Î¼Îµ ACTION_ACL_CONNECTED
 
         } else {
 
@@ -4319,7 +4319,7 @@ private void lab13BluetoothConnectivityCheck() {
     lab13DisconnectEvents = 0;
     lab13ReconnectEvents  = 0;
 
-    // 👉 ΠΑΝΤΑ POPUP
+    // ðŸ‘‰ Î Î‘ÎÎ¤Î‘ POPUP
     showLab13GatePopup();
 }
 
@@ -4348,7 +4348,7 @@ private void showLab13GatePopup() {
             "(e.g. headphones, car kit, keyboard).\n\n" +
             "This test evaluates Bluetooth connection stability.\n\n" +
             "If no external device is connected,\n" +
-            "you may skip this step to continue\n" +
+            "you may skip this step, to continue\n" +
             "with the system Bluetooth check."
     );
     title.setTextColor(0xFFFFFFFF);
@@ -4441,7 +4441,7 @@ private void showLab13GatePopup() {
         tts[0].speak(
                 "Please connect one external Bluetooth device now. " +
                 "This test evaluates Bluetooth connection stability. " +
-                "If no external device is connected, you may skip this step " +
+                "If no external device is connected, you may skip this step, " +
                 "to continue with the system Bluetooth check.",
                 TextToSpeech.QUEUE_FLUSH,
                 null,
@@ -4778,7 +4778,7 @@ private void runLab13BluetoothCheckCore() {
 // ============================================================
 private void startLab13Monitor60s() {
 
-    // 🔒 guard — να μην ξαναξεκινήσει
+    // ❌ guard — Î½Î± Î¼Î·Î½ Î¾Î±Î½Î±Î¾ÎµÎºÎ¹Î½Î®ÏƒÎµÎ¹
     if (lab13MonitoringStarted) return;
     lab13MonitoringStarted = true;
 
@@ -4795,12 +4795,12 @@ private void startLab13Monitor60s() {
     // HARD SYNC — receiver + snapshot (INITIAL)
     // ------------------------------------------------------------
     if (lab13ReceiverSawConnection && !connectedNow) {
-        // receiver είδε σύνδεση αλλά profile δεν έχει προλάβει
+        // receiver ÎµÎ¯Î´Îµ ÏƒÏÎ½Î´ÎµÏƒÎ· Î±Î»Î»Î¬ profile Î´ÎµÎ½ Î­Ï‡ÎµÎ¹ Ï€ÏÎ¿Î»Î¬Î²ÎµÎ¹
         connectedNow = true;
     }
 
     if (lab13ReceiverSawDisconnection && connectedNow) {
-        // receiver είδε disconnect, δίνουμε προτεραιότητα στο event
+        // receiver ÎµÎ¯Î´Îµ disconnect, Î´Î¯Î½Î¿Ï…Î¼Îµ Ï€ÏÎ¿Ï„ÎµÏÎ±Î¹ÏŒÏ„Î·Ï„Î± ÏƒÏ„Î¿ event
         connectedNow = false;
     }
 
@@ -4810,7 +4810,7 @@ private void startLab13Monitor60s() {
     lab13LastConnected = connectedNow;
     if (connectedNow) lab13HadAnyConnection = true;
 
-    // UI update — ΤΩΡΑ ξεκινάμε
+    // UI update — Î¤Î©Î¡Î‘ Î¾ÎµÎºÎ¹Î½Î¬Î¼Îµ
     if (lab13StatusText != null) {
         lab13StatusText.setText("Monitoring Bluetooth stability...");
     }
@@ -4860,12 +4860,12 @@ private void startLab13Monitor60s() {
             // ------------------------------------------------------------
             // TRANSITION LOGIC (CORRECT)
             // ------------------------------------------------------------
-            // ΠΡΩΤΗ σύνδεση ≠ reconnect
+            // Î Î¡Î©Î¤Î— ÏƒÏÎ½Î´ÎµÏƒÎ· â‰  reconnect
             if (!lab13LastConnected && connected && lab13Seconds > 0) {
                 lab13ReconnectEvents++;
             }
 
-            // πραγματικό disconnect
+            // Ï€ÏÎ±Î³Î¼Î±Ï„Î¹ÎºÏŒ disconnect
             if (lab13LastConnected && !connected) {
                 lab13DisconnectEvents++;
             }
@@ -5036,11 +5036,18 @@ private void lab13FinishAndReport(boolean adapterStable) {
         } catch (Throwable ignore) {}
     }
 
-    if (!anyActive && lab13HadAnyConnection) {
-        logWarn("No active external Bluetooth connections detected at finish (device may have gone idle).");
-    } else if (anyActive) {
-        logOk("External Bluetooth connectivity detected at finish.");
-    }
+    if (anyActive) {
+
+    logOk("External Bluetooth connectivity detected at finish.");
+
+} else if (lab13HadAnyConnection) {
+
+    logInfo(
+        "External Bluetooth device was connected during the test, " +
+        "but is currently idle or not actively using a profile."
+    );
+
+}
 
     // ------------------------------------------------------------
     // DIAGNOSIS LOGIC (LOCKED MESSAGE)
@@ -5050,7 +5057,7 @@ private void lab13FinishAndReport(boolean adapterStable) {
 
     if (adapterStable && lab13HadAnyConnection && frequentDisconnects) {
 
-        // 🔒 LOCKED DIAGNOSIS MESSAGE
+        // ❌ LOCKED DIAGNOSIS MESSAGE
         logWarn(
                 "The Bluetooth connection shows frequent disconnections,\n" +
                 "while the phone’s Bluetooth subsystem remains stable.\n" +
@@ -5079,13 +5086,13 @@ private void lab13FinishAndReport(boolean adapterStable) {
     logLine();
     logInfo("LAB 13 — Connected Device Verdict");
 
-    // ❌ Case 1: Δεν υπήρξε ποτέ σύνδεση
+    // ❌ Case 1: Î”ÎµÎ½ Ï…Ï€Î®ÏÎ¾Îµ Ï€Î¿Ï„Î­ ÏƒÏÎ½Î´ÎµÏƒÎ·
     if (!lab13HadAnyConnection) {
 
         logWarn("No active external Bluetooth device was detected during the test window.");
         logWarn("This usually means that no external device was connected, or Bluetooth was idle during the test.");
 
-    // ⚠️ Case 2: Υπήρξε σύνδεση αλλά με αποσυνδέσεις
+    // ⚠️ Case 2: Î¥Ï€Î®ÏÎ¾Îµ ÏƒÏÎ½Î´ÎµÏƒÎ· Î±Î»Î»Î¬ Î¼Îµ Î±Ï€Î¿ÏƒÏ…Î½Î´Î­ÏƒÎµÎ¹Ï‚
     } else if (lab13DisconnectEvents >= 1) {
 
         logError("An external Bluetooth device was connected, but disconnections were detected during monitoring.");
@@ -5097,7 +5104,7 @@ private void lab13FinishAndReport(boolean adapterStable) {
                 "signal quality, or usage conditions."
         );
 
-    // ✅ Case 3: Σταθερή σύνδεση
+    // ✅… Case 3: Î£Ï„Î±Î¸ÎµÏÎ® ÏƒÏÎ½Î´ÎµÏƒÎ·
     } else {
 
         logOk("External Bluetooth connectivity was detected and remained stable during the monitoring period.");
@@ -5143,7 +5150,7 @@ private void abortLab13ByUser() {
     try { if (tts != null && tts[0] != null) tts[0].stop(); } catch (Throwable ignore) {}
 
     // ------------------------------------------------------------
-    // ABORT LOG (ΜΟΝΟ ΕΔΩ)
+    // ABORT LOG (ÎœÎŸÎÎŸ Î•Î”Î©)
     // ------------------------------------------------------------
     appendHtml("<br>");
     logWarn("Lab 13 aborted by user.");
@@ -5154,9 +5161,9 @@ private void abortLab13ByUser() {
 // ============================================================
 // LAB 14 — Battery Health Stress Test
 // FINAL — SNAPSHOT ONLY — UI MATCHES LAB 15
-// ✔ Confidence NOT in intro
-// ✔ Confidence calculated AFTER stress + shown with Aging + Final Score
-// ✔ One confidence only — no contradictions
+// ✅” Confidence NOT in intro
+// ✅” Confidence calculated AFTER stress + shown with Aging + Final Score
+// ✅” One confidence only — no contradictions
 //
 // NOTE (GEL RULE): When you ask for full lab, I must return full lab copy-paste.
 // ============================================================
@@ -5209,55 +5216,55 @@ try {
                     : -1;
 
 // ------------------------------------------------------------
-// 2) LOG HEADER (FULL INFO — SERVICE / OLD LAB STYLE) ✅
+// 2) LOG HEADER (FULL INFO — SERVICE / OLD LAB STYLE) ✅…
 // ------------------------------------------------------------
 
 appendHtml("<br>");
 logLine();
-logInfo("✅ LAB 14 — Battery Health Stress Test");
+logInfo("✅… LAB 14 — Battery Health Stress Test");
 logLine();
 
-logInfo("✅ Mode: " + (rooted ? "Advanced (Rooted)" : "Standard (Unrooted)"));
-logInfo("✅ Duration: " + durationSec + " sec (laboratory mode)");
-logInfo("✅ Stress profile: GEL C Mode (aggressive CPU burn + brightness MAX)");
+logInfo("✅… Mode: " + (rooted ? "Advanced (Rooted)" : "Standard (Unrooted)"));
+logInfo("✅… Duration: " + durationSec + " sec (laboratory mode)");
+logInfo("✅… Stress profile: GEL C Mode (aggressive CPU burn + brightness MAX)");
 
 logInfo(String.format(
 Locale.US,
-"✅ Start conditions: charge=%d mAh, status=Discharging, temp=%.1f°C",
+"✅… Start conditions: charge=%d mAh, status=Discharging, temp=%.1fÂ°C",
 startMah,
 (Float.isNaN(tempStart) ? 0f : tempStart)
 ));
 
-logInfo("✅ Data source: " + snapStart.source);
+logInfo("✅… Data source: " + snapStart.source);
 
 // Capacity baseline
 if (baselineFullMah > 0)
-logInfo("✅ Battery capacity baseline (counter-based): " + baselineFullMah + " mAh");
+logInfo("✅… Battery capacity baseline (counter-based): " + baselineFullMah + " mAh");
 else
-logInfo("✅ Battery capacity baseline (counter-based): N/A");
+logInfo("✅… Battery capacity baseline (counter-based): N/A");
 
 // Cycles
-logInfo("✅ Cycle count: " + (cycles > 0 ? String.valueOf(cycles) : "N/A"));
+logInfo("✅… Cycle count: " + (cycles > 0 ? String.valueOf(cycles) : "N/A"));
 
-// Stress environment (explicit — όπως στο παλιό lab)
-logInfo("✅ Screen state: brightness forced to MAX, screen lock ON");
-logInfo("✅ CPU stress threads: " +
+// Stress environment (explicit — ÏŒÏ€Ï‰Ï‚ ÏƒÏ„Î¿ Ï€Î±Î»Î¹ÏŒ lab)
+logInfo("✅… Screen state: brightness forced to MAX, screen lock ON");
+logInfo("✅… CPU stress threads: " +
 Runtime.getRuntime().availableProcessors() +
 " (cores=" + Runtime.getRuntime().availableProcessors() + ")");
 
 // Thermal snapshot availability (START)
 if (cpuTempStart != null)
-logOk(String.format(Locale.US, "✅ CPU temperature (start): %.1f°C", cpuTempStart));
+logOk(String.format(Locale.US, "✅… CPU temperature (start): %.1fÂ°C", cpuTempStart));
 else
 logWarn("⚠️ CPU temperature (start): N/A");
 
 if (gpuTempStart != null)
-logOk(String.format(Locale.US, "✅ GPU temperature (start): %.1f°C", gpuTempStart));
+logOk(String.format(Locale.US, "✅… GPU temperature (start): %.1fÂ°C", gpuTempStart));
 else
 logWarn("⚠️ GPU temperature (start): N/A");
 
 // System thermal domains (informational, like old LAB)
-logOk("✅ Thermal domains: CPU / GPU / SKIN / PMIC / BATT");
+logOk("✅… Thermal domains: CPU / GPU / SKIN / PMIC / BATT");
 
 logLine();
 
@@ -5285,7 +5292,7 @@ bg.setStroke(dp(4), 0xFFFFD700);  // GOLD border
 root.setBackground(bg);
 
 // ============================================================
-// 🔹 TITLE — INSIDE POPUP (LAB 14)
+// ðŸ”¹ TITLE — INSIDE POPUP (LAB 14)
 // ============================================================
 TextView title = new TextView(this);
 title.setText("LAB 14 — Battery's health stress test");
@@ -5506,7 +5513,7 @@ conf.percent < 60;       // unstable repeated runs
                 idx += Math.min(55.0, d / 800.0 * 55.0);  
 
                 // thermal component (0..25)  
-                // +3°C => 0, +10°C => ~18, +14°C => 25  
+                // +3Â°C => 0, +10Â°C => ~18, +14Â°C => 25  
                 double tr = Math.max(0.0, tempRise - 3.0);  
                 idx += Math.min(25.0, tr / 11.0 * 25.0);  
 
@@ -5529,7 +5536,7 @@ conf.percent < 60;       // unstable repeated runs
 
             } else {  
                 agingIndex = -1;  
-                agingInterp = "Insufficient data (need stable runs with confidence ≥70%)";  
+                agingInterp = "Insufficient data (need stable runs with confidence â‰¥70%)";  
             }  
 
             // ----------------------------------------------------  
@@ -5613,7 +5620,7 @@ logInfo("LAB 14 - Stress result");
 logInfo("End temperature:");
 logOk(String.format(
 Locale.US,
-"%.1f°C",
+"%.1fÂ°C",
 endBatteryTemp
 ));
 
@@ -5625,34 +5632,34 @@ float delta = endBatteryTemp - startBatteryTemp;
 logInfo("Thermal change:");
 
 if (delta >= 3.0f) {
-// ουσιαστική θερμική άνοδος
+// Î¿Ï…ÏƒÎ¹Î±ÏƒÏ„Î¹ÎºÎ® Î¸ÎµÏÎ¼Î¹ÎºÎ® Î¬Î½Î¿Î´Î¿Ï‚
 logWarn(String.format(
 Locale.US,
-"+%.1f°C",
+"+%.1fÂ°C",
 delta
 ));
 
 } else if (delta >= 0.5f) {
-// φυσιολογική άνοδος από stress
+// Ï†Ï…ÏƒÎ¹Î¿Î»Î¿Î³Î¹ÎºÎ® Î¬Î½Î¿Î´Î¿Ï‚ Î±Ï€ÏŒ stress
 logOk(String.format(
 Locale.US,
-"+%.1f°C",
+"+%.1fÂ°C",
 delta
 ));
 
 } else if (delta <= -0.5f) {
-// πτώση θερμοκρασίας (καλό)
+// Ï€Ï„ÏŽÏƒÎ· Î¸ÎµÏÎ¼Î¿ÎºÏÎ±ÏƒÎ¯Î±Ï‚ (ÎºÎ±Î»ÏŒ)
 logOk(String.format(
 Locale.US,
-"%.1f°C",
+"%.1fÂ°C",
 delta
 ));
 
 } else {
-// πρακτικά σταθερό
+// Ï€ÏÎ±ÎºÏ„Î¹ÎºÎ¬ ÏƒÏ„Î±Î¸ÎµÏÏŒ
 logOk(String.format(
 Locale.US,
-"%.1f°C",
+"%.1fÂ°C",
 delta
 ));
 }
@@ -5674,7 +5681,7 @@ logInfo("Drain rate:");
 if (validDrain) {
 logOk(String.format(
 Locale.US,
-"✅ %.0f mAh/hour (counter-based)",
+"✅… %.0f mAh/hour (counter-based)",
 mahPerHour
 ));
 } else {
@@ -5682,11 +5689,11 @@ logWarn("⚠️ Invalid (counter anomaly or no drop)");
 logWarn("⚠️ Counter anomaly detected (PMIC / system-level behavior). Repeat test after system reboot");
 }
 
-// SCORE (αριθμός + runs)
+// SCORE (Î±ÏÎ¹Î¸Î¼ÏŒÏ‚ + runs)
 logInfo("Measurement consistency score:");
 logOk(String.format(
 Locale.US,
-"✅ %d%% (%d valid runs)",
+"✅… %d%% (%d valid runs)",
 conf.percent,
 conf.validRuns
 ));
@@ -5702,7 +5709,7 @@ if (agingIndex >= 0) {
 logInfo("Battery aging index:");  
 logOk(String.format(  
         Locale.US,  
-        "✅ %d/100 — %s",  
+        "✅… %d/100 — %s",  
         agingIndex,  
         agingInterp  
 ));
@@ -5718,7 +5725,7 @@ logWarn("⚠️ Insufficient data");
 // Aging analysis
 // ----------------------------------------------------
 logInfo("Aging analysis:");
-logOk("✅ " + aging.description);
+logOk("✅… " + aging.description);
 
 // ----------------------------------------------------
 // Final Score
@@ -5726,7 +5733,7 @@ logOk("✅ " + aging.description);
 logInfo("Final battery health score:");
 logOk(String.format(
 Locale.US,
-"✅ %d%% (%s)",
+"✅… %d%% (%s)",
 finalScore,
 finalLabel
 ));
@@ -5749,9 +5756,9 @@ p.edit()
 .putLong("lab14_last_ts", System.currentTimeMillis())
 .apply();
 
-logOk("✅ LAB 14 result stored successfully.");
+logOk("✅… LAB 14 result stored successfully.");
 
-// 11) RUN-BASED CONFIDENCE (THE ONLY "CONFIDENCE") ✅
+// 11) RUN-BASED CONFIDENCE (THE ONLY "CONFIDENCE") ✅…
 logLab14Confidence();
 
 appendHtml("<br>");
@@ -5826,7 +5833,7 @@ bg.setStroke(dp(4), 0xFFFFD700);  // GOLD border
 root.setBackground(bg);
 
 // ============================================================
-// 🔹 TITLE — INSIDE POPUP (LAB 15)
+// ðŸ”¹ TITLE — INSIDE POPUP (LAB 15)
 // ============================================================
 TextView title = new TextView(this);
 title.setText(
@@ -5876,35 +5883,35 @@ lab15ProgressBar.addView(seg);
 root.addView(lab15ProgressBar);
 
 // ==========================
-// 🔕 MUTE TOGGLE (LAB 15 — GLOBAL)
+// ðŸ”• MUTE TOGGLE (LAB 15 — GLOBAL)
 // ==========================
 CheckBox muteBox = new CheckBox(this);
-muteBox.setChecked(isTtsMuted());   // ⬅️ μόνο GLOBAL κατάσταση
+muteBox.setChecked(isTtsMuted());   // â¬…ï¸ Î¼ÏŒÎ½Î¿ GLOBAL ÎºÎ±Ï„Î¬ÏƒÏ„Î±ÏƒÎ·
 muteBox.setText("Mute voice instructions");
 muteBox.setTextColor(0xFFDDDDDD);
 muteBox.setGravity(Gravity.CENTER);
 muteBox.setPadding(0, dp(10), 0, dp(10));
 
-// ⬇️ ΠΡΩΤΑ μπαίνει το mute
+// â¬‡ï¸ Î Î¡Î©Î¤Î‘ Î¼Ï€Î±Î¯Î½ÎµÎ¹ Ï„Î¿ mute
 root.addView(muteBox);
 
 // ==========================
-// 🔇 MUTE LOGIC — GLOBAL
+// ðŸ”‡ MUTE LOGIC — GLOBAL
 // ==========================
 muteBox.setOnCheckedChangeListener((v, checked) -> {
 
-// αποθήκευση GLOBAL επιλογής  
+// Î±Ï€Î¿Î¸Î®ÎºÎµÏ…ÏƒÎ· GLOBAL ÎµÏ€Î¹Î»Î¿Î³Î®Ï‚  
 setTtsMuted(checked);  
 
-// κόψε άμεσα τον ήχο αν μπήκε mute  
+// ÎºÏŒÏˆÎµ Î¬Î¼ÎµÏƒÎ± Ï„Î¿Î½ Î®Ï‡Î¿ Î±Î½ Î¼Ï€Î®ÎºÎµ mute  
 if (checked && tts != null && tts[0] != null) {  
-    tts[0].stop();   // ✔ μόνο stop — ΟΧΙ shutdown  
+    tts[0].stop();   // ✅” Î¼ÏŒÎ½Î¿ stop — ÎŸÎ§Î™ shutdown  
 }
 
 });
 
 // ============================================================
-// 🔹 EXIT BUTTON
+// ðŸ”¹ EXIT BUTTON
 // ============================================================
 Button exitBtn = new Button(this);
 exitBtn.setText("Exit test");
@@ -5914,7 +5921,7 @@ exitBtn.setTypeface(null, Typeface.BOLD);
 
 GradientDrawable exitBg = new GradientDrawable();
 exitBg.setColor(0xFF8B0000);
-exitBg.setCornerRadius(dp(14));   // ❗ ΔΙΟΡΘΩΣΗ: έφυγε το τυχαίο 7
+exitBg.setCornerRadius(dp(14));   // â— Î”Î™ÎŸÎ¡Î˜Î©Î£Î—: Î­Ï†Ï…Î³Îµ Ï„Î¿ Ï„Ï…Ï‡Î±Î¯Î¿ 7
 exitBg.setStroke(dp(3), 0xFFFFD700);
 exitBtn.setBackground(exitBg);
 
@@ -5932,17 +5939,17 @@ exitBtn.setLayoutParams(lpExit);
 exitBtn.setOnClickListener(v -> {
 try {
 if (tts != null && tts[0] != null) {
-tts[0].stop();   // ✔ μόνο stop
+tts[0].stop();   // ✅” Î¼ÏŒÎ½Î¿ stop
 }
 } catch (Throwable ignore) {}
 abortLab15ByUser();
 });
 
-// ⬇️ ΜΕΤΑ μπαίνει το exit
+// â¬‡ï¸ ÎœÎ•Î¤Î‘ Î¼Ï€Î±Î¯Î½ÎµÎ¹ Ï„Î¿ exit
 root.addView(exitBtn);
 
 // ============================================================
-// 🔹 SHOW DIALOG
+// ðŸ”¹ SHOW DIALOG
 // ============================================================
 b.setView(root);
 lab15Dialog = b.create();
@@ -5955,7 +5962,7 @@ lab15Dialog.getWindow()
 lab15Dialog.show();
 
 // ============================================================
-// 🔊 TTS — SPEAK AFTER SHOW (FINAL / GLOBAL)
+// ðŸ”Š TTS — SPEAK AFTER SHOW (FINAL / GLOBAL)
 // ============================================================
 if (tts != null && tts[0] != null && ttsReady[0] && !isTtsMuted()) {
 
@@ -5973,7 +5980,7 @@ tts[0].speak(
 }
 
 // ============================================================
-// 🔹 LOGS
+// ðŸ”¹ LOGS
 // ============================================================
 appendHtml("<br>");
 logLine();
@@ -6022,7 +6029,7 @@ ui.post(new Runnable() {
 
                 lab15StatusText.setText("Charging state detected.");  
                 lab15StatusText.setTextColor(0xFF39FF14);  
-                logOk("✅ Charging state detected.");  
+                logOk("✅… Charging state detected.");  
             }  
 
         } else if (wasCharging[0]) {  
@@ -6107,7 +6114,7 @@ ui.post(new Runnable() {
         logInfo("Battery temperature:");  
         logOk(String.format(  
                 Locale.US,  
-                "✅ %.1f°C",  
+                "✅… %.1fÂ°C",  
                 lab15BattTempEnd  
         ));  
 
@@ -6127,13 +6134,13 @@ ui.post(new Runnable() {
         if (lab15OverTempDuringCharge) {  
             logError(String.format(  
                     Locale.US,  
-                    "❌ HOT (ΔT +%.1f°C) — Elevated temperature detected.",  
+                    "❌ HOT (Î”T +%.1fÂ°C) — Elevated temperature detected.",  
                     Math.max(0f, dtCharge)  
             ));  
         } else {  
             logOk(String.format(  
                     Locale.US,  
-                    "✅ OK (ΔT +%.1f°C) — Normal thermal behavior during charging.",  
+                    "✅… OK (Î”T +%.1fÂ°C) — Normal thermal behavior during charging.",  
                     Math.max(0f, dtCharge)  
             ));  
         }  
@@ -6143,7 +6150,7 @@ ui.post(new Runnable() {
         // ------------------------------------------------------------  
         logInfo("Charging connection:");  
         if (lab15FlapUnstable) logError("❌ Unstable (plug/unplug behavior detected).");  
-        else logOk("✅ Appears stable. No abnormal plug/unplug behavior detected.");
+        else logOk("✅… Appears stable. No abnormal plug/unplug behavior detected.");
 
 // ------------------------------------------------------------  
         // CHARGING INPUT & STRENGTH (mAh/min)  
@@ -6164,7 +6171,7 @@ ui.post(new Runnable() {
             logInfo("Charging input:");  
             logOk(String.format(  
                     Locale.US,  
-                    "✅ +%d mAh in %.1f min (%.1f mAh/min)",  
+                    "✅… +%d mAh in %.1f min (%.1f mAh/min)",  
                     deltaMah,  
                     minutes,  
                     mahPerMin  
@@ -6172,10 +6179,10 @@ ui.post(new Runnable() {
 
             logInfo("Charging strength:");  
             if (mahPerMin >= 20.0) {  
-                logOk("✅ STRONG");  
+                logOk("✅… STRONG");  
                 lab15_strengthWeak = false;  
             } else if (mahPerMin >= 10.0) {  
-                logOk("✅ NORMAL");  
+                logOk("✅… NORMAL");  
                 lab15_strengthWeak = false;  
             } else if (mahPerMin >= 5.0) {  
                 logWarn("⚠️ MODERATE");  
@@ -6197,8 +6204,8 @@ ui.post(new Runnable() {
 // ------------------------------------------------------------
 logInfo("LAB decision:");
 if (!lab15OverTempDuringCharge && !lab15FlapUnstable && !lab15_strengthWeak) {
-logOk("✅ Charging system OK. No cleaning or replacement required.");
-logOk("✅ Charging stability OK.");
+logOk("✅… Charging system OK. No cleaning or replacement required.");
+logOk("✅… Charging stability OK.");
 } else {
 logWarn("⚠️ Charging system shows potential issues.");
 logWarn("⚠️ Further inspection or repeat test recommended.");
@@ -6229,10 +6236,10 @@ try {
         logOk("Likely cause: thermal / PMIC protection limiting current.");  
 
     } else {  
-        logOk("✅ Operating normally (no system-level current throttling).");  
+        logOk("✅… Operating normally (no system-level current throttling).");  
     }  
 
-} catch (Throwable ignore) {}  // ✅ ΚΛΕΙΣΙΜΟ TRY/CATCH
+} catch (Throwable ignore) {}  // ✅… ÎšÎ›Î•Î™Î£Î™ÎœÎŸ TRY/CATCH
 
 // ------------------------------------------------------------
 // SUMMARY FLAG (SAFE)
@@ -6346,19 +6353,19 @@ if (peakTemp > 0) {
     if (peakTemp >= 55f) {  
         logWarn(String.format(  
                 Locale.US,  
-                "%.1f°C at %s",  
+                "%.1fÂ°C at %s",  
                 peakTemp, peakSrc  
         ));  
     } else if (peakTemp >= 45f) {  
         logInfo(String.format(  
                 Locale.US,  
-                "%.1f°C at %s",  
+                "%.1fÂ°C at %s",  
                 peakTemp, peakSrc  
         ));  
     } else {  
         logOk(String.format(  
                 Locale.US,  
-                "%.1f°C at %s",  
+                "%.1fÂ°C at %s",  
                 peakTemp, peakSrc  
         ));  
     }  
@@ -6429,7 +6436,7 @@ logLine();
 
 // ============================================================
 // LAB 17 — GEL Auto Battery Reliability Evaluation
-// INTELLIGENCE EDITION • STRICT FRESHNESS (≤ 2 HOURS)
+// INTELLIGENCE EDITION • STRICT FRESHNESS (â‰¤ 2 HOURS)
 // ============================================================
 private void lab17RunAuto() {
 
@@ -6698,7 +6705,7 @@ try {
 
         if (!overallDeviceConcern) {  
 
-            logOk("✅ No critical issues detected. Battery + charging + thermal look stable.");  
+            logOk("✅… No critical issues detected. Battery + charging + thermal look stable.");  
             logInfo("Note:");  
             logOk("Internal chips and critical peripherals were monitored.");  
 
@@ -6808,7 +6815,7 @@ msg.setPadding(0, 0, 0, dp(18));
 box.addView(msg);  
 
 // ==========================  
-// 🔕 MUTE TOGGLE (GLOBAL)  
+// ðŸ”• MUTE TOGGLE (GLOBAL)  
 // ==========================  
 CheckBox muteBox = new CheckBox(this);  
 muteBox.setChecked(isTtsMuted());  
@@ -6848,26 +6855,26 @@ if (popup.getWindow() != null) {
 
 // ==========================
 
-// 🔇 MUTE LOGIC — GLOBAL
+// ðŸ”‡ MUTE LOGIC — GLOBAL
 // ==========================
 muteBox.setOnCheckedChangeListener((v, checked) -> {
 
-// αποθήκευση GLOBAL επιλογής  
+// Î±Ï€Î¿Î¸Î®ÎºÎµÏ…ÏƒÎ· GLOBAL ÎµÏ€Î¹Î»Î¿Î³Î®Ï‚  
 setTtsMuted(checked);  
 
-// κόψε άμεσα τον ήχο αν μπήκε mute  
+// ÎºÏŒÏˆÎµ Î¬Î¼ÎµÏƒÎ± Ï„Î¿Î½ Î®Ï‡Î¿ Î±Î½ Î¼Ï€Î®ÎºÎµ mute  
 if (checked && tts != null && tts[0] != null) {  
-    tts[0].stop();   // ✔ μόνο stop  
+    tts[0].stop();   // ✅” Î¼ÏŒÎ½Î¿ stop  
 }
 
 });
 
 // ==========================
-// 🔊 TTS — PLAY (GLOBAL ENGINE)
+// ðŸ”Š TTS — PLAY (GLOBAL ENGINE)
 // ==========================
 if (tts != null && tts[0] != null && ttsReady[0] && !isTtsMuted()) {
 
-// καθάρισε ό,τι έπαιζε πριν  
+// ÎºÎ±Î¸Î¬ÏÎ¹ÏƒÎµ ÏŒ,Ï„Î¹ Î­Ï€Î±Î¹Î¶Îµ Ï€ÏÎ¹Î½  
 tts[0].stop();  
 
 tts[0].speak(  
@@ -6887,7 +6894,7 @@ ok.setOnClickListener(v -> {
 
     try {  
         if (tts[0] != null) {  
-            tts[0].stop();   // ✔ μόνο stop — όχι shutdown εδώ  
+            tts[0].stop();   // ✅” Î¼ÏŒÎ½Î¿ stop — ÏŒÏ‡Î¹ shutdown ÎµÎ´ÏŽ  
         }  
     } catch (Throwable ignore) {}  
 
@@ -7008,7 +7015,7 @@ if (snap.cachedKb > 0) {
 
     } else {  
 
-        logOk("✅ Storage level is healthy for daily usage.");  
+        logOk("✅… Storage level is healthy for daily usage.");  
     }  
 
     // ------------------------------------------------------------  
@@ -7069,7 +7076,7 @@ if (snap.cachedKb > 0) {
     } else if (pressure) {  
         logWarn("⚠️ Cleanup recommended to restore smooth performance.");  
     } else {  
-        logOk("✅ No action required.");  
+        logOk("✅… No action required.");  
     }  
 
 } catch (Throwable t) {  
@@ -7088,10 +7095,10 @@ logLine();
 // LAB 19 — Live RAM Health Snapshot
 // FINAL — HUMAN • REAL-TIME • ROOT-AWARE • NO GUESSING
 //
-// ✔ Instant snapshot (not stress / not forecast)
-// ✔ Explains what the system is doing NOW
-// ✔ Root-aware (extra insight, never fake)
-// ✔ No cleaning myths, no placebo claims
+// ✅” Instant snapshot (not stress / not forecast)
+// ✅” Explains what the system is doing NOW
+// ✅” Root-aware (extra insight, never fake)
+// ✅” No cleaning myths, no placebo claims
 // ============================================================
 private void lab19RamSnapshot() {
 
@@ -7140,7 +7147,7 @@ try {
         logInfo("This is normal during heavy apps or gaming.");  
 
     } else {  
-        logOk("✅ RAM level is healthy at this moment.");  
+        logOk("✅… RAM level is healthy at this moment.");  
     }  
     
     // ---------------- MEMORY PRESSURE INDICATORS ----------------
@@ -7224,7 +7231,7 @@ logLine();
 // ============================================================
 private void lab20UptimeHints() {
 
-    boolean frequentReboots = false;   // ⭐ πρέπει να είναι εδώ, ΟΧΙ μέσα σε if
+    boolean frequentReboots = false;   // â­ Ï€ÏÎ­Ï€ÎµÎ¹ Î½Î± ÎµÎ¯Î½Î±Î¹ ÎµÎ´ÏŽ, ÎŸÎ§Î™ Î¼Î­ÏƒÎ± ÏƒÎµ if
 
     appendHtml("<br>");
     logLine();
@@ -7267,7 +7274,7 @@ private void lab20UptimeHints() {
 
         } else {
 
-            logOk("✅ Uptime is within a healthy range for diagnostics.");
+            logOk("✅… Uptime is within a healthy range for diagnostics.");
         }
 
         // ----------------------------------------------------
@@ -7279,7 +7286,7 @@ private void lab20UptimeHints() {
             logInfo("Advanced uptime signals:");
 
             boolean lowMemoryPressure = readLowMemoryKillCountSafe() < 5;
-            frequentReboots = detectFrequentRebootsHint();   // ⭐ ASSIGN, όχι νέα δήλωση
+            frequentReboots = detectFrequentRebootsHint();   // â­ ASSIGN, ÏŒÏ‡Î¹ Î½Î­Î± Î´Î®Î»Ï‰ÏƒÎ·
 
             if (frequentReboots) {
                 logWarn("⚠️ Repeated reboot pattern detected.");
@@ -7803,9 +7810,9 @@ logWarn("Play Protect does NOT patch system vulnerabilities or firmware flaws.")
 // ------------------------------------------------------------  
   
 logInfo("Manual checks:");  
-logInfo("1) Settings → About phone → Android version → Security patch level.");  
+logInfo("1) Settings â†’ About phone â†’ Android version â†’ Security patch level.");  
 logWarn("   Very old patch levels increase exploit exposure.");  
-logInfo("2) Google Play Store → Play Protect → verify scanning is enabled.");  
+logInfo("2) Google Play Store â†’ Play Protect â†’ verify scanning is enabled.");  
 
 appendHtml("<br>");  
 logOk("Lab 22 finished.");  
@@ -7893,12 +7900,12 @@ logOk("ADB over Wi-Fi is OFF.");
 }
 
 // ============================================================
-// 4) ADB PAIRING MODE (Android 11–14 typical ports)
+// 4) ADB PAIRING MODE (Android 11â€“14 typical ports)
 // ============================================================
 boolean adbPairing =
 isPortOpen(3700, 200) ||   // some OEM pairing
 isPortOpen(7460, 200) ||   // pairing service
-scanPairingPortRange();    // 7460–7490
+scanPairingPortRange();    // 7460â€“7490
 
 logInfo("ADB Pairing Mode: " + bubble(adbPairing) + " " + (adbPairing ? "ACTIVE" : "OFF"));
 
@@ -7938,15 +7945,15 @@ logInfo("Recommended Actions:");
 
 if (usbDebug || devOpts) {
 logWarn("• Disable Developer Options / USB Debugging:");
-logInfo("  Settings → System → Developer options → OFF");
-logInfo("  USB debugging → OFF");
+logInfo("  Settings â†’ System â†’ Developer options â†’ OFF");
+logInfo("  USB debugging â†’ OFF");
 } else {
 logOk("• Developer options & USB debugging look safe.");
 }
 
 if (adbWifi) {
 logError("• ADB over Wi-Fi must be disabled:");
-logInfo("  Developer options → Wireless debugging → OFF");
+logInfo("  Developer options â†’ Wireless debugging â†’ OFF");
 logInfo("  Or reboot to clear tcpip mode.");
 } else {
 logOk("• Wireless debugging is not active.");
@@ -7954,17 +7961,17 @@ logOk("• Wireless debugging is not active.");
 
 if (adbPairing) {
 logError("• Turn OFF ADB Pairing / Wireless debugging:");
-logInfo("  Developer options → Wireless debugging → OFF");
+logInfo("  Developer options â†’ Wireless debugging â†’ OFF");
 } else {
 logOk("• ADB Pairing is not active.");
 }
 
 if (risk >= 60)
-logError("⚠️  Very high risk — disable ADB features immediately!");
+logError("⚠️Â  Very high risk — disable ADB features immediately!");
 else if (risk >= 30)
-logWarn("⚠️  Partial exposure — review ADB settings.");
+logWarn("⚠️Â  Partial exposure — review ADB settings.");
 else
-logOk("✔️ Risk level acceptable.");
+logOk("✅”ï¸ Risk level acceptable.");
 
 appendHtml("<br>");
 logOk("LAB 23 finished.");
@@ -7975,14 +7982,14 @@ logLine();
 // UI BUBBLES (GEL)
 // ============================================================
 private String bubble(boolean on) {
-return on ? "🔴" : "🟢";
+return on ? "ðŸ”´" : "ðŸŸ¢";
 }
 
 private String riskBubble(int risk) {
-if (risk <= 10) return "🟢";
-if (risk <= 30) return "🟡";
-if (risk <= 60) return "🟠";
-return "🔴";
+if (risk <= 10) return "ðŸŸ¢";
+if (risk <= 30) return "ðŸŸ¡";
+if (risk <= 60) return "ðŸŸ ";
+return "ðŸ”´";
 }
 
 // ============================================================
@@ -8270,7 +8277,7 @@ appendHtml("<br>");
 logOk("Lab 24 finished.");
 logLine();
 
-} // ✅ ΤΕΛΟΣ ΜΕΘΟΔΟΥ
+} // ✅… Î¤Î•Î›ÎŸÎ£ ÎœÎ•Î˜ÎŸÎ”ÎŸÎ¥
 
 // ============================================================
 // LAB 24 — INTERNAL HELPERS
@@ -8532,7 +8539,7 @@ appEvents.entrySet()
                        (e.getValue() >= 5)  ? "🟧" :    
                        (e.getValue() >= 2)  ? "🟨" :    
                                               "🟩";    
-            logInfo(" " + c + " " + e.getKey() + " → " + e.getValue() + " events");    
+            logInfo(" " + c + " " + e.getKey() + " â†’ " + e.getValue() + " events");    
         });
 
 }
@@ -8604,12 +8611,12 @@ return (s == null || s.trim().isEmpty()) ? "(no data)" : s;
 // LAB 26 — Installed Apps Footprint & System Load Intelligence
 // FINAL — LOCKED — PRODUCTION-GRADE — HUMAN OUTPUT — ROOT AWARE
 //
-// ✔ Honest diagnostics (no lies, no “magic”)
-// ✔ Normal vs Risk vs Critical verdicts
-// ✔ Detects: app pressure, background-capable apps, permission load,
-//            redundancy, “heavy offenders” (by capabilities),
+// ✅” Honest diagnostics (no lies, no â€œmagicâ€)
+// ✅” Normal vs Risk vs Critical verdicts
+// ✅” Detects: app pressure, background-capable apps, permission load,
+//            redundancy, â€œheavy offendersâ€ (by capabilities),
 //            root-only leftovers (orphan data dirs), cache pressure signals
-// ✔ Root-aware: deeper scan ONLY when rooted, otherwise safe-mode
+// ✅” Root-aware: deeper scan ONLY when rooted, otherwise safe-mode
 //
 // NOTE (GEL RULE): Full lab block returned for copy-paste.
 // ============================================================
@@ -8648,7 +8655,7 @@ int totalPkgs  = apps.size();
 int userApps   = 0;  
 int systemApps = 0;  
 
-// “pressure” signals (capability-based, not guesses)  
+// â€œpressureâ€ signals (capability-based, not guesses)  
 int bgCapable = 0;            // has background-ish abilities  
 int permHeavy = 0;            // requests many dangerous-ish perms  
 int bootAware = 0;            // has BOOT_COMPLETED receiver declared  
@@ -8667,7 +8674,7 @@ int launchersLike = 0;
 int antivirusLike = 0;  
 int keyboardsLike = 0;  
 
-// top offenders (by “capability score”, not usage)  
+// top offenders (by â€œcapability scoreâ€, not usage)  
 class Offender {  
     String label;  
     String pkg;  
@@ -8715,7 +8722,7 @@ for (ApplicationInfo ai : apps) {
         if (pi != null) reqPerms = pi.requestedPermissions;  
     } catch (Throwable ignore) {}  
 
-    // Count “danger-ish” permissions (best-effort, honest)  
+    // Count â€œdanger-ishâ€ permissions (best-effort, honest)  
     int dangerCount = 0;  
     boolean hasBoot = false;  
 
@@ -8752,7 +8759,7 @@ for (ApplicationInfo ai : apps) {
 
             if ("android.permission.POST_NOTIFICATIONS".equals(p)) hasPostNotif = true;  
 
-            // “danger-ish” set (not perfect, but honest enough to show “permission load”)  
+            // â€œdanger-ishâ€ set (not perfect, but honest enough to show â€œpermission loadâ€)  
             if ("android.permission.READ_CONTACTS".equals(p) ||  
                 "android.permission.WRITE_CONTACTS".equals(p) ||  
                 "android.permission.READ_CALL_LOG".equals(p) ||  
@@ -8788,7 +8795,7 @@ for (ApplicationInfo ai : apps) {
     if (hasVpnBind) { score += 6; tags.append("vpn, "); }  
     if (hasPostNotif) { score += 2; tags.append("notifications, "); }  
 
-    // “background-capable” heuristic (honest: capability, not runtime)  
+    // â€œbackground-capableâ€ heuristic (honest: capability, not runtime)  
     boolean bg =  
             hasBoot || hasLocation || hasVpnBind || hasOverlay || hasPostNotif ||  
             dangerCount >= 5;  
@@ -8934,7 +8941,7 @@ logOk("Recommendation: keep only what you really use and reduce duplicates if yo
     logOk("Recommendation: review redundant apps and background-heavy categories.");  
 
 } else {  
-    logOk("✅ App footprint looks healthy for daily usage.");  
+    logOk("✅App footprint looks healthy for daily usage.");  
     logOk("No strong indicators of app-driven system overload detected.");  
 }  
 
@@ -8953,7 +8960,7 @@ if (!offenders.isEmpty()) {
     }  
 
     logInfo("Note:");  
-    logOk("These apps are NOT confirmed as “bad”. They simply have strong background/permission capabilities.");  
+    logOk("These apps are NOT confirmed as â€œbadâ€. They simply have strong background/permission capabilities.");  
 }  
 
 int orphanDirs = 0;
@@ -9254,7 +9261,6 @@ if (!details.isEmpty()) {
 logInfo("Permission Details (flagged apps):");  
 
 for (String d : details) {  
-    // κάθε flagged entry είναι από μόνο του finding  
     logWarn(d);  
 }
 
@@ -9358,7 +9364,7 @@ private void lab28HardwareStability() {
     // ------------------------------------------------------------
     // POPUP — TECHNICIAN WARNING (with TTS + Language + Mute)
     // ------------------------------------------------------------
-    // ⚠️ helper method (showLab28Popup) βρίσκεται στα helpers του activity
+    // ⚠️ helper method (showLab28Popup) Î²ÏÎ¯ÏƒÎºÎµÏ„Î±Î¹ ÏƒÏ„Î± helpers Ï„Î¿Ï… activity
     showLab28Popup();
 
     // ============================================================
@@ -9441,12 +9447,12 @@ private void lab28HardwareStability() {
         } else logOk("• Evidence: charging behavior stable.");
 
         if (ev.radioInstability) {
-            logWarn("• Evidence: radio/network instability (Lab10–13).");
+            logWarn("• Evidence: radio/network instability (Lab10â€“13).");
             evidenceScore += 20;
         } else logOk("• Evidence: radio signals stable.");
 
         if (ev.sensorFlaps) {
-            logWarn("• Evidence: sensor instability (Lab7–9).");
+            logWarn("• Evidence: sensor instability (Lab7â€“9).");
             evidenceScore += 15;
         } else logOk("• Evidence: sensors stable.");
 
@@ -9566,7 +9572,7 @@ private static class Lab28EvidenceReader {
 
         String log;
         try {
-            log = GELServiceLog.getAll();   // <-- σωστό API
+            log = GELServiceLog.getAll();   // <-- ÏƒÏ‰ÏƒÏ„ÏŒ API
         } catch (Throwable t) {
             return ev; // ultra-safe
         }
@@ -9735,22 +9741,22 @@ logInfo("AUTO Breakdown:");
 logInfo("Thermals: " + thermalFlag + " " + thermalScore + "%");  
 if (zones == null || zones.isEmpty()) {  
     logWarn("• No thermal zones readable. Using Battery temp only: " +  
-            String.format(Locale.US, "°C", battTemp));  
+            String.format(Locale.US, "Â°C", battTemp));  
 } else {  
     logInfo("• Zones=" + zones.size() +
-        " | max=" + fmt1(maxThermal) + "°C" +
-        " | avg=" + fmt1(avgThermal) + "°C");
-if (cpu != null)  logInfo("• CPU="  + fmt1(cpu)  + "°C");
-if (gpu != null)  logInfo("• GPU="  + fmt1(gpu)  + "°C");
-if (pmic != null) logInfo("• PMIC=" + fmt1(pmic) + "°C");
-if (skin != null) logInfo("• Skin=" + fmt1(skin) + "°C");
-logInfo("• Battery=" + fmt1(battTemp) + "°C");
+        " | max=" + fmt1(maxThermal) + "Â°C" +
+        " | avg=" + fmt1(avgThermal) + "Â°C");
+if (cpu != null)  logInfo("• CPU="  + fmt1(cpu)  + "Â°C");
+if (gpu != null)  logInfo("• GPU="  + fmt1(gpu)  + "Â°C");
+if (pmic != null) logInfo("• PMIC=" + fmt1(pmic) + "Â°C");
+if (skin != null) logInfo("• Skin=" + fmt1(skin) + "Â°C");
+logInfo("• Battery=" + fmt1(battTemp) + "Â°C");
 }
 
 // Battery
 logInfo("Battery: " + batteryFlag + " " + batteryScore + "%");
 logInfo("• Level=" + (battPct >= 0 ? fmt1(battPct) + "%" : "Unknown") +
-" | Temp=" + fmt1(battTemp) + "Â°C | Charging=" + charging);
+" | Temp=" + fmt1(battTemp) + "Ã‚Â°C | Charging=" + charging);
 
 // Storage
 logInfo("Storage: " + storageFlag + " " + storageScore + "%");

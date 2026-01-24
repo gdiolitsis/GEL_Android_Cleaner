@@ -1104,26 +1104,22 @@ private void appendHtml(String html) {
 }
 
 private void logInfo(String msg) {
-    String s = "[INFO] " + safe(msg);
-    appendHtml(s);
+    appendHtml("ℹ️ " + safe(msg));
     GELServiceLog.logInfo(msg);
 }
 
 private void logOk(String msg) {
-    String s = "[OK] " + safe(msg);
-    appendHtml("<font color='#39FF14'>" + s + "</font>");
+    appendHtml("<font color='#39FF14'>✅ " + safe(msg) + "</font>");
     GELServiceLog.logOk(msg);
 }
 
 private void logWarn(String msg) {
-    String s = "[WARN] " + safe(msg);
-    appendHtml("<font color='#FFD966'>" + s + "</font>");
+    appendHtml("<font color='#FFD966'>⚠️ " + safe(msg) + "</font>");
     GELServiceLog.logWarn(msg);
 }
 
 private void logError(String msg) {
-    String s = "[ERROR] " + safe(msg);
-    appendHtml("<font color='#FF5555'>" + s + "</font>");
+    appendHtml("<font color='#FF5555'>❌ " + safe(msg) + "</font>");
     GELServiceLog.logError(msg);
 }
 

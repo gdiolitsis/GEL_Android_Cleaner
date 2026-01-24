@@ -5240,10 +5240,9 @@ logLabelValue(
 } else if (lab13HadAnyConnection) {
 
     logInfo(
-        logInfo(
     "An external Bluetooth device was connected during the test, " +
     "but it is currently not in active use."
-    );
+);
 
 }
 

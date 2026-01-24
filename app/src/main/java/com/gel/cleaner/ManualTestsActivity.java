@@ -1415,17 +1415,6 @@ private void logLab15ThermalCorrelation(
         float battTempEnd
 ) {
 
-    if (txtLog == null) {
-        logInfo(String.format(
-                Locale.US,
-                "Thermal correlation (charging): start %.1f°C -> peak %.1f°C -> end %.1f°C",
-                battTempStart,
-                (Float.isNaN(battTempPeak) ? battTempEnd : battTempPeak),
-                battTempEnd
-        ));
-        return;
-    }
-
     String label = "Thermal correlation (charging): ";
 
     String values = String.format(
@@ -1436,30 +1425,33 @@ private void logLab15ThermalCorrelation(
             battTempEnd
     );
 
-    logInfo(label + values);
-}
+    // fallback: no UI
+    if (txtLog == null) {
+        logInfo(label + values);
+        return;
+    }
 
-SpannableString sp = new SpannableString(label + values);  
+    // UI — label white, values green
+    SpannableString sp = new SpannableString(label + values);
 
-// label = white  
-sp.setSpan(  
-        new ForegroundColorSpan(0xFFFFFFFF),  
-        0,  
-        label.length(),  
-        Spanned.SPAN_EXCLUSIVE_EXCLUSIVE  
-);  
+    // label = white
+    sp.setSpan(
+            new ForegroundColorSpan(0xFFFFFFFF),
+            0,
+            label.length(),
+            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+    );
 
-// values = green  
-sp.setSpan(  
-        new ForegroundColorSpan(0xFF39FF14),  
-        label.length(),  
-        sp.length(),  
-        Spanned.SPAN_EXCLUSIVE_EXCLUSIVE  
-);  
+    // values = green
+    sp.setSpan(
+            new ForegroundColorSpan(0xFF39FF14),
+            label.length(),
+            sp.length(),
+            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+    );
 
-txtLog.append(sp);  
-txtLog.append("\n");
-
+    txtLog.append(sp);
+    txtLog.append("\n");
 }
 
 // ------------------------------------------------------------

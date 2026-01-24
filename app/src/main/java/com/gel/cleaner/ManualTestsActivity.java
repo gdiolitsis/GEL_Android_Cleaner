@@ -4270,14 +4270,49 @@ private void lab13BluetoothConnectivityCheck() {
     } catch (Throwable ignore) {}
 
     if (ba == null) {
-        appendHtml("<br>");
-        logLine();
-        logInfo("LAB 13 — Bluetooth Connectivity Check");
-        logLine();
-        logError("Bluetooth NOT supported on this device.");
-        logLine();
-        return;
+    	
+// ------------------------------------------------------------
+// PRECHECK: already connected external Bluetooth device
+// ------------------------------------------------------------
+boolean alreadyConnected = false;
+
+try {
+    if (bm != null) {
+
+        List<BluetoothDevice> a2dp =
+                bm.getConnectedDevices(BluetoothProfile.A2DP);
+
+        List<BluetoothDevice> gatt =
+                bm.getConnectedDevices(BluetoothProfile.GATT);
+
+        if ((a2dp != null && !a2dp.isEmpty()) ||
+            (gatt != null && !gatt.isEmpty())) {
+
+            alreadyConnected = true;
+        }
     }
+} catch (Throwable ignore) {}
+
+if (alreadyConnected) {
+
+    lab13HadAnyConnection = true;
+    lab13MonitoringStarted = true;
+
+    logInfo("External Bluetooth device already connected.");
+    logInfo("Starting stability monitor.");
+
+    startLab13Monitor60s();
+
+    return; // 🔒 ΤΕΛΟΣ εδώ — ΜΗΝ πέσεις στο error path
+}
+
+// ------------------------------------------------------------
+// NORMAL FLOW CONTINUES (popup / receiver / etc)
+// ------------------------------------------------------------
+appendHtml("<br>");
+logLine();
+logInfo("LAB 13 — Bluetooth Connectivity Check");
+logLine();
 
     // ---------- POPUP (instruction gate)
     AlertDialog.Builder b = new AlertDialog.Builder(this);
@@ -4614,7 +4649,7 @@ if (lab13IsAnyExternalConnected()) {
     root.addView(lab13StatusText);
 
     lab13DotsView = new TextView(this);
-    lab13DotsView.setText("•");
+    lab13DotsView.setText("•••");
     lab13DotsView.setTextColor(0xFF39FF14);
     lab13DotsView.setTextSize(22f);
     lab13DotsView.setGravity(Gravity.CENTER);

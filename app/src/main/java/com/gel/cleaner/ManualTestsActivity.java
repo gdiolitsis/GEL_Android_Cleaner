@@ -5337,6 +5337,7 @@ logInfo(
 appendHtml("<br>");
 logOk("Lab 12 finished.");
 logLine();
+}
 
 // ============================================================
 // LAB 13 — Bluetooth Connectivity Check

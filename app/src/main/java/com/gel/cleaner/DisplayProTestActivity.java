@@ -3,6 +3,7 @@ package com.gel.cleaner;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -13,79 +14,80 @@ import android.widget.TextView;
 
 /**
  * ============================================================
- * LAB 6 PRO — DISPLAY INSPECTION
+ * LAB 6 PRO — Display Advanced Diagnostics
  * ------------------------------------------------------------
- * • Color test (auto)
- * • Gradient / banding
- * • Checkerboard
- * • Burn-in reveal
- * • Brightness lock
- * • Fullscreen / no back
+ * • Solid colors (dead pixels / stains)
+ * • Gradient (banding)
+ * • Checkerboard (mura / pixel structure)
+ * • Burn-in stress cycle
+ * • Auto cycle (no touch)
+ * • Back disabled
+ * • Brightness locked
  * ============================================================
  */
 public class DisplayProTestActivity extends Activity {
 
     // ------------------------------------------------------------
-    // MODES
+    // CONFIG
     // ------------------------------------------------------------
-    private enum Mode {
-        COLOR_BASIC,
-        GRADIENT,
-        CHECKERBOARD,
-        BURN_IN,
-        DONE
-    }
-
-    private Mode mode = Mode.COLOR_BASIC;
+    private static final int STEP_DURATION_MS = 2500;
 
     // ------------------------------------------------------------
-    // UI
+    // STATE
     // ------------------------------------------------------------
     private FrameLayout root;
     private TextView hint;
+    private int step = 0;
 
-    // ------------------------------------------------------------
-    // HANDLER
-    // ------------------------------------------------------------
     private final Handler h = new Handler(Looper.getMainLooper());
 
     // ------------------------------------------------------------
-    // COLOR TEST
+    // TEST STEPS
     // ------------------------------------------------------------
-    private final int[] colors = {
-            Color.BLACK,
-            Color.WHITE,
-            Color.RED,
-            Color.GREEN,
-            Color.BLUE,
-            Color.GRAY
+    private final TestStep[] steps = new TestStep[]{
+
+            // SOLID COLORS
+            new SolidStep(Color.BLACK, "Black — look for bright pixels"),
+            new SolidStep(Color.WHITE, "White — look for dark spots"),
+            new SolidStep(Color.RED,   "Red — burn-in / tint"),
+            new SolidStep(Color.GREEN, "Green — uniformity"),
+            new SolidStep(Color.BLUE,  "Blue — uniformity"),
+
+            // GRADIENT (BANDING)
+            new DrawableStep(
+                    DisplayPatterns.makeGradient(),
+                    "Gradient — look for banding"
+            ),
+
+            // CHECKERBOARD (MURA)
+            new DrawableStep(
+                    DisplayPatterns.makeCheckerboard(),
+                    "Checkerboard — look for stains / mura"
+            ),
+
+            // BURN-IN STRESS
+            new DrawableStep(
+                    DisplayPatterns.makeBurnInCycle(),
+                    "Burn-in stress pattern"
+            )
     };
-    private int colorIndex = 0;
 
-    // ------------------------------------------------------------
-    // TIMING (ms)
-    // ------------------------------------------------------------
-    private static final int STEP_DELAY = 2500;
-
+    // ============================================================
+    // LIFECYCLE
+    // ============================================================
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // ------------------------------------------------------------
-        // BRIGHTNESS LOCK + FULLSCREEN
-        // ------------------------------------------------------------
+        // Fullscreen + brightness lock
         getWindow().addFlags(
                 WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
-                        | WindowManager.LayoutParams.FLAG_FULLSCREEN
         );
 
         WindowManager.LayoutParams lp = getWindow().getAttributes();
-        lp.screenBrightness = 1f; // max brightness
+        lp.screenBrightness = 1f;
         getWindow().setAttributes(lp);
 
-        // ------------------------------------------------------------
-        // ROOT
-        // ------------------------------------------------------------
         root = new FrameLayout(this);
         root.setBackgroundColor(Color.BLACK);
 
@@ -98,111 +100,74 @@ public class DisplayProTestActivity extends Activity {
         root.addView(hint);
         setContentView(root);
 
-        startMode();
+        startCycle();
     }
 
-    // ------------------------------------------------------------
-    // MODE DISPATCH
-    // ------------------------------------------------------------
-    private void startMode() {
-        h.removeCallbacksAndMessages(null);
-
-        switch (mode) {
-
-            case COLOR_BASIC:
-                hint.setText(
-                        "COLOR TEST\n\n" +
-                        "Look for dead pixels, color tint, or uneven areas."
-                );
-                colorIndex = 0;
-                root.setBackgroundColor(colors[colorIndex]);
-                h.postDelayed(colorRunnable, STEP_DELAY);
-                break;
-
-            case GRADIENT:
-                hint.setText(
-                        "GRADIENT / BANDING\n\n" +
-                        "Look for visible steps or lines in smooth gradients."
-                );
-                root.setBackground(
-                        DisplayPatterns.makeGradient()
-                );
-                h.postDelayed(this::nextMode, STEP_DELAY * 2L);
-                break;
-
-            case CHECKERBOARD:
-                hint.setText(
-                        "CHECKERBOARD\n\n" +
-                        "Look for uniformity issues or subpixel defects."
-                );
-                root.setBackground(
-                        DisplayPatterns.makeCheckerboard()
-                );
-                h.postDelayed(this::nextMode, STEP_DELAY * 2L);
-                break;
-
-            case BURN_IN:
-                hint.setText(
-                        "BURN-IN REVEAL\n\n" +
-                        "Look for ghost images or retained UI elements."
-                );
-                root.setBackground(
-                        DisplayPatterns.makeBurnInCycle()
-                );
-                h.postDelayed(this::nextMode, STEP_DELAY * 3L);
-                break;
-
-            case DONE:
-                setResult(RESULT_OK, new Intent());
-                finish();
-                break;
-        }
-    }
-
-    // ------------------------------------------------------------
-    // COLOR SEQUENCE
-    // ------------------------------------------------------------
-    private final Runnable colorRunnable = new Runnable() {
-        @Override
-        public void run() {
-            colorIndex++;
-            if (colorIndex >= colors.length) {
-                nextMode();
-                return;
-            }
-            root.setBackgroundColor(colors[colorIndex]);
-            h.postDelayed(this, STEP_DELAY);
-        }
-    };
-
-    // ------------------------------------------------------------
-    // NEXT MODE
-    // ------------------------------------------------------------
-    private void nextMode() {
-        h.removeCallbacksAndMessages(null);
-
-        if (mode == Mode.COLOR_BASIC) mode = Mode.GRADIENT;
-        else if (mode == Mode.GRADIENT) mode = Mode.CHECKERBOARD;
-        else if (mode == Mode.CHECKERBOARD) mode = Mode.BURN_IN;
-        else mode = Mode.DONE;
-
-        startMode();
-    }
-
-    // ------------------------------------------------------------
-    // NO BACK
-    // ------------------------------------------------------------
     @Override
     public void onBackPressed() {
-        // blocked intentionally
+        // Disabled on purpose — test must complete
     }
 
-    // ------------------------------------------------------------
-    // CLEANUP
-    // ------------------------------------------------------------
-    @Override
-    protected void onDestroy() {
-        h.removeCallbacksAndMessages(null);
-        super.onDestroy();
+    // ============================================================
+    // TEST FLOW
+    // ============================================================
+    private void startCycle() {
+        step = 0;
+        runStep();
+    }
+
+    private void runStep() {
+        if (step >= steps.length) {
+            finishTest();
+            return;
+        }
+
+        TestStep s = steps[step];
+        s.apply(root);
+        hint.setText(s.label);
+
+        step++;
+
+        h.postDelayed(this::runStep, STEP_DURATION_MS);
+    }
+
+    private void finishTest() {
+        setResult(RESULT_OK, new Intent());
+        finish();
+    }
+
+    // ============================================================
+    // STEP TYPES
+    // ============================================================
+    private abstract static class TestStep {
+        final String label;
+        TestStep(String l) { label = l; }
+        abstract void apply(FrameLayout root);
+    }
+
+    private static final class SolidStep extends TestStep {
+        final int color;
+        SolidStep(int c, String l) {
+            super(l);
+            color = c;
+        }
+
+        @Override
+        void apply(FrameLayout root) {
+            root.setBackgroundColor(color);
+        }
+    }
+
+    private static final class DrawableStep extends TestStep {
+        final Drawable d;
+        DrawableStep(Drawable dr, String l) {
+            super(l);
+            d = dr;
+        }
+
+        @Override
+        void apply(FrameLayout root) {
+            root.setBackground(d);
+        }
     }
 }

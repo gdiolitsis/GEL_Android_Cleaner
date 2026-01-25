@@ -2990,18 +2990,18 @@ private void lab1SpeakerTone() {
                 logWarn("Audio output path is not clear.");
                 
                 if (volumeMuted) {
-                    logWarn("Detected: Media volume is muted (volume = 0).");
-                }
+    logWarn("Detected", "Media volume is muted (volume = 0)");
+}
 
-                if (bluetoothRouted) {
-                    logWarn("Detected: Audio is routed to a Bluetooth device.");
-                }
+if (bluetoothRouted) {
+    logWarn("Detected", "Audio is routed to a Bluetooth device");
+}
 
-                if (wiredRouted) {
-                    logWarn("Detected: Audio is routed to a wired or USB device.");
-                }
+if (wiredRouted) {
+    logWarn("Detected", "Audio is routed to a wired or USB device");
+}
 
-                logInfo(
+                logWarn(
                         "Please correct the above condition(s) " +
                         "and re-run LAB 1 for accurate diagnostics."
                 );
@@ -3025,9 +3025,15 @@ private void lab1SpeakerTone() {
             MicDiagnosticEngine.Result r =
                     MicDiagnosticEngine.run(this);
 
-            logLabelValue("Mic RMS", String.valueOf((int) r.rms));
-            logLabelValue("Mic Peak", String.valueOf((int) r.peak));
-            logLabelValue("Confidence", r.confidence);
+            logOk("Mic RMS", String.valueOf((int) r.rms));
+            logOk("Mic Peak", String.valueOf((int) r.peak));
+            if ("HIGH".equals(r.confidence)) {
+    logOk("Confidence", r.confidence);
+} else if ("MEDIUM".equals(r.confidence)) {
+    logWarn("Confidence", r.confidence);
+} else {
+    logError("Confidence", r.confidence);
+}
 
             // ------------------------------------------------------------
             // SILENCE DETECTION (HARD)
@@ -3038,7 +3044,7 @@ private void lab1SpeakerTone() {
 
                 logError("No acoustic output detected.");
 
-                logInfo(
+                logWarn(
                         "Audio path is clear, but no sound was captured " +
                         "by the microphone during the speaker test."
                 );
@@ -3048,10 +3054,10 @@ private void lab1SpeakerTone() {
                         "or severe acoustic isolation."
                 );
 
-                logInfo(
-                        "Recommended: re-run the test once more. " +
-                        "If silence persists, hardware inspection is advised."
-                );
+                logOk(
+    "Recommended",
+    "re-run the test once more. If silence persists, hardware inspection is advised."
+);
 
                 return;
             }
@@ -3136,9 +3142,17 @@ private void lab2SpeakerSweep() {
             MicDiagnosticEngine.Result r =
                     MicDiagnosticEngine.run(this);
 
-            logLabelValue("Mic RMS", String.valueOf((int) r.rms));
-            logLabelValue("Mic Peak", String.valueOf((int) r.peak));
-            logLabelValue("Confidence", r.confidence);
+            logOk("Mic RMS",  String.valueOf((int) r.rms));
+logOk("Mic Peak", String.valueOf((int) r.peak));
+
+String c = (r.confidence == null) ? "" : r.confidence.trim().toUpperCase(Locale.US);
+if (c.contains("LOW") || c.contains("WEAK")) {
+    logWarn("Confidence", r.confidence);
+} else if (c.contains("FAIL") || c.contains("NONE") || c.contains("NO")) {
+    logError("Confidence", r.confidence);
+} else {
+    logOk("Confidence", r.confidence);
+}
 
             // ----------------------------------------------------
             // ADAPTIVE GATE — NO SPEAKER OUTPUT
@@ -3333,28 +3347,37 @@ new Thread(() -> {
 
     try {  
 
-        MicDiagnosticEngine.Result bottom =  
-                MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.BOTTOM);  
+        MicDiagnosticEngine.Result bottom =
+        MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.BOTTOM);
 
-        logLabelValue("Bottom Mic RMS", String.valueOf((int) bottom.rms));  
-        logLabelValue("Bottom Mic Peak", String.valueOf((int) bottom.peak));  
-        logLabelValue("Bottom Mic Confidence", bottom.confidence);  
+logOk("Bottom Mic RMS",  String.valueOf((int) bottom.rms));
+logOk("Bottom Mic Peak", String.valueOf((int) bottom.peak));
 
-        MicDiagnosticEngine.Result top =  
-                MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.TOP);  
+String bConf = bottom.confidence == null ? "" : bottom.confidence.toUpperCase(Locale.US);
+if (bConf.contains("LOW") || bConf.contains("WEAK")) {
+    logWarn("Bottom Mic Confidence", bottom.confidence);
+} else if (bConf.contains("FAIL") || bConf.contains("NO")) {
+    logError("Bottom Mic Confidence", bottom.confidence);
+} else {
+    logOk("Bottom Mic Confidence", bottom.confidence);
+}
 
-        logLabelValue("Top Mic RMS", String.valueOf((int) top.rms));  
-        logLabelValue("Top Mic Peak", String.valueOf((int) top.peak));  
-        logLabelValue("Top Mic Confidence", top.confidence);  
+MicDiagnosticEngine.Result top =
+        MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.TOP);
 
-        logOk("Microphone recording path executed");  
+logOk("Top Mic RMS",  String.valueOf((int) top.rms));
+logOk("Top Mic Peak", String.valueOf((int) top.peak));
 
-        logLabelValue(  
-                "Note",  
-                (bottom.silenceDetected && top.silenceDetected)  
-                        ? "Microphones active but detected at very low levels. Low confidence may be caused by environment silence or noise suppression."  
-                        : "Microphone signal detected successfully."  
-        );  
+String tConf = top.confidence == null ? "" : top.confidence.toUpperCase(Locale.US);
+if (tConf.contains("LOW") || tConf.contains("WEAK")) {
+    logWarn("Top Mic Confidence", top.confidence);
+} else if (tConf.contains("FAIL") || tConf.contains("NO")) {
+    logError("Top Mic Confidence", top.confidence);
+} else {
+    logOk("Top Mic Confidence", top.confidence);
+}
+
+logOk("Microphone Path", "Recording path executed");
 
     } catch (Throwable t) {  
 
@@ -3581,17 +3604,38 @@ runOnUiThread(() -> {
     title.setPadding(0, 0, 0, dp(12));
     root.addView(title);
 
-    TextView msg = new TextView(this);
-    msg.setText(
-            "Step 1: Rotate the device slowly.\n" +
-            "The screen should follow orientation.\n\n" +
-            "Step 2: Cover the proximity sensor.\n" +
-            "The screen should turn off."
-    );
-    msg.setTextColor(0xFFDDDDDD);
-    msg.setTextSize(15f);
-    msg.setGravity(Gravity.CENTER);
-    root.addView(msg);
+    // STEP 1 — TITLE
+TextView step1 = new TextView(this);
+step1.setText("Step 1: Rotate the device slowly.");
+step1.setTextColor(0xFFFFFFFF); // white
+step1.setTextSize(15f);
+step1.setGravity(Gravity.CENTER);
+root.addView(step1);
+
+// STEP 1 — DESCRIPTION
+TextView step1Desc = new TextView(this);
+step1Desc.setText("The screen should follow orientation.");
+step1Desc.setTextColor(0xFF39FF14); // green
+step1Desc.setTextSize(14f);
+step1Desc.setGravity(Gravity.CENTER);
+step1Desc.setPadding(0, dp(4), 0, dp(12));
+root.addView(step1Desc);
+
+// STEP 2 — TITLE
+TextView step2 = new TextView(this);
+step2.setText("Step 2: Cover the proximity sensor.");
+step2.setTextColor(0xFFFFFFFF); // white
+step2.setTextSize(15f);
+step2.setGravity(Gravity.CENTER);
+root.addView(step2);
+
+// STEP 2 — DESCRIPTION
+TextView step2Desc = new TextView(this);
+step2Desc.setText("The screen should turn off.");
+step2Desc.setTextColor(0xFF39FF14); // green
+step2Desc.setTextSize(14f);
+step2Desc.setGravity(Gravity.CENTER);
+root.addView(step2Desc);
 
     // ==========================
     // MUTE
@@ -3747,7 +3791,7 @@ private void lab8CameraHardwareCheck() {
     }
 
     logOk("Camera subsystem detected.");
-    logInfo("Total camera IDs: " + ids.length);
+    logLabelValue("Total camera IDs", String.valueOf(ids.length));
 
     // ------------------------------------------------------------
     // Build per-camera descriptors
@@ -3813,7 +3857,7 @@ private void lab8CameraHardwareCheck() {
             cams.add(c);
 
         } catch (Throwable t) {
-            logWarn("Camera ID " + id + ": characteristics read failed.");
+            logWarn("Camera ID " + id, "Characteristics read failed");
         }
     }
 
@@ -3828,40 +3872,60 @@ private void lab8CameraHardwareCheck() {
 
     // Log summary (labels white, values colored via existing log methods you already use)
     logLine();
-    logInfo("Camera capabilities summary:");
-    for (Lab8Cam c : cams) {
-        logInfo("Camera ID:");
-        logOk(c.id);
+logInfo("Camera capabilities summary:");
 
-        logInfo("Facing:");
-        if ("BACK".equals(c.facing)) logOk(c.facing);
-        else if ("FRONT".equals(c.facing)) logWarn(c.facing);
-        else logWarn(c.facing);
+for (Lab8Cam c : cams) {
 
-        logInfo("Flash:");
-        if (c.hasFlash) logOk("YES"); else logWarn("NO");
+    logLabelValue("Camera ID", c.id);
 
-        logInfo("RAW:");
-        if (c.hasRaw) logOk("YES"); else logWarn("NO");
+    // Facing
+    if ("BACK".equals(c.facing))
+        logOk("Facing", c.facing);
+    else
+        logWarn("Facing", c.facing);
 
-        logInfo("Manual sensor:");
-        if (c.hasManual) logOk("YES"); else logWarn("NO");
+    // Flash
+    if (c.hasFlash)
+        logOk("Flash", "YES");
+    else
+        logWarn("Flash", "NO");
 
-        logInfo("Depth output:");
-        if (c.hasDepth) logOk("YES"); else logWarn("NO");
+    // RAW
+    if (c.hasRaw)
+        logOk("RAW", "YES");
+    else
+        logWarn("RAW", "NO");
 
-        if (c.focal != null) {
-            logInfo("Focal length:");
-            logOk(String.format(Locale.US, "%.2f mm", c.focal));
-        }
+    // Manual sensor
+    if (c.hasManual)
+        logOk("Manual sensor", "YES");
+    else
+        logWarn("Manual sensor", "NO");
 
-        if (c.preview != null) {
-            logInfo("Preview size (chosen):");
-            logOk(c.preview.getWidth() + " x " + c.preview.getHeight());
-        }
+    // Depth
+    if (c.hasDepth)
+        logOk("Depth output", "YES");
+    else
+        logWarn("Depth output", "NO");
 
-        logLine();
+    // Focal length
+    if (c.focal != null) {
+        logLabelValue(
+                "Focal length",
+                String.format(Locale.US, "%.2f mm", c.focal)
+        );
     }
+
+    // Preview size
+    if (c.preview != null) {
+        logLabelValue(
+                "Preview size",
+                c.preview.getWidth() + " x " + c.preview.getHeight()
+        );
+    }
+
+    logLine();
+}
 
     // ------------------------------------------------------------
     // Run test sequence (one camera at a time)
@@ -3966,40 +4030,44 @@ private void lab8RunNextCamera(
         Lab8Overall overall
 ) {
     if (idx[0] >= cams.size()) {
-        // Final summary
-        appendHtml("<br>");
-        logLine();
-        logInfo("LAB 8 summary:");
+       // Final summary
+appendHtml("<br>");
+logLine();
+logInfo("LAB 8 summary:");
 
-        logInfo("Cameras tested:");
-        logOk(String.valueOf(overall.total));
+logLabelValue("Cameras tested", String.valueOf(overall.total));
 
-        logInfo("Preview OK:");
-        if (overall.previewOkCount == overall.total) logOk(overall.previewOkCount + "/" + overall.total);
-        else logWarn(overall.previewOkCount + "/" + overall.total);
+if (overall.previewOkCount == overall.total)
+    logOk("Preview OK", overall.previewOkCount + "/" + overall.total);
+else
+    logWarn("Preview OK", overall.previewOkCount + "/" + overall.total);
 
-        logInfo("Preview FAIL:");
-        if (overall.previewFailCount == 0) logOk("0");
-        else logError(String.valueOf(overall.previewFailCount));
+if (overall.previewFailCount == 0)
+    logOk("Preview FAIL", "0");
+else
+    logError("Preview FAIL", String.valueOf(overall.previewFailCount));
 
-        logInfo("Torch OK:");
-        if (overall.torchOkCount > 0) logOk(String.valueOf(overall.torchOkCount));
-        else logWarn("0");
+if (overall.torchOkCount > 0)
+    logOk("Torch OK", String.valueOf(overall.torchOkCount));
+else
+    logWarn("Torch OK", "0");
 
-        logInfo("Torch FAIL:");
-        if (overall.torchFailCount == 0) logOk("0");
-        else logWarn(String.valueOf(overall.torchFailCount));
+if (overall.torchFailCount == 0)
+    logOk("Torch FAIL", "0");
+else
+    logWarn("Torch FAIL", String.valueOf(overall.torchFailCount));
 
-        logInfo("Frame stream issues:");
-        if (overall.streamIssueCount == 0) logOk("None detected");
-        else logWarn(String.valueOf(overall.streamIssueCount));
+if (overall.streamIssueCount == 0)
+    logOk("Frame stream issues", "None detected");
+else
+    logWarn("Frame stream issues", String.valueOf(overall.streamIssueCount));
 
-        logLine();
-        appendHtml("<br>");
-        logOk("Lab 8 finished.");
-        logLine();
-        enableSingleExportButton();
-        return;
+logLine();
+appendHtml("<br>");
+logOk("Lab 8 finished.");
+logLine();
+enableSingleExportButton();
+return;
     }
 
     final Lab8Cam cam = cams.get(idx[0]);
@@ -4015,7 +4083,7 @@ private void lab8RunNextCamera(
     if (cam.hasFlash) {
         lab8TryTorchToggle(cam.id, cam, overall);
     } else {
-        logWarn("Flash: not available on this camera.");
+        logWarn("Flash", "Not available");
     }
 
     // Open preview dialog + camera2 stream sampler
@@ -4183,13 +4251,13 @@ private void lab8ShowPreviewDialogForCamera(
 
     yes.setOnClickListener(v -> {
         overall.previewOkCount++;
-        logOk("User confirmed: live preview visible.");
+        logOk("User confirmation", "Live preview visible");
         finishAndNext.run();
     });
 
     no.setOnClickListener(v -> {
         overall.previewFailCount++;
-        logError("User reported: NO live preview.");
+        logError("User confirmation", "NO live preview");
         logWarn("Possible camera module, driver, permission, or routing issue.");
         finishAndNext.run();
     });
@@ -4409,7 +4477,7 @@ private void lab8StartCamera2Session(
             }
 
             @Override public void onError(CameraDevice camera, int error) {
-                logError("Camera open error: " + error);
+                logError("Camera open error", "Error code " + error);
                 onFail.run();
             }
         }, new Handler(Looper.getMainLooper()));
@@ -4429,55 +4497,65 @@ private void lab8StopAndReportSample(Lab8Session s, Lab8Overall overall) {
     float fps = (s.frames * 1000f) / durMs;
 
     logLine();
-    logInfo("Stream sampling (5s):");
+logInfo("Stream sampling", "5s");
 
-    logInfo("Frames:");
-    if (s.frames > 0) logOk(String.valueOf(s.frames));
-    else logError("0");
+// Frames
+if (s.frames > 0)
+    logOk("Frames", String.valueOf(s.frames));
+else
+    logError("Frames", "0");
 
-    logInfo("FPS (estimated):");
-    if (fps >= 20f) logOk(String.format(Locale.US, "%.1f", fps));
-    else logWarn(String.format(Locale.US, "%.1f", fps));
+// FPS
+if (fps >= 20f)
+    logOk("FPS (estimated)", String.format(Locale.US, "%.1f", fps));
+else
+    logWarn("FPS (estimated)", String.format(Locale.US, "%.1f", fps));
 
-    logInfo("Frame drops/timeouts:");
-    if (s.droppedFrames == 0) logOk("0");
-    else logWarn(String.valueOf(s.droppedFrames));
+// Frame drops
+if (s.droppedFrames == 0)
+    logOk("Frame drops / timeouts", "0");
+else
+    logWarn("Frame drops / timeouts", String.valueOf(s.droppedFrames));
 
-    logInfo("Black frames (suspected):");
-    if (s.blackFrames == 0) logOk("0");
-    else {
-        logWarn(String.valueOf(s.blackFrames));
-        overall.streamIssueCount++;
-    }
+// Black frames
+if (s.blackFrames == 0)
+    logOk("Black frames (suspected)", "0");
+else {
+    logWarn("Black frames (suspected)", String.valueOf(s.blackFrames));
+    overall.streamIssueCount++;
+}
 
-    // Luma stats (if we sampled anything)
-    if (s.frames > 0 && s.sumLuma > 0) {
-        // mean over all sampled points
-        // We didn’t store point count globally (kept light). So report min/max only reliably.
-        logInfo("Luma range (min/max):");
-        if (s.minLuma >= 0 && s.maxLuma >= 0)
-            logOk(s.minLuma + " / " + s.maxLuma);
-        else
-            logWarn("N/A");
-    }
+// Luma stats
+if (s.frames > 0 && s.sumLuma > 0) {
+    if (s.minLuma >= 0 && s.maxLuma >= 0)
+        logOk("Luma range (min / max)", s.minLuma + " / " + s.maxLuma);
+    else
+        logWarn("Luma range (min / max)", "N/A");
+}
 
-    // Latency estimate
-    if (s.latencyCount > 0) {
-        long avg = s.latencySumMs / Math.max(1, s.latencyCount);
-        logInfo("Pipeline latency (avg ms):");
-        if (avg <= 250) logOk(String.valueOf(avg));
-        else logWarn(String.valueOf(avg));
-    } else {
-        logWarn("Pipeline latency estimate: not available (no sensor timestamps).");
-    }
+// Latency
+if (s.latencyCount > 0) {
+    long avg = s.latencySumMs / Math.max(1, s.latencyCount);
+    if (avg <= 250)
+        logOk("Pipeline latency (avg ms)", String.valueOf(avg));
+    else
+        logWarn("Pipeline latency (avg ms)", String.valueOf(avg));
+} else {
+    logWarn(
+            "Pipeline latency (avg ms)",
+            "Not available (no sensor timestamps)"
+    );
+}
 
-    // RAW check
-    if (s.cam != null) {
-        logInfo("RAW support:");
-        if (s.cam.hasRaw) logOk("YES"); else logWarn("NO");
-    }
+// RAW support
+if (s.cam != null) {
+    if (s.cam.hasRaw)
+        logOk("RAW support", "YES");
+    else
+        logWarn("RAW support", "NO");
+}
 
-    logLine();
+logLine();
 }
 
 // ============================================================
@@ -4561,7 +4639,7 @@ try {
 
     List<Sensor> sensors = sm.getSensorList(Sensor.TYPE_ALL);  
     int total = (sensors == null ? 0 : sensors.size());  
-    logInfo("Total sensors reported: " + total);  
+    logInfo("Total sensors reported", String.valueOf(total));
 
     // ------------------------------------------------------------  
     // QUICK PRESENCE CHECK (former LAB 9)  
@@ -4583,12 +4661,14 @@ try {
     // ------------------------------------------------------------  
     // RAW SENSOR LIST (former LAB 10)  
     // ------------------------------------------------------------  
-    for (Sensor s : sensors) {  
-        String line = "• type=" + s.getType()  
-                + " | name=" + s.getName()  
-                + " | vendor=" + s.getVendor();  
-        logInfo(line);  
-    }  
+    for (Sensor s : sensors) {
+    logOk(
+        "Sensor",
+        "type=" + s.getType()
+        + " | name=" + s.getName()
+        + " | vendor=" + s.getVendor()
+    );
+}
 
     // ------------------------------------------------------------  
     // INTERPRETATION LOGIC  
@@ -4629,42 +4709,57 @@ try {
 
     if (alsCount >= 2) hasDualALS = true;  
 
-    // ------------------------------------------------------------  
-    // SUMMARY  
-    // ------------------------------------------------------------  
-    logLine();  
-    logInfo("Sensor Interpretation Summary:");  
+// ------------------------------------------------------------
+// SENSOR INTERPRETATION SUMMARY — ONE LINE PER ITEM (FINAL)
+// ------------------------------------------------------------
+logLine();
+logInfo("Sensor Interpretation Summary");
 
-    if (hasVirtualGyro)  
-        logOk("Detected Xiaomi Virtual Gyroscope — expected behavior (sensor fusion instead of hardware gyro).");  
+// Virtual Gyroscope
+if (hasVirtualGyro)
+    logOk("Virtual Gyroscope", "Detected (sensor fusion — expected behavior)");
+else
+    logWarn("Virtual Gyroscope", "Not reported");
 
-    if (hasDualALS)  
-        logOk("Dual Ambient Light Sensors detected — OK. Device uses front + rear ALS for better auto-brightness.");  
-    else  
-        logWarn("Only one Ambient Light Sensor detected — auto-brightness may be less accurate.");  
+// Ambient Light Sensors
+if (hasDualALS)
+    logOk("Ambient Light Sensors", "Dual ALS (front + rear)");
+else
+    logWarn("Ambient Light Sensors", "Single ALS");
 
-    if (hasSAR)  
-        logOk("SAR Detectors detected — normal. Used for proximity + radio tuning (Xiaomi/QTI platforms).");  
+// SAR Sensors
+if (hasSAR)
+    logOk("SAR Sensors", "Present (proximity / RF tuning)");
+else
+    logWarn("SAR Sensors", "Not reported");
 
-    if (hasPickup)  
-        logOk("Pickup Sensor detected — supports 'lift to wake' and motion awareness.");  
+// Pickup Sensor
+if (hasPickup)
+    logOk("Pickup Sensor", "Present (lift-to-wake supported)");
+else
+    logWarn("Pickup Sensor", "Not reported");
 
-    if (hasLargeTouch)  
-        logOk("Large Area Touch Sensor detected — improved palm rejection and touch accuracy.");  
+// Large Area Touch
+if (hasLargeTouch)
+    logOk("Large Area Touch", "Present (palm rejection / accuracy)");
+else
+    logWarn("Large Area Touch", "Not reported");
 
-    if (hasGameRotation)  
-        logOk("Game Rotation Vector sensor detected — smoother gaming orientation response.");  
+// Game Rotation Vector
+if (hasGameRotation)
+    logOk("Game Rotation Vector", "Present (gaming orientation)");
+else
+    logWarn("Game Rotation Vector", "Not reported");
 
-    logOk("Sensor suite appears complete and healthy for this device.");  
+// Overall assessment
+logOk("Overall Assessment", "Sensor suite complete and healthy for this device");
 
-} catch (Throwable e) {  
-logError("Sensors analysis error: " + e.getMessage());
-
-} finally {
-
-appendHtml("<br>");  
-logOk("Lab 9 finished.");  
-logLine();  
+// ------------------------------------------------------------
+// END / SAFETY
+// ------------------------------------------------------------
+appendHtml("<br>");
+logOk("Lab 9 finished.");
+logLine();
 }
 
 }
@@ -4674,10 +4769,10 @@ Helper — Sensor Presence
 ============================================================ */
 private void checkSensor(SensorManager sm, int type, String name) {
 boolean ok = sm.getDefaultSensor(type) != null;
-if (ok)
-logOk(name + " is reported as available.");
-else
-logWarn(name + " is NOT reported — features depending on it may be limited or missing.");
+if (ok) {
+    logOk(name, "Available");
+} else {
+    logWarn(name, "Not reported (dependent features may be limited or missing)");
 }
 
 // ============================================================
@@ -4777,44 +4872,51 @@ private void lab10WifiConnectivityCheck() {
     String band = (freqMhz > 3000) ? "5 GHz" : "2.4 GHz";
 
     logLabelValue("SSID", ssid);
+
 if (bssid != null)
     logLabelValue("BSSID", bssid);
+
 logLabelValue(
         "Band",
         band + (freqMhz > 0 ? " (" + freqMhz + " MHz)" : "")
 );
+
 logLabelValue("Link speed", speed + " Mbps");
 logLabelValue("RSSI", rssi + " dBm");
 
-    if ("Unknown".equalsIgnoreCase(ssid)) {
-        logWarn("SSID hidden by Android privacy policy.");
+// SSID status — single line, new system
+if ("Unknown".equalsIgnoreCase(ssid)) {
+    logLabelWarnValue("SSID", "Hidden by Android privacy policy");
+} else {
+    logLabelOkValue("SSID", "Read OK");
+}
+
+// Signal quality — single line, new system
+if (rssi > -65)
+    logLabelOkValue("Wi-Fi signal", "Strong");
+else if (rssi > -80)
+    logLabelWarnValue("Wi-Fi signal", "Moderate");
+else
+    logLabelErrorValue("Wi-Fi signal", "Weak");
+
+    // ------------------------------------------------------------
+// 3) DHCP / LAN info — unified label/value format
+// ------------------------------------------------------------
+try {
+    DhcpInfo dh = wm.getDhcpInfo();
+
+    if (dh != null) {
+        logLabelOkValue("IP",      ipToStr(dh.ipAddress));
+        logLabelOkValue("Gateway", ipToStr(dh.gateway));
+        logLabelOkValue("DNS1",    ipToStr(dh.dns1));
+        logLabelOkValue("DNS2",    ipToStr(dh.dns2));
     } else {
-        logOk("SSID read OK.");
+        logLabelWarnValue("DHCP", "Info not available");
     }
 
-    if (rssi > -65)
-        logOk("Wi-Fi signal strong.");
-    else if (rssi > -80)
-        logWarn("Wi-Fi signal moderate.");
-    else
-        logError("Wi-Fi signal weak.");
-
-    // ------------------------------------------------------------
-    // 3) DHCP / LAN info
-    // ------------------------------------------------------------
-    try {
-        DhcpInfo dh = wm.getDhcpInfo();
-        if (dh != null) {
-            logLabelValue("IP",      ipToStr(dh.ipAddress));
-logLabelValue("Gateway", ipToStr(dh.gateway));
-logLabelValue("DNS1",    ipToStr(dh.dns1));
-logLabelValue("DNS2",    ipToStr(dh.dns2));
-        } else {
-            logWarn("DHCP info not available.");
-        }
-    } catch (Exception e) {
-        logWarn("DHCP read failed: " + e.getMessage());
-    }
+} catch (Exception e) {
+    logLabelErrorValue("DHCP", "Read failed: " + e.getMessage());
+}
 
     // ------------------------------------------------------------
     // 4) DeepScan + Internet + Exposure
@@ -4843,6 +4945,8 @@ public void onRequestPermissionsResult(
 
             logWarn("BLUETOOTH_CONNECT permission denied.");
             logWarn("External Bluetooth device monitoring skipped.");
+           
+            appendHtml("<br>");
             logOk("Lab 13 finished.");
             logLine();
         }
@@ -4868,65 +4972,47 @@ private void runWifiDeepScan(WifiManager wm) {
             } catch (Exception ignored) {}
 
             // ----------------------------------------------------
-            // 1) Internet ping
-            // ----------------------------------------------------
-            float pingMs =
-                    tcpLatencyMs("8.8.8.8", 53, 1500);
+// NETWORK DEEP SCAN — unified label/value format
+// ----------------------------------------------------
 
-            if (pingMs > 0)
-                logOk(String.format(
-                        Locale.US,
-                        "Ping latency to 8.8.8.8: %.1f ms",
-                        pingMs));
-            else
-                logWarn("Ping latency test failed.");
+// 1) Internet ping
+float pingMs = tcpLatencyMs("8.8.8.8", 53, 1500);
+if (pingMs > 0)
+    logLabelOkValue("Ping 8.8.8.8", String.format(Locale.US, "%.1f ms", pingMs));
+else
+    logLabelWarnValue("Ping 8.8.8.8", "Failed");
 
-            // ----------------------------------------------------
-            // 2) DNS resolve
-            // ----------------------------------------------------
-            float dnsMs = dnsResolveMs("google.com");
+// 2) DNS resolve
+float dnsMs = dnsResolveMs("google.com");
+if (dnsMs > 0)
+    logLabelOkValue("DNS google.com", String.format(Locale.US, "%.0f ms", dnsMs));
+else
+    logLabelWarnValue("DNS google.com", "Resolve failed");
 
-            if (dnsMs > 0)
-                logOk(String.format(
-                        Locale.US,
-                        "DNS resolve google.com: %.0f ms",
-                        dnsMs));
-            else
-                logWarn("DNS resolve failed.");
+// 3) Gateway ping
+if (gatewayStr != null) {
+    float gwMs = tcpLatencyMs(gatewayStr, 80, 1200);
+    if (gwMs > 0)
+        logLabelOkValue("Gateway ping", String.format(Locale.US, "%.1f ms", gwMs));
+    else
+        logLabelWarnValue("Gateway ping", "Failed");
+} else {
+    logLabelWarnValue("Gateway", "Not detected");
+}
 
-            // ----------------------------------------------------
-            // 3) Gateway ping
-            // ----------------------------------------------------
-            if (gatewayStr != null) {
-                float gwMs =
-                        tcpLatencyMs(gatewayStr, 80, 1200);
-                if (gwMs > 0)
-                    logOk(String.format(
-                            Locale.US,
-                            "Gateway ping (%s): %.1f ms",
-                            gatewayStr, gwMs));
-                else
-                    logWarn("Gateway ping failed.");
-            } else {
-                logWarn("Gateway not detected.");
-            }
+// 4) Speed heuristic
+WifiInfo info = wm.getConnectionInfo();
+int link = info != null ? info.getLinkSpeed() : 0;
+int rssi = info != null ? info.getRssi() : -80;
 
-            // ----------------------------------------------------
-            // 4) Speed heuristic
-            // ----------------------------------------------------
-            WifiInfo info = wm.getConnectionInfo();
-            int link = info != null ? info.getLinkSpeed() : 0;
-            int rssi = info != null ? info.getRssi() : -80;
+float speedSim = estimateSpeedSimMbps(link, rssi);
+logLabelOkValue(
+        "SpeedSim",
+        String.format(Locale.US, "~%.2f Mbps (heuristic)", speedSim)
+);
 
-            float speedSim =
-                    estimateSpeedSimMbps(link, rssi);
-
-            logOk(String.format(
-                    Locale.US,
-                    "SpeedSim: ~%.2f Mbps (heuristic)",
-                    speedSim));
-
-            logOk("DeepScan finished.");
+// Finish
+logLabelOkValue("DeepScan", "Finished");
 
             // ====================================================
             // INTERNET AVAILABILITY (former LAB 13)
@@ -5028,7 +5114,7 @@ private void runWifiDeepScan(WifiManager wm) {
                 else
                     logOk("No boot-time background network capability.");
 
-                logInfo("Network exposure assessment completed.");
+                logOk("Network exposure assessment completed.");
 
             } catch (Throwable e) {
                 logWarn("Network exposure snapshot unavailable: " + e.getMessage());
@@ -5082,50 +5168,53 @@ if (s.airplaneOn) {
     return;  
 }  
 
-// ------------------------------------------------------------  
-// SIM state (laboratory reporting)  
-// ------------------------------------------------------------  
-if (!s.simReady) {  
+// ------------------------------------------------------------
+// SIM state (laboratory reporting)
+// ------------------------------------------------------------
+if (!s.simReady) {
 
-    switch (s.simState) {  
-        case TelephonyManager.SIM_STATE_ABSENT:  
-            logInfo("SIM state: ABSENT.");  
-            return;  
+    switch (s.simState) {
 
-        case TelephonyManager.SIM_STATE_PIN_REQUIRED:  
-            logInfo("SIM state: PRESENT but locked (PIN required).");  
-            return;  
+        case TelephonyManager.SIM_STATE_ABSENT:
+            logLabelWarnValue("SIM State", "ABSENT");
+            return;
 
-        case TelephonyManager.SIM_STATE_PUK_REQUIRED:  
-            logInfo("SIM state: PRESENT but locked (PUK required).");  
-            return;  
+        case TelephonyManager.SIM_STATE_PIN_REQUIRED:
+            logLabelWarnValue("SIM State", "PRESENT but locked (PIN required)");
+            return;
 
-        case TelephonyManager.SIM_STATE_NETWORK_LOCKED:  
-            logInfo("SIM state: PRESENT but network locked.");  
-            return;  
+        case TelephonyManager.SIM_STATE_PUK_REQUIRED:
+            logLabelWarnValue("SIM State", "PRESENT but locked (PUK required)");
+            return;
 
-        default:  
-            logInfo("SIM state: PRESENT but not ready.");  
-            return;  
-    }  
-}  
+        case TelephonyManager.SIM_STATE_NETWORK_LOCKED:
+            logLabelWarnValue("SIM State", "PRESENT but network locked");
+            return;
 
-logLabelValue("SIM State", "READY");  
+        default:
+            logLabelWarnValue("SIM State", "PRESENT but not ready");
+            return;
+    }
+}
 
-// ------------------------------------------------------------  
-// Service state (legacy domain — informational)  
-// ------------------------------------------------------------  
-logLabelValue(  
-        "Service State (legacy)",  
-        s.inService ? "IN SERVICE" : "NOT REPORTED AS IN SERVICE"  
-);  
+// SIM ready
+logLabelOkValue("SIM State", "READY");
 
-if (!s.inService) {  
-    logInfo(  
-            "Legacy service registration is not reported. " +  
-            "On modern LTE/5G devices, voice and data may be provided via IMS (VoLTE / VoWiFi)."  
-    );  
-}  
+// ------------------------------------------------------------
+// Service state (legacy domain — informational)
+// ------------------------------------------------------------
+logLabelValue(
+        "Service State (legacy)",
+        s.inService ? "IN SERVICE" : "NOT REPORTED AS IN SERVICE"
+);
+
+if (!s.inService) {
+    logLabelWarnValue(
+            "Legacy Service Note",
+            "Legacy service registration is not reported. "
+          + "On modern LTE/5G devices, voice and data may be provided via IMS (VoLTE / VoWiFi)."
+    );
+}
 
 // ------------------------------------------------------------  
 // Data state (packet domain — informational)  
@@ -5151,10 +5240,11 @@ logLabelValue("Data State", dataStateLabel);
 // ------------------------------------------------------------  
 // Internet routing context (best effort)  
 // ------------------------------------------------------------  
-logLabelValue(  
-        "Internet Context",  
-        s.hasInternet ? "AVAILABLE (system routing)" : "NOT AVAILABLE"  
-);  
+if (s.hasInternet) {
+    logLabelOkValue("Internet Context", "AVAILABLE (system routing)");
+} else {
+    logLabelWarnValue("Internet Context", "NOT AVAILABLE");
+}
 
 // ------------------------------------------------------------  
 // Laboratory conclusion  
@@ -5190,10 +5280,11 @@ if (s.airplaneOn) {
 // ------------------------------------------------------------  
 // SIM availability (context only)  
 // ------------------------------------------------------------  
-logLabelValue(  
-        "SIM State",  
-        s.simReady ? "READY" : "NOT READY"  
-);  
+if (s.simReady) {
+    logLabelOkValue("SIM State", "READY");
+} else {
+    logLabelWarnValue("SIM State", "NOT READY");
+}
 
 if (!s.simReady) {  
     logInfo(  
@@ -5206,52 +5297,55 @@ if (!s.simReady) {
 // ------------------------------------------------------------  
 // Legacy voice service state (informational)  
 // ------------------------------------------------------------  
-logLabelValue(  
-        "Voice Service (legacy)",  
-        s.inService ? "IN SERVICE" : "NOT REPORTED AS IN SERVICE"  
-);  
+if (s.inService) {
+    logLabelOkValue("Voice Service (legacy)", "IN SERVICE");
+} else {
+    logLabelWarnValue("Voice Service (legacy)", "NOT REPORTED AS IN SERVICE");
+}
 
-if (!s.inService) {  
-    logInfo(  
-            "Legacy circuit-switched voice service is not reported. " +  
-            "On modern LTE/5G devices, voice calls may be provided via IMS (VoLTE / VoWiFi)."  
-    );  
-}  
+if (!s.inService) {
+    logInfo(
+            "Legacy service registration is not reported. " +
+            "On modern LTE/5G devices, voice and data may be provided via IMS (VoLTE / VoWiFi)."
+    );
+}
 
-// ------------------------------------------------------------  
-// Internet context (IMS relevance)  
-// ------------------------------------------------------------  
-logLabelValue(  
-        "Internet Context",  
-        s.hasInternet ? "AVAILABLE (system routing)" : "NOT AVAILABLE"  
-);  
+// ------------------------------------------------------------
+// Internet context (IMS relevance)
+// ------------------------------------------------------------
+if (s.hasInternet) {
+    logLabelOkValue("Internet Context", "AVAILABLE (system routing)");
+} else {
+    logLabelWarnValue("Internet Context", "NOT AVAILABLE");
+}
 
-if (s.hasInternet) {  
-    logInfo(  
-            "Active internet routing detected. " +  
-            "IMS-based calling (VoLTE / VoWiFi) may be supported depending on carrier configuration."  
-    );  
-} else {  
-    logInfo(  
-            "No active internet routing detected. " +  
-            "Legacy voice calling may still function if supported by the network."  
-    );  
-}  
+if (s.hasInternet) {
+    logInfo(
+            "Active internet routing detected. " +
+            "IMS-based calling (VoLTE / VoWiFi) may be supported depending on carrier configuration."
+    );
+} else {
+    logInfo(
+            "No active internet routing detected. " +
+            "Legacy voice calling may still function if supported by the network."
+    );
+}
 
-// ------------------------------------------------------------  
-// Laboratory conclusion  
-// ------------------------------------------------------------  
-logOk(  
-        "Laboratory interpretation complete. " +  
-        "This test does not initiate or verify real call execution."  
-);  
+// ------------------------------------------------------------
+// Laboratory conclusion
+// ------------------------------------------------------------
+logOk(
+        "Laboratory interpretation complete. " +
+        "This test does not initiate or verify real call execution."
+);
 
-logInfo("Call audio routing and microphone/earpiece paths are examined separately (LAB 3).");
+logInfo(
+        "Call audio routing and microphone/earpiece paths are examined separately (LAB 3)."
+);
 
 appendHtml("<br>");
 logOk("Lab 12 finished.");
 logLine();
-}
 
 // ============================================================
 // LAB 13 — Bluetooth Connectivity Check

@@ -3744,7 +3744,6 @@ root.addView(step2Desc);
 private void lab8CameraHardwareCheck() {
 
     appendHtml("<br>");
-    logLine();
     logSection("LAB 8 — Camera Hardware & Path Integrity");
     logLine();
 
@@ -4070,6 +4069,7 @@ private void lab8RunNextCamera(
         appendHtml("<br>");
         logLine();
         logInfo("LAB 8 summary:");
+        logLine();
 
         logLabelValue("Cameras tested", String.valueOf(overall.total));
 
@@ -4102,7 +4102,6 @@ private void lab8RunNextCamera(
         // LAB 8 — FINAL VERDICT / GATE (PROCEED TO 8.1)
         // ====================================================
         appendHtml("<br>");
-        logLine();
         logSection("LAB 8 — Final Evaluation");
         logLine();
 
@@ -4126,8 +4125,8 @@ private void lab8RunNextCamera(
             else
                 logLabelWarnValue("Flash subsystem", "Some cameras have no flash / torch issues");
 
-            logInfo("Your device meets the requirements to evaluate camera capabilities.");
-            logInfo("You may proceed to LAB 8.1 — Camera Capability Evaluation.");
+            logOk("Your device meets the criteria to evaluate camera capabilities.");
+            logOk("You may proceed to LAB 8.1 — Camera Capability Evaluation.");
             logInfo("Note: Capability testing will proceed without flash where not available.");
 
         } else {
@@ -4140,7 +4139,7 @@ private void lab8RunNextCamera(
         // ====================================================
         // LAB 8 — END
         // ====================================================
-        logLine();
+        
         appendHtml("<br>");
         logLabelOkValue("Lab 8", "Finished");
         logLine();
@@ -4156,7 +4155,6 @@ private void lab8RunNextCamera(
 
     // Pre-log per-camera header
     appendHtml("<br>");
-    logLine();
     logSection("LAB 8 — Camera ID " + cam.id + " (" + cam.facing + ")");
     logLine();
 

@@ -140,6 +140,12 @@
             android:theme="@style/Theme.GEL.DarkGold"/>
 
         <activity
+            android:name=".DisplayProTestActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.GEL.DarkGold" />
+
+        <activity
             android:name=".RotationCheckActivity"
             android:exported="false"
             android:screenOrientation="unspecified"

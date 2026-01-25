@@ -11594,7 +11594,7 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
         logInfo("Proceeding to LAB 6.1 — Color & Uniformity Test");
         logLine();
 
-        // 👉 AUTO-START LAB 6.1
+        //  AUTO-START LAB 6.1
         startActivityForResult(
                 new Intent(this, DisplayColorTestActivity.class),
                 REQ_LAB6_COLOR
@@ -11621,7 +11621,6 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
 
         enableSingleExportButton();
     }
-}
 
     // ============================================================
     // LAB 7 — Rotation + Proximity Sensors

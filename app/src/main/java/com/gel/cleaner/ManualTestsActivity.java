@@ -4496,52 +4496,55 @@ private void lab8StopAndReportSample(Lab8Session s, Lab8Overall overall) {
     long durMs = Math.max(1, SystemClock.elapsedRealtime() - s.sampleStartMs);
     float fps = (s.frames * 1000f) / durMs;
 
-    logLine();
-logInfo("Stream sampling", "5s");
+logLine();
+logLabelValue("Stream sampling", "5s");
 
 // Frames
 if (s.frames > 0)
-    logOk("Frames", String.valueOf(s.frames));
+    logLabelOkValue("Frames", String.valueOf(s.frames));
 else
-    logError("Frames", "0");
+    logLabelErrorValue("Frames", "0");
 
 // FPS
 if (fps >= 20f)
-    logOk("FPS (estimated)", String.format(Locale.US, "%.1f", fps));
+    logLabelOkValue("FPS (estimated)", String.format(Locale.US, "%.1f", fps));
 else
-    logWarn("FPS (estimated)", String.format(Locale.US, "%.1f", fps));
+    logLabelWarnValue("FPS (estimated)", String.format(Locale.US, "%.1f", fps));
 
 // Frame drops
 if (s.droppedFrames == 0)
-    logOk("Frame drops / timeouts", "0");
+    logLabelOkValue("Frame drops / timeouts", "0");
 else
-    logWarn("Frame drops / timeouts", String.valueOf(s.droppedFrames));
+    logLabelWarnValue("Frame drops / timeouts", String.valueOf(s.droppedFrames));
 
 // Black frames
 if (s.blackFrames == 0)
-    logOk("Black frames (suspected)", "0");
+    logLabelOkValue("Black frames (suspected)", "0");
 else {
-    logWarn("Black frames (suspected)", String.valueOf(s.blackFrames));
+    logLabelWarnValue("Black frames (suspected)", String.valueOf(s.blackFrames));
     overall.streamIssueCount++;
 }
 
 // Luma stats
 if (s.frames > 0 && s.sumLuma > 0) {
     if (s.minLuma >= 0 && s.maxLuma >= 0)
-        logOk("Luma range (min / max)", s.minLuma + " / " + s.maxLuma);
+        logLabelOkValue(
+                "Luma range (min / max)",
+                s.minLuma + " / " + s.maxLuma
+        );
     else
-        logWarn("Luma range (min / max)", "N/A");
+        logLabelWarnValue("Luma range (min / max)", "N/A");
 }
 
 // Latency
 if (s.latencyCount > 0) {
     long avg = s.latencySumMs / Math.max(1, s.latencyCount);
     if (avg <= 250)
-        logOk("Pipeline latency (avg ms)", String.valueOf(avg));
+        logLabelOkValue("Pipeline latency (avg ms)", String.valueOf(avg));
     else
-        logWarn("Pipeline latency (avg ms)", String.valueOf(avg));
+        logLabelWarnValue("Pipeline latency (avg ms)", String.valueOf(avg));
 } else {
-    logWarn(
+    logLabelWarnValue(
             "Pipeline latency (avg ms)",
             "Not available (no sensor timestamps)"
     );
@@ -4550,9 +4553,9 @@ if (s.latencyCount > 0) {
 // RAW support
 if (s.cam != null) {
     if (s.cam.hasRaw)
-        logOk("RAW support", "YES");
+        logLabelOkValue("RAW support", "YES");
     else
-        logWarn("RAW support", "NO");
+        logLabelWarnValue("RAW support", "NO");
 }
 
 logLine();

@@ -1500,6 +1500,13 @@ else logInfo("Health Map: Informational");
 // ============================================================
 
 // ------------------------------------------------------------
+// BACKWARD COMPATIBILITY — DO NOT REMOVE (yet)
+// ------------------------------------------------------------
+private void logLabelValue(String label, String value) {
+    logOk(label, value);
+}
+
+// ------------------------------------------------------------
 // logLabelOkValue — white label, green value
 // ------------------------------------------------------------
 private void logLabelOkValue(String label, String value) {

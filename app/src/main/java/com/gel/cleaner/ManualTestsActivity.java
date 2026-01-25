@@ -2875,6 +2875,38 @@ private void speakLab28TTS() {
 }
 
 // ============================================================
+// SPEAKER OUTPUT EVALUATION — UNIFIED (LAB 1 / LAB 2)
+// ============================================================
+private enum SpeakerOutputState {
+    NO_OUTPUT,     // No acoustic output detected
+    LOW_SIGNAL,    // Output detected but weak / low confidence
+    OK             // Normal speaker output
+}
+
+private SpeakerOutputState evaluateSpeakerOutput(
+        MicDiagnosticEngine.Result r
+) {
+    if (r == null)
+        return SpeakerOutputState.NO_OUTPUT;
+
+    // HARD NO OUTPUT
+    if (r.silenceDetected)
+        return SpeakerOutputState.NO_OUTPUT;
+
+    // Defensive: zero signal
+    if (r.rms <= 0 || r.peak <= 0)
+        return SpeakerOutputState.NO_OUTPUT;
+
+    // LOW CONFIDENCE PATH
+    if ("LOW".equalsIgnoreCase(r.confidence)
+            || "WEAK".equalsIgnoreCase(r.confidence))
+        return SpeakerOutputState.LOW_SIGNAL;
+
+    // DEFAULT OK
+    return SpeakerOutputState.OK;
+}
+
+// ============================================================
 // AUDIO OUTPUT CONTEXT — LAB 1 SUPPORT
 // ============================================================
 private static class AudioOutputContext {

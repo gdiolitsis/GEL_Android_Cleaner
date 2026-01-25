@@ -4620,148 +4620,138 @@ private static class Lab8Session {
 }
 
 /* ============================================================
-LAB 9 — Sensors Check
+LAB 9 — Sensors Check (LABEL / VALUE MODE)
 ============================================================ */
-
 private void lab9SensorsCheck() {
 
-appendHtml("<br>");  
-logLine();  
-logInfo("LAB 9 — Sensors Presence & Full Analysis");  
-logLine();  
+    appendHtml("<br>");
+    logLine();
+    logSection("LAB 9 — Sensors Presence & Full Analysis");
+    logLine();
 
-try {  
-    SensorManager sm = (SensorManager) getSystemService(SENSOR_SERVICE);  
-    if (sm == null) {  
-        logError("SensorManager not available — framework issue.");  
-        return;  
-    }  
+    try {
+        SensorManager sm = (SensorManager) getSystemService(SENSOR_SERVICE);
+        if (sm == null) {
+            logError("SensorManager", "Not available (framework issue)");
+            return;
+        }
 
-    List<Sensor> sensors = sm.getSensorList(Sensor.TYPE_ALL);  
-    int total = (sensors == null ? 0 : sensors.size());  
-    logInfo("Total sensors reported", String.valueOf(total));
+        List<Sensor> sensors = sm.getSensorList(Sensor.TYPE_ALL);
+        int total = (sensors == null ? 0 : sensors.size());
+        logOk("Total sensors reported", String.valueOf(total));
 
-    // ------------------------------------------------------------  
-    // QUICK PRESENCE CHECK (former LAB 9)  
-    // ------------------------------------------------------------  
-    checkSensor(sm, Sensor.TYPE_ACCELEROMETER, "Accelerometer");  
-    checkSensor(sm, Sensor.TYPE_GYROSCOPE, "Gyroscope");  
-    checkSensor(sm, Sensor.TYPE_MAGNETIC_FIELD, "Magnetometer / Compass");  
-    checkSensor(sm, Sensor.TYPE_LIGHT, "Ambient Light");  
-    checkSensor(sm, Sensor.TYPE_PROXIMITY, "Proximity");  
+        // ------------------------------------------------------------
+        // QUICK PRESENCE CHECK
+        // ------------------------------------------------------------
+        checkSensor(sm, Sensor.TYPE_ACCELEROMETER, "Accelerometer");
+        checkSensor(sm, Sensor.TYPE_GYROSCOPE, "Gyroscope");
+        checkSensor(sm, Sensor.TYPE_MAGNETIC_FIELD, "Magnetometer / Compass");
+        checkSensor(sm, Sensor.TYPE_LIGHT, "Ambient Light");
+        checkSensor(sm, Sensor.TYPE_PROXIMITY, "Proximity");
 
-    if (sensors == null || sensors.isEmpty()) {  
-        logError("No sensors reported by the system.");  
-        return;  
-    }  
+        if (sensors == null || sensors.isEmpty()) {
+            logError("Sensor list", "No sensors reported by the system");
+            return;
+        }
 
-    logLine();  
-    logInfo("Full Sensor List:");  
+        logLine();
 
-    // ------------------------------------------------------------  
-    // RAW SENSOR LIST (former LAB 10)  
-    // ------------------------------------------------------------  
-    for (Sensor s : sensors) {
-    logOk(
-        "Sensor",
-        "type=" + s.getType()
-        + " | name=" + s.getName()
-        + " | vendor=" + s.getVendor()
-    );
-}
+        // ------------------------------------------------------------
+        // RAW SENSOR LIST
+        // ------------------------------------------------------------
+        for (Sensor s : sensors) {
+            logOk(
+                    "Sensor",
+                    "type=" + s.getType()
+                            + " | name=" + s.getName()
+                            + " | vendor=" + s.getVendor()
+            );
+        }
 
-    // ------------------------------------------------------------  
-    // INTERPRETATION LOGIC  
-    // ------------------------------------------------------------  
-    boolean hasVirtualGyro = false;  
-    boolean hasDualALS = false;  
-    int alsCount = 0;  
-    boolean hasSAR = false;  
-    boolean hasPickup = false;  
-    boolean hasLargeTouch = false;  
-    boolean hasGameRotation = false;  
+        // ------------------------------------------------------------
+        // INTERPRETATION LOGIC
+        // ------------------------------------------------------------
+        boolean hasVirtualGyro = false;
+        boolean hasDualALS = false;
+        int alsCount = 0;
+        boolean hasSAR = false;
+        boolean hasPickup = false;
+        boolean hasLargeTouch = false;
+        boolean hasGameRotation = false;
 
-    for (Sensor s : sensors) {  
-        String name   = s.getName()   != null ? s.getName().toLowerCase(Locale.US)   : "";  
-        String vendor = s.getVendor() != null ? s.getVendor().toLowerCase(Locale.US) : "";  
+        for (Sensor s : sensors) {
+            String name   = s.getName()   != null ? s.getName().toLowerCase(Locale.US)   : "";
+            String vendor = s.getVendor() != null ? s.getVendor().toLowerCase(Locale.US) : "";
 
-        if (name.contains("virtual") && name.contains("gyro"))  
-            hasVirtualGyro = true;  
+            if (name.contains("virtual") && name.contains("gyro"))
+                hasVirtualGyro = true;
 
-        if (name.contains("gyroscope") && vendor.contains("xiaomi"))  
-            hasVirtualGyro = true;  
+            if (name.contains("gyroscope") && vendor.contains("xiaomi"))
+                hasVirtualGyro = true;
 
-        if (name.contains("ambient") && name.contains("light"))  
-            alsCount++;  
+            if (name.contains("ambient") && name.contains("light"))
+                alsCount++;
 
-        if (name.contains("sar") || name.contains("rf"))  
-            hasSAR = true;  
+            if (name.contains("sar") || name.contains("rf"))
+                hasSAR = true;
 
-        if (name.contains("pickup"))  
-            hasPickup = true;  
+            if (name.contains("pickup"))
+                hasPickup = true;
 
-        if (name.contains("touch") && name.contains("large"))  
-            hasLargeTouch = true;  
+            if (name.contains("touch") && name.contains("large"))
+                hasLargeTouch = true;
 
-        if (name.contains("game") && name.contains("rotation"))  
-            hasGameRotation = true;  
-    }  
+            if (name.contains("game") && name.contains("rotation"))
+                hasGameRotation = true;
+        }
 
-    if (alsCount >= 2) hasDualALS = true;  
+        if (alsCount >= 2) hasDualALS = true;
 
-// ------------------------------------------------------------
-// SENSOR INTERPRETATION SUMMARY — ONE LINE PER ITEM (FINAL)
-// ------------------------------------------------------------
-logLine();
-logInfo("Sensor Interpretation Summary");
+        // ------------------------------------------------------------
+        // SENSOR INTERPRETATION SUMMARY — ONE LINE PER ITEM
+        // ------------------------------------------------------------
+        logLine();
 
-// Virtual Gyroscope
-if (hasVirtualGyro)
-    logOk("Virtual Gyroscope", "Detected (sensor fusion — expected behavior)");
-else
-    logWarn("Virtual Gyroscope", "Not reported");
+        if (hasVirtualGyro)
+            logOk("Virtual Gyroscope", "Detected (sensor fusion — expected behavior)");
+        else
+            logWarn("Virtual Gyroscope", "Not reported");
 
-// Ambient Light Sensors
-if (hasDualALS)
-    logOk("Ambient Light Sensors", "Dual ALS (front + rear)");
-else
-    logWarn("Ambient Light Sensors", "Single ALS");
+        if (hasDualALS)
+            logOk("Ambient Light Sensors", "Dual ALS (front + rear)");
+        else
+            logWarn("Ambient Light Sensors", "Single ALS");
 
-// SAR Sensors
-if (hasSAR)
-    logOk("SAR Sensors", "Present (proximity / RF tuning)");
-else
-    logWarn("SAR Sensors", "Not reported");
+        if (hasSAR)
+            logOk("SAR Sensors", "Present (proximity / RF tuning)");
+        else
+            logWarn("SAR Sensors", "Not reported");
 
-// Pickup Sensor
-if (hasPickup)
-    logOk("Pickup Sensor", "Present (lift-to-wake supported)");
-else
-    logWarn("Pickup Sensor", "Not reported");
+        if (hasPickup)
+            logOk("Pickup Sensor", "Present (lift-to-wake supported)");
+        else
+            logWarn("Pickup Sensor", "Not reported");
 
-// Large Area Touch
-if (hasLargeTouch)
-    logOk("Large Area Touch", "Present (palm rejection / accuracy)");
-else
-    logWarn("Large Area Touch", "Not reported");
+        if (hasLargeTouch)
+            logOk("Large Area Touch", "Present (palm rejection / accuracy)");
+        else
+            logWarn("Large Area Touch", "Not reported");
 
-// Game Rotation Vector
-if (hasGameRotation)
-    logOk("Game Rotation Vector", "Present (gaming orientation)");
-else
-    logWarn("Game Rotation Vector", "Not reported");
+        if (hasGameRotation)
+            logOk("Game Rotation Vector", "Present (gaming orientation)");
+        else
+            logWarn("Game Rotation Vector", "Not reported");
 
-// Overall assessment
-logOk("Overall Assessment", "Sensor suite complete and healthy for this device");
+        logOk("Overall Assessment", "Sensor suite complete and healthy for this device");
 
-// ------------------------------------------------------------
-// END / SAFETY
-// ------------------------------------------------------------
-appendHtml("<br>");
-logOk("Lab 9 finished.");
-logLine();
-}
-
+    } catch (Throwable e) {
+        logError("Sensors analysis error", e.getMessage());
+    } finally {
+        appendHtml("<br>");
+        logOk("Lab 9", "Finished");
+        logLine();
+        enableSingleExportButton();
+    }
 }
 
 /* ============================================================

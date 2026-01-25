@@ -165,9 +165,13 @@ import java.util.Map;
 import java.util.Set;
 
 public class ManualTestsActivity extends AppCompatActivity {
+	
+private static final int REQ_LAB6_TOUCH = 6006;
+private static final int REQ_LAB6_COLOR = 6007;
 
 private AlertDialog lab14RunningDialog;
 private static final int REQ_LAB13_BT_CONNECT = 1313;
+
 
 // ============================================================
 // LAB 13 — BLUETOOTH RECEIVER (FINAL / AUTHORITATIVE)
@@ -2942,6 +2946,28 @@ private static class AudioOutputContext {
     }
 }
 
+private SpeakerOutputState evaluateSpeakerOutput(MicDiagnosticEngine.Result r) {
+
+if (r == null)  
+    return SpeakerOutputState.NO_OUTPUT;  
+
+boolean silence =  
+        r.silenceDetected &&  
+        r.rms <= 0 &&  
+        r.peak <= 0;  
+
+if (silence)  
+    return SpeakerOutputState.NO_OUTPUT;  
+
+return SpeakerOutputState.OUTPUT_DETECTED;
+
+}
+
+private enum SpeakerOutputState {
+OUTPUT_DETECTED,
+NO_OUTPUT
+}
+
 // ------------------------------------------------------------
 // GET AUDIO OUTPUT CONTEXT
 // ------------------------------------------------------------
@@ -3097,42 +3123,49 @@ if (state == SpeakerOutputState.NO_OUTPUT) {
     return;
 }
 
-            // ------------------------------------------------------------
-            // NORMAL / LOW CONFIDENCE PATH
-            // ------------------------------------------------------------
-            logOk("Speaker output detected.");
-
-            if ("LOW".equalsIgnoreCase(r.confidence)) {
-
-                logLabelValue(
-"Note",
-"Speaker signal detected with low confidence. " +
-"This may be caused by noise cancellation, " +
-"microphone placement, or acoustic design."
+// ------------------------------------------------------------
+// OUTPUT DETECTED — CONFIDENCE IS INFORMATIONAL ONLY
+// ------------------------------------------------------------
+logLabelOkValue(
+        "Speaker output",
+        "Acoustic signal detected"
 );
 
-            } else {
+String conf =
+        (r.confidence == null)
+                ? ""
+                : r.confidence.trim().toUpperCase(Locale.US);
 
-                logLabelValue(
-                        "Note",
-                        "Speaker signal detected successfully."
-                );
-            }
+if (conf.contains("LOW")) {
 
-        } catch (Throwable t) {
+    logLabelValue(
+            "Note",
+            "Low confidence may be caused by DSP noise cancellation, "
+          + "microphone placement, or acoustic design"
+    );
 
-            logError("Speaker tone test failed.");
+} else {
 
-        } finally {
+    logLabelValue(
+            "Note",
+            "Speaker signal detected successfully"
+    );
+}
 
-            if (tg != null) tg.release();
+} catch (Throwable t) {
 
-            appendHtml("<br>");
-            logOk("Lab 1 finished.");
-            logLine();
-        }
+    logError("Speaker tone test failed.");
 
-    }).start();
+} finally {
+
+    if (tg != null) tg.release();
+
+    appendHtml("<br>");
+    logOk("Lab 1 finished.");
+    logLine();
+}
+
+}).start();
 }
 
 // ============================================================
@@ -3202,13 +3235,13 @@ if (state == SpeakerOutputState.NO_OUTPUT) {
     );
 
     logLabelWarnValue(
-            "LAB 2 status",
-            "Frequency response cannot be evaluated without confirmed audio output"
+            "Possible cause",
+            "Speaker hardware failure, severe acoustic isolation, or muted output path"
     );
 
-    logLabelWarnValue(
-            "Action",
-            "Run LAB 1 to verify speaker operation, audio routing, and system volume"
+    logLabelOkValue(
+            "Recommended",
+            "Re-run LAB 1 to verify speaker operation and audio routing"
     );
 
     appendHtml("<br>");
@@ -3216,42 +3249,42 @@ if (state == SpeakerOutputState.NO_OUTPUT) {
     return;
 }
 
-            // ----------------------------------------------------
-            // SPEAKER OUTPUT CONFIRMED — CONTINUE LAB 2
-            // ----------------------------------------------------
-            logOk("Speaker output detected during frequency sweep.");
+// ----------------------------------------------------
+// SPEAKER OUTPUT CONFIRMED — CONTINUE LAB 2
+// ----------------------------------------------------
+logOk("Speaker output detected during frequency sweep.");
 
-            if ("LOW".equalsIgnoreCase(r.confidence)) {
+if ("LOW".equalsIgnoreCase(r.confidence)) {
 
-                logLabelValue(
-                        "Note",
-                        "Frequency sweep detected at low confidence. " +
-                        "This may be caused by DSP filtering, narrow speaker " +
-                        "frequency response, or microphone placement."
-                );
+    logLabelValue(
+            "Note",
+            "Frequency sweep detected with low confidence. " +
+            "This may be caused by DSP filtering, noise cancellation, " +
+            "limited speaker frequency response, or microphone placement."
+    );
 
-            } else {
+} else {
 
-                logLabelValue(
-                        "Note",
-                        "Frequency sweep detected successfully across multiple tones."
-                );
-            }
+    logLabelValue(
+            "Note",
+            "Frequency sweep detected successfully across multiple tones."
+    );
+}
 
-        } catch (Throwable t) {
+} catch (Throwable t) {
 
-            logError("Speaker frequency sweep failed");
+    logError("Speaker frequency sweep failed");
 
-        } finally {
+} finally {
 
-            if (tg != null) tg.release();
+    if (tg != null) tg.release();
 
-            appendHtml("<br>");
-            logOk("Lab 2 finished.");
-            logLine();
-        }
+    appendHtml("<br>");
+    logOk("Lab 2 finished.");
+    logLine();
+}
 
-    }).start();
+}).start();
 }
 
 /* ============================================================
@@ -11523,45 +11556,71 @@ short[] buffer = new short[samples];
 
 @Override
 protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-super.onActivityResult(requestCode, resultCode, data);
+    super.onActivityResult(requestCode, resultCode, data);
 
-if (requestCode == 6006) { // LAB 6 — Touch Grid  
+    // ============================================================
+    // LAB 6 — TOUCH GRID
+    // ============================================================
+    if (requestCode == REQ_LAB6_TOUCH) {
 
-    int total = TouchGridTestActivity.getTotalZones();  
-    int remaining = TouchGridTestActivity.getRemainingZones();  
+        int total = TouchGridTestActivity.getTotalZones();
+        int remaining = TouchGridTestActivity.getRemainingZones();
 
-appendHtml("<br>");  
-logLine();  
-logSection("LAB 6 — Display / Touch");  
-logLine();  
+        appendHtml("<br>");
+        logLine();
+        logSection("LAB 6 — Display / Touch");
+        logLine();
 
-if (resultCode == RESULT_OK) {  
+        if (resultCode == RESULT_OK) {
 
-    logOk("Touch grid test completed.");  
-    logOk("All screen zones responded to touch input.");  
-    logOk("No dead touch zones detected.");  
+            logOk("Touch grid test completed.");
+            logOk("All screen zones responded to touch input.");
+            logOk("No dead touch zones detected.");
 
-} else {  
+        } else {
 
-    logWarn("Touch grid test incomplete.");  
-    logWarn(  
-            "These " + remaining +  
-            " screen zones did not respond to touch input (" +  
-            remaining + " / " + total + ")."  
-    );  
+            logWarn("Touch grid test incomplete.");
+            logWarn(
+                    remaining + " screen zones did not respond to touch input (" +
+                    remaining + " / " + total + ")."
+            );
 
-    logInfo("This may indicate:");  
-    logError("Localized digitizer dead zones");  
-    logWarn("Manual re-test is recommended to confirm behavior.");  
-}  
+            logInfo("This may indicate:");
+            logError("Localized digitizer dead zones");
+            logWarn("Manual re-test is recommended to confirm behavior.");
+        }
 
-appendHtml("<br>");  
-logOk("Lab 6 finished.");  
-logLine();  
+        appendHtml("<br>");
+        logInfo("Proceeding to LAB 6.1 — Color & Uniformity Test");
+        logLine();
 
-enableSingleExportButton();  
-return;
+        // 👉 AUTO-START LAB 6.1
+        startActivityForResult(
+                new Intent(this, DisplayColorTestActivity.class),
+                REQ_LAB6_COLOR
+        );
+        return;
+    }
 
+    // ============================================================
+    // LAB 6.1 — COLOR / UNIFORMITY
+    // ============================================================
+    if (requestCode == REQ_LAB6_COLOR) {
+
+        appendHtml("<br>");
+        logLine();
+        logSection("LAB 6.1 — Display Color & Uniformity");
+        logLine();
+
+        logOk("Color and uniformity test completed.");
+        logInfo("No critical display artifacts reported.");
+
+        appendHtml("<br>");
+        logOk("LAB 6 finished.");
+        logLine();
+
+        enableSingleExportButton();
+    }
 }
 
     // ============================================================

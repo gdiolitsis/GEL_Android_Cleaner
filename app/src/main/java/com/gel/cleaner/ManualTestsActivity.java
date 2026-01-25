@@ -5292,7 +5292,6 @@ logLabelValue(
 
 } else if (lab13HadAnyConnection) {
 
-    logInfo(
         logInfo(
     "An external Bluetooth device was connected during the test, " +
     "but it is currently not in active use."
@@ -10681,7 +10680,7 @@ protected void onActivityResult(int requestCode, int resultCode, Intent data) {
             logOk("Orientation change confirmed.");
             logOk("Motion sensors responding normally.");
 
-            // ▶️ NEXT: Proximity
+            //  NEXT: Proximity
             startActivityForResult(
                     new Intent(this, ProximityCheckActivity.class),
                     8008

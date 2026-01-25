@@ -11572,9 +11572,9 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
         logInfo("Proceeding to LAB 6.1 — Color & Uniformity Test");
         logLine();
 
-        //  AUTO-START LAB 6.1
+        // AUTO-START LAB 6.1
         startActivityForResult(
-                new Intent(this, DisplayColorTestActivity.class),
+                new Intent(this, DisplayProTestActivity.class),
                 REQ_LAB6_COLOR
         );
         return;

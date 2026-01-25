@@ -3035,32 +3035,35 @@ if (wiredRouted) {
     logError("Confidence", r.confidence);
 }
 
-            // ------------------------------------------------------------
-            // SILENCE DETECTION (HARD)
-            // ------------------------------------------------------------
-            boolean silenceDetected = r.silenceDetected;
+// ------------------------------------------------------------
+// SPEAKER OUTPUT EVALUATION (UNIFIED)
+// ------------------------------------------------------------
+SpeakerOutputState state = evaluateSpeakerOutput(r);
 
-            if (silenceDetected) {
+if (state == SpeakerOutputState.NO_OUTPUT) {
 
-                logError("No acoustic output detected.");
+    logLabelErrorValue(
+            "Speaker output",
+            "No acoustic output detected"
+    );
 
-                logWarn(
-                        "Audio path is clear, but no sound was captured " +
-                        "by the microphone during the speaker test."
-                );
+    logLabelWarnValue(
+            "Diagnosis",
+            "Audio path is clear, but no sound was captured by the microphone"
+    );
 
-                logWarn(
-                        "This may indicate a speaker hardware failure " +
-                        "or severe acoustic isolation."
-                );
+    logLabelWarnValue(
+            "Possible cause",
+            "Speaker hardware failure or severe acoustic isolation"
+    );
 
-                logOk(
-    "Recommended",
-    "re-run the test once more. If silence persists, hardware inspection is advised."
-);
+    logLabelOkValue(
+            "Recommended",
+            "Re-run the test once more. If silence persists, hardware inspection is advised"
+    );
 
-                return;
-            }
+    return;
+}
 
             // ------------------------------------------------------------
             // NORMAL / LOW CONFIDENCE PATH
@@ -3154,34 +3157,32 @@ if (c.contains("LOW") || c.contains("WEAK")) {
     logOk("Confidence", r.confidence);
 }
 
-            // ----------------------------------------------------
-            // ADAPTIVE GATE — NO SPEAKER OUTPUT
-            // ----------------------------------------------------
-            boolean noSpeakerOutput =
-                    r.silenceDetected ||
-                    r.rms <= 0 ||
-                    r.peak <= 0;
+// ------------------------------------------------------------
+// ADAPTIVE GATE — SPEAKER OUTPUT (UNIFIED)
+// ------------------------------------------------------------
+SpeakerOutputState state = evaluateSpeakerOutput(r);
 
-            if (noSpeakerOutput) {
+if (state == SpeakerOutputState.NO_OUTPUT) {
 
-                logWarn(
-                        "No speaker output was detected during this test."
-                );
+    logLabelErrorValue(
+            "Speaker output",
+            "No acoustic output detected"
+    );
 
-                logWarn(
-                        "LAB 2 cannot evaluate frequency response " +
-                        "without confirmed audio output."
-                );
+    logLabelWarnValue(
+            "LAB 2 status",
+            "Frequency response cannot be evaluated without confirmed audio output"
+    );
 
-                logWarn(
-                        "Please run LAB 1 to verify speaker operation, " +
-                        "audio routing, and system volume settings."
-                );
+    logLabelWarnValue(
+            "Action",
+            "Run LAB 1 to verify speaker operation, audio routing, and system volume"
+    );
 
-                appendHtml("<br>");
-                logLine();
-                return;
-            }
+    appendHtml("<br>");
+    logLine();
+    return;
+}
 
             // ----------------------------------------------------
             // SPEAKER OUTPUT CONFIRMED — CONTINUE LAB 2

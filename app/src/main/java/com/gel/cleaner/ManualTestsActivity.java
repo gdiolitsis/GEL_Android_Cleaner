@@ -524,8 +524,8 @@ root.setBackgroundColor(0xFF101010); // GEL black
     root.addView(body2);  
 
     body2.addView(makeTestButton("6. Display / Touch Basic Inspection", this::lab6DisplayTouch));  
-    body2.addView(makeTestButton("7. Rotation / Auto-Rotate Check", this::lab7RotationManual));  
-    body2.addView(makeTestButton("8. Proximity During Call Test", this::lab8ProximityCall));  
+    body2.addView(makeTestButton("7. Rotation & Proximity Sensors Check",this::lab7RotationManual));
+    body2.addView(makeTestButton("8. Camera Hardware & Preview Path Check",this::lab8CameraHardwareCheck));
     body2.addView(makeTestButton("9. Sensors Check", this::lab9SensorsCheck));  
 
     // ============================================================  
@@ -3490,243 +3490,296 @@ runOnUiThread(() -> {
 }
 
 // ============================================================
-// LAB 7 — Rotation manual
+// LAB 7 — Rotation + Proximity Sensors (MANUAL)
 // ============================================================
-private void lab7RotationManual() {
+private void lab7RotationAndProximityManual() {
 
-runOnUiThread(() -> {  
+runOnUiThread(() -> {
 
-    final boolean[] ttsMuted = {  
-            prefs.getBoolean(PREF_TTS_MUTED, false)  
-    };  
+    final boolean[] ttsMuted = {
+            prefs.getBoolean(PREF_TTS_MUTED, false)
+    };
 
-    AlertDialog.Builder b =  
-            new AlertDialog.Builder(  
-                    ManualTestsActivity.this,  
-                    android.R.style.Theme_Material_Dialog_NoActionBar  
-            );  
-    b.setCancelable(false);  
+    AlertDialog.Builder b =
+            new AlertDialog.Builder(
+                    ManualTestsActivity.this,
+                    android.R.style.Theme_Material_Dialog_NoActionBar
+            );
+    b.setCancelable(false);
 
-    LinearLayout root = new LinearLayout(this);  
-    root.setOrientation(LinearLayout.VERTICAL);  
-    root.setPadding(dp(24), dp(20), dp(24), dp(18));  
+    LinearLayout root = new LinearLayout(this);
+    root.setOrientation(LinearLayout.VERTICAL);
+    root.setPadding(dp(24), dp(20), dp(24), dp(18));
 
-    GradientDrawable bg = new GradientDrawable();  
-    bg.setColor(0xFF101010);  
-    bg.setCornerRadius(dp(18));  
-    bg.setStroke(dp(4), 0xFFFFD700);  
-    root.setBackground(bg);  
+    GradientDrawable bg = new GradientDrawable();
+    bg.setColor(0xFF101010);
+    bg.setCornerRadius(dp(18));
+    bg.setStroke(dp(4), 0xFFFFD700);
+    root.setBackground(bg);
 
-    TextView title = new TextView(this);  
-    title.setText("LAB 7 — Rotation / Auto-Rotate");  
-    title.setTextColor(0xFFFFFFFF);  
-    title.setTextSize(18f);  
-    title.setTypeface(null, Typeface.BOLD);  
-    title.setGravity(Gravity.CENTER);  
-    title.setPadding(0, 0, 0, dp(12));  
-    root.addView(title);  
+    TextView title = new TextView(this);
+    title.setText("LAB 7 — Rotation & Proximity Sensors");
+    title.setTextColor(0xFFFFFFFF);
+    title.setTextSize(18f);
+    title.setTypeface(null, Typeface.BOLD);
+    title.setGravity(Gravity.CENTER);
+    title.setPadding(0, 0, 0, dp(12));
+    root.addView(title);
 
-    TextView msg = new TextView(this);  
-    msg.setText(  
-            "Rotate the device slowly.\n\n" +  
-            "The screen should follow the device orientation."  
-    );  
-    msg.setTextColor(0xFFDDDDDD);  
-    msg.setTextSize(15f);  
-    msg.setGravity(Gravity.CENTER);  
-    root.addView(msg);  
+    TextView msg = new TextView(this);
+    msg.setText(
+            "Step 1: Rotate the device slowly.\n" +
+            "The screen should follow orientation.\n\n" +
+            "Step 2: Cover the proximity sensor.\n" +
+            "The screen should turn off."
+    );
+    msg.setTextColor(0xFFDDDDDD);
+    msg.setTextSize(15f);
+    msg.setGravity(Gravity.CENTER);
+    root.addView(msg);
 
-    // ==========================  
-    // MUTE TOGGLE  
-    // ==========================  
-    CheckBox muteBox = new CheckBox(this);  
-    muteBox.setChecked(ttsMuted[0]);  
-    muteBox.setText("Mute voice instructions");  
-    muteBox.setTextColor(0xFFDDDDDD);  
-    muteBox.setGravity(Gravity.CENTER);  
-    muteBox.setPadding(0, dp(10), 0, dp(10));  
-    root.addView(muteBox);  
+    // ==========================
+    // MUTE
+    // ==========================
+    CheckBox muteBox = new CheckBox(this);
+    muteBox.setChecked(ttsMuted[0]);
+    muteBox.setText("Mute voice instructions");
+    muteBox.setTextColor(0xFFDDDDDD);
+    muteBox.setGravity(Gravity.CENTER);
+    muteBox.setPadding(0, dp(10), 0, dp(10));
+    root.addView(muteBox);
 
-    // ==========================  
-    // START BUTTON  
-    // ==========================  
-    Button start = new Button(this);  
-    start.setText("START TEST");  
-    start.setAllCaps(false);  
-    start.setTextColor(0xFFFFFFFF);  
+    muteBox.setOnCheckedChangeListener((v, checked) -> {
+        ttsMuted[0] = checked;
+        prefs.edit().putBoolean(PREF_TTS_MUTED, checked).apply();
+        if (checked && tts != null && tts[0] != null) tts[0].stop();
+    });
 
-    GradientDrawable startBg = new GradientDrawable();  
-    startBg.setColor(0xFF39FF14);  
-    startBg.setCornerRadius(dp(14));  
-    startBg.setStroke(dp(3), 0xFFFFD700);  
-    start.setBackground(startBg);  
-    root.addView(start);  
+    // ==========================
+    // START
+    // ==========================
+    Button start = new Button(this);
+    start.setText("START TEST");
+    start.setAllCaps(false);
+    start.setTextColor(0xFFFFFFFF);
 
-    // ==========================  
-    // MUTE LOGIC — GLOBAL  
-    // ==========================  
-    muteBox.setOnCheckedChangeListener((v, checked) -> {  
-        ttsMuted[0] = checked;  
-        prefs.edit().putBoolean(PREF_TTS_MUTED, checked).apply();  
+    GradientDrawable startBg = new GradientDrawable();
+    startBg.setColor(0xFF39FF14);
+    startBg.setCornerRadius(dp(14));
+    startBg.setStroke(dp(3), 0xFFFFD700);
+    start.setBackground(startBg);
+    root.addView(start);
 
-        if (checked && tts != null && tts[0] != null) {  
-            tts[0].stop();  
-        }  
-    });  
+    b.setView(root);
+    final AlertDialog d = b.create();
+    if (d.getWindow() != null)
+        d.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+    d.show();
 
-    // ==========================  
-    // DIALOG CREATE / SHOW  
-    // ==========================  
-    b.setView(root);  
-    final AlertDialog d = b.create();  
-    if (d.getWindow() != null)  
-        d.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));  
-    d.show();  
+    // TTS
+    if (tts != null && tts[0] != null && ttsReady[0] && !ttsMuted[0]) {
+        tts[0].stop();
+        tts[0].speak(
+                "Rotate the device, then cover the proximity sensor.",
+                TextToSpeech.QUEUE_FLUSH,
+                null,
+                "LAB7_INTRO"
+        );
+    }
 
-    // ==========================  
-    //  TTS — SPEAK AFTER SHOW  
-    // ==========================  
-    if (tts != null && tts[0] != null && ttsReady[0] && !ttsMuted[0]) {  
-        tts[0].stop();  
-        tts[0].speak(  
-                "Rotate the device slowly. " +  
-                "The screen should follow the device orientation.",  
-                TextToSpeech.QUEUE_FLUSH,  
-                null,  
-                "LAB7_INTRO"  
-        );  
-    }  
+    start.setOnClickListener(v -> {
+        if (tts != null && tts[0] != null) tts[0].stop();
+        d.dismiss();
 
-    start.setOnClickListener(v -> {  
-        if (tts != null && tts[0] != null) tts[0].stop();  
-        d.dismiss();  
-        startActivityForResult(  
-                new Intent(this, RotationCheckActivity.class),  
-                7007  
-        );  
-    });  
+        startActivityForResult(
+                new Intent(this, RotationCheckActivity.class),
+                7007
+        );
+    });
 });
-
 }
 
 // ============================================================
-// LAB 8 — Proximity call
+// LAB 8 — Camera Hardware & Preview Path Check (MANUAL)
 // ============================================================
-private void lab8ProximityCall() {
+private void lab8CameraHardwareCheck() {
 
-runOnUiThread(() -> {  
+    appendHtml("<br>");
+    logLine();
+    logSection("LAB 8 — Camera Hardware & Preview Path Check");
+    logLine();
 
-    final boolean[] ttsMuted = {  
-            prefs.getBoolean(PREF_TTS_MUTED, false)  
-    };  
+    PackageManager pm = getPackageManager();
 
-    AlertDialog.Builder b =  
-            new AlertDialog.Builder(  
-                    ManualTestsActivity.this,  
-                    android.R.style.Theme_Material_Dialog_NoActionBar  
-            );  
-    b.setCancelable(false);  
+    // ------------------------------------------------------------
+    // CAMERA HARDWARE CHECK
+    // ------------------------------------------------------------
+    if (!pm.hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY)) {
+        logError("No camera hardware detected on this device.");
+        appendHtml("<br>");
+        logOk("Lab 8 finished.");
+        logLine();
+        enableSingleExportButton();
+        return;
+    }
 
-    LinearLayout root = new LinearLayout(this);  
-    root.setOrientation(LinearLayout.VERTICAL);  
-    root.setPadding(dp(24), dp(20), dp(24), dp(18));  
+    logOk("Camera hardware detected.");
 
-    GradientDrawable bg = new GradientDrawable();  
-    bg.setColor(0xFF101010);  
-    bg.setCornerRadius(dp(18));  
-    bg.setStroke(dp(4), 0xFFFFD700);  
-    root.setBackground(bg);  
+    // ------------------------------------------------------------
+    // FLASH (TORCH) CHECK — SAFE / NON-DESTRUCTIVE
+    // ------------------------------------------------------------
+    if (!pm.hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH)) {
 
-    TextView title = new TextView(this);  
-    title.setText("LAB 8 — Proximity Sensor");  
-    title.setTextColor(0xFFFFFFFF);  
-    title.setTextSize(18f);  
-    title.setTypeface(null, Typeface.BOLD);  
-    title.setGravity(Gravity.CENTER);  
-    title.setPadding(0, 0, 0, dp(12));  
-    root.addView(title);  
+        logWarn("Camera flash not present on this device.");
 
-    TextView msg = new TextView(this);  
-    msg.setText(  
-            "Cover the proximity sensor with your hand.\n\n" +  
-            "The screen should turn off."  
-    );  
-    msg.setTextColor(0xFFDDDDDD);  
-    msg.setTextSize(15f);  
-    msg.setGravity(Gravity.CENTER);  
-    root.addView(msg);  
+    } else {
 
-    // ==========================  
-    // MUTE TOGGLE  
-    // ==========================  
-    CheckBox muteBox = new CheckBox(this);  
-    muteBox.setChecked(ttsMuted[0]);  
-    muteBox.setText("Mute voice instructions");  
-    muteBox.setTextColor(0xFFDDDDDD);  
-    muteBox.setGravity(Gravity.CENTER);  
-    muteBox.setPadding(0, dp(10), 0, dp(10));  
-    root.addView(muteBox);  
+        logOk("Camera flash hardware detected.");
 
-    // ==========================  
-    // START BUTTON  
-    // ==========================  
-    Button start = new Button(this);  
-    start.setText("START TEST");  
-    start.setAllCaps(false);  
-    start.setTextColor(0xFFFFFFFF);  
+        if (Build.VERSION.SDK_INT >= 33 &&
+                checkSelfPermission(Manifest.permission.CAMERA)
+                        != PackageManager.PERMISSION_GRANTED) {
 
-    GradientDrawable startBg = new GradientDrawable();  
-    startBg.setColor(0xFF39FF14);  
-    startBg.setCornerRadius(dp(14));  
-    startBg.setStroke(dp(3), 0xFFFFD700);  
-    start.setBackground(startBg);  
-    root.addView(start);  
+            logWarn("Camera permission not granted. Flash test skipped.");
 
-    // ==========================  
-    // MUTE LOGIC — GLOBAL  
-    // ==========================  
-    muteBox.setOnCheckedChangeListener((v, checked) -> {  
-        ttsMuted[0] = checked;  
-        prefs.edit().putBoolean(PREF_TTS_MUTED, checked).apply();  
+        } else {
 
-        if (checked && tts != null && tts[0] != null) {  
-            tts[0].stop();  
-        }  
-    });  
+            try {
+                CameraManager cm =
+                        (CameraManager) getSystemService(Context.CAMERA_SERVICE);
 
-    // ==========================  
-    // DIALOG CREATE / SHOW  
-    // ==========================  
-    b.setView(root);  
-    final AlertDialog d = b.create();  
-    if (d.getWindow() != null)  
-        d.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));  
-    d.show();  
+                if (cm == null) {
+                    logWarn("CameraManager unavailable for flash test.");
+                } else {
 
-    // ==========================  
-    // TTS — SPEAK AFTER SHOW  
-    // ==========================  
-    if (tts != null && tts[0] != null && ttsReady[0] && !ttsMuted[0]) {  
-        tts[0].stop();  
-        tts[0].speak(  
-                "Cover the proximity sensor with your hand. " +  
-                "The screen should turn off.",  
-                TextToSpeech.QUEUE_FLUSH,  
-                null,  
-                "LAB8_INTRO"  
-        );  
-    }  
+                    String camId = null;
 
-    start.setOnClickListener(v -> {  
-        if (tts != null && tts[0] != null) tts[0].stop();  
-        d.dismiss();  
-        startActivityForResult(  
-                new Intent(this, ProximityCheckActivity.class),  
-                8008  
-        );  
-    });  
-});
+                    for (String id : cm.getCameraIdList()) {
+                        CameraCharacteristics cc =
+                                cm.getCameraCharacteristics(id);
 
+                        Boolean flash =
+                                cc.get(CameraCharacteristics.FLASH_INFO_AVAILABLE);
+                        Integer facing =
+                                cc.get(CameraCharacteristics.LENS_FACING);
+
+                        if (Boolean.TRUE.equals(flash)
+                                && facing != null
+                                && facing == CameraCharacteristics.LENS_FACING_BACK) {
+                            camId = id;
+                            break;
+                        }
+                    }
+
+                    if (camId == null) {
+                        logWarn("No back camera with flash found.");
+                    } else {
+                        cm.setTorchMode(camId, true);
+                        SystemClock.sleep(300);
+                        cm.setTorchMode(camId, false);
+
+                        logOk("Flash torch toggled successfully.");
+                        logOk("Flash hardware responding normally.");
+                    }
+                }
+
+            } catch (Throwable t) {
+                logError("Flash torch control failed.");
+                logWarn("Possible flash hardware, driver, or permission issue.");
+            }
+        }
+    }
+
+    // ------------------------------------------------------------
+    // USER CONFIRMATION — CAMERA PREVIEW
+    // ------------------------------------------------------------
+    runOnUiThread(() -> {
+
+        AlertDialog.Builder b =
+                new AlertDialog.Builder(
+                        ManualTestsActivity.this,
+                        android.R.style.Theme_Material_Dialog_NoActionBar
+                );
+        b.setCancelable(false);
+
+        LinearLayout root = new LinearLayout(this);
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.setPadding(dp(24), dp(20), dp(24), dp(18));
+
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(0xFF101010);
+        bg.setCornerRadius(dp(18));
+        bg.setStroke(dp(4), 0xFFFFD700);
+        root.setBackground(bg);
+
+        TextView title = new TextView(this);
+        title.setText("LAB 8 — Camera Check");
+        title.setTextColor(0xFFFFFFFF);
+        title.setTextSize(18f);
+        title.setTypeface(null, Typeface.BOLD);
+        title.setGravity(Gravity.CENTER);
+        title.setPadding(0, 0, 0, dp(12));
+        root.addView(title);
+
+        TextView msg = new TextView(this);
+        msg.setText(
+                "The camera preview will open.\n\n" +
+                "If you see a live image, the camera hardware\n" +
+                "and preview path are working correctly.\n\n" +
+                "Close the camera to complete the test."
+        );
+        msg.setTextColor(0xFFDDDDDD);
+        msg.setTextSize(15f);
+        msg.setGravity(Gravity.CENTER);
+        root.addView(msg);
+
+        Button start = new Button(this);
+        start.setText("START TEST");
+        start.setAllCaps(false);
+        start.setTextColor(0xFFFFFFFF);
+
+        GradientDrawable startBg = new GradientDrawable();
+        startBg.setColor(0xFF39FF14);
+        startBg.setCornerRadius(dp(14));
+        startBg.setStroke(dp(3), 0xFFFFD700);
+        start.setBackground(startBg);
+
+        LinearLayout.LayoutParams lp =
+                new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        dp(56)
+                );
+        lp.setMargins(0, dp(14), 0, 0);
+        start.setLayoutParams(lp);
+
+        root.addView(start);
+
+        b.setView(root);
+        AlertDialog d = b.create();
+        if (d.getWindow() != null)
+            d.getWindow().setBackgroundDrawable(
+                    new ColorDrawable(Color.TRANSPARENT)
+            );
+        d.show();
+
+        start.setOnClickListener(v -> {
+            d.dismiss();
+            try {
+                startActivityForResult(
+                        new Intent(MediaStore.ACTION_IMAGE_CAPTURE),
+                        9009
+                );
+            } catch (Throwable t) {
+                logError("Failed to launch camera preview.");
+                logWarn("Camera app may be missing or blocked.");
+
+                appendHtml("<br>");
+                logOk("Lab 8 finished.");
+                logLine();
+                enableSingleExportButton();
+            }
+        });
+    });
 }
 
 /* ============================================================
@@ -5240,9 +5293,10 @@ logLabelValue(
 } else if (lab13HadAnyConnection) {
 
     logInfo(
+        logInfo(
     "An external Bluetooth device was connected during the test, " +
     "but it is currently not in active use."
-);
+    );
 
 }
 
@@ -9547,8 +9601,8 @@ return (i >= 0 && i < p.length() - 1) ? p.substring(i + 1) : p;
 // ============================================================
 // LAB 28 — Hardware Stability & Interconnect Integrity
 // TECHNICIAN MODE — SYMPTOM-BASED TRIAGE ONLY
-//  This lab does NOT diagnose hardware faults.
-//  Does NOT confirm soldering defects.
+// !! This lab does NOT diagnose hardware faults.
+// !! Does NOT confirm soldering defects.
 // ============================================================
 private void lab28HardwareStability() {
 
@@ -9561,7 +9615,7 @@ private void lab28HardwareStability() {
     // ------------------------------------------------------------
     // POPUP — TECHNICIAN WARNING (with TTS + Language + Mute)
     // ------------------------------------------------------------
-    //  helper method (showLab28Popup) Î²ÏÎ¯ÏƒÎºÎµÏ„Î±Î¹ ÏƒÏ„Î± helpers Ï„Î¿Ï… activity
+    // helper method (showLab28Popup) is located in activity helpers
     showLab28Popup();
 
     // ============================================================
@@ -9569,38 +9623,38 @@ private void lab28HardwareStability() {
     // ============================================================
     int symptomScore = 0;
 
-    boolean randomReboots   = detectRecentReboots();
-    boolean signalDrops     = detectSignalInstability();
-    boolean sensorFlaps     = detectSensorInstability();
-    boolean thermalSpikes   = detectThermalSpikes();
-    boolean powerGlitches   = detectPowerInstability();
+    boolean randomReboots = detectRecentReboots();
+    boolean signalDrops   = detectSignalInstability();
+    boolean sensorFlaps   = detectSensorInstability();
+    boolean thermalSpikes = detectThermalSpikes();
+    boolean powerGlitches = detectPowerInstability();
 
     logInfo("Observed symptom signals:");
 
     if (randomReboots) {
-        logWarn("• Random reboots / sudden resets detected.");
+        logWarn("Random reboots or sudden resets detected.");
         symptomScore += 25;
-    } else logOk("• No abnormal reboot pattern detected.");
+    } else logOk("No abnormal reboot pattern detected.");
 
     if (signalDrops) {
-        logWarn("• Network / radio instability detected.");
+        logWarn("Network or radio instability detected.");
         symptomScore += 20;
-    } else logOk("• Radio signals appear stable.");
+    } else logOk("Radio signals appear stable.");
 
     if (sensorFlaps) {
-        logWarn("• Sensor instability (intermittent readings).");
+        logWarn("Sensor instability (intermittent readings).");
         symptomScore += 15;
-    } else logOk("• Sensors appear stable.");
+    } else logOk("Sensors appear stable.");
 
     if (thermalSpikes) {
-        logWarn("• Abnormal thermal spikes detected.");
+        logWarn("Abnormal thermal spikes detected.");
         symptomScore += 20;
-    } else logOk("• Thermal behavior within normal range.");
+    } else logOk("Thermal behavior within normal range.");
 
     if (powerGlitches) {
-        logWarn("• Power / charging instability signals.");
+        logWarn("Power or charging instability signals detected.");
         symptomScore += 20;
-    } else logOk("• Power behavior appears stable.");
+    } else logOk("Power behavior appears stable.");
 
     if (symptomScore > 100) symptomScore = 100;
 
@@ -9622,7 +9676,7 @@ private void lab28HardwareStability() {
         logOk(symptomScore + "/100 (" + symptomLevel + ")");
 
     // ============================================================
-    // STAGE B — EVIDENCE SCORE (FROM GELServiceLog — SAFE ADDITION)
+    // STAGE B — EVIDENCE SCORE (FROM GELServiceLog)
     // ============================================================
     int evidenceScore = 0;
 
@@ -9634,52 +9688,52 @@ private void lab28HardwareStability() {
         logInfo("Cross-lab evidence signals:");
 
         if (ev.thermalSpikes) {
-            logWarn("• Evidence: thermal instability (Lab16).");
+            logWarn("Evidence: thermal instability (Lab 16).");
             evidenceScore += 20;
-        } else logOk("• Evidence: no abnormal thermal pattern.");
+        } else logOk("Evidence: no abnormal thermal pattern.");
 
         if (ev.chargingGlitch) {
-            logWarn("• Evidence: charging / power glitches (Lab15).");
+            logWarn("Evidence: charging or power glitches (Lab 15).");
             evidenceScore += 20;
-        } else logOk("• Evidence: charging behavior stable.");
+        } else logOk("Evidence: charging behavior stable.");
 
         if (ev.radioInstability) {
-            logWarn("• Evidence: radio/network instability (Lab10â€“13).");
+            logWarn("Evidence: radio or network instability (Labs 10-13).");
             evidenceScore += 20;
-        } else logOk("• Evidence: radio signals stable.");
+        } else logOk("Evidence: radio signals stable.");
 
         if (ev.sensorFlaps) {
-            logWarn("• Evidence: sensor instability (Lab7â€“9).");
+            logWarn("Evidence: sensor instability (Labs 7-9).");
             evidenceScore += 15;
-        } else logOk("• Evidence: sensors stable.");
+        } else logOk("Evidence: sensors stable.");
 
         if (ev.rebootPattern) {
-            logWarn("• Evidence: abnormal reboot pattern (Lab20).");
+            logWarn("Evidence: abnormal reboot pattern (Lab 20).");
             evidenceScore += 15;
-        } else logOk("• Evidence: reboot behavior normal.");
+        } else logOk("Evidence: reboot behavior normal.");
 
         if (evidenceScore > 100) evidenceScore = 100;
     }
 
     // ============================================================
-    // STAGE C — EXCLUSION RULES (ANTI-FALSE-POSITIVE SHIELD)
+    // STAGE C — EXCLUSION RULES (ANTI-FALSE-POSITIVE)
     // ============================================================
     boolean softwareLikely = false;
 
     if (ev != null) {
 
         if ("SOFTWARE".equals(ev.crashPattern)) {
-            logWarn("• Exclusion: crash history indicates SOFTWARE origin.");
+            logWarn("Exclusion: crash history indicates SOFTWARE origin.");
             softwareLikely = true;
         }
 
         if (ev.appsHeavyImpact) {
-            logWarn("• Exclusion: installed apps impact suggests SOFTWARE stress.");
+            logWarn("Exclusion: installed apps impact suggests SOFTWARE stress.");
             softwareLikely = true;
         }
 
         if (ev.thermalOnlyDuringCharging) {
-            logWarn("• Exclusion: thermal spikes linked to charging conditions.");
+            logWarn("Exclusion: thermal spikes linked to charging conditions.");
             softwareLikely = true;
         }
     }
@@ -9693,9 +9747,7 @@ private void lab28HardwareStability() {
     // ============================================================
     // STAGE D — FINAL CONFIDENCE
     // ============================================================
-    int finalScore =
-            (int) (0.6f * symptomScore + 0.4f * evidenceScore);
-
+    int finalScore = (int) (0.6f * symptomScore + 0.4f * evidenceScore);
     if (finalScore > 100) finalScore = 100;
 
     logLine();
@@ -9713,15 +9765,15 @@ private void lab28HardwareStability() {
         logOk(finalScore + "/100 (" + finalLevel + ")");
 
     // ============================================================
-    // FINAL WORDING — TRIAGE, NOT DIAGNOSIS (SAFE)
+    // FINAL WORDING — TRIAGE, NOT DIAGNOSIS
     // ============================================================
     logLine();
     logInfo("Technician note:");
 
     if (finalScore >= 60) {
-        logWarn(" Multi-source instability pattern detected.");
-        logWarn("Symptoms MAY be consistent with intermittent contact issues.");
-        logWarn("This includes POSSIBLE loose connectors or unstable interconnect paths.");
+        logWarn("Multi-source instability pattern detected.");
+        logWarn("Symptoms may be consistent with intermittent contact issues.");
+        logWarn("Possible loose connectors or unstable interconnect paths.");
         logInfo("Important:");
         logWarn("This is NOT a hardware diagnosis.");
         logWarn("This does NOT confirm soldering defects.");
@@ -9729,8 +9781,8 @@ private void lab28HardwareStability() {
         logOk("Professional physical inspection and bench testing recommended.");
     }
     else if (finalScore >= 30) {
-        logWarn(" Some instability patterns detected.");
-        logInfo("Evidence suggests mixed origin (hardware + software possible).");
+        logWarn("Some instability patterns detected.");
+        logInfo("Evidence suggests mixed origin (hardware and software possible).");
         logOk("Hardware intervention is NOT indicated at this stage.");
     }
     else {
@@ -9744,7 +9796,7 @@ private void lab28HardwareStability() {
 }
 
 // ============================================================
-// LAB 28 — Helpers (KEEP ONLY THIS)
+// LAB 28 — Helpers
 // ============================================================
 
 private static class Lab28Evidence {
@@ -9757,7 +9809,7 @@ private static class Lab28Evidence {
     boolean appsHeavyImpact;
     boolean thermalOnlyDuringCharging;
 
-    String crashPattern; // "SOFTWARE", "MIXED", "UNKNOWN"
+    String crashPattern; // SOFTWARE, MIXED, UNKNOWN
 }
 
 private static class Lab28EvidenceReader {
@@ -9769,9 +9821,9 @@ private static class Lab28EvidenceReader {
 
         String log;
         try {
-            log = GELServiceLog.getAll();   // <-- ÏƒÏ‰ÏƒÏ„ÏŒ API
+            log = GELServiceLog.getAll();
         } catch (Throwable t) {
-            return ev; // ultra-safe
+            return ev;
         }
 
         if (log == null || log.trim().isEmpty())
@@ -9788,31 +9840,28 @@ private static class Lab28EvidenceReader {
                         "while charging","during charging","charging only","only while charging");
 
         ev.chargingGlitch = containsAny(L,
-                "charging glitch","power glitch","power / charging instability",
-                "charging instability","usb disconnect","disconnect while charging",
-                "charger unstable","power behavior");
+                "charging glitch","power glitch","charging instability",
+                "usb disconnect","disconnect while charging","charger unstable");
 
         ev.radioInstability = containsAny(L,
-                "radio instability","network instability","signal drop","signal drops",
-                "no service","service lost","mobile network",
-                "wifi disconnect","wi-fi disconnect","internet access");
+                "radio instability","network instability","signal drop","no service",
+                "wifi disconnect","internet access");
 
         ev.sensorFlaps = containsAny(L,
-                "sensor instability","intermittent readings","sensor flaps",
+                "sensor instability","intermittent readings",
                 "proximity","rotation","auto-rotate","sensor unavailable");
 
         ev.rebootPattern = containsAny(L,
                 "random reboots","sudden resets","abnormal reboot",
-                "reboot pattern","unexpected reboot","uptime");
+                "unexpected reboot","uptime");
 
         boolean crashMention = containsAny(L,
-                "crash","anr","freeze","app not responding","stopped working","fatal exception");
+                "crash","anr","freeze","app not responding","fatal exception");
         if (crashMention) ev.crashPattern = "SOFTWARE";
 
         ev.appsHeavyImpact = containsAny(L,
                 "installed applications impact analysis",
-                "apps footprint","heavy apps","high app impact",
-                "background apps","excessive background");
+                "heavy apps","high app impact","background apps");
 
         return ev;
     }
@@ -9820,8 +9869,7 @@ private static class Lab28EvidenceReader {
     private static boolean containsAny(String hay, String... needles) {
         if (hay == null || hay.isEmpty() || needles == null) return false;
         for (String n : needles) {
-            if (n == null) continue;
-            if (hay.contains(n)) return true;
+            if (n != null && hay.contains(n)) return true;
         }
         return false;
     }
@@ -10614,56 +10662,60 @@ return;
 
 }
 
-if (requestCode == 7007) {  
+@Override
+protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    super.onActivityResult(requestCode, resultCode, data);
 
-appendHtml("<br>");  
-logLine();  
-logSection("LAB 7 — Rotation / Auto-Rotate");  
-logLine();  
+    // ============================================================
+    // LAB 7 — Rotation + Proximity Sensors
+    // ============================================================
+    if (requestCode == 7007) {
 
-if (resultCode == RESULT_OK) {  
-	  
-    logOk("Device rotation detected via accelerometer.");  
-    logOk("Orientation change confirmed.");  
-    logOk("Motion sensors responding normally.");  
-} else {  
-    logError("Rotation was not detected.");  
-    logWarn("Auto-rotate may be disabled or sensor malfunctioning.");  
-}  
+        appendHtml("<br>");
+        logLine();
+        logSection("LAB 7 — Rotation & Proximity Sensors");
+        logLine();
 
-appendHtml("<br>");  
-logOk("Lab 7 finished.");  
-logLine();  
-enableSingleExportButton();  
-return;
+        if (resultCode == RESULT_OK) {
+            logOk("Rotation detected via accelerometer.");
+            logOk("Orientation change confirmed.");
+            logOk("Motion sensors responding normally.");
 
-}
+            // ▶️ NEXT: Proximity
+            startActivityForResult(
+                    new Intent(this, ProximityCheckActivity.class),
+                    8008
+            );
+            return;
 
-if (requestCode == 8008) { // LAB 8 — Proximity Sensor  
+        } else {
+            logError("Rotation was not detected.");
+            logWarn("Auto-rotate may be disabled or sensor malfunctioning.");
 
-appendHtml("<br>");  
-logLine();  
-logSection("LAB 8 — Proximity Sensor");  
-logLine();  
+            logLine();
+            logOk("Lab 7 finished.");
+            enableSingleExportButton();
+            return;
+        }
+    }
 
-if (resultCode == RESULT_OK) {  
+    if (requestCode == 8008) {
 
-    logOk("Proximity sensor responded correctly.");  
-    logOk("Near/Far response confirmed.");  
-    logOk("Screen turned off when sensor was covered.");  
-} else {  
-    logError("Proximity sensor did not respond.");  
-    logWarn("Possible sensor obstruction or hardware fault.");  
-}  
+        if (resultCode == RESULT_OK) {
+            logOk("Proximity sensor responded correctly.");
+            logOk("Near/Far response confirmed.");
+            logOk("Screen turned off when sensor was covered.");
+        } else {
+            logError("Proximity sensor did not respond.");
+            logWarn("Possible sensor obstruction or hardware fault.");
+        }
 
-appendHtml("<br>");  
-logOk("Lab 8 finished.");  
-logLine();  
-
-enableSingleExportButton();  
-return;
-
-}
+        appendHtml("<br>");
+        logOk("Lab 7 finished.");
+        logLine();
+        enableSingleExportButton();
+        return;
+    }
 }
 
 // ============================================================

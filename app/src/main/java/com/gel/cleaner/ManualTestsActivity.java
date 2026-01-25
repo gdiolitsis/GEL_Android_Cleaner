@@ -60,7 +60,8 @@ import android.media.AudioAttributes;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioTrack;
-import android.media.Image, android.media.ImageReader;
+import android.media.Image;
+import android.media.ImageReader;
 import android.media.ToneGenerator;
 import android.net.ConnectivityManager;
 import android.net.DhcpInfo;
@@ -3617,7 +3618,7 @@ runOnUiThread(() -> {
 // • Preview path per camera (user confirmation)
 // • Torch test where available
 // • Frame stream sampling (FPS / drops / black frames / luma stats)
-// • Pipeline latency estimate (sensor timestamp → arrival)
+// • Pipeline latency estimate (sensor timestamp  arrival)
 // • RAW support check (and optional RAW stream probe if supported)
 // ============================================================
 
@@ -4279,7 +4280,7 @@ private void lab8StartCamera2Session(
                 }
 
                 // Pipeline latency estimate:
-                // SENSOR_TIMESTAMP (ns) → arrival time (ns) if we can read capture results.
+                // SENSOR_TIMESTAMP (ns)  arrival time (ns) if we can read capture results.
                 // Here we only have arrival; capture timestamp is taken from the image itself if present.
                 long sensorNs = img.getTimestamp(); // best-effort
                 if (sensorNs > 0) {

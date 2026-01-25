@@ -2946,28 +2946,6 @@ private static class AudioOutputContext {
     }
 }
 
-private SpeakerOutputState evaluateSpeakerOutput(MicDiagnosticEngine.Result r) {
-
-if (r == null)  
-    return SpeakerOutputState.NO_OUTPUT;  
-
-boolean silence =  
-        r.silenceDetected &&  
-        r.rms <= 0 &&  
-        r.peak <= 0;  
-
-if (silence)  
-    return SpeakerOutputState.NO_OUTPUT;  
-
-return SpeakerOutputState.OUTPUT_DETECTED;
-
-}
-
-private enum SpeakerOutputState {
-OUTPUT_DETECTED,
-NO_OUTPUT
-}
-
 // ------------------------------------------------------------
 // GET AUDIO OUTPUT CONTEXT
 // ------------------------------------------------------------

@@ -1500,13 +1500,45 @@ else logInfo("Health Map: Informational");
 // ============================================================
 
 // ------------------------------------------------------------
-// logLabelValue (2-arg) — you already had it earlier, restore it
+// logLabelOkValue — white label, green value
 // ------------------------------------------------------------
-private void logLabelValue(String label, String value) {
-appendHtml(
-escape(label) + ": "
-+ "<font color='#39FF14'>" + escape(value) + "</font>"
-);
+private void logLabelOkValue(String label, String value) {
+    appendHtml(
+            escape(label) + ": " +
+            "<font color='#39FF14'>" + escape(value) + "</font>"
+    );
+}
+
+// ------------------------------------------------------------
+// logLabelWarnValue — white label, yellow value
+// ------------------------------------------------------------
+private void logLabelWarnValue(String label, String value) {
+    appendHtml(
+            escape(label) + ": " +
+            "<font color='#FFD700'>" + escape(value) + "</font>"
+    );
+}
+
+// ------------------------------------------------------------
+// logLabelErrorValue — white label, red value
+// ------------------------------------------------------------
+private void logLabelErrorValue(String label, String value) {
+    appendHtml(
+            escape(label) + ": " +
+            "<font color='#FF5555'>" + escape(value) + "</font>"
+    );
+}
+
+private void logOk(String label, String value) {
+    logLabelOkValue(label, value);
+}
+
+private void logWarn(String label, String value) {
+    logLabelWarnValue(label, value);
+}
+
+private void logError(String label, String value) {
+    logLabelErrorValue(label, value);
 }
 
 // ============================================================
@@ -2948,9 +2980,8 @@ private void lab1SpeakerTone() {
             // BLOCKED AUDIO PATH  STOP & ASK RE-RUN
             // ------------------------------------------------------------
             if (volumeMuted || bluetoothRouted || wiredRouted) {
-
                 logWarn("Audio output path is not clear.");
-
+                
                 if (volumeMuted) {
                     logWarn("Detected: Media volume is muted (volume = 0).");
                 }
@@ -2994,10 +3025,7 @@ private void lab1SpeakerTone() {
             // ------------------------------------------------------------
             // SILENCE DETECTION (HARD)
             // ------------------------------------------------------------
-            boolean silenceDetected =
-                    r.silenceDetected ||
-                    r.rms <= 2 ||
-                    r.peak <= 4;
+            boolean silenceDetected = r.silenceDetected;
 
             if (silenceDetected) {
 
@@ -3029,11 +3057,11 @@ private void lab1SpeakerTone() {
             if ("LOW".equalsIgnoreCase(r.confidence)) {
 
                 logLabelValue(
-                        "Note",
-                        "Speaker signal detected with low confidence. " +
-                        "This may be influenced by noise cancellation, " +
-                        "microphone placement, or acoustic design."
-                );
+"Note",
+"Speaker signal detected with low confidence. " +
+"This may be caused by noise cancellation, " +
+"microphone placement, or acoustic design."
+);
 
             } else {
 

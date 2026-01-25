@@ -4764,6 +4764,7 @@ if (ok) {
 } else {
     logWarn(name, "Not reported (dependent features may be limited or missing)");
 }
+}
 
 // ============================================================
 // LAB 10: Wi-Fi Connectivity Check (Wi-Fi + Internet + Exposure)

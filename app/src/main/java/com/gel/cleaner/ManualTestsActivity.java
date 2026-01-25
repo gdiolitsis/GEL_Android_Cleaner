@@ -49,6 +49,8 @@ import android.graphics.drawable.GradientDrawable;
 import android.graphics.pdf.PdfDocument;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
+import android.hardware.camera2.CameraManager;
+import android.hardware.camera2.CameraCharacteristics;
 import android.location.LocationManager;
 import android.media.AudioAttributes;
 import android.media.AudioFormat;
@@ -77,6 +79,7 @@ import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.os.VibratorManager;
 import android.provider.Settings;
+import android.provider.MediaStore;
 import android.speech.tts.TextToSpeech;
 import android.telephony.ServiceState;
 import android.telephony.TelephonyManager;
@@ -524,7 +527,7 @@ root.setBackgroundColor(0xFF101010); // GEL black
     root.addView(body2);  
 
     body2.addView(makeTestButton("6. Display / Touch Basic Inspection", this::lab6DisplayTouch));  
-    body2.addView(makeTestButton("7. Rotation & Proximity Sensors Check",this::lab7RotationManual));
+    body2.addView(makeTestButton("7. Rotation & Proximity Sensors Check",this::lab7RotationAndProximityManual));
     body2.addView(makeTestButton("8. Camera Hardware & Preview Path Check",this::lab8CameraHardwareCheck));
     body2.addView(makeTestButton("9. Sensors Check", this::lab9SensorsCheck));  
 

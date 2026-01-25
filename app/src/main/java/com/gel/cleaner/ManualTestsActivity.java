@@ -4063,46 +4063,94 @@ private void lab8RunNextCamera(
         Lab8Overall overall
 ) {
     if (idx[0] >= cams.size()) {
-       // Final summary
-appendHtml("<br>");
-logLine();
-logInfo("LAB 8 summary:");
 
-logLabelValue("Cameras tested", String.valueOf(overall.total));
+        // ====================================================
+        // LAB 8 — FINAL SUMMARY
+        // ====================================================
+        appendHtml("<br>");
+        logLine();
+        logInfo("LAB 8 summary:");
 
-if (overall.previewOkCount == overall.total)
-    logOk("Preview OK", overall.previewOkCount + "/" + overall.total);
-else
-    logWarn("Preview OK", overall.previewOkCount + "/" + overall.total);
+        logLabelValue("Cameras tested", String.valueOf(overall.total));
 
-if (overall.previewFailCount == 0)
-    logOk("Preview FAIL", "0");
-else
-    logError("Preview FAIL", String.valueOf(overall.previewFailCount));
+        if (overall.previewOkCount == overall.total && overall.total > 0)
+            logLabelOkValue("Preview OK", overall.previewOkCount + "/" + overall.total);
+        else
+            logLabelWarnValue("Preview OK", overall.previewOkCount + "/" + overall.total);
 
-if (overall.torchOkCount > 0)
-    logOk("Torch OK", String.valueOf(overall.torchOkCount));
-else
-    logWarn("Torch OK", "0");
+        if (overall.previewFailCount == 0)
+            logLabelOkValue("Preview FAIL", "0");
+        else
+            logLabelErrorValue("Preview FAIL", String.valueOf(overall.previewFailCount));
 
-if (overall.torchFailCount == 0)
-    logOk("Torch FAIL", "0");
-else
-    logWarn("Torch FAIL", String.valueOf(overall.torchFailCount));
+        if (overall.torchOkCount > 0)
+            logLabelOkValue("Torch OK", String.valueOf(overall.torchOkCount));
+        else
+            logLabelWarnValue("Torch OK", "0");
 
-if (overall.streamIssueCount == 0)
-    logOk("Frame stream issues", "None detected");
-else
-    logWarn("Frame stream issues", String.valueOf(overall.streamIssueCount));
+        if (overall.torchFailCount == 0)
+            logLabelOkValue("Torch FAIL", "0");
+        else
+            logLabelWarnValue("Torch FAIL", String.valueOf(overall.torchFailCount));
 
-logLine();
-appendHtml("<br>");
-logOk("Lab 8 finished.");
-logLine();
-enableSingleExportButton();
-return;
+        if (overall.streamIssueCount == 0)
+            logLabelOkValue("Frame stream issues", "None detected");
+        else
+            logLabelWarnValue("Frame stream issues", String.valueOf(overall.streamIssueCount));
+
+        // ====================================================
+        // LAB 8 — FINAL VERDICT / GATE (PROCEED TO 8.1)
+        // ====================================================
+        appendHtml("<br>");
+        logLine();
+        logSection("LAB 8 — Final Evaluation");
+        logLine();
+
+        boolean cameraSubsystemOk =
+                overall.total > 0 &&
+                overall.previewFailCount == 0 &&
+                overall.previewOkCount == overall.total;
+
+        if (cameraSubsystemOk) {
+
+            logLabelOkValue("Camera subsystem", "Operational");
+
+            if (overall.streamIssueCount == 0) {
+                logLabelOkValue("Live stream stability", "OK");
+            } else {
+                logLabelWarnValue("Live stream stability", "Minor anomalies detected");
+            }
+
+            if (overall.torchFailCount == 0)
+                logLabelOkValue("Flash subsystem", "OK (where available)");
+            else
+                logLabelWarnValue("Flash subsystem", "Some cameras have no flash / torch issues");
+
+            logInfo("Your device meets the requirements to evaluate camera capabilities.");
+            logInfo("You may proceed to LAB 8.1 — Camera Capability Evaluation.");
+            logInfo("Note: Capability testing will proceed without flash where not available.");
+
+        } else {
+
+            logLabelErrorValue("Camera subsystem", "NOT reliable");
+            logInfo("One or more cameras failed basic operation checks.");
+            logInfo("Please inspect/repair the camera module before proceeding with capability testing.");
+        }
+
+        // ====================================================
+        // LAB 8 — END
+        // ====================================================
+        logLine();
+        appendHtml("<br>");
+        logLabelOkValue("Lab 8", "Finished");
+        logLine();
+        enableSingleExportButton();
+        return;
     }
 
+    // ====================================================
+    // NEXT CAMERA
+    // ====================================================
     final Lab8Cam cam = cams.get(idx[0]);
     idx[0]++;
 
@@ -4116,7 +4164,7 @@ return;
     if (cam.hasFlash) {
         lab8TryTorchToggle(cam.id, cam, overall);
     } else {
-        logWarn("Flash", "Not available");
+        logLabelWarnValue("Flash", "Not available");
     }
 
     // Open preview dialog + camera2 stream sampler
@@ -4133,22 +4181,21 @@ private void lab8TryTorchToggle(String camId, Lab8Cam cam, Lab8Overall overall) 
     try {
         CameraManager cm = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
         if (cm == null) {
-            logWarn("Flash test skipped: CameraManager unavailable.");
+            logLabelWarnValue("Flash", "Test skipped (CameraManager unavailable)");
             overall.torchFailCount++;
             return;
         }
 
-        // NOTE: Torch control generally needs CAMERA permission (already checked).
         cm.setTorchMode(camId, true);
         SystemClock.sleep(250);
         cm.setTorchMode(camId, false);
 
-        logOk("Flash torch toggled successfully.");
+        logLabelOkValue("Flash", "Torch toggled successfully");
         overall.torchOkCount++;
 
     } catch (Throwable t) {
-        logError("Flash torch control failed.");
-        logWarn("Possible flash hardware, driver, or permission issue.");
+        logLabelErrorValue("Flash", "Torch control failed");
+        logInfo("Possible flash hardware, driver, or permission issue.");
         overall.torchFailCount++;
     }
 }
@@ -4284,21 +4331,20 @@ private void lab8ShowPreviewDialogForCamera(
 
     yes.setOnClickListener(v -> {
         overall.previewOkCount++;
-        logOk("User confirmation", "Live preview visible");
+        logLabelOkValue("User confirmation", "Live preview visible");
         finishAndNext.run();
     });
 
     no.setOnClickListener(v -> {
         overall.previewFailCount++;
-        logError("User confirmation", "NO live preview");
-        logWarn("Possible camera module, driver, permission, or routing issue.");
+        logLabelErrorValue("User confirmation", "NO live preview");
+        logInfo("Possible camera module, driver, permission, or routing issue.");
         finishAndNext.run();
     });
 
     // Start camera when texture is ready
     if (tv.isAvailable()) {
         lab8StartCamera2Session(s, overall, enableButtons, () -> {
-            // If session fails, we still ask user (buttons enable) but log it
             overall.streamIssueCount++;
             enableButtons.run();
         });
@@ -4333,7 +4379,7 @@ private void lab8StartCamera2Session(
 
         SurfaceTexture st = s.textureView.getSurfaceTexture();
         if (st == null) {
-            logError("Preview SurfaceTexture unavailable.");
+            logLabelErrorValue("Preview", "SurfaceTexture unavailable");
             onFail.run();
             return;
         }
@@ -4372,7 +4418,6 @@ private void lab8StartCamera2Session(
                 // Estimate drop/jitter (very simple)
                 if (s.lastFrameTsNs != 0) {
                     long dtNs = nowNs - s.lastFrameTsNs;
-                    // if > 200ms between frames, call it a "drop/timeout"
                     if (dtNs > 200_000_000L) s.droppedFrames++;
                 }
                 s.lastFrameTsNs = nowNs;
@@ -4385,7 +4430,6 @@ private void lab8StartCamera2Session(
                     int w = img.getWidth();
                     int h = img.getHeight();
 
-                    // sample grid
                     int stepX = Math.max(8, w / 64);
                     int stepY = Math.max(8, h / 48);
 
@@ -4395,7 +4439,6 @@ private void lab8StartCamera2Session(
                     int localMin = 999;
                     int localMax = -1;
 
-                    // Access with care
                     for (int yy = 0; yy < h; yy += stepY) {
                         int row = yy * rowStride;
                         for (int xx = 0; xx < w; xx += stepX) {
@@ -4417,14 +4460,10 @@ private void lab8StartCamera2Session(
                         if (localMin < s.minLuma) s.minLuma = localMin;
                         if (localMax > s.maxLuma) s.maxLuma = localMax;
 
-                        // "black frame" heuristic
                         if (mean < 8 && localMax < 20) s.blackFrames++;
                     }
                 }
 
-                // Pipeline latency estimate:
-                // SENSOR_TIMESTAMP (ns)  arrival time (ns) if we can read capture results.
-                // Here we only have arrival; capture timestamp is taken from the image itself if present.
                 long sensorNs = img.getTimestamp(); // best-effort
                 if (sensorNs > 0) {
                     long latMs = (nowNs - sensorNs) / 1_000_000L;
@@ -4461,7 +4500,6 @@ private void lab8StartCamera2Session(
                                 rb.addTarget(previewSurface);
                                 rb.addTarget(s.reader.getSurface());
 
-                                // Try to push stable FPS range if available
                                 try {
                                     CameraCharacteristics cc = s.cm.getCameraCharacteristics(s.camId);
                                     Range<Integer>[] ranges =
@@ -4480,43 +4518,42 @@ private void lab8StartCamera2Session(
 
                                 session.setRepeatingRequest(rb.build(), null, new Handler(Looper.getMainLooper()));
 
-                                // Sampling window: 5 seconds
                                 new Handler(Looper.getMainLooper()).postDelayed(() -> {
                                     try { lab8StopAndReportSample(s, overall); } catch (Throwable ignore) {}
                                     onSamplingDoneEnableButtons.run();
                                 }, 5000);
 
                             } catch (Throwable t) {
-                                logError("Failed to start repeating preview request.");
+                                logLabelErrorValue("Preview", "Failed to start repeating request");
                                 onFail.run();
                             }
                         }
 
                         @Override public void onConfigureFailed(CameraCaptureSession session) {
-                            logError("Camera capture session configuration failed.");
+                            logLabelErrorValue("Preview", "Capture session configuration failed");
                             onFail.run();
                         }
                     }, new Handler(Looper.getMainLooper()));
 
                 } catch (Throwable t) {
-                    logError("Camera preview session creation failed.");
+                    logLabelErrorValue("Preview", "Session creation failed");
                     onFail.run();
                 }
             }
 
             @Override public void onDisconnected(CameraDevice camera) {
-                logWarn("Camera disconnected during preview.");
+                logLabelWarnValue("Preview", "Camera disconnected during sampling");
                 onFail.run();
             }
 
             @Override public void onError(CameraDevice camera, int error) {
-                logError("Camera open error", "Error code " + error);
+                logLabelErrorValue("Camera open", "Error code " + error);
                 onFail.run();
             }
         }, new Handler(Looper.getMainLooper()));
 
     } catch (Throwable t) {
-        logError("Camera2 session start failed.");
+        logLabelErrorValue("Camera2", "Session start failed");
         onFail.run();
     }
 }
@@ -4529,69 +4566,56 @@ private void lab8StopAndReportSample(Lab8Session s, Lab8Overall overall) {
     long durMs = Math.max(1, SystemClock.elapsedRealtime() - s.sampleStartMs);
     float fps = (s.frames * 1000f) / durMs;
 
-logLine();
-logLabelValue("Stream sampling", "5s");
+    logLine();
+    logLabelValue("Stream sampling", "5s");
 
-// Frames
-if (s.frames > 0)
-    logLabelOkValue("Frames", String.valueOf(s.frames));
-else
-    logLabelErrorValue("Frames", "0");
-
-// FPS
-if (fps >= 20f)
-    logLabelOkValue("FPS (estimated)", String.format(Locale.US, "%.1f", fps));
-else
-    logLabelWarnValue("FPS (estimated)", String.format(Locale.US, "%.1f", fps));
-
-// Frame drops
-if (s.droppedFrames == 0)
-    logLabelOkValue("Frame drops / timeouts", "0");
-else
-    logLabelWarnValue("Frame drops / timeouts", String.valueOf(s.droppedFrames));
-
-// Black frames
-if (s.blackFrames == 0)
-    logLabelOkValue("Black frames (suspected)", "0");
-else {
-    logLabelWarnValue("Black frames (suspected)", String.valueOf(s.blackFrames));
-    overall.streamIssueCount++;
-}
-
-// Luma stats
-if (s.frames > 0 && s.sumLuma > 0) {
-    if (s.minLuma >= 0 && s.maxLuma >= 0)
-        logLabelOkValue(
-                "Luma range (min / max)",
-                s.minLuma + " / " + s.maxLuma
-        );
+    if (s.frames > 0)
+        logLabelOkValue("Frames", String.valueOf(s.frames));
     else
-        logLabelWarnValue("Luma range (min / max)", "N/A");
-}
+        logLabelErrorValue("Frames", "0");
 
-// Latency
-if (s.latencyCount > 0) {
-    long avg = s.latencySumMs / Math.max(1, s.latencyCount);
-    if (avg <= 250)
-        logLabelOkValue("Pipeline latency (avg ms)", String.valueOf(avg));
+    if (fps >= 20f)
+        logLabelOkValue("FPS (estimated)", String.format(Locale.US, "%.1f", fps));
     else
-        logLabelWarnValue("Pipeline latency (avg ms)", String.valueOf(avg));
-} else {
-    logLabelWarnValue(
-            "Pipeline latency (avg ms)",
-            "Not available (no sensor timestamps)"
-    );
-}
+        logLabelWarnValue("FPS (estimated)", String.format(Locale.US, "%.1f", fps));
 
-// RAW support
-if (s.cam != null) {
-    if (s.cam.hasRaw)
-        logLabelOkValue("RAW support", "YES");
+    if (s.droppedFrames == 0)
+        logLabelOkValue("Frame drops / timeouts", "0");
     else
-        logLabelWarnValue("RAW support", "NO");
-}
+        logLabelWarnValue("Frame drops / timeouts", String.valueOf(s.droppedFrames));
 
-logLine();
+    if (s.blackFrames == 0)
+        logLabelOkValue("Black frames (suspected)", "0");
+    else {
+        logLabelWarnValue("Black frames (suspected)", String.valueOf(s.blackFrames));
+        overall.streamIssueCount++;
+    }
+
+    if (s.frames > 0 && s.sumLuma > 0) {
+        if (s.minLuma >= 0 && s.maxLuma >= 0)
+            logLabelOkValue("Luma range (min / max)", s.minLuma + " / " + s.maxLuma);
+        else
+            logLabelWarnValue("Luma range (min / max)", "N/A");
+    }
+
+    if (s.latencyCount > 0) {
+        long avg = s.latencySumMs / Math.max(1, s.latencyCount);
+        if (avg <= 250)
+            logLabelOkValue("Pipeline latency (avg ms)", String.valueOf(avg));
+        else
+            logLabelWarnValue("Pipeline latency (avg ms)", String.valueOf(avg));
+    } else {
+        logLabelWarnValue("Pipeline latency (avg ms)", "Not available (no sensor timestamps)");
+    }
+
+    if (s.cam != null) {
+        if (s.cam.hasRaw)
+            logLabelOkValue("RAW support", "YES");
+        else
+            logLabelWarnValue("RAW support", "NO");
+    }
+
+    logLine();
 }
 
 // ============================================================

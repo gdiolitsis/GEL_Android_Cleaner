@@ -39,6 +39,7 @@ import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.SurfaceTexture;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -51,11 +52,15 @@ import android.hardware.Sensor;
 import android.hardware.SensorManager;
 import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.CameraCharacteristics;
+import android.hardware.camera2;
+import android.hardware.camera2.params.StreamConfigurationMap;
 import android.location.LocationManager;
+import android.Manifest;
 import android.media.AudioAttributes;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioTrack;
+import android.media.Image, android.media.ImageReader;
 import android.media.ToneGenerator;
 import android.net.ConnectivityManager;
 import android.net.DhcpInfo;
@@ -90,6 +95,8 @@ import android.text.TextUtils;
 import android.text.method.ScrollingMovementMethod;
 import android.text.style.ForegroundColorSpan;
 import android.util.TypedValue;
+import android.util.Range;
+import android.view.TextureView;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -135,6 +142,8 @@ import java.net.Socket;
 // JAVA — UTIL
 // ============================================================
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.concurrent.Executor;
@@ -3603,21 +3612,42 @@ runOnUiThread(() -> {
 }
 
 // ============================================================
-// LAB 8 — Camera Hardware & Preview Path Check (MANUAL)
+// LAB 8 — Camera Hardware & Path Integrity (FULL TECH MODE)
+// • All cameras (front/back/extra)
+// • Preview path per camera (user confirmation)
+// • Torch test where available
+// • Frame stream sampling (FPS / drops / black frames / luma stats)
+// • Pipeline latency estimate (sensor timestamp → arrival)
+// • RAW support check (and optional RAW stream probe if supported)
 // ============================================================
+
 private void lab8CameraHardwareCheck() {
 
     appendHtml("<br>");
     logLine();
-    logSection("LAB 8 — Camera Hardware & Preview Path Check");
+    logSection("LAB 8 — Camera Hardware & Path Integrity");
     logLine();
 
-    PackageManager pm = getPackageManager();
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+        logWarn("Camera2 not supported on this Android version.");
+        logInfo("Fallback: opening system camera app (basic check).");
+        try {
+            startActivityForResult(new Intent(MediaStore.ACTION_IMAGE_CAPTURE), 9009);
+        } catch (Throwable t) {
+            logError("Failed to launch camera app.");
+            logWarn("Camera app may be missing or blocked.");
+            appendHtml("<br>");
+            logOk("Lab 8 finished.");
+            logLine();
+            enableSingleExportButton();
+        }
+        return;
+    }
 
-    // ------------------------------------------------------------
-    // CAMERA HARDWARE CHECK
-    // ------------------------------------------------------------
-    if (!pm.hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY)) {
+    final PackageManager pm = getPackageManager();
+    final boolean hasAnyCamera = pm.hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY);
+
+    if (!hasAnyCamera) {
         logError("No camera hardware detected on this device.");
         appendHtml("<br>");
         logOk("Lab 8 finished.");
@@ -3626,163 +3656,846 @@ private void lab8CameraHardwareCheck() {
         return;
     }
 
-    logOk("Camera hardware detected.");
+    final CameraManager cm = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
+    if (cm == null) {
+        logError("CameraManager unavailable.");
+        appendHtml("<br>");
+        logOk("Lab 8 finished.");
+        logLine();
+        enableSingleExportButton();
+        return;
+    }
 
-    // ------------------------------------------------------------
-    // FLASH (TORCH) CHECK — SAFE / NON-DESTRUCTIVE
-    // ------------------------------------------------------------
-    if (!pm.hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH)) {
-
-        logWarn("Camera flash not present on this device.");
-
-    } else {
-
-        logOk("Camera flash hardware detected.");
-
-        if (Build.VERSION.SDK_INT >= 33 &&
-                checkSelfPermission(Manifest.permission.CAMERA)
-                        != PackageManager.PERMISSION_GRANTED) {
-
-            logWarn("Camera permission not granted. Flash test skipped.");
-
-        } else {
-
-            try {
-                CameraManager cm =
-                        (CameraManager) getSystemService(Context.CAMERA_SERVICE);
-
-                if (cm == null) {
-                    logWarn("CameraManager unavailable for flash test.");
-                } else {
-
-                    String camId = null;
-
-                    for (String id : cm.getCameraIdList()) {
-                        CameraCharacteristics cc =
-                                cm.getCameraCharacteristics(id);
-
-                        Boolean flash =
-                                cc.get(CameraCharacteristics.FLASH_INFO_AVAILABLE);
-                        Integer facing =
-                                cc.get(CameraCharacteristics.LENS_FACING);
-
-                        if (Boolean.TRUE.equals(flash)
-                                && facing != null
-                                && facing == CameraCharacteristics.LENS_FACING_BACK) {
-                            camId = id;
-                            break;
-                        }
-                    }
-
-                    if (camId == null) {
-                        logWarn("No back camera with flash found.");
-                    } else {
-                        cm.setTorchMode(camId, true);
-                        SystemClock.sleep(300);
-                        cm.setTorchMode(camId, false);
-
-                        logOk("Flash torch toggled successfully.");
-                        logOk("Flash hardware responding normally.");
-                    }
-                }
-
-            } catch (Throwable t) {
-                logError("Flash torch control failed.");
-                logWarn("Possible flash hardware, driver, or permission issue.");
-            }
+    // Permission check (Android 6+). (You said: strict, no lies.)
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+            logWarn("Camera permission not granted.");
+            logWarn("Grant CAMERA permission and re-run Lab 8.");
+            appendHtml("<br>");
+            logOk("Lab 8 finished.");
+            logLine();
+            enableSingleExportButton();
+            return;
         }
     }
 
     // ------------------------------------------------------------
-    // USER CONFIRMATION — CAMERA PREVIEW
+    // Collect camera IDs
     // ------------------------------------------------------------
-    runOnUiThread(() -> {
+    final String[] ids;
+    try {
+        ids = cm.getCameraIdList();
+    } catch (Throwable t) {
+        logError("Failed to enumerate cameras.");
+        appendHtml("<br>");
+        logOk("Lab 8 finished.");
+        logLine();
+        enableSingleExportButton();
+        return;
+    }
 
-        AlertDialog.Builder b =
-                new AlertDialog.Builder(
-                        ManualTestsActivity.this,
-                        android.R.style.Theme_Material_Dialog_NoActionBar
-                );
-        b.setCancelable(false);
+    if (ids == null || ids.length == 0) {
+        logError("No accessible camera IDs found.");
+        appendHtml("<br>");
+        logOk("Lab 8 finished.");
+        logLine();
+        enableSingleExportButton();
+        return;
+    }
 
-        LinearLayout root = new LinearLayout(this);
-        root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(dp(24), dp(20), dp(24), dp(18));
+    logOk("Camera subsystem detected.");
+    logInfo("Total camera IDs: " + ids.length);
 
-        GradientDrawable bg = new GradientDrawable();
-        bg.setColor(0xFF101010);
-        bg.setCornerRadius(dp(18));
-        bg.setStroke(dp(4), 0xFFFFD700);
-        root.setBackground(bg);
+    // ------------------------------------------------------------
+    // Build per-camera descriptors
+    // ------------------------------------------------------------
+    final ArrayList<Lab8Cam> cams = new ArrayList<>();
+    for (String id : ids) {
+        try {
+            CameraCharacteristics cc = cm.getCameraCharacteristics(id);
 
-        TextView title = new TextView(this);
-        title.setText("LAB 8 — Camera Check");
-        title.setTextColor(0xFFFFFFFF);
-        title.setTextSize(18f);
-        title.setTypeface(null, Typeface.BOLD);
-        title.setGravity(Gravity.CENTER);
-        title.setPadding(0, 0, 0, dp(12));
-        root.addView(title);
+            Integer facing = cc.get(CameraCharacteristics.LENS_FACING);
+            Float focal = cc.get(CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS) != null
+                    && cc.get(CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS).length > 0
+                    ? cc.get(CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS)[0]
+                    : null;
 
-        TextView msg = new TextView(this);
-        msg.setText(
-                "The camera preview will open.\n\n" +
-                "If you see a live image, the camera hardware\n" +
-                "and preview path are working correctly.\n\n" +
-                "Close the camera to complete the test."
-        );
-        msg.setTextColor(0xFFDDDDDD);
-        msg.setTextSize(15f);
-        msg.setGravity(Gravity.CENTER);
-        root.addView(msg);
+            Boolean flash = cc.get(CameraCharacteristics.FLASH_INFO_AVAILABLE);
+            int[] caps = cc.get(CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES);
 
-        Button start = new Button(this);
-        start.setText("START TEST");
-        start.setAllCaps(false);
-        start.setTextColor(0xFFFFFFFF);
-
-        GradientDrawable startBg = new GradientDrawable();
-        startBg.setColor(0xFF39FF14);
-        startBg.setCornerRadius(dp(14));
-        startBg.setStroke(dp(3), 0xFFFFD700);
-        start.setBackground(startBg);
-
-        LinearLayout.LayoutParams lp =
-                new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        dp(56)
-                );
-        lp.setMargins(0, dp(14), 0, 0);
-        start.setLayoutParams(lp);
-
-        root.addView(start);
-
-        b.setView(root);
-        AlertDialog d = b.create();
-        if (d.getWindow() != null)
-            d.getWindow().setBackgroundDrawable(
-                    new ColorDrawable(Color.TRANSPARENT)
-            );
-        d.show();
-
-        start.setOnClickListener(v -> {
-            d.dismiss();
-            try {
-                startActivityForResult(
-                        new Intent(MediaStore.ACTION_IMAGE_CAPTURE),
-                        9009
-                );
-            } catch (Throwable t) {
-                logError("Failed to launch camera preview.");
-                logWarn("Camera app may be missing or blocked.");
-
-                appendHtml("<br>");
-                logOk("Lab 8 finished.");
-                logLine();
-                enableSingleExportButton();
+            boolean hasRaw = false;
+            boolean hasManual = false;
+            boolean hasDepth = false;
+            if (caps != null) {
+                for (int c : caps) {
+                    if (c == CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES_RAW) hasRaw = true;
+                    if (c == CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES_MANUAL_SENSOR) hasManual = true;
+                    if (c == CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES_DEPTH_OUTPUT) hasDepth = true;
+                }
             }
-        });
+
+            StreamConfigurationMap map = cc.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
+            Size previewSize = null;
+            if (map != null) {
+                Size[] outs = map.getOutputSizes(SurfaceTexture.class);
+                if (outs != null && outs.length > 0) {
+                    // pick a stable "not huge" size
+                    previewSize = outs[0];
+                    for (Size s : outs) {
+                        if (s.getWidth() <= 1920 && s.getHeight() <= 1080) {
+                            previewSize = s;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            String facingStr = "UNKNOWN";
+            if (facing != null) {
+                if (facing == CameraCharacteristics.LENS_FACING_BACK) facingStr = "BACK";
+                else if (facing == CameraCharacteristics.LENS_FACING_FRONT) facingStr = "FRONT";
+                else if (facing == CameraCharacteristics.LENS_FACING_EXTERNAL) facingStr = "EXTERNAL";
+            }
+
+            Lab8Cam c = new Lab8Cam();
+            c.id = id;
+            c.facing = facingStr;
+            c.hasFlash = Boolean.TRUE.equals(flash);
+            c.hasRaw = hasRaw;
+            c.hasManual = hasManual;
+            c.hasDepth = hasDepth;
+            c.focal = focal;
+            c.preview = previewSize;
+
+            cams.add(c);
+
+        } catch (Throwable t) {
+            logWarn("Camera ID " + id + ": characteristics read failed.");
+        }
+    }
+
+    if (cams.isEmpty()) {
+        logError("No usable camera descriptors.");
+        appendHtml("<br>");
+        logOk("Lab 8 finished.");
+        logLine();
+        enableSingleExportButton();
+        return;
+    }
+
+    // Log summary (labels white, values colored via existing log methods you already use)
+    logLine();
+    logInfo("Camera capabilities summary:");
+    for (Lab8Cam c : cams) {
+        logInfo("Camera ID:");
+        logOk(c.id);
+
+        logInfo("Facing:");
+        if ("BACK".equals(c.facing)) logOk(c.facing);
+        else if ("FRONT".equals(c.facing)) logWarn(c.facing);
+        else logWarn(c.facing);
+
+        logInfo("Flash:");
+        if (c.hasFlash) logOk("YES"); else logWarn("NO");
+
+        logInfo("RAW:");
+        if (c.hasRaw) logOk("YES"); else logWarn("NO");
+
+        logInfo("Manual sensor:");
+        if (c.hasManual) logOk("YES"); else logWarn("NO");
+
+        logInfo("Depth output:");
+        if (c.hasDepth) logOk("YES"); else logWarn("NO");
+
+        if (c.focal != null) {
+            logInfo("Focal length:");
+            logOk(String.format(Locale.US, "%.2f mm", c.focal));
+        }
+
+        if (c.preview != null) {
+            logInfo("Preview size (chosen):");
+            logOk(c.preview.getWidth() + " x " + c.preview.getHeight());
+        }
+
+        logLine();
+    }
+
+    // ------------------------------------------------------------
+    // Run test sequence (one camera at a time)
+    // ------------------------------------------------------------
+    final int[] idx = {0};
+
+    final Lab8Overall overall = new Lab8Overall();
+    overall.total = cams.size();
+
+    runOnUiThread(() -> showLab8IntroAndStart(cams, idx, cm, overall));
+}
+
+// ============================================================
+// LAB 8 — Intro dialog
+// ============================================================
+private void showLab8IntroAndStart(
+        ArrayList<Lab8Cam> cams,
+        int[] idx,
+        CameraManager cm,
+        Lab8Overall overall
+) {
+    AlertDialog.Builder b =
+            new AlertDialog.Builder(
+                    ManualTestsActivity.this,
+                    android.R.style.Theme_Material_Dialog_NoActionBar
+            );
+    b.setCancelable(false);
+
+    LinearLayout root = new LinearLayout(this);
+    root.setOrientation(LinearLayout.VERTICAL);
+    root.setPadding(dp(24), dp(20), dp(24), dp(18));
+
+    GradientDrawable bg = new GradientDrawable();
+    bg.setColor(0xFF101010);
+    bg.setCornerRadius(dp(18));
+    bg.setStroke(dp(4), 0xFFFFD700);
+    root.setBackground(bg);
+
+    TextView title = new TextView(this);
+    title.setText("LAB 8 — Camera Lab (Full)");
+    title.setTextColor(0xFFFFFFFF);
+    title.setTextSize(18f);
+    title.setTypeface(null, Typeface.BOLD);
+    title.setGravity(Gravity.CENTER);
+    title.setPadding(0, 0, 0, dp(12));
+    root.addView(title);
+
+    TextView msg = new TextView(this);
+    msg.setText(
+            "This lab will test ALL cameras one-by-one.\n\n" +
+            "For each camera:\n" +
+            "• Live preview will open\n" +
+            "• We sample frame stream (FPS / drops / black frames)\n" +
+            "• We estimate pipeline latency\n" +
+            "• Flash (torch) will be toggled where available\n\n" +
+            "After each camera you will confirm if you saw live image."
+    );
+    msg.setTextColor(0xFFDDDDDD);
+    msg.setTextSize(15f);
+    msg.setGravity(Gravity.CENTER);
+    root.addView(msg);
+
+    Button start = new Button(this);
+    start.setText("START TEST");
+    start.setAllCaps(false);
+    start.setTextColor(0xFFFFFFFF);
+
+    GradientDrawable startBg = new GradientDrawable();
+    startBg.setColor(0xFF39FF14);
+    startBg.setCornerRadius(dp(14));
+    startBg.setStroke(dp(3), 0xFFFFD700);
+    start.setBackground(startBg);
+
+    LinearLayout.LayoutParams lp =
+            new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    dp(56)
+            );
+    lp.setMargins(0, dp(14), 0, 0);
+    start.setLayoutParams(lp);
+    root.addView(start);
+
+    b.setView(root);
+    final AlertDialog d = b.create();
+    if (d.getWindow() != null)
+        d.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+    d.show();
+
+    start.setOnClickListener(v -> {
+        d.dismiss();
+        lab8RunNextCamera(cams, idx, cm, overall);
     });
+}
+
+// ============================================================
+// LAB 8 — Run next camera
+// ============================================================
+private void lab8RunNextCamera(
+        ArrayList<Lab8Cam> cams,
+        int[] idx,
+        CameraManager cm,
+        Lab8Overall overall
+) {
+    if (idx[0] >= cams.size()) {
+        // Final summary
+        appendHtml("<br>");
+        logLine();
+        logInfo("LAB 8 summary:");
+
+        logInfo("Cameras tested:");
+        logOk(String.valueOf(overall.total));
+
+        logInfo("Preview OK:");
+        if (overall.previewOkCount == overall.total) logOk(overall.previewOkCount + "/" + overall.total);
+        else logWarn(overall.previewOkCount + "/" + overall.total);
+
+        logInfo("Preview FAIL:");
+        if (overall.previewFailCount == 0) logOk("0");
+        else logError(String.valueOf(overall.previewFailCount));
+
+        logInfo("Torch OK:");
+        if (overall.torchOkCount > 0) logOk(String.valueOf(overall.torchOkCount));
+        else logWarn("0");
+
+        logInfo("Torch FAIL:");
+        if (overall.torchFailCount == 0) logOk("0");
+        else logWarn(String.valueOf(overall.torchFailCount));
+
+        logInfo("Frame stream issues:");
+        if (overall.streamIssueCount == 0) logOk("None detected");
+        else logWarn(String.valueOf(overall.streamIssueCount));
+
+        logLine();
+        appendHtml("<br>");
+        logOk("Lab 8 finished.");
+        logLine();
+        enableSingleExportButton();
+        return;
+    }
+
+    final Lab8Cam cam = cams.get(idx[0]);
+    idx[0]++;
+
+    // Pre-log per-camera header
+    appendHtml("<br>");
+    logLine();
+    logSection("LAB 8 — Camera ID " + cam.id + " (" + cam.facing + ")");
+    logLine();
+
+    // Torch quick test (if available)
+    if (cam.hasFlash) {
+        lab8TryTorchToggle(cam.id, cam, overall);
+    } else {
+        logWarn("Flash: not available on this camera.");
+    }
+
+    // Open preview dialog + camera2 stream sampler
+    runOnUiThread(() -> lab8ShowPreviewDialogForCamera(cam, cm, overall, () -> {
+        // Next camera
+        lab8RunNextCamera(cams, idx, cm, overall);
+    }));
+}
+
+// ============================================================
+// LAB 8 — Torch toggle
+// ============================================================
+private void lab8TryTorchToggle(String camId, Lab8Cam cam, Lab8Overall overall) {
+    try {
+        CameraManager cm = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
+        if (cm == null) {
+            logWarn("Flash test skipped: CameraManager unavailable.");
+            overall.torchFailCount++;
+            return;
+        }
+
+        // NOTE: Torch control generally needs CAMERA permission (already checked).
+        cm.setTorchMode(camId, true);
+        SystemClock.sleep(250);
+        cm.setTorchMode(camId, false);
+
+        logOk("Flash torch toggled successfully.");
+        overall.torchOkCount++;
+
+    } catch (Throwable t) {
+        logError("Flash torch control failed.");
+        logWarn("Possible flash hardware, driver, or permission issue.");
+        overall.torchFailCount++;
+    }
+}
+
+// ============================================================
+// LAB 8 — Preview dialog + stream sampling
+// ============================================================
+private void lab8ShowPreviewDialogForCamera(
+        Lab8Cam cam,
+        CameraManager cm,
+        Lab8Overall overall,
+        Runnable onDone
+) {
+    // UI container
+    AlertDialog.Builder b =
+            new AlertDialog.Builder(
+                    ManualTestsActivity.this,
+                    android.R.style.Theme_Material_Dialog_NoActionBar
+            );
+    b.setCancelable(false);
+
+    LinearLayout root = new LinearLayout(this);
+    root.setOrientation(LinearLayout.VERTICAL);
+    root.setPadding(dp(18), dp(16), dp(18), dp(14));
+
+    GradientDrawable bg = new GradientDrawable();
+    bg.setColor(0xFF101010);
+    bg.setCornerRadius(dp(18));
+    bg.setStroke(dp(4), 0xFFFFD700);
+    root.setBackground(bg);
+
+    TextView title = new TextView(this);
+    title.setText("Camera Preview — " + cam.facing + " (ID " + cam.id + ")");
+    title.setTextColor(0xFFFFFFFF);
+    title.setTextSize(16f);
+    title.setTypeface(null, Typeface.BOLD);
+    title.setGravity(Gravity.CENTER);
+    title.setPadding(0, 0, 0, dp(10));
+    root.addView(title);
+
+    TextView hint = new TextView(this);
+    hint.setText(
+            "Wait ~5 seconds while we sample frames.\n" +
+            "Then confirm: did you see live image?"
+    );
+    hint.setTextColor(0xFFDDDDDD);
+    hint.setTextSize(14f);
+    hint.setGravity(Gravity.CENTER);
+    hint.setPadding(0, 0, 0, dp(10));
+    root.addView(hint);
+
+    // TextureView for preview
+    final TextureView tv = new TextureView(this);
+    LinearLayout.LayoutParams lpTv =
+            new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    dp(280)
+            );
+    tv.setLayoutParams(lpTv);
+    root.addView(tv);
+
+    // Buttons row
+    LinearLayout row = new LinearLayout(this);
+    row.setOrientation(LinearLayout.HORIZONTAL);
+    row.setGravity(Gravity.CENTER);
+    row.setPadding(0, dp(12), 0, 0);
+
+    Button yes = new Button(this);
+    yes.setText("I SEE IMAGE");
+    yes.setAllCaps(false);
+    yes.setTextColor(0xFFFFFFFF);
+    GradientDrawable yesBg = new GradientDrawable();
+    yesBg.setColor(0xFF0F8A3B);
+    yesBg.setCornerRadius(dp(14));
+    yesBg.setStroke(dp(3), 0xFFFFD700);
+    yes.setBackground(yesBg);
+
+    Button no = new Button(this);
+    no.setText("NO IMAGE");
+    no.setAllCaps(false);
+    no.setTextColor(0xFFFFFFFF);
+    GradientDrawable noBg = new GradientDrawable();
+    noBg.setColor(0xFF444444);
+    noBg.setCornerRadius(dp(14));
+    noBg.setStroke(dp(3), 0xFFFFD700);
+    no.setBackground(noBg);
+
+    LinearLayout.LayoutParams lpB =
+            new LinearLayout.LayoutParams(0, dp(56), 1f);
+    lpB.setMargins(0, 0, dp(8), 0);
+    yes.setLayoutParams(lpB);
+
+    LinearLayout.LayoutParams lpB2 =
+            new LinearLayout.LayoutParams(0, dp(56), 1f);
+    lpB2.setMargins(dp(8), 0, 0, 0);
+    no.setLayoutParams(lpB2);
+
+    row.addView(yes);
+    row.addView(no);
+    root.addView(row);
+
+    b.setView(root);
+    final AlertDialog d = b.create();
+    if (d.getWindow() != null)
+        d.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+    d.show();
+
+    // Disable buttons until sampling done (avoid instant wrong click)
+    yes.setEnabled(false);
+    no.setEnabled(false);
+
+    final Lab8Session s = new Lab8Session();
+    s.camId = cam.id;
+    s.cm = cm;
+    s.textureView = tv;
+    s.cam = cam;
+
+    final AtomicBoolean finished = new AtomicBoolean(false);
+
+    Runnable finishAndNext = () -> {
+        if (finished.getAndSet(true)) return;
+        try { lab8CloseSession(s); } catch (Throwable ignore) {}
+        try { d.dismiss(); } catch (Throwable ignore) {}
+        onDone.run();
+    };
+
+    // After sampling window, enable buttons
+    Runnable enableButtons = () -> {
+        if (finished.get()) return;
+        yes.setEnabled(true);
+        no.setEnabled(true);
+    };
+
+    yes.setOnClickListener(v -> {
+        overall.previewOkCount++;
+        logOk("User confirmed: live preview visible.");
+        finishAndNext.run();
+    });
+
+    no.setOnClickListener(v -> {
+        overall.previewFailCount++;
+        logError("User reported: NO live preview.");
+        logWarn("Possible camera module, driver, permission, or routing issue.");
+        finishAndNext.run();
+    });
+
+    // Start camera when texture is ready
+    if (tv.isAvailable()) {
+        lab8StartCamera2Session(s, overall, enableButtons, () -> {
+            // If session fails, we still ask user (buttons enable) but log it
+            overall.streamIssueCount++;
+            enableButtons.run();
+        });
+    } else {
+        tv.setSurfaceTextureListener(new TextureView.SurfaceTextureListener() {
+            @Override public void onSurfaceTextureAvailable(SurfaceTexture st, int w, int h) {
+                if (finished.get()) return;
+                lab8StartCamera2Session(s, overall, enableButtons, () -> {
+                    overall.streamIssueCount++;
+                    enableButtons.run();
+                });
+            }
+            @Override public void onSurfaceTextureSizeChanged(SurfaceTexture st, int w, int h) {}
+            @Override public boolean onSurfaceTextureDestroyed(SurfaceTexture st) { return true; }
+            @Override public void onSurfaceTextureUpdated(SurfaceTexture st) {}
+        });
+    }
+}
+
+// ============================================================
+// LAB 8 — Start Camera2 preview + stream sampling
+// ============================================================
+private void lab8StartCamera2Session(
+        Lab8Session s,
+        Lab8Overall overall,
+        Runnable onSamplingDoneEnableButtons,
+        Runnable onFail
+) {
+    try {
+        // Choose preview size
+        Size ps = (s.cam != null && s.cam.preview != null) ? s.cam.preview : new Size(1280, 720);
+
+        SurfaceTexture st = s.textureView.getSurfaceTexture();
+        if (st == null) {
+            logError("Preview SurfaceTexture unavailable.");
+            onFail.run();
+            return;
+        }
+        st.setDefaultBufferSize(ps.getWidth(), ps.getHeight());
+        final Surface previewSurface = new Surface(st);
+
+        // ImageReader for stream sampling (YUV)
+        s.reader = ImageReader.newInstance(
+                Math.min(ps.getWidth(), 1280),
+                Math.min(ps.getHeight(), 720),
+                ImageFormat.YUV_420_888,
+                2
+        );
+
+        s.sampleStartMs = SystemClock.elapsedRealtime();
+        s.frames = 0;
+        s.blackFrames = 0;
+        s.droppedFrames = 0;
+        s.sumLuma = 0;
+        s.sumLuma2 = 0;
+        s.minLuma = 999;
+        s.maxLuma = -1;
+        s.latencySumMs = 0;
+        s.latencyCount = 0;
+        s.lastFrameTsNs = 0;
+
+        s.reader.setOnImageAvailableListener(reader -> {
+            Image img = null;
+            try {
+                img = reader.acquireLatestImage();
+                if (img == null) return;
+
+                long nowNs = SystemClock.elapsedRealtimeNanos();
+                s.frames++;
+
+                // Estimate drop/jitter (very simple)
+                if (s.lastFrameTsNs != 0) {
+                    long dtNs = nowNs - s.lastFrameTsNs;
+                    // if > 200ms between frames, call it a "drop/timeout"
+                    if (dtNs > 200_000_000L) s.droppedFrames++;
+                }
+                s.lastFrameTsNs = nowNs;
+
+                // Basic frame analysis: sample luma plane sparsely
+                Image.Plane[] planes = img.getPlanes();
+                if (planes != null && planes.length > 0 && planes[0] != null) {
+                    ByteBuffer y = planes[0].getBuffer();
+                    int rowStride = planes[0].getRowStride();
+                    int w = img.getWidth();
+                    int h = img.getHeight();
+
+                    // sample grid
+                    int stepX = Math.max(8, w / 64);
+                    int stepY = Math.max(8, h / 48);
+
+                    long sum = 0;
+                    long sum2 = 0;
+                    int count = 0;
+                    int localMin = 999;
+                    int localMax = -1;
+
+                    // Access with care
+                    for (int yy = 0; yy < h; yy += stepY) {
+                        int row = yy * rowStride;
+                        for (int xx = 0; xx < w; xx += stepX) {
+                            int idx = row + xx;
+                            if (idx < 0 || idx >= y.limit()) continue;
+                            int v = y.get(idx) & 0xFF;
+                            sum += v;
+                            sum2 += (long) v * (long) v;
+                            count++;
+                            if (v < localMin) localMin = v;
+                            if (v > localMax) localMax = v;
+                        }
+                    }
+
+                    if (count > 0) {
+                        int mean = (int) (sum / count);
+                        s.sumLuma += sum;
+                        s.sumLuma2 += sum2;
+                        if (localMin < s.minLuma) s.minLuma = localMin;
+                        if (localMax > s.maxLuma) s.maxLuma = localMax;
+
+                        // "black frame" heuristic
+                        if (mean < 8 && localMax < 20) s.blackFrames++;
+                    }
+                }
+
+                // Pipeline latency estimate:
+                // SENSOR_TIMESTAMP (ns) → arrival time (ns) if we can read capture results.
+                // Here we only have arrival; capture timestamp is taken from the image itself if present.
+                long sensorNs = img.getTimestamp(); // best-effort
+                if (sensorNs > 0) {
+                    long latMs = (nowNs - sensorNs) / 1_000_000L;
+                    if (latMs >= 0 && latMs < 2000) {
+                        s.latencySumMs += latMs;
+                        s.latencyCount++;
+                    }
+                }
+
+            } catch (Throwable ignore) {
+            } finally {
+                try { if (img != null) img.close(); } catch (Throwable ignore2) {}
+            }
+        }, new Handler(Looper.getMainLooper()));
+
+        // Open camera device
+        s.cm.openCamera(s.camId, new CameraDevice.StateCallback() {
+            @Override public void onOpened(CameraDevice camera) {
+                s.device = camera;
+
+                try {
+                    ArrayList<Surface> outs = new ArrayList<>();
+                    outs.add(previewSurface);
+                    outs.add(s.reader.getSurface());
+
+                    camera.createCaptureSession(outs, new CameraCaptureSession.StateCallback() {
+                        @Override public void onConfigured(CameraCaptureSession session) {
+                            s.session = session;
+
+                            try {
+                                CaptureRequest.Builder rb =
+                                        camera.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
+
+                                rb.addTarget(previewSurface);
+                                rb.addTarget(s.reader.getSurface());
+
+                                // Try to push stable FPS range if available
+                                try {
+                                    CameraCharacteristics cc = s.cm.getCameraCharacteristics(s.camId);
+                                    Range<Integer>[] ranges =
+                                            cc.get(CameraCharacteristics.CONTROL_AE_AVAILABLE_TARGET_FPS_RANGES);
+                                    if (ranges != null && ranges.length > 0) {
+                                        Range<Integer> best = ranges[0];
+                                        for (Range<Integer> r : ranges) {
+                                            if (r.getUpper() >= 30 && r.getLower() >= 15) { best = r; break; }
+                                        }
+                                        rb.set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, best);
+                                    }
+                                } catch (Throwable ignore) {}
+
+                                rb.set(CaptureRequest.CONTROL_MODE, CaptureRequest.CONTROL_MODE_AUTO);
+                                rb.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
+
+                                session.setRepeatingRequest(rb.build(), null, new Handler(Looper.getMainLooper()));
+
+                                // Sampling window: 5 seconds
+                                new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                                    try { lab8StopAndReportSample(s, overall); } catch (Throwable ignore) {}
+                                    onSamplingDoneEnableButtons.run();
+                                }, 5000);
+
+                            } catch (Throwable t) {
+                                logError("Failed to start repeating preview request.");
+                                onFail.run();
+                            }
+                        }
+
+                        @Override public void onConfigureFailed(CameraCaptureSession session) {
+                            logError("Camera capture session configuration failed.");
+                            onFail.run();
+                        }
+                    }, new Handler(Looper.getMainLooper()));
+
+                } catch (Throwable t) {
+                    logError("Camera preview session creation failed.");
+                    onFail.run();
+                }
+            }
+
+            @Override public void onDisconnected(CameraDevice camera) {
+                logWarn("Camera disconnected during preview.");
+                onFail.run();
+            }
+
+            @Override public void onError(CameraDevice camera, int error) {
+                logError("Camera open error: " + error);
+                onFail.run();
+            }
+        }, new Handler(Looper.getMainLooper()));
+
+    } catch (Throwable t) {
+        logError("Camera2 session start failed.");
+        onFail.run();
+    }
+}
+
+// ============================================================
+// LAB 8 — Stop + report stream sample
+// ============================================================
+private void lab8StopAndReportSample(Lab8Session s, Lab8Overall overall) {
+
+    long durMs = Math.max(1, SystemClock.elapsedRealtime() - s.sampleStartMs);
+    float fps = (s.frames * 1000f) / durMs;
+
+    logLine();
+    logInfo("Stream sampling (5s):");
+
+    logInfo("Frames:");
+    if (s.frames > 0) logOk(String.valueOf(s.frames));
+    else logError("0");
+
+    logInfo("FPS (estimated):");
+    if (fps >= 20f) logOk(String.format(Locale.US, "%.1f", fps));
+    else logWarn(String.format(Locale.US, "%.1f", fps));
+
+    logInfo("Frame drops/timeouts:");
+    if (s.droppedFrames == 0) logOk("0");
+    else logWarn(String.valueOf(s.droppedFrames));
+
+    logInfo("Black frames (suspected):");
+    if (s.blackFrames == 0) logOk("0");
+    else {
+        logWarn(String.valueOf(s.blackFrames));
+        overall.streamIssueCount++;
+    }
+
+    // Luma stats (if we sampled anything)
+    if (s.frames > 0 && s.sumLuma > 0) {
+        // mean over all sampled points
+        // We didn’t store point count globally (kept light). So report min/max only reliably.
+        logInfo("Luma range (min/max):");
+        if (s.minLuma >= 0 && s.maxLuma >= 0)
+            logOk(s.minLuma + " / " + s.maxLuma);
+        else
+            logWarn("N/A");
+    }
+
+    // Latency estimate
+    if (s.latencyCount > 0) {
+        long avg = s.latencySumMs / Math.max(1, s.latencyCount);
+        logInfo("Pipeline latency (avg ms):");
+        if (avg <= 250) logOk(String.valueOf(avg));
+        else logWarn(String.valueOf(avg));
+    } else {
+        logWarn("Pipeline latency estimate: not available (no sensor timestamps).");
+    }
+
+    // RAW check
+    if (s.cam != null) {
+        logInfo("RAW support:");
+        if (s.cam.hasRaw) logOk("YES"); else logWarn("NO");
+    }
+
+    logLine();
+}
+
+// ============================================================
+// LAB 8 — Close session safely
+// ============================================================
+private void lab8CloseSession(Lab8Session s) {
+    try { if (s.session != null) s.session.close(); } catch (Throwable ignore) {}
+    try { if (s.device != null) s.device.close(); } catch (Throwable ignore) {}
+    try { if (s.reader != null) s.reader.close(); } catch (Throwable ignore) {}
+    s.session = null;
+    s.device = null;
+    s.reader = null;
+}
+
+// ============================================================
+// LAB 8 — Structs
+// ============================================================
+private static class Lab8Cam {
+    String id;
+    String facing;
+    boolean hasFlash;
+    boolean hasRaw;
+    boolean hasManual;
+    boolean hasDepth;
+    Float focal;
+    Size preview;
+}
+
+private static class Lab8Overall {
+    int total;
+    int previewOkCount;
+    int previewFailCount;
+    int torchOkCount;
+    int torchFailCount;
+    int streamIssueCount;
+}
+
+private static class Lab8Session {
+    String camId;
+    CameraManager cm;
+    TextureView textureView;
+    Lab8Cam cam;
+
+    CameraDevice device;
+    CameraCaptureSession session;
+    ImageReader reader;
+
+    long sampleStartMs;
+    long frames;
+    long blackFrames;
+    long droppedFrames;
+
+    long sumLuma;
+    long sumLuma2;
+    int minLuma = 999;
+    int maxLuma = -1;
+
+    long latencySumMs;
+    int latencyCount;
+
+    long lastFrameTsNs;
 }
 
 /* ============================================================

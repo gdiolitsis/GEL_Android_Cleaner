@@ -172,6 +172,11 @@ private static final int REQ_LAB6_COLOR = 6007;
 private AlertDialog lab14RunningDialog;
 private static final int REQ_LAB13_BT_CONNECT = 1313;
 
+// ============================================================
+// LAB 8.1 — STATE (CLASS FIELDS)
+// ============================================================
+private ArrayList<Lab8Cam> lab8CamsFor81 = null;
+private CameraManager lab8CmFor81 = null;
 
 // ============================================================
 // LAB 13 — BLUETOOTH RECEIVER (FINAL / AUTHORITATIVE)
@@ -3983,6 +3988,10 @@ for (Lab8Cam c : cams) {
 
     final Lab8Overall overall = new Lab8Overall();
     overall.total = cams.size();
+    
+    // ✅ Save state for LAB 8.1
+lab8CamsFor81 = cams;
+lab8CmFor81 = cm;
 
     runOnUiThread(() -> showLab8IntroAndStart(cams, idx, cm, overall));
 }
@@ -4145,14 +4154,7 @@ private void lab8RunNextCamera(
             logInfo(
                     "In the next step we can analyze photo & video capabilities\n" +
                     "(resolution, formats, FPS, RAW support, slow-motion, etc)."
-            );
-
-            // ----------------------------------------------------
-            // PROMPT  LAB 8.1 ( )
-            // ----------------------------------------------------
-            runOnUiThread(() -> showLab8_1Prompt());
-            return;
-        }
+            );          
 
         //  FAIL PATH
         logLabelErrorValue("Camera subsystem", "NOT reliable");
@@ -4697,109 +4699,404 @@ private static class Lab8Session {
 }
 
 // ============================================================
-// LAB 8.1 — Proceed prompt
+// LAB 8.1 — PROMPT (FINAL)  ✅ CREATE THIS METHOD
 // ============================================================
 private void showLab8_1Prompt() {
 
-    AlertDialog.Builder b =
-            new AlertDialog.Builder(
-                    ManualTestsActivity.this,
-                    android.R.style.Theme_Material_Dialog_NoActionBar
-            );
+    runOnUiThread(() -> {
 
-    LinearLayout root = new LinearLayout(this);
-    root.setOrientation(LinearLayout.VERTICAL);
-    root.setPadding(dp(20), dp(18), dp(20), dp(16));
+        AlertDialog.Builder b =
+                new AlertDialog.Builder(
+                        ManualTestsActivity.this,
+                        android.R.style.Theme_Material_Dialog_NoActionBar
+                );
 
-    GradientDrawable bg = new GradientDrawable();
-    bg.setColor(0xFF101010);
-    bg.setCornerRadius(dp(18));
-    bg.setStroke(dp(4), 0xFFFFD700);
-    root.setBackground(bg);
+        LinearLayout root = new LinearLayout(this);
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.setPadding(dp(20), dp(18), dp(20), dp(16));
 
-    TextView title = new TextView(this);
-    title.setText("Proceed to LAB 8.1?");
-    title.setTextColor(0xFFFFFFFF);
-    title.setTextSize(17f);
-    title.setTypeface(null, Typeface.BOLD);
-    title.setGravity(Gravity.CENTER);
-    title.setPadding(0, 0, 0, dp(10));
-    root.addView(title);
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(0xFF101010);
+        bg.setCornerRadius(dp(18));
+        bg.setStroke(dp(4), 0xFFFFD700);
+        root.setBackground(bg);
 
-    TextView msg = new TextView(this);
-    msg.setText(
-            "LAB 8.1 will evaluate declared and effective\n" +
-            "camera capabilities such as:\n\n" +
-            "• Photo & video resolutions\n" +
-            "• FPS ranges\n" +
-            "• RAW / high-speed support\n" +
-            "• Format availability\n\n" +
-            "This is a capability analysis — not a stress test."
-    );
-    msg.setTextColor(0xFFDDDDDD);
-    msg.setTextSize(14f);
-    msg.setGravity(Gravity.CENTER);
-    root.addView(msg);
+        TextView title = new TextView(this);
+        title.setText("Proceed to LAB 8.1?");
+        title.setTextColor(0xFFFFFFFF);
+        title.setTextSize(17f);
+        title.setTypeface(null, Typeface.BOLD);
+        title.setGravity(Gravity.CENTER);
+        title.setPadding(0, 0, 0, dp(10));
+        root.addView(title);
 
-    LinearLayout buttons = new LinearLayout(this);
-    buttons.setOrientation(LinearLayout.HORIZONTAL);
-    buttons.setPadding(0, dp(14), 0, 0);
-
-    Button yes = new Button(this);
-    yes.setText("CONTINUE");
-    yes.setAllCaps(false);
-    yes.setTextColor(0xFFFFFFFF);
-    GradientDrawable yesBg = new GradientDrawable();
-    yesBg.setColor(0xFF0F8A3B);
-    yesBg.setCornerRadius(dp(14));
-    yesBg.setStroke(dp(3), 0xFFFFD700);
-    yes.setBackground(yesBg);
-
-    Button no = new Button(this);
-    no.setText("SKIP");
-    no.setAllCaps(false);
-    no.setTextColor(0xFFFFFFFF);
-    GradientDrawable noBg = new GradientDrawable();
-    noBg.setColor(0xFF444444);
-    noBg.setCornerRadius(dp(14));
-    noBg.setStroke(dp(3), 0xFFFFD700);
-    no.setBackground(noBg);
-
-    LinearLayout.LayoutParams lp =
-            new LinearLayout.LayoutParams(0, dp(54), 1f);
-    lp.setMargins(dp(6), 0, dp(6), 0);
-
-    yes.setLayoutParams(lp);
-    no.setLayoutParams(lp);
-
-    buttons.addView(yes);
-    buttons.addView(no);
-    root.addView(buttons);
-
-    b.setView(root);
-    b.setCancelable(false);
-
-    AlertDialog d = b.create();
-    if (d.getWindow() != null)
-        d.getWindow().setBackgroundDrawable(
-                new ColorDrawable(Color.TRANSPARENT)
+        TextView msg = new TextView(this);
+        msg.setText(
+                "LAB 8.1 will analyze camera capabilities (declared vs effective):\n\n" +
+                "• Photo & video max resolutions\n" +
+                "• FPS ranges / high-speed support\n" +
+                "• RAW / formats\n" +
+                "• Control features (manual, stabilization)\n\n" +
+                "This is capability mapping — no scoring."
         );
-    d.show();
+        msg.setTextColor(0xFFDDDDDD);
+        msg.setTextSize(14f);
+        msg.setGravity(Gravity.CENTER);
+        root.addView(msg);
 
-    yes.setOnClickListener(v -> {
-        d.dismiss();
-        startLab8_1CameraCapabilities();
+        LinearLayout buttons = new LinearLayout(this);
+        buttons.setOrientation(LinearLayout.HORIZONTAL);
+        buttons.setPadding(0, dp(14), 0, 0);
+
+        Button yes = new Button(this);
+        yes.setText("CONTINUE");
+        yes.setAllCaps(false);
+        yes.setTextColor(0xFFFFFFFF);
+        GradientDrawable yesBg = new GradientDrawable();
+        yesBg.setColor(0xFF0F8A3B);
+        yesBg.setCornerRadius(dp(14));
+        yesBg.setStroke(dp(3), 0xFFFFD700);
+        yes.setBackground(yesBg);
+
+        Button no = new Button(this);
+        no.setText("SKIP");
+        no.setAllCaps(false);
+        no.setTextColor(0xFFFFFFFF);
+        GradientDrawable noBg = new GradientDrawable();
+        noBg.setColor(0xFF444444);
+        noBg.setCornerRadius(dp(14));
+        noBg.setStroke(dp(3), 0xFFFFD700);
+        no.setBackground(noBg);
+
+        LinearLayout.LayoutParams lp =
+                new LinearLayout.LayoutParams(0, dp(54), 1f);
+        lp.setMargins(dp(6), 0, dp(6), 0);
+
+        yes.setLayoutParams(lp);
+        no.setLayoutParams(lp);
+
+        buttons.addView(yes);
+        buttons.addView(no);
+        root.addView(buttons);
+
+        b.setView(root);
+        b.setCancelable(false);
+
+        AlertDialog d = b.create();
+        if (d.getWindow() != null)
+            d.getWindow().setBackgroundDrawable(
+                    new ColorDrawable(Color.TRANSPARENT)
+            );
+        d.show();
+
+        yes.setOnClickListener(v -> {
+            d.dismiss();
+            startLab8_1CameraCapabilities();
+        });
+
+        no.setOnClickListener(v -> {
+            d.dismiss();
+            appendHtml("<br>");
+            logInfo("LAB 8.1 was skipped by user.");
+            logLine();
+            logLabelOkValue("Lab 8", "Finished");
+            logLine();
+            enableSingleExportButton();
+        });
     });
+}
 
-    no.setOnClickListener(v -> {
-        d.dismiss();
-        appendHtml("<br>");
-        logInfo("LAB 8.1 was skipped by user.");
-        logLine();
-        logLabelOkValue("Lab 8", "Finished");
+// ============================================================
+// LAB 8.1 — CAPABILITIES MAP (NO SCORE) ✅ CREATE THIS METHOD
+// ============================================================
+private void startLab8_1CameraCapabilities() {
+
+    appendHtml("<br>");
+    logSection("LAB 8.1 — Camera Capabilities Map");
+    logLine();
+
+    if (lab8CmFor81 == null || lab8CamsFor81 == null || lab8CamsFor81.isEmpty()) {
+        logLabelErrorValue("LAB 8.1", "Missing Lab 8 context (camera list / manager).");
+        logInfo("Re-run LAB 8, then press CONTINUE.");
         logLine();
         enableSingleExportButton();
-    });
+        return;
+    }
+
+    logInfo("This report is declarative + effective mapping (no scoring).");
+    logLabelValue("Cameras", String.valueOf(lab8CamsFor81.size()));
+    logLine();
+
+    for (Lab8Cam c : lab8CamsFor81) {
+        lab8_1DumpOneCameraCapabilities(lab8CmFor81, c);
+    }
+
+    appendHtml("<br>");
+    logLabelOkValue("Lab 8.1", "Finished");
+    logLine();
+    enableSingleExportButton();
+}
+
+// ============================================================
+// LAB 8.1 — Dump one camera
+// ============================================================
+private void lab8_1DumpOneCameraCapabilities(CameraManager cm, Lab8Cam cam) {
+
+    if (cm == null || cam == null || cam.id == null) return;
+
+    appendHtml("<br>");
+    logSection("LAB 8.1 — Camera ID " + cam.id + " (" + cam.facing + ")");
+    logLine();
+
+    CameraCharacteristics cc = null;
+    try { cc = cm.getCameraCharacteristics(cam.id); } catch (Throwable ignore) {}
+
+    if (cc == null) {
+        logLabelErrorValue("Characteristics", "Unavailable");
+        logLine();
+        return;
+    }
+
+    // ----------------------------
+    // BASIC
+    // ----------------------------
+    logLabelValue("Facing", cam.facing);
+
+    Boolean flash = null;
+    try { flash = cc.get(CameraCharacteristics.FLASH_INFO_AVAILABLE); } catch (Throwable ignore) {}
+    if (Boolean.TRUE.equals(flash)) logLabelOkValue("Flash", "YES");
+    else logLabelWarnValue("Flash", "NO");
+
+    // ----------------------------
+    // FORMATS / STREAM MAP
+    // ----------------------------
+    StreamConfigurationMap map = null;
+    try { map = cc.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP); } catch (Throwable ignore) {}
+
+    if (map == null) {
+        logLabelWarnValue("Stream map", "Unavailable");
+        logLine();
+        return;
+    }
+
+    // ----------------------------
+    // PHOTO
+    // ----------------------------
+    logLine();
+    logInfo("PHOTO");
+
+    Size maxJpeg = lab8_1MaxSize(map.getOutputSizes(ImageFormat.JPEG));
+    if (maxJpeg != null) logLabelValue("Max JPEG size", maxJpeg.getWidth() + " x " + maxJpeg.getHeight());
+    else logLabelWarnValue("Max JPEG size", "N/A");
+
+    boolean hasRaw = false;
+    try {
+        int[] caps = cc.get(CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES);
+        if (caps != null) {
+            for (int v : caps) {
+                if (v == CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES_RAW) { hasRaw = true; break; }
+            }
+        }
+    } catch (Throwable ignore) {}
+
+    if (hasRaw) logLabelOkValue("RAW support", "DECLARED");
+    else logLabelWarnValue("RAW support", "NOT declared");
+
+    // Supported output formats (limited list; safe)
+    int[] fmts = null;
+    try { fmts = map.getOutputFormats(); } catch (Throwable ignore) {}
+    if (fmts != null && fmts.length > 0) {
+        logLabelValue("Output formats", lab8_1FormatList(fmts, hasRaw));
+    } else {
+        logLabelWarnValue("Output formats", "N/A");
+    }
+
+    // ----------------------------
+    // VIDEO
+    // ----------------------------
+    logLine();
+    logInfo("VIDEO");
+
+    Size maxVideo = null;
+    try { maxVideo = lab8_1MaxSize(map.getOutputSizes(MediaRecorder.class)); } catch (Throwable ignore) {}
+    if (maxVideo != null) logLabelValue("Max video size", maxVideo.getWidth() + " x " + maxVideo.getHeight());
+    else logLabelWarnValue("Max video size", "N/A");
+
+    Range<Integer>[] fpsRanges = null;
+    try { fpsRanges = cc.get(CameraCharacteristics.CONTROL_AE_AVAILABLE_TARGET_FPS_RANGES); } catch (Throwable ignore) {}
+    if (fpsRanges != null && fpsRanges.length > 0) {
+        logLabelValue("FPS ranges", lab8_1FpsRangesToString(fpsRanges));
+    } else {
+        logLabelWarnValue("FPS ranges", "N/A");
+    }
+
+    // High-speed video (declared)
+    try {
+        Range<Integer>[] hsFps = map.getHighSpeedVideoFpsRanges();
+        if (hsFps != null && hsFps.length > 0) {
+            logLabelOkValue("High-speed video", "DECLARED");
+            logLabelValue("HS FPS ranges", lab8_1FpsRangesToString(hsFps));
+        } else {
+            logLabelWarnValue("High-speed video", "NOT declared");
+        }
+    } catch (Throwable t) {
+        logLabelWarnValue("High-speed video", "N/A");
+    }
+
+    // ----------------------------
+    // CONTROL FEATURES
+    // ----------------------------
+    logLine();
+    logInfo("CONTROL");
+
+    boolean manualSensor = false;
+    try {
+        int[] caps = cc.get(CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES);
+        if (caps != null) {
+            for (int v : caps) {
+                if (v == CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES_MANUAL_SENSOR) { manualSensor = true; break; }
+            }
+        }
+    } catch (Throwable ignore) {}
+
+    if (manualSensor) logLabelOkValue("Manual sensor", "DECLARED");
+    else logLabelWarnValue("Manual sensor", "NOT declared");
+
+    int[] afModes = null;
+    try { afModes = cc.get(CameraCharacteristics.CONTROL_AF_AVAILABLE_MODES); } catch (Throwable ignore) {}
+    if (afModes != null && afModes.length > 0) logLabelValue("AF modes", lab8_1AfModesToString(afModes));
+    else logLabelWarnValue("AF modes", "N/A");
+
+    int[] aeModes = null;
+    try { aeModes = cc.get(CameraCharacteristics.CONTROL_AE_AVAILABLE_MODES); } catch (Throwable ignore) {}
+    if (aeModes != null && aeModes.length > 0) logLabelValue("AE modes", lab8_1AeModesToString(aeModes));
+    else logLabelWarnValue("AE modes", "N/A");
+
+    int[] awbModes = null;
+    try { awbModes = cc.get(CameraCharacteristics.CONTROL_AWB_AVAILABLE_MODES); } catch (Throwable ignore) {}
+    if (awbModes != null && awbModes.length > 0) logLabelValue("AWB modes", lab8_1AwbModesToString(awbModes));
+    else logLabelWarnValue("AWB modes", "N/A");
+
+    int[] stab = null;
+    try { stab = cc.get(CameraCharacteristics.CONTROL_AVAILABLE_VIDEO_STABILIZATION_MODES); } catch (Throwable ignore) {}
+    if (stab != null && stab.length > 0) logLabelValue("Video stabilization", lab8_1VideoStabToString(stab));
+    else logLabelWarnValue("Video stabilization", "N/A");
+
+    logLine();
+}
+
+// ============================================================
+// LAB 8.1 — Helpers (NO NESTED METHODS)
+// ============================================================
+private Size lab8_1MaxSize(Size[] sizes) {
+    if (sizes == null || sizes.length == 0) return null;
+    Size best = sizes[0];
+    for (Size s : sizes) {
+        if (s == null) continue;
+        long a = (long) s.getWidth() * (long) s.getHeight();
+        long b = (long) best.getWidth() * (long) best.getHeight();
+        if (a > b) best = s;
+    }
+    return best;
+}
+
+private String lab8_1FpsRangesToString(Range<Integer>[] rs) {
+    if (rs == null || rs.length == 0) return "N/A";
+    StringBuilder sb = new StringBuilder();
+    for (int i = 0; i < rs.length; i++) {
+        Range<Integer> r = rs[i];
+        if (r == null) continue;
+        if (sb.length() > 0) sb.append(", ");
+        sb.append(r.getLower()).append("–").append(r.getUpper());
+    }
+    return (sb.length() == 0) ? "N/A" : sb.toString();
+}
+
+private String lab8_1FormatList(int[] fmts, boolean hasRaw) {
+    if (fmts == null || fmts.length == 0) return "N/A";
+    // keep it readable, not a dump of 50 formats
+    boolean hasJpeg = false, hasYuv = false, hasPrivate = false;
+    for (int f : fmts) {
+        if (f == ImageFormat.JPEG) hasJpeg = true;
+        if (f == ImageFormat.YUV_420_888) hasYuv = true;
+        if (f == ImageFormat.PRIVATE) hasPrivate = true;
+    }
+    StringBuilder sb = new StringBuilder();
+    if (hasJpeg) sb.append("JPEG");
+    if (hasYuv) { if (sb.length() > 0) sb.append(", "); sb.append("YUV_420_888"); }
+    if (hasRaw) { if (sb.length() > 0) sb.append(", "); sb.append("RAW_SENSOR"); }
+    if (hasPrivate) { if (sb.length() > 0) sb.append(", "); sb.append("PRIVATE"); }
+    return (sb.length() == 0) ? "Available (many)" : sb.toString();
+}
+
+private String lab8_1AfModesToString(int[] modes) {
+    StringBuilder sb = new StringBuilder();
+    for (int m : modes) {
+        String s = null;
+        if (m == CaptureRequest.CONTROL_AF_MODE_OFF) s = "OFF";
+        else if (m == CaptureRequest.CONTROL_AF_MODE_AUTO) s = "AUTO";
+        else if (m == CaptureRequest.CONTROL_AF_MODE_MACRO) s = "MACRO";
+        else if (m == CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_VIDEO) s = "CONTINUOUS_VIDEO";
+        else if (m == CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE) s = "CONTINUOUS_PICTURE";
+        else if (m == CaptureRequest.CONTROL_AF_MODE_EDOF) s = "EDOF";
+        else s = "MODE_" + m;
+
+        if (sb.length() > 0) sb.append(", ");
+        sb.append(s);
+    }
+    return (sb.length() == 0) ? "N/A" : sb.toString();
+}
+
+private String lab8_1AeModesToString(int[] modes) {
+    StringBuilder sb = new StringBuilder();
+    for (int m : modes) {
+        String s;
+        if (m == CaptureRequest.CONTROL_AE_MODE_OFF) s = "OFF";
+        else if (m == CaptureRequest.CONTROL_AE_MODE_ON) s = "ON";
+        else if (m == CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH) s = "ON_AUTO_FLASH";
+        else if (m == CaptureRequest.CONTROL_AE_MODE_ON_ALWAYS_FLASH) s = "ON_ALWAYS_FLASH";
+        else if (m == CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH_REDEYE) s = "ON_REDEYE";
+        else s = "MODE_" + m;
+
+        if (sb.length() > 0) sb.append(", ");
+        sb.append(s);
+    }
+    return (sb.length() == 0) ? "N/A" : sb.toString();
+}
+
+private String lab8_1AwbModesToString(int[] modes) {
+    StringBuilder sb = new StringBuilder();
+    for (int m : modes) {
+        String s;
+        if (m == CaptureRequest.CONTROL_AWB_MODE_OFF) s = "OFF";
+        else if (m == CaptureRequest.CONTROL_AWB_MODE_AUTO) s = "AUTO";
+        else if (m == CaptureRequest.CONTROL_AWB_MODE_INCANDESCENT) s = "INCANDESCENT";
+        else if (m == CaptureRequest.CONTROL_AWB_MODE_FLUORESCENT) s = "FLUORESCENT";
+        else if (m == CaptureRequest.CONTROL_AWB_MODE_WARM_FLUORESCENT) s = "WARM_FLUORESCENT";
+        else if (m == CaptureRequest.CONTROL_AWB_MODE_DAYLIGHT) s = "DAYLIGHT";
+        else if (m == CaptureRequest.CONTROL_AWB_MODE_CLOUDY_DAYLIGHT) s = "CLOUDY";
+        else if (m == CaptureRequest.CONTROL_AWB_MODE_TWILIGHT) s = "TWILIGHT";
+        else if (m == CaptureRequest.CONTROL_AWB_MODE_SHADE) s = "SHADE";
+        else s = "MODE_" + m;
+
+        if (sb.length() > 0) sb.append(", ");
+        sb.append(s);
+    }
+    return (sb.length() == 0) ? "N/A" : sb.toString();
+}
+
+private String lab8_1VideoStabToString(int[] modes) {
+    StringBuilder sb = new StringBuilder();
+    for (int m : modes) {
+        String s;
+        if (m == CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE_OFF) s = "OFF";
+        else if (m == CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE_ON) s = "ON";
+        else s = "MODE_" + m;
+
+        if (sb.length() > 0) sb.append(", ");
+        sb.append(s);
+    }
+    return (sb.length() == 0) ? "N/A" : sb.toString();
 }
 
 /* ============================================================

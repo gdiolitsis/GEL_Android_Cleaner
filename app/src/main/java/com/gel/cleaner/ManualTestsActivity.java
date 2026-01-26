@@ -4126,49 +4126,53 @@ private void lab8RunNextCamera(
         else
             logLabelWarnValue("Frame stream issues", String.valueOf(overall.streamIssueCount));
 
-        // ====================================================
-        // FINAL VERDICT
-        // ====================================================
-        boolean cameraSubsystemOk =
-                overall.total > 0 &&
-                overall.previewFailCount == 0 &&
-                overall.previewOkCount == overall.total;
+// ====================================================
+// FINAL VERDICT
+// ====================================================
+boolean cameraSubsystemOk =
+        overall.total > 0 &&
+        overall.previewFailCount == 0 &&
+        overall.previewOkCount == overall.total;
 
-        if (cameraSubsystemOk) {
+if (cameraSubsystemOk) {
 
-            logLabelOkValue("Camera subsystem", "Operational");
+    logLabelOkValue("Camera subsystem", "Operational");
 
-            if (overall.streamIssueCount == 0)
-                logLabelOkValue("Live stream stability", "OK");
-            else
-                logLabelWarnValue("Live stream stability", "Minor anomalies detected");
+    if (overall.streamIssueCount == 0)
+        logLabelOkValue("Live stream stability", "OK");
+    else
+        logLabelWarnValue("Live stream stability", "Minor anomalies detected");
 
-            if (overall.torchFailCount == 0)
-                logLabelOkValue("Flash subsystem", "OK (where available)");
-            else
-                logLabelWarnValue(
-                        "Flash subsystem",
-                        "Some cameras have no flash / torch issues"
-                );
+    if (overall.torchFailCount == 0)
+        logLabelOkValue("Flash subsystem", "OK (where available)");
+    else
+        logLabelWarnValue(
+                "Flash subsystem",
+                "Some cameras have no flash / torch issues"
+        );
 
-            logOk("Your device meets the criteria to evaluate camera capabilities.");
-            logInfo(
-                    "In the next step we can analyze photo & video capabilities\n" +
-                    "(resolution, formats, FPS, RAW support, slow-motion, etc)."
-            );
-            return;
-        }
+    logOk("Your device meets the criteria to evaluate camera capabilities.");
+    logInfo(
+            "In the next step we can analyze photo & video capabilities\n" +
+            "(resolution, formats, FPS, RAW support, slow-motion, etc)."
+    );
 
-        //  FAIL PATH
-        logLabelErrorValue("Camera subsystem", "NOT reliable");
-        logInfo("One or more cameras failed basic operation checks.");
+    // 👉 ΣΥΝΕΧΕΙΑ ΣΤΟ LAB 8.1
+    runOnUiThread(this::showLab8_1Prompt);
+    return;
 
-        appendHtml("<br>");
-        logLabelOkValue("Lab 8", "Finished");
-        logLine();
-        enableSingleExportButton();
-        return;
-    }
+} else {
+
+    // ❌ FAIL PATH
+    logLabelErrorValue("Camera subsystem", "NOT reliable");
+    logInfo("One or more cameras failed basic operation checks.");
+
+    appendHtml("<br>");
+    logLabelOkValue("Lab 8", "Finished");
+    logLine();
+    enableSingleExportButton();
+    return;
+}
 
     // ====================================================
     // NEXT CAMERA

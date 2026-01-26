@@ -66,6 +66,7 @@ import android.media.AudioManager;
 import android.media.AudioTrack;
 import android.media.Image;
 import android.media.ImageReader;
+import android.media.MediaRecorder;
 import android.media.ToneGenerator;
 import android.net.ConnectivityManager;
 import android.net.DhcpInfo;

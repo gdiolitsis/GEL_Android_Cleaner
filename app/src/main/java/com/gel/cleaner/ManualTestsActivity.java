@@ -4157,13 +4157,13 @@ if (cameraSubsystemOk) {
             "(resolution, formats, FPS, RAW support, slow-motion, etc)."
     );
 
-    // 👉 ΣΥΝΕΧΕΙΑ ΣΤΟ LAB 8.1
+    //    LAB 8.1
     runOnUiThread(this::showLab8_1Prompt);
     return;
 
 } else {
 
-    // ❌ FAIL PATH
+    //  FAIL PATH
     logLabelErrorValue("Camera subsystem", "NOT reliable");
     logInfo("One or more cameras failed basic operation checks.");
 
@@ -4171,8 +4171,10 @@ if (cameraSubsystemOk) {
     logLabelOkValue("Lab 8", "Finished");
     logLine();
     enableSingleExportButton();
-    return;
-}
+            return;
+        }
+    }
+
 
     // ====================================================
     // NEXT CAMERA

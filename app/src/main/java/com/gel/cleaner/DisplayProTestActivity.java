@@ -261,10 +261,31 @@ private void showOledWarning() {
     }
 
     private void finishTest() {
-        setResult(RESULT_OK, new Intent());
-        finish();
-    }
 
+    new AlertDialog.Builder(this)
+            .setTitle("Visual Inspection Result")
+            .setMessage(
+                    "Did you notice any of the following?\n\n" +
+                    "• Burn-in / image retention\n" +
+                    "• Color banding or steps\n" +
+                    "• Screen stains / mura\n" +
+                    "• Uneven brightness or tint"
+            )
+            .setCancelable(false)
+            .setPositiveButton("YES — Issues noticed", (d, w) -> {
+                Intent i = new Intent();
+                i.putExtra("display_issues", true);
+                setResult(RESULT_OK, i);
+                finish();
+            })
+            .setNegativeButton("NO — Screen looks OK", (d, w) -> {
+                Intent i = new Intent();
+                i.putExtra("display_issues", false);
+                setResult(RESULT_OK, i);
+                finish();
+            })
+            .show();
+}
     // ============================================================
     // STEP TYPES
     // ============================================================

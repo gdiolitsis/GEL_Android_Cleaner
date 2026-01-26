@@ -96,28 +96,104 @@ public class DisplayProTestActivity extends Activity {
     }
 
     // ============================================================
-    // OLED WARNING
-    // ============================================================
-    private void showOledWarning() {
+// OLED WARNING — GEL STYLE
+// ============================================================
+private void showOledWarning() {
 
-        new AlertDialog.Builder(this)
-                .setTitle("Display Stress Test")
-                .setMessage(
-                        "This test drives the display at maximum brightness " +
-                        "and may temporarily stress OLED panels.\n\n" +
-                        "Proceed only if you understand and accept this."
-                )
-                .setCancelable(false)
-                .setPositiveButton("START", (d, w) -> {
-                    d.dismiss();
-                    initUiAndStart();
-                })
-                .setNegativeButton("CANCEL", (d, w) -> {
-                    d.dismiss();
-                    finish();
-                })
-                .show();
-    }
+    AlertDialog.Builder b =
+            new AlertDialog.Builder(
+                    this,
+                    android.R.style.Theme_Material_Dialog_NoActionBar
+            );
+    b.setCancelable(false);
+
+    // ROOT
+    LinearLayout root = new LinearLayout(this);
+    root.setOrientation(LinearLayout.VERTICAL);
+    root.setPadding(dp(24), dp(22), dp(24), dp(18));
+
+    GradientDrawable bg = new GradientDrawable();
+    bg.setColor(0xFF101010);              // GEL black
+    bg.setCornerRadius(dp(18));
+    bg.setStroke(dp(4), 0xFFFFD700);      // GEL gold
+    root.setBackground(bg);
+
+    // TITLE
+    TextView title = new TextView(this);
+    title.setText("Display Stress Test");
+    title.setTextColor(0xFFFFFFFF);
+    title.setTextSize(18f);
+    title.setTypeface(null, Typeface.BOLD);
+    title.setGravity(Gravity.CENTER);
+    title.setPadding(0, 0, 0, dp(12));
+    root.addView(title);
+
+    // MESSAGE
+    TextView msg = new TextView(this);
+    msg.setText(
+            "This test drives the display at maximum brightness\n" +
+            "and may temporarily stress OLED panels.\n\n" +
+            "Proceed only if you understand and accept this."
+    );
+    msg.setTextColor(0xFFDDDDDD);
+    msg.setTextSize(15f);
+    msg.setGravity(Gravity.CENTER);
+    msg.setPadding(0, 0, 0, dp(16));
+    root.addView(msg);
+
+    // BUTTON ROW
+    LinearLayout buttons = new LinearLayout(this);
+    buttons.setOrientation(LinearLayout.HORIZONTAL);
+    buttons.setGravity(Gravity.END);
+
+    // CANCEL
+    Button cancel = new Button(this);
+    cancel.setText("CANCEL");
+    cancel.setAllCaps(false);
+    cancel.setTextColor(0xFFFFD700);
+
+    GradientDrawable cancelBg = new GradientDrawable();
+    cancelBg.setColor(0xFF202020);
+    cancelBg.setCornerRadius(dp(12));
+    cancelBg.setStroke(dp(2), 0xFFFFD700);
+    cancel.setBackground(cancelBg);
+
+    // START
+    Button start = new Button(this);
+    start.setText("START");
+    start.setAllCaps(false);
+    start.setTextColor(0xFFFFFFFF);
+
+    GradientDrawable startBg = new GradientDrawable();
+    startBg.setColor(0xFF39FF14);         // GEL green
+    startBg.setCornerRadius(dp(12));
+    startBg.setStroke(dp(3), 0xFFFFD700);
+    start.setBackground(startBg);
+
+    buttons.addView(cancel);
+    buttons.addView(space(dp(12)));
+    buttons.addView(start);
+    root.addView(buttons);
+
+    b.setView(root);
+
+    AlertDialog d = b.create();
+    if (d.getWindow() != null)
+        d.getWindow().setBackgroundDrawable(
+                new ColorDrawable(Color.TRANSPARENT)
+        );
+    d.show();
+
+    cancel.setOnClickListener(v -> {
+        d.dismiss();
+        finish();
+    });
+
+    start.setOnClickListener(v -> {
+        d.dismiss();
+        initUiAndStart();
+    });
+}
 
     // ============================================================
     // INIT + START

@@ -4,18 +4,25 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.graphics.Color;
+import android.graphics.Typeface;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.TypedValue;
+import android.view.Gravity;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 /**
  * ============================================================
- * LAB 6 PRO — Display Advanced Diagnostics (FINAL)
+ * LAB 6 PRO — Display Advanced Diagnostics (FINAL / LOCKED)
  * ------------------------------------------------------------
  * • Solid colors (dead pixels / stains)
  * • Gradient (banding)
@@ -24,7 +31,7 @@ import android.widget.TextView;
  * • Auto cycle (no touch)
  * • Brightness locked
  * • OLED safeguard timer
- * • User warning before start
+ * • User confirmation at the end
  * ============================================================
  */
 public class DisplayProTestActivity extends Activity {
@@ -34,9 +41,7 @@ public class DisplayProTestActivity extends Activity {
     // ------------------------------------------------------------
     private static final int STEP_DURATION_MS = 2500;
     private static final int LOOP_COUNT = 3;
-
-    // OLED safeguard: max total runtime (ms)
-    private static final long MAX_RUNTIME_MS = 5 * 60 * 1000; // 5 minutes
+    private static final long MAX_RUNTIME_MS = 5 * 60 * 1000; // 5 min
 
     // ------------------------------------------------------------
     // STATE
@@ -54,26 +59,22 @@ public class DisplayProTestActivity extends Activity {
     // ------------------------------------------------------------
     private final TestStep[] steps = new TestStep[]{
 
-            // SOLID COLORS
             new SolidStep(Color.BLACK, "Black — look for bright pixels"),
             new SolidStep(Color.WHITE, "White — look for dark spots"),
             new SolidStep(Color.RED,   "Red — burn-in / tint"),
             new SolidStep(Color.GREEN, "Green — uniformity"),
             new SolidStep(Color.BLUE,  "Blue — uniformity"),
 
-            // GRADIENT (BANDING)
             new DrawableStep(
                     DisplayPatterns.makeGradient(),
                     "Gradient — look for banding"
             ),
 
-            // CHECKERBOARD (MURA)
             new DrawableStep(
                     DisplayPatterns.makeCheckerboard(),
                     "Checkerboard — look for stains / mura"
             ),
 
-            // BURN-IN STRESS
             new DrawableStep(
                     DisplayPatterns.makeBurnInCycle(),
                     "Burn-in stress pattern"
@@ -86,125 +87,113 @@ public class DisplayProTestActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         showOledWarning();
     }
 
     @Override
     public void onBackPressed() {
-        // Disabled intentionally — test must complete
+        // disabled intentionally
     }
 
     // ============================================================
-// OLED WARNING — GEL STYLE
-// ============================================================
-private void showOledWarning() {
+    // OLED WARNING — GEL STYLE
+    // ============================================================
+    private void showOledWarning() {
 
-    AlertDialog.Builder b =
-            new AlertDialog.Builder(
-                    this,
-                    android.R.style.Theme_Material_Dialog_NoActionBar
-            );
-    b.setCancelable(false);
+        AlertDialog.Builder b =
+                new AlertDialog.Builder(this,
+                        android.R.style.Theme_Material_Dialog_NoActionBar);
 
-    // ROOT
-    LinearLayout root = new LinearLayout(this);
-    root.setOrientation(LinearLayout.VERTICAL);
-    root.setPadding(dp(24), dp(22), dp(24), dp(18));
+        b.setCancelable(false);
 
-    GradientDrawable bg = new GradientDrawable();
-    bg.setColor(0xFF101010);              // GEL black
-    bg.setCornerRadius(dp(18));
-    bg.setStroke(dp(4), 0xFFFFD700);      // GEL gold
-    root.setBackground(bg);
+        LinearLayout rootBox = new LinearLayout(this);
+        rootBox.setOrientation(LinearLayout.VERTICAL);
+        rootBox.setPadding(dp(24), dp(22), dp(24), dp(18));
 
-    // TITLE
-    TextView title = new TextView(this);
-    title.setText("Display Stress Test");
-    title.setTextColor(0xFFFFFFFF);
-    title.setTextSize(18f);
-    title.setTypeface(null, Typeface.BOLD);
-    title.setGravity(Gravity.CENTER);
-    title.setPadding(0, 0, 0, dp(12));
-    root.addView(title);
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(0xFF101010);
+        bg.setCornerRadius(dp(18));
+        bg.setStroke(dp(4), 0xFFFFD700);
+        rootBox.setBackground(bg);
 
-    // MESSAGE
-    TextView msg = new TextView(this);
-    msg.setText(
-            "This test drives the display at maximum brightness\n" +
-            "and may temporarily stress OLED panels.\n\n" +
-            "Proceed only if you understand and accept this."
-    );
-    msg.setTextColor(0xFFDDDDDD);
-    msg.setTextSize(15f);
-    msg.setGravity(Gravity.CENTER);
-    msg.setPadding(0, 0, 0, dp(16));
-    root.addView(msg);
+        TextView title = new TextView(this);
+        title.setText("Display Stress Test");
+        title.setTextColor(Color.WHITE);
+        title.setTextSize(18f);
+        title.setTypeface(null, Typeface.BOLD);
+        title.setGravity(Gravity.CENTER);
+        title.setPadding(0, 0, 0, dp(12));
+        rootBox.addView(title);
 
-    // BUTTON ROW
-    LinearLayout buttons = new LinearLayout(this);
-    buttons.setOrientation(LinearLayout.HORIZONTAL);
-    buttons.setGravity(Gravity.END);
-
-    // CANCEL
-    Button cancel = new Button(this);
-    cancel.setText("CANCEL");
-    cancel.setAllCaps(false);
-    cancel.setTextColor(0xFFFFD700);
-
-    GradientDrawable cancelBg = new GradientDrawable();
-    cancelBg.setColor(0xFF202020);
-    cancelBg.setCornerRadius(dp(12));
-    cancelBg.setStroke(dp(2), 0xFFFFD700);
-    cancel.setBackground(cancelBg);
-
-    // START
-    Button start = new Button(this);
-    start.setText("START");
-    start.setAllCaps(false);
-    start.setTextColor(0xFFFFFFFF);
-
-    GradientDrawable startBg = new GradientDrawable();
-    startBg.setColor(0xFF39FF14);         // GEL green
-    startBg.setCornerRadius(dp(12));
-    startBg.setStroke(dp(3), 0xFFFFD700);
-    start.setBackground(startBg);
-
-    buttons.addView(cancel);
-    buttons.addView(space(dp(12)));
-    buttons.addView(start);
-    root.addView(buttons);
-
-    b.setView(root);
-
-    AlertDialog d = b.create();
-    if (d.getWindow() != null)
-        d.getWindow().setBackgroundDrawable(
-                new ColorDrawable(Color.TRANSPARENT)
+        TextView msg = new TextView(this);
+        msg.setText(
+                "This test drives the display at maximum brightness\n" +
+                "and may temporarily stress OLED panels.\n\n" +
+                "Proceed only if you understand and accept this."
         );
-    d.show();
+        msg.setTextColor(0xFFDDDDDD);
+        msg.setTextSize(15f);
+        msg.setGravity(Gravity.CENTER);
+        msg.setPadding(0, 0, 0, dp(16));
+        rootBox.addView(msg);
 
-    cancel.setOnClickListener(v -> {
-        d.dismiss();
-        finish();
-    });
+        LinearLayout buttons = new LinearLayout(this);
+        buttons.setOrientation(LinearLayout.HORIZONTAL);
+        buttons.setGravity(Gravity.END);
 
-    start.setOnClickListener(v -> {
-        d.dismiss();
-        initUiAndStart();
-    });
-}
+        Button cancel = new Button(this);
+        cancel.setText("CANCEL");
+        cancel.setAllCaps(false);
+        cancel.setTextColor(0xFFFFD700);
+
+        GradientDrawable cancelBg = new GradientDrawable();
+        cancelBg.setColor(0xFF202020);
+        cancelBg.setCornerRadius(dp(12));
+        cancelBg.setStroke(dp(2), 0xFFFFD700);
+        cancel.setBackground(cancelBg);
+
+        Button start = new Button(this);
+        start.setText("START");
+        start.setAllCaps(false);
+        start.setTextColor(Color.WHITE);
+
+        GradientDrawable startBg = new GradientDrawable();
+        startBg.setColor(0xFF39FF14);
+        startBg.setCornerRadius(dp(12));
+        startBg.setStroke(dp(3), 0xFFFFD700);
+        start.setBackground(startBg);
+
+        buttons.addView(cancel);
+        buttons.addView(space(dp(12)));
+        buttons.addView(start);
+
+        rootBox.addView(buttons);
+        b.setView(rootBox);
+
+        AlertDialog d = b.create();
+        if (d.getWindow() != null)
+            d.getWindow().setBackgroundDrawable(
+                    new ColorDrawable(Color.TRANSPARENT));
+
+        d.show();
+
+        cancel.setOnClickListener(v -> {
+            d.dismiss();
+            finish();
+        });
+
+        start.setOnClickListener(v -> {
+            d.dismiss();
+            initUiAndStart();
+        });
+    }
 
     // ============================================================
-    // INIT + START
+    // INIT + RUN
     // ============================================================
     private void initUiAndStart() {
 
-        // Fullscreen + brightness lock
-        getWindow().addFlags(
-                WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
-        );
-
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         WindowManager.LayoutParams lp = getWindow().getAttributes();
         lp.screenBrightness = 1f;
         getWindow().setAttributes(lp);
@@ -215,25 +204,21 @@ private void showOledWarning() {
         hint = new TextView(this);
         hint.setTextColor(Color.WHITE);
         hint.setTextSize(16f);
-        hint.setPadding(24, 24, 24, 24);
-        hint.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+        hint.setPadding(dp(24), dp(24), dp(24), dp(24));
+        hint.setGravity(Gravity.CENTER);
 
         root.addView(hint);
         setContentView(root);
 
         startTimeMs = System.currentTimeMillis();
-        loopIndex = 0;
         stepIndex = 0;
+        loopIndex = 0;
 
         runStep();
     }
 
-    // ============================================================
-    // TEST FLOW
-    // ============================================================
     private void runStep() {
 
-        // OLED safeguard
         if (System.currentTimeMillis() - startTimeMs > MAX_RUNTIME_MS) {
             finishTest();
             return;
@@ -242,7 +227,6 @@ private void showOledWarning() {
         if (stepIndex >= steps.length) {
             stepIndex = 0;
             loopIndex++;
-
             if (loopIndex >= LOOP_COUNT) {
                 finishTest();
                 return;
@@ -252,40 +236,126 @@ private void showOledWarning() {
         TestStep s = steps[stepIndex];
         s.apply(root);
         hint.setText(
-                s.label +
-                "\n\nCycle " + (loopIndex + 1) + " / " + LOOP_COUNT
+                s.label + "\n\nCycle " + (loopIndex + 1) + " / " + LOOP_COUNT
         );
 
         stepIndex++;
         h.postDelayed(this::runStep, STEP_DURATION_MS);
     }
 
+    // ============================================================
+    // FINAL USER QUESTION — GEL STYLE
+    // ============================================================
     private void finishTest() {
 
-    new AlertDialog.Builder(this)
-            .setTitle("Visual Inspection Result")
-            .setMessage(
-                    "Did you notice any of the following?\n\n" +
-                    "• Burn-in / image retention\n" +
-                    "• Color banding or steps\n" +
-                    "• Screen stains / mura\n" +
-                    "• Uneven brightness or tint"
-            )
-            .setCancelable(false)
-            .setPositiveButton("YES — Issues noticed", (d, w) -> {
-                Intent i = new Intent();
-                i.putExtra("display_issues", true);
-                setResult(RESULT_OK, i);
-                finish();
-            })
-            .setNegativeButton("NO — Screen looks OK", (d, w) -> {
-                Intent i = new Intent();
-                i.putExtra("display_issues", false);
-                setResult(RESULT_OK, i);
-                finish();
-            })
-            .show();
-}
+        AlertDialog.Builder b =
+                new AlertDialog.Builder(this,
+                        android.R.style.Theme_Material_Dialog_NoActionBar);
+
+        b.setCancelable(false);
+
+        LinearLayout box = new LinearLayout(this);
+        box.setOrientation(LinearLayout.VERTICAL);
+        box.setPadding(dp(24), dp(22), dp(24), dp(18));
+
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(0xFF101010);
+        bg.setCornerRadius(dp(18));
+        bg.setStroke(dp(4), 0xFFFFD700);
+        box.setBackground(bg);
+
+        TextView title = new TextView(this);
+        title.setText("Visual Inspection Result");
+        title.setTextColor(Color.WHITE);
+        title.setTextSize(18f);
+        title.setTypeface(null, Typeface.BOLD);
+        title.setGravity(Gravity.CENTER);
+        title.setPadding(0, 0, 0, dp(12));
+        box.addView(title);
+
+        TextView msg = new TextView(this);
+        msg.setText(
+                "Did you notice any of the following?\n\n" +
+                "• Burn-in / image retention\n" +
+                "• Color banding or gradient steps\n" +
+                "• Screen stains / mura\n" +
+                "• Uneven brightness or tint"
+        );
+        msg.setTextColor(0xFFDDDDDD);
+        msg.setTextSize(15f);
+        msg.setGravity(Gravity.CENTER);
+        msg.setPadding(0, 0, 0, dp(16));
+        box.addView(msg);
+
+        LinearLayout buttons = new LinearLayout(this);
+        buttons.setOrientation(LinearLayout.HORIZONTAL);
+        buttons.setGravity(Gravity.END);
+
+        Button no = new Button(this);
+        no.setText("NO — Screen OK");
+        no.setAllCaps(false);
+        no.setTextColor(0xFFFFD700);
+
+        GradientDrawable noBg = new GradientDrawable();
+        noBg.setColor(0xFF202020);
+        noBg.setCornerRadius(dp(12));
+        noBg.setStroke(dp(2), 0xFFFFD700);
+        no.setBackground(noBg);
+
+        Button yes = new Button(this);
+        yes.setText("YES — Issues noticed");
+        yes.setAllCaps(false);
+        yes.setTextColor(Color.WHITE);
+
+        GradientDrawable yesBg = new GradientDrawable();
+        yesBg.setColor(0xFFB00020);
+        yesBg.setCornerRadius(dp(12));
+        yesBg.setStroke(dp(3), 0xFFFFD700);
+        yes.setBackground(yesBg);
+
+        buttons.addView(no);
+        buttons.addView(space(dp(12)));
+        buttons.addView(yes);
+        box.addView(buttons);
+
+        b.setView(box);
+
+        AlertDialog d = b.create();
+        if (d.getWindow() != null)
+            d.getWindow().setBackgroundDrawable(
+                    new ColorDrawable(Color.TRANSPARENT));
+
+        d.show();
+
+        no.setOnClickListener(v -> {
+            Intent i = new Intent();
+            i.putExtra("display_issues", false);
+            setResult(RESULT_OK, i);
+            finish();
+        });
+
+        yes.setOnClickListener(v -> {
+            Intent i = new Intent();
+            i.putExtra("display_issues", true);
+            setResult(RESULT_OK, i);
+            finish();
+        });
+    }
+
+    // ============================================================
+    // HELPERS
+    // ============================================================
+    private int dp(int v) {
+        float d = getResources().getDisplayMetrics().density;
+        return (int) (v * d + 0.5f);
+    }
+
+    private View space(int w) {
+        View v = new View(this);
+        v.setLayoutParams(new LinearLayout.LayoutParams(w, 1));
+        return v;
+    }
+
     // ============================================================
     // STEP TYPES
     // ============================================================
@@ -297,26 +367,16 @@ private void showOledWarning() {
 
     private static final class SolidStep extends TestStep {
         final int color;
-        SolidStep(int c, String l) {
-            super(l);
-            color = c;
-        }
-
-        @Override
-        void apply(FrameLayout root) {
+        SolidStep(int c, String l) { super(l); color = c; }
+        @Override void apply(FrameLayout root) {
             root.setBackgroundColor(color);
         }
     }
 
     private static final class DrawableStep extends TestStep {
         final Drawable d;
-        DrawableStep(Drawable dr, String l) {
-            super(l);
-            d = dr;
-        }
-
-        @Override
-        void apply(FrameLayout root) {
+        DrawableStep(Drawable dr, String l) { super(l); d = dr; }
+        @Override void apply(FrameLayout root) {
             root.setBackground(d);
         }
     }

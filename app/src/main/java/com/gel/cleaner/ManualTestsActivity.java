@@ -11736,67 +11736,6 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
         enableSingleExportButton();
         return;
     }
-}
-
-    appendHtml("<br>");
-    logLine();
-    logSection("LAB 6 PRO — Display Color & Uniformity");
-    logLine();
-
-    if (resultCode == RESULT_OK) {
-
-        logOk("Display stress & visual inspection completed.");
-        logOk("Solid colors, gradients, checkerboard and burn-in patterns were displayed.");
-
-        logInfo(
-                "This test helps identify issues such as:\n" +
-                "• Color banding or gradient steps\n" +
-                "• Screen blotches or mura\n" +
-                "• Burn-in or image retention\n" +
-                "• Uneven brightness or tint shifts"
-        );
-
-        logLabelOkValue(
-                "Visual inspection",
-                "No critical visual artifacts observed during the test"
-        );
-
-    } else {
-
-        logWarn("Display color / uniformity test was interrupted.");
-
-        logWarn(
-                "Visual inspection was not completed.\n" +
-                "Re-running the test is recommended for reliable results."
-        );
-    }
-
-    appendHtml("<br>");
-    logLine();
-
-    // ------------------------------------------------------------
-    // LAB 6 — FINAL VERDICT
-    // ------------------------------------------------------------
-    logSection("LAB 6 — Final Result");
-    logLine();
-
-    logOk(
-            "Display touch integrity and visual artifact inspection completed."
-    );
-
-    logInfo(
-            "LAB 6 evaluates human-visible behavior.\n" +
-            "Some defects (burn-in, tint, banding) may only be noticeable\n" +
-            "under specific brightness or viewing conditions."
-    );
-
-    appendHtml("<br>");
-    logOk("LAB 6 finished.");
-    logLine();
-
-    enableSingleExportButton();
-    return;
-}
 
     // ============================================================
     // LAB 7 — Rotation + Proximity Sensors

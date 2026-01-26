@@ -131,40 +131,53 @@ public class DisplayProTestActivity extends Activity {
                 "and may temporarily stress OLED panels.\n\n" +
                 "Proceed only if you understand and accept this."
         );
-        msg.setTextColor(0xFFDDDDDD);
+        msg.setTextColor(0xFF39FF14); // 🟢 neon green
         msg.setTextSize(15f);
         msg.setGravity(Gravity.CENTER);
         msg.setPadding(0, 0, 0, dp(16));
         rootBox.addView(msg);
 
         LinearLayout buttons = new LinearLayout(this);
-        buttons.setOrientation(LinearLayout.HORIZONTAL);
-        buttons.setGravity(Gravity.END);
+buttons.setOrientation(LinearLayout.HORIZONTAL);
+buttons.setGravity(Gravity.CENTER);
+buttons.setPadding(0, dp(8), 0, 0);
+rootBox.addView(buttons);
 
         Button cancel = new Button(this);
-        cancel.setText("CANCEL");
-        cancel.setAllCaps(false);
-        cancel.setTextColor(0xFFFFD700);
+cancel.setText("CANCEL");
+cancel.setAllCaps(false);
+cancel.setTextColor(Color.WHITE);
+cancel.setTextSize(15f);
 
-        GradientDrawable cancelBg = new GradientDrawable();
-        cancelBg.setColor(0xFF202020);
-        cancelBg.setCornerRadius(dp(12));
-        cancelBg.setStroke(dp(2), 0xFFFFD700);
-        cancel.setBackground(cancelBg);
+GradientDrawable cancelBg = new GradientDrawable();
+cancelBg.setColor(0xFFB00020); // 🔴 κόκκινο
+cancelBg.setCornerRadius(dp(12));
+cancelBg.setStroke(dp(3), 0xFFFFD700);
+cancel.setBackground(cancelBg);
+
+LinearLayout.LayoutParams lpCancel =
+        new LinearLayout.LayoutParams(0, dp(56), 1f);
+lpCancel.setMargins(0, 0, dp(8), 0);
+cancel.setLayoutParams(lpCancel);
 
         Button start = new Button(this);
-        start.setText("START");
-        start.setAllCaps(false);
-        start.setTextColor(Color.WHITE);
+start.setText("START");
+start.setAllCaps(false);
+start.setTextColor(Color.WHITE);
+start.setTextSize(15f);
 
-        GradientDrawable startBg = new GradientDrawable();
-        startBg.setColor(0xFF39FF14);
-        startBg.setCornerRadius(dp(12));
-        startBg.setStroke(dp(3), 0xFFFFD700);
-        start.setBackground(startBg);
+GradientDrawable startBg = new GradientDrawable();
+startBg.setColor(0xFF0F8A3B); // 🟢 σκούρο πράσινο
+startBg.setCornerRadius(dp(12));
+startBg.setStroke(dp(3), 0xFFFFD700);
+start.setBackground(startBg);
+
+LinearLayout.LayoutParams lpStart =
+        new LinearLayout.LayoutParams(0, dp(56), 1f);
+lpStart.setMargins(dp(8), 0, 0, 0);
+start.setLayoutParams(lpStart);
 
         buttons.addView(cancel);
-        buttons.addView(space(dp(12)));
         buttons.addView(start);
 
         rootBox.addView(buttons);
@@ -292,29 +305,44 @@ public class DisplayProTestActivity extends Activity {
         buttons.setGravity(Gravity.END);
 
         Button no = new Button(this);
-        no.setText("NO — Screen OK");
-        no.setAllCaps(false);
-        no.setTextColor(0xFFFFD700);
+no.setText("NO\nScreen OK");
+no.setAllCaps(false);
+no.setSingleLine(false);
+no.setMaxLines(2);
+no.setGravity(Gravity.CENTER);
+no.setTextColor(Color.WHITE);
+no.setTextSize(15f);
 
-        GradientDrawable noBg = new GradientDrawable();
-        noBg.setColor(0xFF202020);
-        noBg.setCornerRadius(dp(12));
-        noBg.setStroke(dp(2), 0xFFFFD700);
-        no.setBackground(noBg);
+GradientDrawable noBg = new GradientDrawable();
+noBg.setColor(0xFF0F8A3B); // 🟢 ΠΡΑΣΙΝΟ
+noBg.setCornerRadius(dp(12));
+noBg.setStroke(dp(3), 0xFFFFD700);
+no.setBackground(noBg);
+
+LinearLayout.LayoutParams lpNo =
+        new LinearLayout.LayoutParams(0, dp(56), 1f);
+no.setLayoutParams(lpNo);
 
         Button yes = new Button(this);
-        yes.setText("YES — Issues noticed");
-        yes.setAllCaps(false);
-        yes.setTextColor(Color.WHITE);
+yes.setText("YES\nIssues noticed");
+yes.setAllCaps(false);
+yes.setSingleLine(false);
+yes.setMaxLines(2);
+yes.setGravity(Gravity.CENTER);
+yes.setTextColor(Color.WHITE);
+yes.setTextSize(15f);
 
-        GradientDrawable yesBg = new GradientDrawable();
-        yesBg.setColor(0xFFB00020);
-        yesBg.setCornerRadius(dp(12));
-        yesBg.setStroke(dp(3), 0xFFFFD700);
-        yes.setBackground(yesBg);
+GradientDrawable yesBg = new GradientDrawable();
+yesBg.setColor(0xFFB00020); // 🔴 ΚΟΚΚΙΝΟ
+yesBg.setCornerRadius(dp(12));
+yesBg.setStroke(dp(3), 0xFFFFD700);
+yes.setBackground(yesBg);
+
+LinearLayout.LayoutParams lpYes =
+        new LinearLayout.LayoutParams(0, dp(56), 1f);
+yes.setLayoutParams(lpYes);
 
         buttons.addView(no);
-        buttons.addView(space(dp(12)));
         buttons.addView(yes);
         box.addView(buttons);
 

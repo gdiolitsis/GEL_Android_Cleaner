@@ -3989,7 +3989,7 @@ for (Lab8Cam c : cams) {
     final Lab8Overall overall = new Lab8Overall();
     overall.total = cams.size();
     
-    // ✅ Save state for LAB 8.1
+    //  Save state for LAB 8.1
 lab8CamsFor81 = cams;
 lab8CmFor81 = cm;
 
@@ -4154,7 +4154,9 @@ private void lab8RunNextCamera(
             logInfo(
                     "In the next step we can analyze photo & video capabilities\n" +
                     "(resolution, formats, FPS, RAW support, slow-motion, etc)."
-            );          
+            );
+            return;
+        }
 
         //  FAIL PATH
         logLabelErrorValue("Camera subsystem", "NOT reliable");
@@ -4699,7 +4701,7 @@ private static class Lab8Session {
 }
 
 // ============================================================
-// LAB 8.1 — PROMPT (FINAL)  ✅ CREATE THIS METHOD
+// LAB 8.1 — PROMPT (FINAL)   CREATE THIS METHOD
 // ============================================================
 private void showLab8_1Prompt() {
 
@@ -4807,7 +4809,7 @@ private void showLab8_1Prompt() {
 }
 
 // ============================================================
-// LAB 8.1 — CAPABILITIES MAP (NO SCORE) ✅ CREATE THIS METHOD
+// LAB 8.1 — CAPABILITIES MAP (NO SCORE)  CREATE THIS METHOD
 // ============================================================
 private void startLab8_1CameraCapabilities() {
 

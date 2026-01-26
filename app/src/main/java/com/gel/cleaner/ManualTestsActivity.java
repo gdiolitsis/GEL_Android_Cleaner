@@ -4080,7 +4080,7 @@ private void lab8RunNextCamera(
 ) {
 
     // ====================================================
-    // ALL CAMERAS DONE → FINAL SUMMARY + VERDICT
+    // ALL CAMERAS DONE  FINAL SUMMARY + VERDICT
     // ====================================================
     if (idx[0] >= cams.size()) {
 
@@ -4148,13 +4148,13 @@ private void lab8RunNextCamera(
             );
 
             // ----------------------------------------------------
-            // PROMPT → LAB 8.1 (ΜΟΝΟ ΕΔΩ)
+            // PROMPT  LAB 8.1 ( )
             // ----------------------------------------------------
             runOnUiThread(() -> showLab8_1Prompt());
             return;
         }
 
-        // ❌ FAIL PATH
+        //  FAIL PATH
         logLabelErrorValue("Camera subsystem", "NOT reliable");
         logInfo("One or more cameras failed basic operation checks.");
 
@@ -4694,6 +4694,112 @@ private static class Lab8Session {
     int latencyCount;
 
     long lastFrameTsNs;
+}
+
+// ============================================================
+// LAB 8.1 — Proceed prompt
+// ============================================================
+private void showLab8_1Prompt() {
+
+    AlertDialog.Builder b =
+            new AlertDialog.Builder(
+                    ManualTestsActivity.this,
+                    android.R.style.Theme_Material_Dialog_NoActionBar
+            );
+
+    LinearLayout root = new LinearLayout(this);
+    root.setOrientation(LinearLayout.VERTICAL);
+    root.setPadding(dp(20), dp(18), dp(20), dp(16));
+
+    GradientDrawable bg = new GradientDrawable();
+    bg.setColor(0xFF101010);
+    bg.setCornerRadius(dp(18));
+    bg.setStroke(dp(4), 0xFFFFD700);
+    root.setBackground(bg);
+
+    TextView title = new TextView(this);
+    title.setText("Proceed to LAB 8.1?");
+    title.setTextColor(0xFFFFFFFF);
+    title.setTextSize(17f);
+    title.setTypeface(null, Typeface.BOLD);
+    title.setGravity(Gravity.CENTER);
+    title.setPadding(0, 0, 0, dp(10));
+    root.addView(title);
+
+    TextView msg = new TextView(this);
+    msg.setText(
+            "LAB 8.1 will evaluate declared and effective\n" +
+            "camera capabilities such as:\n\n" +
+            "• Photo & video resolutions\n" +
+            "• FPS ranges\n" +
+            "• RAW / high-speed support\n" +
+            "• Format availability\n\n" +
+            "This is a capability analysis — not a stress test."
+    );
+    msg.setTextColor(0xFFDDDDDD);
+    msg.setTextSize(14f);
+    msg.setGravity(Gravity.CENTER);
+    root.addView(msg);
+
+    LinearLayout buttons = new LinearLayout(this);
+    buttons.setOrientation(LinearLayout.HORIZONTAL);
+    buttons.setPadding(0, dp(14), 0, 0);
+
+    Button yes = new Button(this);
+    yes.setText("CONTINUE");
+    yes.setAllCaps(false);
+    yes.setTextColor(0xFFFFFFFF);
+    GradientDrawable yesBg = new GradientDrawable();
+    yesBg.setColor(0xFF0F8A3B);
+    yesBg.setCornerRadius(dp(14));
+    yesBg.setStroke(dp(3), 0xFFFFD700);
+    yes.setBackground(yesBg);
+
+    Button no = new Button(this);
+    no.setText("SKIP");
+    no.setAllCaps(false);
+    no.setTextColor(0xFFFFFFFF);
+    GradientDrawable noBg = new GradientDrawable();
+    noBg.setColor(0xFF444444);
+    noBg.setCornerRadius(dp(14));
+    noBg.setStroke(dp(3), 0xFFFFD700);
+    no.setBackground(noBg);
+
+    LinearLayout.LayoutParams lp =
+            new LinearLayout.LayoutParams(0, dp(54), 1f);
+    lp.setMargins(dp(6), 0, dp(6), 0);
+
+    yes.setLayoutParams(lp);
+    no.setLayoutParams(lp);
+
+    buttons.addView(yes);
+    buttons.addView(no);
+    root.addView(buttons);
+
+    b.setView(root);
+    b.setCancelable(false);
+
+    AlertDialog d = b.create();
+    if (d.getWindow() != null)
+        d.getWindow().setBackgroundDrawable(
+                new ColorDrawable(Color.TRANSPARENT)
+        );
+    d.show();
+
+    yes.setOnClickListener(v -> {
+        d.dismiss();
+        startLab8_1CameraCapabilities();
+    });
+
+    no.setOnClickListener(v -> {
+        d.dismiss();
+        appendHtml("<br>");
+        logInfo("LAB 8.1 was skipped by user.");
+        logLine();
+        logLabelOkValue("Lab 8", "Finished");
+        logLine();
+        enableSingleExportButton();
+    });
 }
 
 /* ============================================================

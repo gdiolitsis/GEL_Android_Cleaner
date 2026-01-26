@@ -180,7 +180,6 @@ start.setLayoutParams(lpStart);
         buttons.addView(cancel);
         buttons.addView(start);
 
-        rootBox.addView(buttons);
         b.setView(rootBox);
 
         AlertDialog d = b.create();

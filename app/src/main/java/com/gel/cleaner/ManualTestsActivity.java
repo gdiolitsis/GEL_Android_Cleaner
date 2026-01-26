@@ -1167,6 +1167,12 @@ float d = getResources().getDisplayMetrics().density;
 return (int) (v * d + 0.5f);
 }
 
+private View space(int w) {
+    View v = new View(this);
+    v.setLayoutParams(new LinearLayout.LayoutParams(w, 1));
+    return v;
+}
+
 // ============================================================
 // FORMAT HELPERS
 // ============================================================
@@ -4109,54 +4115,170 @@ private void lab8RunNextCamera(
         else
             logLabelWarnValue("Frame stream issues", String.valueOf(overall.streamIssueCount));
 
-        // ====================================================
-        // LAB 8 — FINAL VERDICT / GATE (PROCEED TO 8.1)
-        // ====================================================
-        appendHtml("<br>");
-        logSection("LAB 8 — Final Evaluation");
-        logLine();
+// ====================================================
+// LAB 8 — FINAL VERDICT / GATE (PROCEED TO 8.1)
+// ====================================================
+appendHtml("<br>");
+logSection("LAB 8 — Final Evaluation");
+logLine();
 
-        boolean cameraSubsystemOk =
-                overall.total > 0 &&
-                overall.previewFailCount == 0 &&
-                overall.previewOkCount == overall.total;
+boolean cameraSubsystemOk =
+        overall.total > 0 &&
+        overall.previewFailCount == 0 &&
+        overall.previewOkCount == overall.total;
 
-        if (cameraSubsystemOk) {
+if (cameraSubsystemOk) {
 
-            logLabelOkValue("Camera subsystem", "Operational");
+    logLabelOkValue("Camera subsystem", "Operational");
 
-            if (overall.streamIssueCount == 0) {
-                logLabelOkValue("Live stream stability", "OK");
-            } else {
-                logLabelWarnValue("Live stream stability", "Minor anomalies detected");
-            }
-
-            if (overall.torchFailCount == 0)
-                logLabelOkValue("Flash subsystem", "OK (where available)");
-            else
-                logLabelWarnValue("Flash subsystem", "Some cameras have no flash / torch issues");
-
-            logOk("Your device meets the criteria to evaluate camera capabilities.");
-            logOk("You may proceed to LAB 8.1 — Camera Capability Evaluation.");
-            logInfo("Note: Capability testing will proceed without flash where not available.");
-
-        } else {
-
-            logLabelErrorValue("Camera subsystem", "NOT reliable");
-            logInfo("One or more cameras failed basic operation checks.");
-            logInfo("Please inspect/repair the camera module before proceeding with capability testing.");
-        }
-
-        // ====================================================
-        // LAB 8 — END
-        // ====================================================
-        
-        appendHtml("<br>");
-        logLabelOkValue("Lab 8", "Finished");
-        logLine();
-        enableSingleExportButton();
-        return;
+    if (overall.streamIssueCount == 0) {
+        logLabelOkValue("Live stream stability", "OK");
+    } else {
+        logLabelWarnValue("Live stream stability", "Minor anomalies detected");
     }
+
+    if (overall.torchFailCount == 0)
+        logLabelOkValue("Flash subsystem", "OK (where available)");
+    else
+        logLabelWarnValue(
+                "Flash subsystem",
+                "Some cameras have no flash / torch issues"
+        );
+
+    logOk("Your device meets the criteria to evaluate camera capabilities.");
+    logInfo(
+            "In the next step we can analyze photo & video capabilities\n" +
+            "(resolution, formats, FPS, RAW support, slow-motion, etc)."
+    );
+
+    // ----------------------------------------------------
+    // PROMPT — CONTINUE TO LAB 8.1
+    // ----------------------------------------------------
+    runOnUiThread(() -> {
+
+        AlertDialog.Builder b =
+                new AlertDialog.Builder(
+                        ManualTestsActivity.this,
+                        android.R.style.Theme_Material_Dialog_NoActionBar
+                );
+
+        LinearLayout root = new LinearLayout(this);
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.setPadding(dp(20), dp(18), dp(20), dp(16));
+
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(0xFF101010);
+        bg.setCornerRadius(dp(18));
+        bg.setStroke(dp(4), 0xFFFFD700);
+        root.setBackground(bg);
+
+        TextView title = new TextView(this);
+        title.setText("Proceed to LAB 8.1?");
+        title.setTextColor(0xFFFFFFFF);
+        title.setTextSize(17f);
+        title.setTypeface(null, Typeface.BOLD);
+        title.setGravity(Gravity.CENTER);
+        title.setPadding(0, 0, 0, dp(10));
+        root.addView(title);
+
+        TextView msg = new TextView(this);
+        msg.setText(
+                "LAB 8.1 will evaluate declared and effective\n" +
+                "camera capabilities such as:\n\n" +
+                "• Photo & video resolutions\n" +
+                "• FPS ranges\n" +
+                "• RAW / high-speed support\n" +
+                "• Format availability\n\n" +
+                "This is a capability analysis — not a stress test."
+        );
+        msg.setTextColor(0xFFDDDDDD);
+        msg.setTextSize(14f);
+        msg.setGravity(Gravity.CENTER);
+        root.addView(msg);
+
+        LinearLayout buttons = new LinearLayout(this);
+        buttons.setOrientation(LinearLayout.HORIZONTAL);
+        buttons.setPadding(0, dp(14), 0, 0);
+
+        Button yes = new Button(this);
+        yes.setText("CONTINUE");
+        yes.setAllCaps(false);
+        yes.setTextColor(0xFFFFFFFF);
+        GradientDrawable yesBg = new GradientDrawable();
+        yesBg.setColor(0xFF0F8A3B);
+        yesBg.setCornerRadius(dp(14));
+        yesBg.setStroke(dp(3), 0xFFFFD700);
+        yes.setBackground(yesBg);
+
+        Button no = new Button(this);
+        no.setText("SKIP");
+        no.setAllCaps(false);
+        no.setTextColor(0xFFFFFFFF);
+        GradientDrawable noBg = new GradientDrawable();
+        noBg.setColor(0xFF444444);
+        noBg.setCornerRadius(dp(14));
+        noBg.setStroke(dp(3), 0xFFFFD700);
+        no.setBackground(noBg);
+
+        LinearLayout.LayoutParams lp =
+                new LinearLayout.LayoutParams(0, dp(54), 1f);
+        lp.setMargins(dp(6), 0, dp(6), 0);
+
+        yes.setLayoutParams(lp);
+        no.setLayoutParams(lp);
+
+        buttons.addView(yes);
+        buttons.addView(no);
+        root.addView(buttons);
+
+        b.setView(root);
+        b.setCancelable(false);
+
+        AlertDialog d = b.create();
+        if (d.getWindow() != null)
+            d.getWindow().setBackgroundDrawable(
+                    new ColorDrawable(Color.TRANSPARENT)
+            );
+        d.show();
+
+        yes.setOnClickListener(v -> {
+            d.dismiss();
+            startLab8_1CameraCapabilities(); //      8.1
+        });
+
+        no.setOnClickListener(v -> {
+            d.dismiss();
+
+            appendHtml("<br>");
+            logInfo("LAB 8.1 was skipped by user.");
+            logLine();
+            logLabelOkValue("Lab 8", "Finished");
+            logLine();
+            enableSingleExportButton();
+        });
+    });
+
+    return;
+}
+
+// ----------------------------------------------------
+// FAIL PATH — DO NOT PROCEED
+// ----------------------------------------------------
+logLabelErrorValue("Camera subsystem", "NOT reliable");
+logInfo("One or more cameras failed basic operation checks.");
+logInfo(
+        "Please inspect or repair the camera module before proceeding\n" +
+        "with capability testing."
+);
+
+// ====================================================
+// LAB 8 — END (FAIL PATH ONLY)
+// ====================================================
+appendHtml("<br>");
+logLabelOkValue("Lab 8", "Finished");
+logLine();
+enableSingleExportButton();
+return;
 
     // ====================================================
     // NEXT CAMERA
@@ -11584,6 +11706,39 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
 // LAB 6 PRO — Display Color / Uniformity / Artifacts
 // ============================================================
 if (requestCode == REQ_LAB6_COLOR) {
+
+    appendHtml("<br>");
+    logLine();
+    logSection("LAB 6 PRO — Display Color & Uniformity");
+    logLine();
+
+    boolean issues =
+            data != null && data.getBooleanExtra("display_issues", false);
+
+    if (!issues) {
+        logOk("Visual inspection result", "No visible artifacts reported");
+        logOk("Display uniformity", "OK");
+        logOk("Burn-in / banding", "Not observed");
+    } else {
+        logWarn("Visual inspection result", "User reported visual anomalies");
+        logWarn("Burn-in / image retention");
+        logWarn("Color banding / gradient steps");
+        logWarn("Screen stains / mura / tint shift");
+    }
+
+    appendHtml("<br>");
+    logSection("LAB 6 — Final Result");
+    logLine();
+
+    logOk("Display touch and visual inspection completed.");
+
+    appendHtml("<br>");
+    logOk("LAB 6 finished.");
+    logLine();
+
+    enableSingleExportButton();
+    return;
+}
 
     appendHtml("<br>");
     logLine();

@@ -11672,29 +11672,25 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
         logLine();
 
         if (resultCode == RESULT_OK) {
-
             logOk("Touch grid test completed.");
             logOk("All screen zones responded to touch input.");
             logOk("No dead touch zones detected.");
-
         } else {
-
             logWarn("Touch grid test incomplete.");
             logWarn(
                     remaining + " screen zones did not respond to touch input (" +
                     remaining + " / " + total + ")."
             );
-
             logInfo("This may indicate:");
             logError("Localized digitizer dead zones");
             logWarn("Manual re-test is recommended to confirm behavior.");
         }
 
         appendHtml("<br>");
-        logInfo("Proceeding to LAB 6.1 — Color & Uniformity Test");
+        logInfo("Proceeding to LAB 6 PRO — Display Color & Uniformity");
         logLine();
 
-        // AUTO-START LAB 6.1
+        // AUTO-START LAB 6 PRO
         startActivityForResult(
                 new Intent(this, DisplayProTestActivity.class),
                 REQ_LAB6_COLOR
@@ -11702,42 +11698,44 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
         return;
     }
 
-// ============================================================
-// LAB 6 PRO — Display Color / Uniformity / Artifacts
-// ============================================================
-if (requestCode == REQ_LAB6_COLOR) {
+    // ============================================================
+    // LAB 6 PRO — DISPLAY COLOR / UNIFORMITY / ARTIFACTS
+    // ============================================================
+    if (requestCode == REQ_LAB6_COLOR) {
 
-    appendHtml("<br>");
-    logLine();
-    logSection("LAB 6 PRO — Display Color & Uniformity");
-    logLine();
+        appendHtml("<br>");
+        logLine();
+        logSection("LAB 6 PRO — Display Color & Uniformity");
+        logLine();
 
-    boolean issues =
-            data != null && data.getBooleanExtra("display_issues", false);
+        boolean issues =
+                data != null && data.getBooleanExtra("display_issues", false);
 
-    if (!issues) {
-        logOk("Visual inspection result", "No visible artifacts reported");
-        logOk("Display uniformity", "OK");
-        logOk("Burn-in / banding", "Not observed");
-    } else {
-        logWarn("Visual inspection result", "User reported visual anomalies");
-        logWarn("Burn-in / image retention");
-        logWarn("Color banding / gradient steps");
-        logWarn("Screen stains / mura / tint shift");
+        if (!issues) {
+            logOk("Visual inspection result", "No visible artifacts reported");
+            logOk("Display uniformity", "OK");
+            logOk("Burn-in / banding", "Not observed");
+        } else {
+            logWarn("Visual inspection result", "User reported visual anomalies");
+            logWarn("Possible findings:");
+            logWarn("• Burn-in / image retention");
+            logWarn("• Color banding / gradient steps");
+            logWarn("• Screen stains / mura / tint shift");
+        }
+
+        appendHtml("<br>");
+        logSection("LAB 6 — Final Result");
+        logLine();
+
+        logOk("Display touch integrity and visual inspection completed.");
+
+        appendHtml("<br>");
+        logOk("LAB 6 finished.");
+        logLine();
+
+        enableSingleExportButton();
+        return;
     }
-
-    appendHtml("<br>");
-    logSection("LAB 6 — Final Result");
-    logLine();
-
-    logOk("Display touch and visual inspection completed.");
-
-    appendHtml("<br>");
-    logOk("LAB 6 finished.");
-    logLine();
-
-    enableSingleExportButton();
-    return;
 }
 
     appendHtml("<br>");

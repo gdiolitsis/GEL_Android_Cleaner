@@ -12114,7 +12114,9 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
         logOk("Display touch integrity and visual inspection completed.");
 
         appendHtml("<br>");
-        log
+        logOk("LAB 6 finished.");
+        logLine();
+
         enableSingleExportButton();
         return;
     }
@@ -12172,4 +12174,7 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
 }
 
 // ============================================================
-// END OF CLA
+// END OF CLASS
+// ============================================================
+}
+

@@ -11,6 +11,9 @@ import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.style.ForegroundColorSpan;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
@@ -19,6 +22,8 @@ import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import com.gel.cleaner.AppLang;
 
 /**
  * ============================================================
@@ -95,110 +100,97 @@ public class DisplayProTestActivity extends Activity {
         // disabled intentionally
     }
 
-    // ============================================================
-    // OLED WARNING — GEL STYLE
-    // ============================================================
-    private void showOledWarning() {
+// ============================================================
+// OLED WARNING — GEL STYLE (APP LANGUAGE + AppTTS + MUTE)
+// ============================================================
+private void showOledWarning() {
 
-        AlertDialog.Builder b =
-                new AlertDialog.Builder(this,
-                        android.R.style.Theme_Material_Dialog_NoActionBar);
+    final boolean gr = AppLang.isGreek(this);
 
-        b.setCancelable(false);
+    AlertDialog.Builder b =
+            new AlertDialog.Builder(
+                    this,
+                    android.R.style.Theme_Material_Dialog_NoActionBar
+            );
+    b.setCancelable(false);
 
-        LinearLayout rootBox = new LinearLayout(this);
-        rootBox.setOrientation(LinearLayout.VERTICAL);
-        rootBox.setPadding(dp(24), dp(22), dp(24), dp(18));
+    // ROOT (helper)
+    LinearLayout root = buildGELPopupRoot(this);
 
-        GradientDrawable bg = new GradientDrawable();
-        bg.setColor(0xFF101010);
-        bg.setCornerRadius(dp(18));
-        bg.setStroke(dp(4), 0xFFFFD700);
-        rootBox.setBackground(bg);
+    // HEADER (helper)
+    root.addView(
+            buildPopupHeaderWithMute(
+                    this,
+                    gr ? "Δοκιμή Καταπόνησης Οθόνης" : "Display Stress Test",
+                    AppTTS::stop
+            )
+    );
 
-        TextView title = new TextView(this);
-        title.setText("Display Stress Test");
-        title.setTextColor(Color.WHITE);
-        title.setTextSize(18f);
-        title.setTypeface(null, Typeface.BOLD);
-        title.setGravity(Gravity.CENTER);
-        title.setPadding(0, 0, 0, dp(12));
-        rootBox.addView(title);
+    // MESSAGE
+    final String text =
+            gr
+            ? "Η δοκιμή αυτή οδηγεί την οθόνη στη μέγιστη φωτεινότητα\n"
+              + "και μπορεί να καταπονήσει προσωρινά πάνελ OLED.\n\n"
+              + "Συνέχισε μόνο αν κατανοείς και αποδέχεσαι τον κίνδυνο."
+            : "This test drives the display at maximum brightness\n"
+              + "and may temporarily stress OLED panels.\n\n"
+              + "Proceed only if you understand and accept this.";
 
-        TextView msg = new TextView(this);
-        msg.setText(
-                "This test drives the display at maximum brightness\n" +
-                "and may temporarily stress OLED panels.\n\n" +
-                "Proceed only if you understand and accept this."
+    TextView msg = new TextView(this);
+    msg.setText(text);
+    msg.setTextColor(0xFF39FF14);
+    msg.setTextSize(15f);
+    msg.setGravity(Gravity.CENTER);
+    msg.setPadding(0, 0, 0, dp(16));
+    root.addView(msg);
+
+    // BUTTONS
+    LinearLayout buttons = new LinearLayout(this);
+    buttons.setOrientation(LinearLayout.HORIZONTAL);
+    buttons.setGravity(Gravity.CENTER);
+
+    // CANCEL
+    Button cancel = gelButton(
+            this,
+            gr ? "ΑΚΥΡΩΣΗ" : "CANCEL",
+            0xFFB00020
+    );
+
+    // START
+    Button start = gelButton(
+            this,
+            gr ? "ΕΝΑΡΞΗ" : "START",
+            0xFF0F8A3B
+    );
+
+    setDualButtonLayout(cancel, start, buttons);
+    root.addView(buttons);
+
+    b.setView(root);
+
+    AlertDialog d = b.create();
+    if (d.getWindow() != null)
+        d.getWindow().setBackgroundDrawable(
+                new ColorDrawable(Color.TRANSPARENT)
         );
-        msg.setTextColor(0xFF39FF14); // 🟢 neon green
-        msg.setTextSize(15f);
-        msg.setGravity(Gravity.CENTER);
-        msg.setPadding(0, 0, 0, dp(16));
-        rootBox.addView(msg);
 
-        LinearLayout buttons = new LinearLayout(this);
-buttons.setOrientation(LinearLayout.HORIZONTAL);
-buttons.setGravity(Gravity.CENTER);
-buttons.setPadding(0, dp(8), 0, 0);
-rootBox.addView(buttons);
+    d.show();
 
-        Button cancel = new Button(this);
-cancel.setText("CANCEL");
-cancel.setAllCaps(false);
-cancel.setTextColor(Color.WHITE);
-cancel.setTextSize(15f);
+    // TTS
+    AppTTS.speak(this, text, gr);
 
-GradientDrawable cancelBg = new GradientDrawable();
-cancelBg.setColor(0xFFB00020); // 🔴 κόκκινο
-cancelBg.setCornerRadius(dp(12));
-cancelBg.setStroke(dp(3), 0xFFFFD700);
-cancel.setBackground(cancelBg);
+    cancel.setOnClickListener(v -> {
+        AppTTS.stop();
+        d.dismiss();
+        finish();
+    });
 
-LinearLayout.LayoutParams lpCancel =
-        new LinearLayout.LayoutParams(0, dp(56), 1f);
-lpCancel.setMargins(0, 0, dp(8), 0);
-cancel.setLayoutParams(lpCancel);
-
-        Button start = new Button(this);
-start.setText("START");
-start.setAllCaps(false);
-start.setTextColor(Color.WHITE);
-start.setTextSize(15f);
-
-GradientDrawable startBg = new GradientDrawable();
-startBg.setColor(0xFF0F8A3B); // 🟢 σκούρο πράσινο
-startBg.setCornerRadius(dp(12));
-startBg.setStroke(dp(3), 0xFFFFD700);
-start.setBackground(startBg);
-
-LinearLayout.LayoutParams lpStart =
-        new LinearLayout.LayoutParams(0, dp(56), 1f);
-lpStart.setMargins(dp(8), 0, 0, 0);
-start.setLayoutParams(lpStart);
-
-        buttons.addView(cancel);
-        buttons.addView(start);
-
-        b.setView(rootBox);
-
-        AlertDialog d = b.create();
-        if (d.getWindow() != null)
-            d.getWindow().setBackgroundDrawable(
-                    new ColorDrawable(Color.TRANSPARENT));
-
-        d.show();
-
-        cancel.setOnClickListener(v -> {
-            d.dismiss();
-            finish();
-        });
-
-        start.setOnClickListener(v -> {
-            d.dismiss();
-            initUiAndStart();
-        });
-    }
+    start.setOnClickListener(v -> {
+        AppTTS.stop();
+        d.dismiss();
+        initUiAndStart();
+    });
+}
 
     // ============================================================
     // INIT + RUN
@@ -256,47 +248,36 @@ start.setLayoutParams(lpStart);
     }
 
 // ============================================================
-// FINAL USER QUESTION — GEL STYLE (APP LANGUAGE AWARE)
+// FINAL USER QUESTION — GEL STYLE (HELPERS + AppTTS)
 // ============================================================
 private void finishTest() {
 
-    boolean gr = isGreek(); // ⬅️ APP language, ΟΧΙ system
+    final boolean gr = AppLang.isGreek(this);
 
     AlertDialog.Builder b =
-            new AlertDialog.Builder(this,
-                    android.R.style.Theme_Material_Dialog_NoActionBar);
-
+            new AlertDialog.Builder(
+                    this,
+                    android.R.style.Theme_Material_Dialog_NoActionBar
+            );
     b.setCancelable(false);
 
-    LinearLayout box = new LinearLayout(this);
-    box.setOrientation(LinearLayout.VERTICAL);
-    box.setPadding(dp(24), dp(22), dp(24), dp(18));
+    // ROOT (helper)
+    LinearLayout root = buildGELPopupRoot(this);
 
-    GradientDrawable bg = new GradientDrawable();
-    bg.setColor(0xFF101010);
-    bg.setCornerRadius(dp(18));
-    bg.setStroke(dp(4), 0xFFFFD700);
-    box.setBackground(bg);
-
-    // =========================
-    // TITLE
-    // =========================
-    TextView title = new TextView(this);
-    title.setText(
-            gr ? "Αποτέλεσμα Οπτικού Ελέγχου"
-               : "Visual Inspection Result"
+    // HEADER + MUTE (helper)
+    root.addView(
+            buildPopupHeaderWithMute(
+                    this,
+                    gr ? "Αποτέλεσμα Οπτικού Ελέγχου" : "Visual Inspection Result",
+                    AppTTS::stop
+            )
     );
-    title.setTextColor(Color.WHITE);
-    title.setTextSize(18f);
-    title.setTypeface(null, Typeface.BOLD);
-    title.setGravity(Gravity.CENTER);
-    title.setPadding(0, 0, 0, dp(12));
-    box.addView(title);
 
     // =========================
-    // QUESTION (NEON GREEN)
+    // QUESTION TEXT
     // =========================
-    String questionText = gr
+    final String text =
+            gr
             ? "Παρατήρησες κάποιο από τα παρακάτω;\n\n"
               + "• Burn-in / αποτύπωση εικόνας\n"
               + "• Ζώνες χρώματος ή απότομες μεταβάσεις\n"
@@ -308,7 +289,7 @@ private void finishTest() {
               + "• Screen stains / mura\n"
               + "• Uneven brightness or tint";
 
-    SpannableString span = new SpannableString(questionText);
+    SpannableString span = new SpannableString(text);
 
     int titleLen = gr
             ? "Παρατήρησες κάποιο από τα παρακάτω;".length()
@@ -326,68 +307,31 @@ private void finishTest() {
     msg.setTextSize(15f);
     msg.setGravity(Gravity.CENTER);
     msg.setPadding(0, 0, 0, dp(16));
-    box.addView(msg);
+    root.addView(msg);
 
     // =========================
-    // BUTTONS
+    // BUTTONS (helper style)
     // =========================
     LinearLayout buttons = new LinearLayout(this);
     buttons.setOrientation(LinearLayout.HORIZONTAL);
     buttons.setGravity(Gravity.CENTER);
 
-    LinearLayout.LayoutParams lpLeft =
-            new LinearLayout.LayoutParams(0, dp(56), 1f);
-    lpLeft.setMargins(0, 0, dp(8), 0);
-
-    LinearLayout.LayoutParams lpRight =
-            new LinearLayout.LayoutParams(0, dp(56), 1f);
-    lpRight.setMargins(dp(8), 0, 0, 0);
-
-    // NO BUTTON
-    Button no = new Button(this);
-    no.setText(
-            gr ? "ΟΧΙ\nΗ οθόνη είναι ΟΚ"
-               : "NO\nScreen OK"
+    Button no = gelButton(
+            this,
+            gr ? "ΟΧΙ\nΗ οθόνη είναι ΟΚ" : "NO\nScreen OK",
+            0xFF0F8A3B
     );
-    no.setAllCaps(false);
-    no.setSingleLine(false);
-    no.setMaxLines(2);
-    no.setGravity(Gravity.CENTER);
-    no.setTextColor(Color.WHITE);
-    no.setTextSize(15f);
-    no.setLayoutParams(lpLeft);
 
-    GradientDrawable noBg = new GradientDrawable();
-    noBg.setColor(0xFF0F8A3B); // 🟢 πράσινο
-    noBg.setCornerRadius(dp(12));
-    noBg.setStroke(dp(3), 0xFFFFD700);
-    no.setBackground(noBg);
-
-    // YES BUTTON
-    Button yes = new Button(this);
-    yes.setText(
-            gr ? "ΝΑΙ\nΠαρατηρήθηκαν προβλήματα"
-               : "YES\nIssues noticed"
+    Button yes = gelButton(
+            this,
+            gr ? "ΝΑΙ\nΠαρατηρήθηκαν προβλήματα" : "YES\nIssues noticed",
+            0xFFB00020
     );
-    yes.setAllCaps(false);
-    yes.setSingleLine(false);
-    yes.setMaxLines(2);
-    yes.setGravity(Gravity.CENTER);
-    yes.setTextColor(Color.WHITE);
-    yes.setTextSize(15f);
-    yes.setLayoutParams(lpRight);
 
-    GradientDrawable yesBg = new GradientDrawable();
-    yesBg.setColor(0xFFB00020); // 🔴 κόκκινο
-    yesBg.setCornerRadius(dp(12));
-    yesBg.setStroke(dp(3), 0xFFFFD700);
-    yes.setBackground(yesBg);
+    setDualButtonLayout(no, yes, buttons);
+    root.addView(buttons);
 
-    buttons.addView(no);
-    buttons.addView(yes);
-    box.addView(buttons);
-
-    b.setView(box);
+    b.setView(root);
 
     AlertDialog d = b.create();
     if (d.getWindow() != null)
@@ -398,9 +342,15 @@ private void finishTest() {
     d.show();
 
     // =========================
+    // TTS
+    // =========================
+    AppTTS.speak(this, text, gr);
+
+    // =========================
     // ACTIONS
     // =========================
     no.setOnClickListener(v -> {
+        AppTTS.stop();
         Intent i = new Intent();
         i.putExtra("display_issues", false);
         setResult(RESULT_OK, i);
@@ -408,6 +358,7 @@ private void finishTest() {
     });
 
     yes.setOnClickListener(v -> {
+        AppTTS.stop();
         Intent i = new Intent();
         i.putExtra("display_issues", true);
         setResult(RESULT_OK, i);

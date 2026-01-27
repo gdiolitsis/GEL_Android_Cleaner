@@ -143,6 +143,15 @@ private void showOledWarning() {
     msg.setTextSize(15f);
     msg.setGravity(Gravity.CENTER);
     msg.setPadding(0, 0, 0, dp(16));
+
+    // 🔴 CRITICAL FIX — WIDTH
+    msg.setLayoutParams(
+            new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+    );
+
     root.addView(msg);
 
     // BUTTONS
@@ -297,7 +306,7 @@ private void finishTest() {
             : "Did you notice any of the following?".length();
 
     span.setSpan(
-            new ForegroundColorSpan(0xFF39FF14), // 🟢 neon green
+            new ForegroundColorSpan(0xFF39FF14),
             0,
             titleLen,
             Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
@@ -308,10 +317,19 @@ private void finishTest() {
     msg.setTextSize(15f);
     msg.setGravity(Gravity.CENTER);
     msg.setPadding(0, 0, 0, dp(16));
+
+    // 🔴 CRITICAL FIX — WIDTH
+    msg.setLayoutParams(
+            new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+    );
+
     root.addView(msg);
 
     // =========================
-    // BUTTONS (helper style)
+    // BUTTONS
     // =========================
     LinearLayout buttons = new LinearLayout(this);
     buttons.setOrientation(LinearLayout.HORIZONTAL);

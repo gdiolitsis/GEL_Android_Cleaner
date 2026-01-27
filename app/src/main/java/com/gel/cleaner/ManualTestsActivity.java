@@ -1774,7 +1774,7 @@ private void showLab14PreTestAdvisory(Runnable onContinue) {
 
     dlg.show();
 
-    AppTTS.speak(this, text);
+    AppTTS.ensureSpeak(this, text);
 
     btnContinue.setOnClickListener(v -> {
         AppTTS.stop();
@@ -2911,7 +2911,7 @@ private void showLab28Popup() {
         // ==========================
         // SPEAK ON SHOW
         // ==========================
-        AppTTS.speak(this, text);
+        AppTTS.ensureSpeak(this, text);
 
         okBtn.setOnClickListener(v -> {
             AppTTS.stop();

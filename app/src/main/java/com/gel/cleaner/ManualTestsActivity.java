@@ -3558,25 +3558,164 @@ enableSingleExportButton();
 // ============================================================
 
 // ============================================================
-// LAB 6 — Display Touch (CLEAN / NO POPUP / AppTTS)
+// LAB 6 — Display Touch Test (FINAL / ACCESSIBLE)
 // ============================================================
 private void lab6DisplayTouch() {
 
-    // Προαιρετική φωνητική οδηγία (στη γλώσσα της εφαρμογής)
-    runOnUiThread(() -> {
-        AppTTS.speak(
-                this,
-                AppLang.isGreek(this)
-                        ? "Άγγιξε όλα τα σημεία στην οθόνη για να ολοκληρωθεί το τεστ αφής."
-                        : "Touch all dots on the screen to complete the touch test."
+    final boolean gr = AppLang.isGreek(this);
+    final boolean[] muted = {false};
+
+    final String text =
+            gr
+                    ? "Άγγιξε όλα τα σημεία στην οθόνη για να ολοκληρωθεί το τεστ αφής."
+                    : "Touch all points on the screen to complete the touch test.";
+
+    // =========================
+    // POPUP
+    // =========================
+    AlertDialog.Builder b =
+            new AlertDialog.Builder(
+                    this,
+                    android.R.style.Theme_Material_Dialog_NoActionBar
+            );
+    b.setCancelable(false);
+
+    LinearLayout root = new LinearLayout(this);
+    root.setOrientation(LinearLayout.VERTICAL);
+    root.setPadding(dp(24), dp(22), dp(24), dp(18));
+
+    GradientDrawable bg = new GradientDrawable();
+    bg.setColor(0xFF101010);
+    bg.setCornerRadius(dp(18));
+    bg.setStroke(dp(4), 0xFFFFD700);
+    root.setBackground(bg);
+
+    // =========================
+    // HEADER + MUTE
+    // =========================
+    LinearLayout header = new LinearLayout(this);
+    header.setOrientation(LinearLayout.HORIZONTAL);
+    header.setGravity(Gravity.CENTER_VERTICAL);
+    header.setPadding(0, 0, 0, dp(12));
+
+    TextView title = new TextView(this);
+    title.setText(gr ? "Τεστ Αφής Οθόνης" : "Display Touch Test");
+    title.setTextColor(Color.WHITE);
+    title.setTextSize(18f);
+    title.setTypeface(null, Typeface.BOLD);
+    title.setLayoutParams(
+            new LinearLayout.LayoutParams(
+                    0,
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    1f
+            )
+    );
+
+    Button muteBtn = new Button(this);
+    muteBtn.setAllCaps(false);
+    muteBtn.setTextColor(Color.WHITE);
+    muteBtn.setTextSize(14f);
+    muteBtn.setPadding(dp(16), dp(8), dp(16), dp(8));
+    muteBtn.setMinWidth(0);
+    muteBtn.setMinimumWidth(0);
+
+    GradientDrawable muteBg = new GradientDrawable();
+    muteBg.setColor(0xFF444444);
+    muteBg.setCornerRadius(dp(12));
+    muteBg.setStroke(dp(2), 0xFFFFD700);
+    muteBtn.setBackground(muteBg);
+
+    muteBtn.setText(gr ? "Σίγαση" : "Mute");
+
+    muteBtn.setOnClickListener(v -> {
+        muted[0] = !muted[0];
+        muteBtn.setText(
+                muted[0]
+                        ? (gr ? "Ήχος ON" : "Unmute")
+                        : (gr ? "Σίγαση" : "Mute")
         );
+        if (muted[0]) AppTTS.stop();
     });
 
-    // Άμεση εκκίνηση του touch test
-    startActivityForResult(
-            new Intent(this, TouchGridTestActivity.class),
-            6006
-    );
+    header.addView(title);
+    header.addView(muteBtn);
+    root.addView(header);
+
+    // =========================
+    // MESSAGE
+    // =========================
+    TextView msg = new TextView(this);
+    msg.setText(text);
+    msg.setTextColor(0xFF39FF14);
+    msg.setTextSize(15f);
+    msg.setGravity(Gravity.CENTER);
+    msg.setPadding(0, 0, 0, dp(18));
+    root.addView(msg);
+
+    // =========================
+    // OK BUTTON
+    // =========================
+    Button ok = new Button(this);
+    ok.setText("OK");
+    ok.setAllCaps(false);
+    ok.setTextColor(Color.WHITE);
+    ok.setTextSize(18f);
+
+    GradientDrawable okBg = new GradientDrawable();
+    okBg.setColor(0xFF0F8A3B);
+    okBg.setCornerRadius(dp(16));
+    okBg.setStroke(dp(3), 0xFFFFD700);
+    ok.setBackground(okBg);
+
+    LinearLayout.LayoutParams lpOk =
+            new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    dp(64)
+            );
+    lpOk.setMargins(0, dp(12), 0, 0);
+    ok.setLayoutParams(lpOk);
+
+    root.addView(ok);
+
+    b.setView(root);
+
+    AlertDialog d = b.create();
+    if (d.getWindow() != null)
+        d.getWindow().setBackgroundDrawable(
+                new ColorDrawable(Color.TRANSPARENT)
+        );
+
+    d.show();
+
+    // =========================
+    // TTS (OPTIONAL)
+    // =========================
+    AppTTS.stop();
+    new Handler(Looper.getMainLooper()).postDelayed(() -> {
+        if (!muted[0]) {
+            AppTTS.speak(this, text);
+        }
+    }, 120);
+
+    // =========================
+    // ACTION
+    // =========================
+    ok.setOnClickListener(v -> {
+        AppTTS.stop();
+        d.dismiss();
+
+        startActivityForResult(
+                new Intent(this, TouchGridTestActivity.class),
+                6006
+        );
+    });
+}
+
+// ============================================================
+// DP HELPER (LOCAL)
+// ============================================================
+private int dp(int v) {
+    return (int) (v * getResources().getDisplayMetrics().density + 0.5f);
 }
 
 // ============================================================

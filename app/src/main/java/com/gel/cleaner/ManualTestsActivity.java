@@ -1773,7 +1773,7 @@ private void showLab14PreTestAdvisory(Runnable onContinue) {
 
     dlg.show();
 
-    AppTTS.speak(this, text, gr);
+    AppTTS.speak(this, text);
 
     btnContinue.setOnClickListener(v -> {
         AppTTS.stop();
@@ -2742,7 +2742,7 @@ muteBtn.setText(
 muteBtn.setOnClickListener(v -> {
 
     boolean newState = !AppTTS.isMuted();
-    AppTTS.setMuted(newState);
+    AppTTS.setMuted(this, newState);
 
     muteBtn.setText(
             newState
@@ -2761,14 +2761,42 @@ muteBtn.setOnClickListener(v -> {
 }
 
 // ============================================================
-// DP helper that works with Context (portable)
+// DP HELPER — CONTEXT SAFE (GLOBAL POPUPS)
 // ============================================================
-private int dpCtx(Context ctx, float v) {
-    return (int) TypedValue.applyDimension(
-            TypedValue.COMPLEX_UNIT_DIP,
-            v,
-            ctx.getResources().getDisplayMetrics()
-    );
+private static int dpCtx(Context ctx, int v) {
+    if (ctx == null) return v;
+    float d = ctx.getResources().getDisplayMetrics().density;
+    return (int) (v * d + 0.5f);
+}
+
+// ============================================================
+// GEL BUTTON — STANDARD (GREEN / GOLD)
+// ============================================================
+private Button gelButton(Context ctx, String text, int bgColor) {
+
+    Button b = new Button(ctx);
+    b.setText(text);
+    b.setAllCaps(false);
+    b.setTextColor(Color.WHITE);
+    b.setTextSize(15f);
+    b.setTypeface(null, Typeface.BOLD);
+
+    GradientDrawable bg = new GradientDrawable();
+    bg.setColor(bgColor);
+    bg.setCornerRadius(dp(14));
+    bg.setStroke(dp(3), 0xFFFFD700);
+
+    b.setBackground(bg);
+
+    LinearLayout.LayoutParams lp =
+            new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    dp(52)
+            );
+    lp.setMargins(0, dp(10), 0, 0);
+    b.setLayoutParams(lp);
+
+    return b;
 }
 
 // ============================================================
@@ -2882,7 +2910,7 @@ private void showLab28Popup() {
         // ==========================
         // SPEAK ON SHOW
         // ==========================
-        AppTTS.speak(this, text, gr);
+        AppTTS.speak(this, text);
 
         okBtn.setOnClickListener(v -> {
             AppTTS.stop();

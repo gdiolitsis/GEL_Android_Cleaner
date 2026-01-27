@@ -64,35 +64,33 @@ public final class AppTTS {
         try {
             tts.stop();
 
-            boolean wantGreek = AppLang.isGreek(ctx);
-            boolean greekOk = false;
+             boolean wantGreek = AppLang.isGreek(ctx);
+boolean greekOk = false;
 
-            if (wantGreek) {
-                int res = tts.setLanguage(new Locale("el", "GR"));
-                greekOk =
-                        res != TextToSpeech.LANG_MISSING_DATA &&
-                        res != TextToSpeech.LANG_NOT_SUPPORTED;
-            }
+if (wantGreek) {
+    int res = tts.setLanguage(new Locale("el", "GR"));
+    greekOk =
+            res != TextToSpeech.LANG_MISSING_DATA &&
+            res != TextToSpeech.LANG_NOT_SUPPORTED;
 
-            if (!greekOk) {
-                tts.setLanguage(Locale.US);
+    if (greekOk) {
+        greekEverWorked = true; // ✅ realtime upgrade detected
+    }
+}
 
-                // ⚠️ ενημέρωσε ΜΟΝΟ ΜΙΑ ΦΟΡΑ
-                SharedPreferences p =
-                        ctx.getApplicationContext()
-                           .getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+if (!greekOk) {
+    tts.setLanguage(Locale.US);
 
-                if (wantGreek && !p.getBoolean(KEY_WARNED_NO_GR, false)) {
-                    Toast.makeText(
-                            ctx,
-                            "Δεν υπάρχει εγκατεστημένη Ελληνική φωνή.\n" +
-                            "Οι οδηγίες δίνονται προσωρινά στα Αγγλικά.",
-                            Toast.LENGTH_LONG
-                    ).show();
-
-                    p.edit().putBoolean(KEY_WARNED_NO_GR, true).apply();
-                }
-            }
+    // ⚠️ δείξε toast ΜΟΝΟ αν ΠΟΤΕ δεν έχει δουλέψει ελληνικό TTS
+    if (wantGreek && !greekEverWorked) {
+        Toast.makeText(
+                ctx,
+                "Δεν υπάρχει εγκατεστημένη Ελληνική φωνή.\n" +
+                "Οι οδηγίες δίνονται προσωρινά στα Αγγλικά.",
+                Toast.LENGTH_LONG
+        ).show();
+    }
+}
 
             tts.speak(
                     text,

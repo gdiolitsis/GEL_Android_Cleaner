@@ -2,6 +2,7 @@ package com.gel.cleaner;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Typeface;
@@ -480,6 +481,14 @@ private void setDualButtonLayout(
     parent.addView(left);
     parent.addView(space(dpCtx(parent.getContext(), 12)));
     parent.addView(right);
+}
+
+// ============================================================
+// DP helper (LOCAL)
+// ============================================================
+private int dp(int v) {
+    float d = getResources().getDisplayMetrics().density;
+    return (int) (v * d + 0.5f);
 }
 
 // ============================================================

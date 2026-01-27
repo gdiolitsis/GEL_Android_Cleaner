@@ -2747,13 +2747,12 @@ muteBtn.setOnClickListener(v -> {
     muteBtn.setText(
             newState
                     ? (gr ? "Ήχος ON" : "Unmute")
-                : (gr ? "Ήχος OFF"       : "Mute")
+                    : (gr ? "Ήχος OFF" : "Mute")
     );
-});
 
-        if (newState) AppTTS.stop();
-        if (onMuteToggle != null) onMuteToggle.run();
-    });
+    if (newState) AppTTS.stop();
+    if (onMuteToggle != null) onMuteToggle.run();
+});
 
     header.addView(title);
     header.addView(muteBtn);

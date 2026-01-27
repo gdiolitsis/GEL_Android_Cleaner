@@ -1,12 +1,12 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// LocaleHelper v3.1 — Ultra-Safe Multi-Language Engine (Foldable Ready)
+// LocaleHelper v3.2 — Ultra-Safe Multi-Language Engine (Foldable Ready)
 // ---------------------------------------------------------------
 // ✔ Full support: Android 5 → Android 14
 // ✔ Safe recreate() model (zero-crash)
 // ✔ No leaks, no ANRs
 // ✔ Perfect behaviour σε foldables / tablets / multi-window
 // ✔ Fully compatible με: GELAutoActivityHook / GELFoldableOrchestrator
-// ✔ Ολόκληρο αρχείο — έτοιμο για copy-paste (κανόνας παππού Γιώργου)
+// ✔ Ολόκληρο αρχείο — έτοιμο για copy-paste
 // ---------------------------------------------------------------
 
 package com.gel.cleaner;
@@ -57,12 +57,28 @@ public final class LocaleHelper {
     }
 
     /**
-     * Get current language
+     * Get persisted app language code
      */
     public static String getLang(Context ctx) {
         if (ctx == null) return "en";
         return ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
                 .getString(KEY, "en");
+    }
+
+    // ============================================================
+    // PUBLIC — Read current applied Locale (APP LEVEL)
+    // ============================================================
+    public static Locale getLocale(Context ctx) {
+        if (ctx == null) return Locale.getDefault();
+
+        try {
+            return ctx.getResources()
+                      .getConfiguration()
+                      .getLocales()
+                      .get(0);
+        } catch (Throwable t) {
+            return Locale.getDefault();
+        }
     }
 
     // ============================================================
@@ -95,7 +111,10 @@ public final class LocaleHelper {
 
         // Android 5–6 (legacy)
         try {
-            ctx.getResources().updateConfiguration(cfg, ctx.getResources().getDisplayMetrics());
+            ctx.getResources().updateConfiguration(
+                    cfg,
+                    ctx.getResources().getDisplayMetrics()
+            );
         } catch (Throwable ignored) {
             // never crash — last-resort fallback
         }

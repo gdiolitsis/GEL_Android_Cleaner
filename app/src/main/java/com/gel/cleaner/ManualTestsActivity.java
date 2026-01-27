@@ -3558,17 +3558,15 @@ enableSingleExportButton();
 // ============================================================
 
 // ============================================================
-// LAB 6 — Display Touch Test (FINAL / ACCESSIBLE / SAFE)
+// LAB 6 — Display Touch (POPUP + TTS + MUTE + LANG)
 // ============================================================
 private void lab6DisplayTouch() {
 
     final boolean gr = AppLang.isGreek(this);
-    final boolean[] muted = {false};
 
-    final String text =
-            gr
-                    ? "Άγγιξε όλα τα σημεία στην οθόνη για να ολοκληρωθεί το τεστ αφής."
-                    : "Touch all points on the screen to complete the touch test.";
+    final String text = gr
+            ? "Άγγιξε όλα τα σημεία στην οθόνη για να ολοκληρωθεί το τεστ αφής."
+            : "Touch all dots on the screen to complete the touch test.";
 
     AlertDialog.Builder b =
             new AlertDialog.Builder(
@@ -3577,6 +3575,7 @@ private void lab6DisplayTouch() {
             );
     b.setCancelable(false);
 
+    // ================= ROOT =================
     LinearLayout root = new LinearLayout(this);
     root.setOrientation(LinearLayout.VERTICAL);
     root.setPadding(dp(24), dp(22), dp(24), dp(18));
@@ -3587,7 +3586,7 @@ private void lab6DisplayTouch() {
     bg.setStroke(dp(4), 0xFFFFD700);
     root.setBackground(bg);
 
-    // ================= HEADER + MUTE =================
+    // ================= HEADER =================
     LinearLayout header = new LinearLayout(this);
     header.setOrientation(LinearLayout.HORIZONTAL);
     header.setGravity(Gravity.CENTER_VERTICAL);
@@ -3610,9 +3609,9 @@ private void lab6DisplayTouch() {
     muteBtn.setAllCaps(false);
     muteBtn.setTextColor(Color.WHITE);
     muteBtn.setTextSize(14f);
-    muteBtn.setPadding(dp(16), dp(8), dp(16), dp(8));
     muteBtn.setMinWidth(0);
     muteBtn.setMinimumWidth(0);
+    muteBtn.setPadding(dp(14), dp(8), dp(14), dp(8));
 
     GradientDrawable muteBg = new GradientDrawable();
     muteBg.setColor(0xFF444444);
@@ -3620,16 +3619,21 @@ private void lab6DisplayTouch() {
     muteBg.setStroke(dp(2), 0xFFFFD700);
     muteBtn.setBackground(muteBg);
 
-    muteBtn.setText(gr ? "Σίγαση" : "Mute");
+    muteBtn.setText(
+            AppTTS.isMuted()
+                    ? (gr ? "Ήχος ON" : "Unmute")
+                    : (gr ? "Σίγαση" : "Mute")
+    );
 
     muteBtn.setOnClickListener(v -> {
-        muted[0] = !muted[0];
+        boolean m = !AppTTS.isMuted();
+        AppTTS.setMuted(this, m);
         muteBtn.setText(
-                muted[0]
+                m
                         ? (gr ? "Ήχος ON" : "Unmute")
                         : (gr ? "Σίγαση" : "Mute")
         );
-        if (muted[0]) AppTTS.stop();
+        if (m) AppTTS.stop();
     });
 
     header.addView(title);
@@ -3642,31 +3646,31 @@ private void lab6DisplayTouch() {
     msg.setTextColor(0xFF39FF14);
     msg.setTextSize(15f);
     msg.setGravity(Gravity.CENTER);
-    msg.setPadding(0, 0, 0, dp(18));
+    msg.setPadding(0, 0, 0, dp(16));
     root.addView(msg);
 
-    // ================= OK BUTTON =================
-    Button ok = new Button(this);
-    ok.setText("OK");
-    ok.setAllCaps(false);
-    ok.setTextColor(Color.WHITE);
-    ok.setTextSize(18f);
+    // ================= BUTTON =================
+    Button start = new Button(this);
+    start.setAllCaps(false);
+    start.setText(gr ? "ΕΝΑΡΞΗ" : "START");
+    start.setTextColor(Color.WHITE);
+    start.setTextSize(16f);
 
-    GradientDrawable okBg = new GradientDrawable();
-    okBg.setColor(0xFF0F8A3B);
-    okBg.setCornerRadius(dp(16));
-    okBg.setStroke(dp(3), 0xFFFFD700);
-    ok.setBackground(okBg);
+    GradientDrawable startBg = new GradientDrawable();
+    startBg.setColor(0xFF0F8A3B);
+    startBg.setCornerRadius(dp(14));
+    startBg.setStroke(dp(3), 0xFFFFD700);
+    start.setBackground(startBg);
 
-    LinearLayout.LayoutParams lpOk =
+    LinearLayout.LayoutParams lpStart =
             new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,
-                    dp(64)
+                    dp(56)
             );
-    lpOk.setMargins(0, dp(12), 0, 0);
-    ok.setLayoutParams(lpOk);
+    lpStart.setMargins(0, dp(10), 0, 0);
+    start.setLayoutParams(lpStart);
 
-    root.addView(ok);
+    root.addView(start);
 
     b.setView(root);
 
@@ -3681,16 +3685,13 @@ private void lab6DisplayTouch() {
     // ================= TTS =================
     AppTTS.stop();
     new Handler(Looper.getMainLooper()).postDelayed(() -> {
-        if (!muted[0]) {
-            AppTTS.speak(this, text);
-        }
+        AppTTS.speak(this, text);
     }, 120);
 
     // ================= ACTION =================
-    ok.setOnClickListener(v -> {
+    start.setOnClickListener(v -> {
         AppTTS.stop();
         d.dismiss();
-
         startActivityForResult(
                 new Intent(this, TouchGridTestActivity.class),
                 6006

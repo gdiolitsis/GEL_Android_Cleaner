@@ -3559,7 +3559,7 @@ enableSingleExportButton();
 
 // ============================================================
 // LAB 6 — Display Touch (POPUP + MUTE + TTS + GR/EN)
-// FINAL — NO HELPERS / NO dp() / NO SIDE EFFECTS
+// FINAL — SAFE with AppTTS.ensureSpeak
 // ============================================================
 private void lab6DisplayTouch() {
 
@@ -3661,13 +3661,6 @@ private void lab6DisplayTouch() {
     tvMsg.setGravity(Gravity.CENTER);
     tvMsg.setPadding(0, 0, 0, 32);
 
-    tvMsg.setLayoutParams(
-            new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-    );
-
     root.addView(tvMsg);
 
     // ---------------------------
@@ -3705,11 +3698,10 @@ private void lab6DisplayTouch() {
     d.show();
 
     // ---------------------------
-    // TTS (FOR BLIND USERS)
+    // TTS (SAFE GLOBAL ENTRY)
     // ---------------------------
-    AppTTS.stop();
     new Handler(Looper.getMainLooper()).postDelayed(
-            () -> AppTTS.speak(this, message),
+            () -> AppTTS.ensureSpeak(this, message),
             120
     );
 

@@ -1,10 +1,9 @@
 // ============================================================
 // AppTTS.java — FINAL (GEL)
-// Unified Text-To-Speech helper (GLOBAL)
-// • App language aware (GR / EN via AppLang)
-// • Persistent mute (SharedPreferences)
-// • Safe init / stop / reuse
-// • No system language dependency
+// • App language aware (via AppLang)
+// • Greek TTS detect with EN fallback
+// • Persistent mute
+// • Zero UI dependency
 // ============================================================
 
 package com.gel.cleaner;
@@ -12,6 +11,7 @@ package com.gel.cleaner;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.speech.tts.TextToSpeech;
+import android.widget.Toast;
 
 import java.util.Locale;
 
@@ -19,46 +19,38 @@ public final class AppTTS {
 
     private static final String PREF_NAME = "GEL_TTS_PREF";
     private static final String KEY_MUTE  = "tts_muted";
+    private static final String KEY_WARNED_NO_GR = "warned_no_gr";
 
     private static TextToSpeech tts;
     private static boolean ready = false;
     private static boolean muted = false;
     private static boolean prefsLoaded = false;
 
-    private AppTTS() {
-        // no instances
-    }
+    private AppTTS() {}
 
     // ============================================================
-    // INIT (lazy / safe)
+    // INIT
     // ============================================================
     private static void init(Context ctx) {
 
         if (!prefsLoaded) {
-            try {
-                SharedPreferences p =
-                        ctx.getApplicationContext()
-                           .getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
-                muted = p.getBoolean(KEY_MUTE, false);
-            } catch (Throwable ignore) {}
+            SharedPreferences p =
+                    ctx.getApplicationContext()
+                       .getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+            muted = p.getBoolean(KEY_MUTE, false);
             prefsLoaded = true;
         }
 
         if (tts != null) return;
 
-        try {
-            tts = new TextToSpeech(
-                    ctx.getApplicationContext(),
-                    status -> ready = (status == TextToSpeech.SUCCESS)
-            );
-        } catch (Throwable t) {
-            tts = null;
-            ready = false;
-        }
+        tts = new TextToSpeech(
+                ctx.getApplicationContext(),
+                status -> ready = (status == TextToSpeech.SUCCESS)
+        );
     }
 
     // ============================================================
-    // SPEAK (MAIN ENTRY)
+    // SPEAK — GR with fallback EN
     // ============================================================
     public static void speak(Context ctx, String text) {
 
@@ -72,12 +64,34 @@ public final class AppTTS {
         try {
             tts.stop();
 
-            boolean greek = AppLang.isGreek(ctx);
+            boolean wantGreek = AppLang.isGreek(ctx);
+            boolean greekOk = false;
 
-            if (greek) {
-                tts.setLanguage(new Locale("el", "GR"));
-            } else {
+            if (wantGreek) {
+                int res = tts.setLanguage(new Locale("el", "GR"));
+                greekOk =
+                        res != TextToSpeech.LANG_MISSING_DATA &&
+                        res != TextToSpeech.LANG_NOT_SUPPORTED;
+            }
+
+            if (!greekOk) {
                 tts.setLanguage(Locale.US);
+
+                // ⚠️ ενημέρωσε ΜΟΝΟ ΜΙΑ ΦΟΡΑ
+                SharedPreferences p =
+                        ctx.getApplicationContext()
+                           .getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+
+                if (wantGreek && !p.getBoolean(KEY_WARNED_NO_GR, false)) {
+                    Toast.makeText(
+                            ctx,
+                            "Δεν υπάρχει εγκατεστημένη Ελληνική φωνή.\n" +
+                            "Οι οδηγίες δίνονται προσωρινά στα Αγγλικά.",
+                            Toast.LENGTH_LONG
+                    ).show();
+
+                    p.edit().putBoolean(KEY_WARNED_NO_GR, true).apply();
+                }
             }
 
             tts.speak(
@@ -91,61 +105,33 @@ public final class AppTTS {
     }
 
     // ============================================================
-    // STOP (on dismiss / mute)
-    // ============================================================
-    public static void stop() {
-        try {
-            if (tts != null) tts.stop();
-        } catch (Throwable ignore) {}
-    }
-
-    // ============================================================
-    // MUTE CONTROL (PERSISTENT)
+    // MUTE
     // ============================================================
     public static void setMuted(Context ctx, boolean value) {
         muted = value;
 
-        try {
-            SharedPreferences p =
-                    ctx.getApplicationContext()
-                       .getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
-            p.edit().putBoolean(KEY_MUTE, value).apply();
-        } catch (Throwable ignore) {}
+        SharedPreferences p =
+                ctx.getApplicationContext()
+                   .getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        p.edit().putBoolean(KEY_MUTE, value).apply();
 
-        if (muted) stop();
-    }
-
-    public static void toggleMute(Context ctx) {
-        setMuted(ctx, !muted);
+        if (muted && tts != null) tts.stop();
     }
 
     public static boolean isMuted() {
         return muted;
     }
 
-    // ============================================================
-    // STATE HELPERS
-    // ============================================================
-    public static boolean isSpeaking() {
-        try {
-            return tts != null && tts.isSpeaking();
-        } catch (Throwable t) {
-            return false;
-        }
+    public static void stop() {
+        if (tts != null) tts.stop();
     }
 
-    // ============================================================
-    // SHUTDOWN (optional — app destroy)
-    // ============================================================
     public static void shutdown() {
-        try {
-            if (tts != null) {
-                tts.stop();
-                tts.shutdown();
-            }
-        } catch (Throwable ignore) {}
+        if (tts != null) {
+            tts.stop();
+            tts.shutdown();
+        }
         tts = null;
         ready = false;
-        prefsLoaded = false;
     }
 }

@@ -1,98 +1,115 @@
+// ============================================================
+// AppTTS.java — FINAL (GEL)
+// Unified Text-To-Speech helper for popups & labs
+// • App language aware (GR / EN)
+// • Global mute respected
+// • Safe init / stop / reuse
+// ============================================================
+
 package com.gel.cleaner;
 
 import android.content.Context;
 import android.speech.tts.TextToSpeech;
 
 import java.util.Locale;
-import java.util.concurrent.atomic.AtomicBoolean;
 
-/**
- * ============================================================
- * AppTTS — GLOBAL Text-to-Speech (GEL)
- * • One engine for the whole app
- * • Uses APP language (not system)
- * • Safe init / speak / shutdown
- * ============================================================
- */
 public final class AppTTS {
 
     private static TextToSpeech tts;
-    private static final AtomicBoolean ready = new AtomicBoolean(false);
+    private static boolean ready = false;
+    private static boolean muted = false;
 
-    private AppTTS() {} // no instances
+    private AppTTS() {
+        // no instances
+    }
 
     // ============================================================
-    // INIT — call once (Application or MainActivity)
+    // INIT (call once, lazy-safe)
     // ============================================================
-    public static void init(Context ctx) {
+    private static void init(Context ctx) {
         if (tts != null) return;
 
-        Context appCtx = ctx.getApplicationContext();
-
-        tts = new TextToSpeech(appCtx, status -> {
-            if (status == TextToSpeech.SUCCESS) {
-
-                boolean gr = isGreek(appCtx);
-
-                Locale locale = gr
-                        ? new Locale("el", "GR")
-                        : Locale.US;
-
-                int res = tts.setLanguage(locale);
-                ready.set(res != TextToSpeech.LANG_MISSING_DATA
-                        && res != TextToSpeech.LANG_NOT_SUPPORTED);
-            }
-        });
+        try {
+            tts = new TextToSpeech(ctx.getApplicationContext(), status -> {
+                ready = (status == TextToSpeech.SUCCESS);
+            });
+        } catch (Throwable t) {
+            ready = false;
+            tts = null;
+        }
     }
 
     // ============================================================
-    // SPEAK — safe, silent if not ready
+    // SPEAK (MAIN ENTRY)
     // ============================================================
-    public static void speak(Context ctx, String text) {
+    public static void speak(Context ctx, String text, boolean greek) {
+
+        if (muted) return;
         if (text == null || text.trim().isEmpty()) return;
 
-        if (tts == null) {
-            init(ctx);
-            return;
-        }
+        init(ctx);
 
-        if (!ready.get()) return;
+        if (!ready || tts == null) return;
 
         try {
-            tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, "GEL_TTS");
-        } catch (Throwable ignore) {}
+            tts.stop();
+
+            if (greek) {
+                tts.setLanguage(new Locale("el", "GR"));
+            } else {
+                tts.setLanguage(Locale.US);
+            }
+
+            tts.speak(
+                    text,
+                    TextToSpeech.QUEUE_FLUSH,
+                    null,
+                    "GEL_TTS"
+            );
+
+        } catch (Throwable ignore) { }
     }
 
     // ============================================================
-    // STOP (optional)
+    // STOP (ON DISMISS / MUTE)
     // ============================================================
     public static void stop() {
         try {
             if (tts != null) tts.stop();
-        } catch (Throwable ignore) {}
+        } catch (Throwable ignore) { }
     }
 
     // ============================================================
-    // SHUTDOWN — call only on app exit (Application.onTerminate)
+    // STATE HELPERS
+    // ============================================================
+    public static boolean isSpeaking() {
+        try {
+            return tts != null && tts.isSpeaking();
+        } catch (Throwable t) {
+            return false;
+        }
+    }
+
+    public static void setMuted(boolean m) {
+        muted = m;
+        if (muted) stop();
+    }
+
+    public static boolean isMuted() {
+        return muted;
+    }
+
+    // ============================================================
+    // RELEASE (OPTIONAL — on app destroy)
     // ============================================================
     public static void shutdown() {
         try {
             if (tts != null) {
                 tts.stop();
                 tts.shutdown();
-                tts = null;
-                ready.set(false);
             }
-        } catch (Throwable ignore) {}
-    }
-
-    // ============================================================
-    // APP LANGUAGE (GEL) — NOT system language
-    // ============================================================
-    private static boolean isGreek(Context ctx) {
-        return "gr".equalsIgnoreCase(
-                ctx.getSharedPreferences("gel_prefs", Context.MODE_PRIVATE)
-                        .getString("app_lang", "en")
-        );
+        } catch (Throwable ignore) { }
+        tts = null;
+        ready = false;
     }
 }

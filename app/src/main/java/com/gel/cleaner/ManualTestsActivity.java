@@ -3558,7 +3558,7 @@ enableSingleExportButton();
 // ============================================================
 
 // ============================================================
-// LAB 6 — Display Touch Test (FINAL / ACCESSIBLE)
+// LAB 6 — Display Touch Test (FINAL / ACCESSIBLE / SAFE)
 // ============================================================
 private void lab6DisplayTouch() {
 
@@ -3570,9 +3570,6 @@ private void lab6DisplayTouch() {
                     ? "Άγγιξε όλα τα σημεία στην οθόνη για να ολοκληρωθεί το τεστ αφής."
                     : "Touch all points on the screen to complete the touch test.";
 
-    // =========================
-    // POPUP
-    // =========================
     AlertDialog.Builder b =
             new AlertDialog.Builder(
                     this,
@@ -3590,9 +3587,7 @@ private void lab6DisplayTouch() {
     bg.setStroke(dp(4), 0xFFFFD700);
     root.setBackground(bg);
 
-    // =========================
-    // HEADER + MUTE
-    // =========================
+    // ================= HEADER + MUTE =================
     LinearLayout header = new LinearLayout(this);
     header.setOrientation(LinearLayout.HORIZONTAL);
     header.setGravity(Gravity.CENTER_VERTICAL);
@@ -3641,9 +3636,7 @@ private void lab6DisplayTouch() {
     header.addView(muteBtn);
     root.addView(header);
 
-    // =========================
-    // MESSAGE
-    // =========================
+    // ================= MESSAGE =================
     TextView msg = new TextView(this);
     msg.setText(text);
     msg.setTextColor(0xFF39FF14);
@@ -3652,9 +3645,7 @@ private void lab6DisplayTouch() {
     msg.setPadding(0, 0, 0, dp(18));
     root.addView(msg);
 
-    // =========================
-    // OK BUTTON
-    // =========================
+    // ================= OK BUTTON =================
     Button ok = new Button(this);
     ok.setText("OK");
     ok.setAllCaps(false);
@@ -3687,9 +3678,7 @@ private void lab6DisplayTouch() {
 
     d.show();
 
-    // =========================
-    // TTS (OPTIONAL)
-    // =========================
+    // ================= TTS =================
     AppTTS.stop();
     new Handler(Looper.getMainLooper()).postDelayed(() -> {
         if (!muted[0]) {
@@ -3697,9 +3686,7 @@ private void lab6DisplayTouch() {
         }
     }, 120);
 
-    // =========================
-    // ACTION
-    // =========================
+    // ================= ACTION =================
     ok.setOnClickListener(v -> {
         AppTTS.stop();
         d.dismiss();
@@ -3709,13 +3696,6 @@ private void lab6DisplayTouch() {
                 6006
         );
     });
-}
-
-// ============================================================
-// DP HELPER (LOCAL)
-// ============================================================
-private int dp(int v) {
-    return (int) (v * getResources().getDisplayMetrics().density + 0.5f);
 }
 
 // ============================================================

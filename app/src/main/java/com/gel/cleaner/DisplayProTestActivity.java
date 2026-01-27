@@ -56,9 +56,13 @@ public class DisplayProTestActivity extends Activity {
         showOledWarning();
     }
 
+    // ============================================================
+    // BACK = EXIT TEST
+    // ============================================================
     @Override
     public void onBackPressed() {
-        // disabled
+        AppTTS.stop();
+        finish();
     }
 
     // ============================================================
@@ -114,11 +118,13 @@ public class DisplayProTestActivity extends Activity {
         );
 
         cancel.setOnClickListener(v -> {
+            AppTTS.stop();
             d.dismiss();
             finish();
         });
 
         start.setOnClickListener(v -> {
+            AppTTS.stop();
             d.dismiss();
             initAndStart();
         });
@@ -158,8 +164,38 @@ public class DisplayProTestActivity extends Activity {
         hint.setTextSize(16f);
         hint.setPadding(dp(24), dp(24), dp(24), dp(24));
         hint.setGravity(Gravity.CENTER);
-
         root.addView(hint);
+
+        // =========================
+        // EXIT BUTTON
+        // =========================
+        Button exitBtn = new Button(this);
+        exitBtn.setAllCaps(false);
+        exitBtn.setText(gr ? "ΕΞΟΔΟΣ" : "EXIT");
+        exitBtn.setTextColor(Color.WHITE);
+        exitBtn.setTextSize(15f);
+
+        GradientDrawable exitBg = new GradientDrawable();
+        exitBg.setColor(0xFF8B0000);
+        exitBg.setCornerRadius(dp(14));
+        exitBg.setStroke(dp(3), 0xFFFFD700);
+        exitBtn.setBackground(exitBg);
+
+        FrameLayout.LayoutParams lpExit =
+                new FrameLayout.LayoutParams(
+                        FrameLayout.LayoutParams.WRAP_CONTENT,
+                        FrameLayout.LayoutParams.WRAP_CONTENT
+                );
+        lpExit.gravity = Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL;
+        lpExit.bottomMargin = dp(24);
+        exitBtn.setLayoutParams(lpExit);
+
+        exitBtn.setOnClickListener(v -> {
+            AppTTS.stop();
+            finish();
+        });
+
+        root.addView(exitBtn);
         setContentView(root);
 
         startTimeMs = System.currentTimeMillis();
@@ -257,11 +293,13 @@ public class DisplayProTestActivity extends Activity {
         );
 
         no.setOnClickListener(v -> {
+            AppTTS.stop();
             setResult(RESULT_OK);
             finish();
         });
 
         yes.setOnClickListener(v -> {
+            AppTTS.stop();
             setResult(RESULT_OK);
             finish();
         });

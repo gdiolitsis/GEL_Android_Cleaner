@@ -91,7 +91,6 @@ import android.os.Vibrator;
 import android.os.VibratorManager;
 import android.provider.Settings;
 import android.provider.MediaStore;
-import android.speech.tts.TextToSpeech;
 import android.telephony.ServiceState;
 import android.telephony.TelephonyManager;
 import android.text.Html;
@@ -112,7 +111,6 @@ import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.CheckBox;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.SeekBar;
@@ -3557,123 +3555,25 @@ enableSingleExportButton();
 // ============================================================
 
 // ============================================================
-// LAB 6 — Display Touch
+// LAB 6 — Display Touch (CLEAN / NO POPUP / AppTTS)
 // ============================================================
 private void lab6DisplayTouch() {
 
-runOnUiThread(() -> {  
+    // Προαιρετική φωνητική οδηγία (στη γλώσσα της εφαρμογής)
+    runOnUiThread(() -> {
+        AppTTS.speak(
+                this,
+                AppLang.isGreek(this)
+                        ? "Άγγιξε όλα τα σημεία στην οθόνη για να ολοκληρωθεί το τεστ αφής."
+                        : "Touch all dots on the screen to complete the touch test."
+        );
+    });
 
-    final boolean[] ttsMuted = {  
-            prefs.getBoolean(PREF_TTS_MUTED, false)  
-    };  
-
-    AlertDialog.Builder b =  
-            new AlertDialog.Builder(  
-                    ManualTestsActivity.this,  
-                    android.R.style.Theme_Material_Dialog_NoActionBar  
-            );  
-    b.setCancelable(false);  
-
-    LinearLayout root = new LinearLayout(this);  
-    root.setOrientation(LinearLayout.VERTICAL);  
-    root.setPadding(dp(24), dp(20), dp(24), dp(18));  
-
-    GradientDrawable bg = new GradientDrawable();  
-    bg.setColor(0xFF101010);  
-    bg.setCornerRadius(dp(18));  
-    bg.setStroke(dp(4), 0xFFFFD700);  
-    root.setBackground(bg);  
-
-    TextView title = new TextView(this);  
-    title.setText("LAB 6 — Display / Touch");  
-    title.setTextColor(0xFFFFFFFF);  
-    title.setTextSize(18f);  
-    title.setTypeface(null, Typeface.BOLD);  
-    title.setGravity(Gravity.CENTER);  
-    title.setPadding(0, 0, 0, dp(12));  
-    root.addView(title);  
-
-    TextView msg = new TextView(this);  
-    msg.setText(  
-            "Touch all dots on the screen to complete the test.\n\n" +  
-            "All screen areas must respond to touch input."  
-    );  
-    msg.setTextColor(0xFFDDDDDD);  
-    msg.setTextSize(15f);  
-    msg.setGravity(Gravity.CENTER);  
-    root.addView(msg);  
-
-    // ==========================  
-    //  MUTE TOGGLE  
-    // ==========================  
-    CheckBox muteBox = new CheckBox(this);  
-    muteBox.setChecked(ttsMuted[0]);  
-    muteBox.setText("Mute voice instructions");  
-    muteBox.setTextColor(0xFFDDDDDD);  
-    muteBox.setGravity(Gravity.CENTER);  
-    muteBox.setPadding(0, dp(10), 0, dp(10));  
-    root.addView(muteBox);  
-
-    // ==========================  
-    //  START BUTTON
-    // ==========================  
-    Button start = new Button(this);  
-    start.setText("START TEST");  
-    start.setAllCaps(false);  
-    start.setTextColor(0xFFFFFFFF);  
-
-    GradientDrawable startBg = new GradientDrawable();  
-    startBg.setColor(0xFF39FF14);  
-    startBg.setCornerRadius(dp(14));  
-    startBg.setStroke(dp(3), 0xFFFFD700);  
-    start.setBackground(startBg);  
-    root.addView(start);  
-
-    // ==========================  
-    // MUTE LOGIC — GLOBAL  
-    // ==========================  
-    muteBox.setOnCheckedChangeListener((v, checked) -> {  
-        ttsMuted[0] = checked;  
-        prefs.edit().putBoolean(PREF_TTS_MUTED, checked).apply();  
-
-        if (checked && tts != null && tts[0] != null) {  
-            tts[0].stop();  
-        }  
-    });  
-
-    // ==========================  
-    // DIALOG CREATE / SHOW  
-    // ==========================  
-    b.setView(root);  
-    final AlertDialog d = b.create();  
-    if (d.getWindow() != null)  
-        d.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));  
-    d.show();  
-
-    // ==========================  
-    // TTS — SPEAK AFTER SHOW  
-    // ==========================  
-    if (tts != null && tts[0] != null && ttsReady[0] && !ttsMuted[0]) {  
-        tts[0].stop();  
-        tts[0].speak(  
-                "Touch all dots on the screen to complete the test. " +  
-                "All screen areas must respond to touch input.",  
-                TextToSpeech.QUEUE_FLUSH,  
-                null,  
-                "LAB6_INTRO"  
-        );  
-    }  
-
-    start.setOnClickListener(v -> {  
-        if (tts != null && tts[0] != null) tts[0].stop();  
-        d.dismiss();  
-        startActivityForResult(  
-                new Intent(this, TouchGridTestActivity.class),  
-                6006  
-        );  
-    });  
-});
-
+    // Άμεση εκκίνηση του touch test
+    startActivityForResult(
+            new Intent(this, TouchGridTestActivity.class),
+            6006
+    );
 }
 
 // ============================================================

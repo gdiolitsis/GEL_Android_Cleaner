@@ -1,8 +1,9 @@
 // ============================================================
-// AppTTS.java — FINAL (GEL)
+// AppTTS.java — FINAL (GEL) — LOCKED
 // • App language aware (via AppLang)
 // • Realtime Greek TTS detect with EN fallback
 // • Persistent mute
+// • SAFE global entry point (ensureSpeak)
 // • Zero UI dependency
 // ============================================================
 
@@ -11,7 +12,8 @@ package com.gel.cleaner;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.speech.tts.TextToSpeech;
-import android.widget.Toast;
+import android.os.Handler;
+import android.os.Looper;
 
 import java.util.Locale;
 
@@ -31,9 +33,9 @@ public final class AppTTS {
     private AppTTS() {}
 
     // ============================================================
-    // INIT
+    // INIT (SAFE / IDLE)
     // ============================================================
-    private static void init(Context ctx) {
+    private static synchronized void init(Context ctx) {
 
         if (!prefsLoaded) {
             SharedPreferences p =
@@ -52,20 +54,31 @@ public final class AppTTS {
     }
 
     // ============================================================
-    // SPEAK — GR with realtime fallback EN
+    // 🔒 GLOBAL ENTRY POINT — USE ONLY THIS
     // ============================================================
-    public static void speak(Context ctx, String text) {
+    public static void ensureSpeak(Context ctx, String text) {
 
-        if (text == null || text.trim().isEmpty()) return;
-        if (muted) return;
+        if (ctx == null || text == null || text.trim().isEmpty())
+            return;
+
+        if (muted)
+            return;
 
         init(ctx);
 
-        if (!ready || tts == null) return;
+        if (!ready || tts == null)
+            return;
+
+        // force to main thread (TTS is sensitive)
+        new Handler(Looper.getMainLooper()).post(() -> speakInternal(ctx, text));
+    }
+
+    // ============================================================
+    // INTERNAL SPEAK (DO NOT CALL DIRECTLY)
+    // ============================================================
+    private static void speakInternal(Context ctx, String text) {
 
         try {
-            tts.stop();
-
             boolean wantGreek = AppLang.isGreek(ctx);
             boolean greekOk = false;
 
@@ -76,29 +89,19 @@ public final class AppTTS {
                         res != TextToSpeech.LANG_NOT_SUPPORTED;
 
                 if (greekOk) {
-                    greekEverWorked = true; // ✅ realtime upgrade detected
+                    greekEverWorked = true;
                 }
             }
 
             if (!greekOk) {
                 tts.setLanguage(Locale.US);
-
-                // ⚠️ ενημέρωση ΜΟΝΟ αν δεν έχει δουλέψει ΠΟΤΕ Ελληνικό TTS
-                if (wantGreek && !greekEverWorked) {
-                    Toast.makeText(
-                            ctx,
-                            "Δεν υπάρχει εγκατεστημένη Ελληνική φωνή.\n" +
-                            "Οι οδηγίες δίνονται προσωρινά στα Αγγλικά.",
-                            Toast.LENGTH_LONG
-                    ).show();
-                }
             }
 
             tts.speak(
                     text,
                     TextToSpeech.QUEUE_FLUSH,
                     null,
-                    "GEL_TTS"
+                    "GEL_TTS_" + System.currentTimeMillis()
             );
 
         } catch (Throwable ignore) {}
@@ -108,6 +111,7 @@ public final class AppTTS {
     // MUTE
     // ============================================================
     public static void setMuted(Context ctx, boolean value) {
+
         muted = value;
 
         SharedPreferences p =
@@ -122,6 +126,9 @@ public final class AppTTS {
         return muted;
     }
 
+    // ============================================================
+    // CONTROL
+    // ============================================================
     public static void stop() {
         if (tts != null) tts.stop();
     }

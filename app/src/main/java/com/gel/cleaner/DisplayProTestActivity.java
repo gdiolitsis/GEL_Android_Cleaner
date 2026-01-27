@@ -3,7 +3,6 @@ package com.gel.cleaner;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
@@ -16,7 +15,6 @@ import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.style.ForegroundColorSpan;
 import android.view.Gravity;
-import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.FrameLayout;
@@ -86,15 +84,12 @@ public class DisplayProTestActivity extends Activity {
 
         LinearLayout root = buildPopupRoot(this);
 
-        // ---------- HEADER + MUTE ----------
         root.addView(buildHeaderWithMute(
                 gr ? "Δοκιμή Καταπόνησης Οθόνης" : "Display Stress Test"
         ));
 
-        // ---------- MESSAGE ----------
         root.addView(buildMessage(text));
 
-        // ---------- BUTTONS ----------
         LinearLayout buttons = new LinearLayout(this);
         buttons.setOrientation(LinearLayout.HORIZONTAL);
         buttons.setGravity(Gravity.CENTER);
@@ -113,17 +108,17 @@ public class DisplayProTestActivity extends Activity {
 
         d.show();
 
-        AppTTS.stop();
-        h.postDelayed(() -> AppTTS.speak(this, text), 120);
+        new Handler(Looper.getMainLooper()).postDelayed(
+                () -> AppTTS.ensureSpeak(this, text),
+                120
+        );
 
         cancel.setOnClickListener(v -> {
-            AppTTS.stop();
             d.dismiss();
             finish();
         });
 
         start.setOnClickListener(v -> {
-            AppTTS.stop();
             d.dismiss();
             initAndStart();
         });
@@ -256,17 +251,17 @@ public class DisplayProTestActivity extends Activity {
 
         d.show();
 
-        AppTTS.stop();
-        h.postDelayed(() -> AppTTS.speak(this, text), 120);
+        new Handler(Looper.getMainLooper()).postDelayed(
+                () -> AppTTS.ensureSpeak(this, text),
+                120
+        );
 
         no.setOnClickListener(v -> {
-            AppTTS.stop();
             setResult(RESULT_OK);
             finish();
         });
 
         yes.setOnClickListener(v -> {
-            AppTTS.stop();
             setResult(RESULT_OK);
             finish();
         });

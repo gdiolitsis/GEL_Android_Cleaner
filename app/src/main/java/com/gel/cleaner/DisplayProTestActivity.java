@@ -255,119 +255,165 @@ start.setLayoutParams(lpStart);
         h.postDelayed(this::runStep, STEP_DURATION_MS);
     }
 
-    // ============================================================
-    // FINAL USER QUESTION — GEL STYLE
-    // ============================================================
-    private void finishTest() {
+// ============================================================
+// FINAL USER QUESTION — GEL STYLE (APP LANGUAGE AWARE)
+// ============================================================
+private void finishTest() {
 
-        AlertDialog.Builder b =
-                new AlertDialog.Builder(this,
-                        android.R.style.Theme_Material_Dialog_NoActionBar);
+    boolean gr = isGreek(); // ⬅️ APP language, ΟΧΙ system
 
-        b.setCancelable(false);
+    AlertDialog.Builder b =
+            new AlertDialog.Builder(this,
+                    android.R.style.Theme_Material_Dialog_NoActionBar);
 
-        LinearLayout box = new LinearLayout(this);
-        box.setOrientation(LinearLayout.VERTICAL);
-        box.setPadding(dp(24), dp(22), dp(24), dp(18));
+    b.setCancelable(false);
 
-        GradientDrawable bg = new GradientDrawable();
-        bg.setColor(0xFF101010);
-        bg.setCornerRadius(dp(18));
-        bg.setStroke(dp(4), 0xFFFFD700);
-        box.setBackground(bg);
+    LinearLayout box = new LinearLayout(this);
+    box.setOrientation(LinearLayout.VERTICAL);
+    box.setPadding(dp(24), dp(22), dp(24), dp(18));
 
-        TextView title = new TextView(this);
-        title.setText("Visual Inspection Result");
-        title.setTextColor(Color.WHITE);
-        title.setTextSize(18f);
-        title.setTypeface(null, Typeface.BOLD);
-        title.setGravity(Gravity.CENTER);
-        title.setPadding(0, 0, 0, dp(12));
-        box.addView(title);
+    GradientDrawable bg = new GradientDrawable();
+    bg.setColor(0xFF101010);
+    bg.setCornerRadius(dp(18));
+    bg.setStroke(dp(4), 0xFFFFD700);
+    box.setBackground(bg);
 
-        TextView msg = new TextView(this);
-        msg.setText(
-                "Did you notice any of the following?\n\n" +
-                "• Burn-in / image retention\n" +
-                "• Color banding or gradient steps\n" +
-                "• Screen stains / mura\n" +
-                "• Uneven brightness or tint"
+    // =========================
+    // TITLE
+    // =========================
+    TextView title = new TextView(this);
+    title.setText(
+            gr ? "Αποτέλεσμα Οπτικού Ελέγχου"
+               : "Visual Inspection Result"
+    );
+    title.setTextColor(Color.WHITE);
+    title.setTextSize(18f);
+    title.setTypeface(null, Typeface.BOLD);
+    title.setGravity(Gravity.CENTER);
+    title.setPadding(0, 0, 0, dp(12));
+    box.addView(title);
+
+    // =========================
+    // QUESTION (NEON GREEN)
+    // =========================
+    String questionText = gr
+            ? "Παρατήρησες κάποιο από τα παρακάτω;\n\n"
+              + "• Burn-in / αποτύπωση εικόνας\n"
+              + "• Ζώνες χρώματος ή απότομες μεταβάσεις\n"
+              + "• Κηλίδες / mura στην οθόνη\n"
+              + "• Ανομοιόμορφη φωτεινότητα ή απόχρωση"
+            : "Did you notice any of the following?\n\n"
+              + "• Burn-in / image retention\n"
+              + "• Color banding or gradient steps\n"
+              + "• Screen stains / mura\n"
+              + "• Uneven brightness or tint";
+
+    SpannableString span = new SpannableString(questionText);
+
+    int titleLen = gr
+            ? "Παρατήρησες κάποιο από τα παρακάτω;".length()
+            : "Did you notice any of the following?".length();
+
+    span.setSpan(
+            new ForegroundColorSpan(0xFF39FF14), // 🟢 neon green
+            0,
+            titleLen,
+            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+    );
+
+    TextView msg = new TextView(this);
+    msg.setText(span);
+    msg.setTextSize(15f);
+    msg.setGravity(Gravity.CENTER);
+    msg.setPadding(0, 0, 0, dp(16));
+    box.addView(msg);
+
+    // =========================
+    // BUTTONS
+    // =========================
+    LinearLayout buttons = new LinearLayout(this);
+    buttons.setOrientation(LinearLayout.HORIZONTAL);
+    buttons.setGravity(Gravity.CENTER);
+
+    LinearLayout.LayoutParams lpLeft =
+            new LinearLayout.LayoutParams(0, dp(56), 1f);
+    lpLeft.setMargins(0, 0, dp(8), 0);
+
+    LinearLayout.LayoutParams lpRight =
+            new LinearLayout.LayoutParams(0, dp(56), 1f);
+    lpRight.setMargins(dp(8), 0, 0, 0);
+
+    // NO BUTTON
+    Button no = new Button(this);
+    no.setText(
+            gr ? "ΟΧΙ\nΗ οθόνη είναι ΟΚ"
+               : "NO\nScreen OK"
+    );
+    no.setAllCaps(false);
+    no.setSingleLine(false);
+    no.setMaxLines(2);
+    no.setGravity(Gravity.CENTER);
+    no.setTextColor(Color.WHITE);
+    no.setTextSize(15f);
+    no.setLayoutParams(lpLeft);
+
+    GradientDrawable noBg = new GradientDrawable();
+    noBg.setColor(0xFF0F8A3B); // 🟢 πράσινο
+    noBg.setCornerRadius(dp(12));
+    noBg.setStroke(dp(3), 0xFFFFD700);
+    no.setBackground(noBg);
+
+    // YES BUTTON
+    Button yes = new Button(this);
+    yes.setText(
+            gr ? "ΝΑΙ\nΠαρατηρήθηκαν προβλήματα"
+               : "YES\nIssues noticed"
+    );
+    yes.setAllCaps(false);
+    yes.setSingleLine(false);
+    yes.setMaxLines(2);
+    yes.setGravity(Gravity.CENTER);
+    yes.setTextColor(Color.WHITE);
+    yes.setTextSize(15f);
+    yes.setLayoutParams(lpRight);
+
+    GradientDrawable yesBg = new GradientDrawable();
+    yesBg.setColor(0xFFB00020); // 🔴 κόκκινο
+    yesBg.setCornerRadius(dp(12));
+    yesBg.setStroke(dp(3), 0xFFFFD700);
+    yes.setBackground(yesBg);
+
+    buttons.addView(no);
+    buttons.addView(yes);
+    box.addView(buttons);
+
+    b.setView(box);
+
+    AlertDialog d = b.create();
+    if (d.getWindow() != null)
+        d.getWindow().setBackgroundDrawable(
+                new ColorDrawable(Color.TRANSPARENT)
         );
-        msg.setTextColor(0xFFDDDDDD);
-        msg.setTextSize(15f);
-        msg.setGravity(Gravity.CENTER);
-        msg.setPadding(0, 0, 0, dp(16));
-        box.addView(msg);
 
-        LinearLayout buttons = new LinearLayout(this);
-        buttons.setOrientation(LinearLayout.HORIZONTAL);
-        buttons.setGravity(Gravity.END);
+    d.show();
 
-        Button no = new Button(this);
-no.setText("NO\nScreen OK");
-no.setAllCaps(false);
-no.setSingleLine(false);
-no.setMaxLines(2);
-no.setGravity(Gravity.CENTER);
-no.setTextColor(Color.WHITE);
-no.setTextSize(15f);
+    // =========================
+    // ACTIONS
+    // =========================
+    no.setOnClickListener(v -> {
+        Intent i = new Intent();
+        i.putExtra("display_issues", false);
+        setResult(RESULT_OK, i);
+        finish();
+    });
 
-GradientDrawable noBg = new GradientDrawable();
-noBg.setColor(0xFF0F8A3B); // 🟢 ΠΡΑΣΙΝΟ
-noBg.setCornerRadius(dp(12));
-noBg.setStroke(dp(3), 0xFFFFD700);
-no.setBackground(noBg);
-
-LinearLayout.LayoutParams lpNo =
-        new LinearLayout.LayoutParams(0, dp(56), 1f);
-no.setLayoutParams(lpNo);
-
-        Button yes = new Button(this);
-yes.setText("YES\nIssues noticed");
-yes.setAllCaps(false);
-yes.setSingleLine(false);
-yes.setMaxLines(2);
-yes.setGravity(Gravity.CENTER);
-yes.setTextColor(Color.WHITE);
-yes.setTextSize(15f);
-
-GradientDrawable yesBg = new GradientDrawable();
-yesBg.setColor(0xFFB00020); // 🔴 ΚΟΚΚΙΝΟ
-yesBg.setCornerRadius(dp(12));
-yesBg.setStroke(dp(3), 0xFFFFD700);
-yes.setBackground(yesBg);
-
-LinearLayout.LayoutParams lpYes =
-        new LinearLayout.LayoutParams(0, dp(56), 1f);
-yes.setLayoutParams(lpYes);
-
-        buttons.addView(no);
-        buttons.addView(yes);
-        box.addView(buttons);
-
-        b.setView(box);
-
-        AlertDialog d = b.create();
-        if (d.getWindow() != null)
-            d.getWindow().setBackgroundDrawable(
-                    new ColorDrawable(Color.TRANSPARENT));
-
-        d.show();
-
-        no.setOnClickListener(v -> {
-            Intent i = new Intent();
-            i.putExtra("display_issues", false);
-            setResult(RESULT_OK, i);
-            finish();
-        });
-
-        yes.setOnClickListener(v -> {
-            Intent i = new Intent();
-            i.putExtra("display_issues", true);
-            setResult(RESULT_OK, i);
-            finish();
-        });
-    }
+    yes.setOnClickListener(v -> {
+        Intent i = new Intent();
+        i.putExtra("display_issues", true);
+        setResult(RESULT_OK, i);
+        finish();
+    });
+}
 
     // ============================================================
     // HELPERS

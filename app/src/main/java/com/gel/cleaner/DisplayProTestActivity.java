@@ -409,7 +409,7 @@ private LinearLayout buildGELPopupRoot(Context ctx) {
 }
 
 // ============================================================
-// HEADER + MUTE
+// HEADER + MUTE (FIXED)
 // ============================================================
 private LinearLayout buildPopupHeaderWithMute(
         Context ctx,
@@ -423,23 +423,45 @@ private LinearLayout buildPopupHeaderWithMute(
     header.setGravity(Gravity.CENTER_VERTICAL);
     header.setPadding(0, 0, 0, dpCtx(ctx, 12));
 
+    // TITLE
     TextView title = new TextView(ctx);
     title.setText(titleText);
     title.setTextColor(Color.WHITE);
     title.setTextSize(18f);
     title.setTypeface(null, Typeface.BOLD);
-    title.setLayoutParams(
-            new LinearLayout.LayoutParams(0,
-                    LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
-    );
 
-    Button muteBtn = gelButton(
-            ctx,
+    LinearLayout.LayoutParams titleLp =
+            new LinearLayout.LayoutParams(
+                    0,
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    1f
+            );
+    title.setLayoutParams(titleLp);
+
+    // MUTE BUTTON — 🔴 WRAP_CONTENT (ΟΧΙ MATCH_PARENT)
+    Button muteBtn = new Button(ctx);
+    muteBtn.setText(
             AppTTS.isMuted()
                     ? (gr ? "Ενεργοποίηση Ήχου" : "Unmute")
-                    : (gr ? "Σίγαση Ήχου"       : "Mute"),
-            0xFF444444
+                    : (gr ? "Σίγαση Ήχου"       : "Mute")
     );
+    muteBtn.setAllCaps(false);
+    muteBtn.setTextColor(Color.WHITE);
+    muteBtn.setTextSize(14f);
+
+    GradientDrawable bg = new GradientDrawable();
+    bg.setColor(0xFF444444);
+    bg.setCornerRadius(dpCtx(ctx, 14));
+    bg.setStroke(dpCtx(ctx, 3), 0xFFFFD700);
+    muteBtn.setBackground(bg);
+
+    LinearLayout.LayoutParams muteLp =
+            new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    dpCtx(ctx, 44)
+            );
+    muteLp.setMargins(dpCtx(ctx, 6), 0, 0, 0);
+    muteBtn.setLayoutParams(muteLp);
 
     muteBtn.setOnClickListener(v -> {
         boolean newState = !AppTTS.isMuted();

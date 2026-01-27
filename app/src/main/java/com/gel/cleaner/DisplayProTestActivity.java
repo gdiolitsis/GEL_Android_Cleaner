@@ -344,7 +344,7 @@ private void finishTest() {
     // =========================
     // TTS
     // =========================
-    AppTTS.speak(this, text, gr);
+    AppTTS.speak(this, text);
 
     // =========================
     // ACTIONS

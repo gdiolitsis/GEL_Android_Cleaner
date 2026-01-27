@@ -1,20 +1,15 @@
 package com.gel.cleaner;
 
 import android.content.Context;
-import android.content.SharedPreferences;
+import java.util.Locale;
 
 // ============================================================
-// APP LANGUAGE HELPER — GEL STYLE (LOCKED)
-// • App-level language ONLY (not system)
-// • Application-context safe
-// • Android / TTS compatible ("el" / "en")
+// APP LANGUAGE HELPER — GEL (LOCKED)
+// Source of truth: LocaleHelper (app language)
 // ============================================================
 public final class AppLang {
 
-    private static final String PREFS   = "gel_prefs";
-    private static final String KEY_LANG = "app_lang"; // "en" | "el"
-
-    private AppLang() {} // no instances
+    private AppLang() {}
 
     // ------------------------------------------------------------
     // TRUE = Greek, FALSE = English
@@ -22,18 +17,16 @@ public final class AppLang {
     public static boolean isGreek(Context c) {
         if (c == null) return false;
 
-        Context appCtx = c.getApplicationContext();
-
-        SharedPreferences sp =
-                appCtx.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
-
-        String lang = sp.getString(KEY_LANG, "en");
-
-        return "el".equalsIgnoreCase(lang) || "gr".equalsIgnoreCase(lang);
+        try {
+            Locale l = LocaleHelper.getLocale(c);
+            return l != null && "el".equalsIgnoreCase(l.getLanguage());
+        } catch (Throwable t) {
+            return false;
+        }
     }
 
     // ------------------------------------------------------------
-    // Canonical language code for Android / TTS
+    // Canonical language
     // ------------------------------------------------------------
     public static String lang(Context c) {
         return isGreek(c) ? "el" : "en";

@@ -366,19 +366,135 @@ private void finishTest() {
     });
 }
 
-    // ============================================================
-    // HELPERS
-    // ============================================================
-    private int dp(int v) {
-        float d = getResources().getDisplayMetrics().density;
-        return (int) (v * d + 0.5f);
-    }
+// ============================================================
+// GEL POPUP ROOT — BLACK + GOLD
+// ============================================================
+private LinearLayout buildGELPopupRoot(Context ctx) {
 
-    private View space(int w) {
-        View v = new View(this);
-        v.setLayoutParams(new LinearLayout.LayoutParams(w, 1));
-        return v;
-    }
+    LinearLayout root = new LinearLayout(ctx);
+    root.setOrientation(LinearLayout.VERTICAL);
+    root.setPadding(
+            dpCtx(ctx, 24),
+            dpCtx(ctx, 22),
+            dpCtx(ctx, 24),
+            dpCtx(ctx, 18)
+    );
+
+    GradientDrawable bg = new GradientDrawable();
+    bg.setColor(0xFF101010);
+    bg.setCornerRadius(dpCtx(ctx, 18));
+    bg.setStroke(dpCtx(ctx, 4), 0xFFFFD700);
+    root.setBackground(bg);
+
+    return root;
+}
+
+// ============================================================
+// HEADER + MUTE
+// ============================================================
+private LinearLayout buildPopupHeaderWithMute(
+        Context ctx,
+        String titleText,
+        Runnable onMuteToggle
+) {
+    final boolean gr = AppLang.isGreek(ctx);
+
+    LinearLayout header = new LinearLayout(ctx);
+    header.setOrientation(LinearLayout.HORIZONTAL);
+    header.setGravity(Gravity.CENTER_VERTICAL);
+    header.setPadding(0, 0, 0, dpCtx(ctx, 12));
+
+    TextView title = new TextView(ctx);
+    title.setText(titleText);
+    title.setTextColor(Color.WHITE);
+    title.setTextSize(18f);
+    title.setTypeface(null, Typeface.BOLD);
+    title.setLayoutParams(
+            new LinearLayout.LayoutParams(0,
+                    LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+    );
+
+    Button muteBtn = gelButton(
+            ctx,
+            AppTTS.isMuted()
+                    ? (gr ? "Ενεργοποίηση Ήχου" : "Unmute")
+                    : (gr ? "Σίγαση Ήχου"       : "Mute"),
+            0xFF444444
+    );
+
+    muteBtn.setOnClickListener(v -> {
+        boolean newState = !AppTTS.isMuted();
+        AppTTS.setMuted(ctx, newState);
+        muteBtn.setText(
+                newState
+                        ? (gr ? "Ενεργοποίηση Ήχου" : "Unmute")
+                        : (gr ? "Σίγαση Ήχου"       : "Mute")
+        );
+        if (newState) AppTTS.stop();
+        if (onMuteToggle != null) onMuteToggle.run();
+    });
+
+    header.addView(title);
+    header.addView(muteBtn);
+
+    return header;
+}
+
+// ============================================================
+// GEL BUTTON
+// ============================================================
+private Button gelButton(Context ctx, String text, int bgColor) {
+
+    Button b = new Button(ctx);
+    b.setText(text);
+    b.setAllCaps(false);
+    b.setTextColor(Color.WHITE);
+    b.setTextSize(15f);
+
+    GradientDrawable bg = new GradientDrawable();
+    bg.setColor(bgColor);
+    bg.setCornerRadius(dpCtx(ctx, 14));
+    bg.setStroke(dpCtx(ctx, 3), 0xFFFFD700);
+    b.setBackground(bg);
+
+    LinearLayout.LayoutParams lp =
+            new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    dpCtx(ctx, 52)
+            );
+    lp.setMargins(dpCtx(ctx, 6), 0, dpCtx(ctx, 6), 0);
+    b.setLayoutParams(lp);
+
+    return b;
+}
+
+// ============================================================
+// DUAL BUTTON LAYOUT
+// ============================================================
+private void setDualButtonLayout(
+        Button left,
+        Button right,
+        LinearLayout parent
+) {
+    parent.removeAllViews();
+    parent.addView(left);
+    parent.addView(space(dpCtx(parent.getContext(), 12)));
+    parent.addView(right);
+}
+
+// ============================================================
+// DP CONTEXT HELPER
+// ============================================================
+private static int dpCtx(Context ctx, int v) {
+    float d = ctx.getResources().getDisplayMetrics().density;
+    return (int) (v * d + 0.5f);
+}
+
+private View space(int w) {
+    View v = new View(this);
+    v.setLayoutParams(new LinearLayout.LayoutParams(w, 1));
+    return v;
+}
 
     // ============================================================
     // STEP TYPES

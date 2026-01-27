@@ -896,6 +896,13 @@ private void applyAppleModeUI() {
     }
 
 private void changeLang(String code) {
+
+    // 🔒 SAVE APP LANGUAGE FOR AppLang / TTS / LABS
+    getSharedPreferences("gel_prefs", MODE_PRIVATE)
+            .edit()
+            .putString("app_lang", code)   // "el" | "en"
+            .apply();
+
     setSkipWelcomeOnce(true);
     LocaleHelper.set(this, code);
     recreate();

@@ -4,12 +4,15 @@ import android.content.Context;
 import android.content.SharedPreferences;
 
 // ============================================================
-// APP LANGUAGE HELPER — GEL STYLE
+// APP LANGUAGE HELPER — GEL STYLE (LOCKED)
+// • App-level language ONLY (not system)
+// • Application-context safe
+// • Android / TTS compatible ("el" / "en")
 // ============================================================
 public final class AppLang {
 
-    private static final String PREFS = "gel_prefs";
-    private static final String KEY_LANG = "app_lang"; // "en" | "gr"
+    private static final String PREFS   = "gel_prefs";
+    private static final String KEY_LANG = "app_lang"; // "en" | "el"
 
     private AppLang() {} // no instances
 
@@ -19,18 +22,20 @@ public final class AppLang {
     public static boolean isGreek(Context c) {
         if (c == null) return false;
 
-        SharedPreferences sp =
-                c.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+        Context appCtx = c.getApplicationContext();
 
-        return "gr".equalsIgnoreCase(
-                sp.getString(KEY_LANG, "en")
-        );
+        SharedPreferences sp =
+                appCtx.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+
+        String lang = sp.getString(KEY_LANG, "en");
+
+        return "el".equalsIgnoreCase(lang) || "gr".equalsIgnoreCase(lang);
     }
 
     // ------------------------------------------------------------
-    // Convenience
+    // Canonical language code for Android / TTS
     // ------------------------------------------------------------
     public static String lang(Context c) {
-        return isGreek(c) ? "gr" : "en";
+        return isGreek(c) ? "el" : "en";
     }
 }

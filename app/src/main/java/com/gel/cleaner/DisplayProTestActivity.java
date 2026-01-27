@@ -60,11 +60,15 @@ public class DisplayProTestActivity extends Activity {
     // ============================================================
     // LIFECYCLE
     // ============================================================
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        showOledWarning();
-    }
+@Override
+protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+
+    // 🔥 CRITICAL: reset TTS ώστε να πιάσει ΤΡΕΧΟΥΣΑ γλώσσα app
+    AppTTS.shutdown();
+
+    showOledWarning();
+}
 
     @Override
     protected void onResume() {
@@ -122,7 +126,8 @@ public class DisplayProTestActivity extends Activity {
             d.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         d.show();
 
-        AppTTS.speak(this, text);
+AppTTS.stop();
+AppTTS.speak(this, text);
 
         cancel.setOnClickListener(v -> {
             AppTTS.stop();
@@ -284,7 +289,8 @@ public class DisplayProTestActivity extends Activity {
             d.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         d.show();
 
-        AppTTS.speak(this, text);
+AppTTS.stop();
+AppTTS.speak(this, text);
 
         no.setOnClickListener(v -> {
             AppTTS.stop();

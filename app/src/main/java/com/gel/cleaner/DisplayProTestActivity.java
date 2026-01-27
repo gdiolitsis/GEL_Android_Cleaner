@@ -23,8 +23,6 @@ import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import java.util.Locale;
-
 public class DisplayProTestActivity extends Activity {
 
     // ============================================================
@@ -44,20 +42,16 @@ public class DisplayProTestActivity extends Activity {
     private long startTimeMs;
 
     private TestStep[] steps;
-
     private final Handler h = new Handler(Looper.getMainLooper());
 
     // ============================================================
-    // 🔴 CRITICAL — APPLY APP LANGUAGE
+    // APPLY APP LANGUAGE
     // ============================================================
     @Override
     protected void attachBaseContext(Context base) {
         super.attachBaseContext(LocaleHelper.apply(base));
     }
 
-    // ============================================================
-    // LIFECYCLE
-    // ============================================================
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -66,11 +60,11 @@ public class DisplayProTestActivity extends Activity {
 
     @Override
     public void onBackPressed() {
-        // disabled intentionally
+        // disabled
     }
 
     // ============================================================
-    // OLED WARNING POPUP
+    // POPUP 1 — OLED WARNING
     // ============================================================
     private void showOledWarning() {
 
@@ -86,31 +80,27 @@ public class DisplayProTestActivity extends Activity {
                         + "Proceed only if you understand and accept this.";
 
         AlertDialog.Builder b =
-                new AlertDialog.Builder(
-                        this,
-                        android.R.style.Theme_Material_Dialog_NoActionBar
-                );
+                new AlertDialog.Builder(this,
+                        android.R.style.Theme_Material_Dialog_NoActionBar);
         b.setCancelable(false);
 
         LinearLayout root = buildPopupRoot(this);
 
-        // HEADER + MUTE
-        root.addView(
-                buildPopupHeaderWithMute(
-                        this,
-                        gr ? "Δοκιμή Καταπόνησης Οθόνης" : "Display Stress Test"
-                )
-        );
+        // ---------- HEADER + MUTE ----------
+        root.addView(buildHeaderWithMute(
+                gr ? "Δοκιμή Καταπόνησης Οθόνης" : "Display Stress Test"
+        ));
 
-        TextView msg = buildMessage(this, text);
-        root.addView(msg);
+        // ---------- MESSAGE ----------
+        root.addView(buildMessage(text));
 
+        // ---------- BUTTONS ----------
         LinearLayout buttons = new LinearLayout(this);
         buttons.setOrientation(LinearLayout.HORIZONTAL);
         buttons.setGravity(Gravity.CENTER);
 
-        Button cancel = gelButton(this, gr ? "ΑΚΥΡΩΣΗ" : "CANCEL", 0xFFB00020);
-        Button start  = gelButton(this, gr ? "ΕΝΑΡΞΗ" : "START",  0xFF0F8A3B);
+        Button cancel = gelButton(gr ? "ΑΚΥΡΩΣΗ" : "CANCEL", 0xFFB00020);
+        Button start  = gelButton(gr ? "ΕΝΑΡΞΗ" : "START",  0xFF0F8A3B);
 
         setDualButtons(cancel, start, buttons);
         root.addView(buttons);
@@ -147,28 +137,16 @@ public class DisplayProTestActivity extends Activity {
         final boolean gr = AppLang.isGreek(this);
 
         steps = new TestStep[]{
-
-                new SolidStep(Color.BLACK,
-                        gr ? "Μαύρο — φωτεινά pixels" : "Black — bright pixels"),
-                new SolidStep(Color.WHITE,
-                        gr ? "Λευκό — σκοτεινά σημεία" : "White — dark spots"),
-                new SolidStep(Color.RED,
-                        gr ? "Κόκκινο — burn-in / tint" : "Red — burn-in / tint"),
-                new SolidStep(Color.GREEN,
-                        gr ? "Πράσινο — ομοιομορφία" : "Green — uniformity"),
-                new SolidStep(Color.BLUE,
-                        gr ? "Μπλε — ομοιομορφία" : "Blue — uniformity"),
-
-                new DrawableStep(
-                        DisplayPatterns.makeGradient(),
+                new SolidStep(Color.BLACK, gr ? "Μαύρο — φωτεινά pixels" : "Black — bright pixels"),
+                new SolidStep(Color.WHITE, gr ? "Λευκό — σκοτεινά σημεία" : "White — dark spots"),
+                new SolidStep(Color.RED,   gr ? "Κόκκινο — burn-in"       : "Red — burn-in"),
+                new SolidStep(Color.GREEN, gr ? "Πράσινο — ομοιομορφία"  : "Green — uniformity"),
+                new SolidStep(Color.BLUE,  gr ? "Μπλε — ομοιομορφία"     : "Blue — uniformity"),
+                new DrawableStep(DisplayPatterns.makeGradient(),
                         gr ? "Διαβάθμιση — banding" : "Gradient — banding"),
-
-                new DrawableStep(
-                        DisplayPatterns.makeCheckerboard(),
-                        gr ? "Σκακιέρα — mura / stains" : "Checkerboard — mura"),
-
-                new DrawableStep(
-                        DisplayPatterns.makeBurnInCycle(),
+                new DrawableStep(DisplayPatterns.makeCheckerboard(),
+                        gr ? "Σκακιέρα — mura" : "Checkerboard — mura"),
+                new DrawableStep(DisplayPatterns.makeBurnInCycle(),
                         gr ? "Κύκλος καταπόνησης OLED" : "Burn-in stress cycle")
         };
 
@@ -198,8 +176,6 @@ public class DisplayProTestActivity extends Activity {
 
     private void runStep() {
 
-        final boolean gr = AppLang.isGreek(this);
-
         if (System.currentTimeMillis() - startTimeMs > MAX_RUNTIME_MS) {
             finishTest();
             return;
@@ -219,7 +195,7 @@ public class DisplayProTestActivity extends Activity {
 
         hint.setText(
                 s.label + "\n\n" +
-                        (gr ? "Κύκλος " : "Cycle ") +
+                        (AppLang.isGreek(this) ? "Κύκλος " : "Cycle ") +
                         (loopIndex + 1) + " / " + LOOP_COUNT
         );
 
@@ -228,7 +204,7 @@ public class DisplayProTestActivity extends Activity {
     }
 
     // ============================================================
-    // FINAL QUESTION
+    // POPUP 2 — FINAL QUESTION
     // ============================================================
     private void finishTest() {
 
@@ -237,31 +213,20 @@ public class DisplayProTestActivity extends Activity {
         final String text =
                 gr
                         ? "Παρατήρησες κάποιο πρόβλημα στην οθόνη;\n\n"
-                        + "• Burn-in / αποτύπωση\n"
-                        + "• Ζώνες χρώματος\n"
-                        + "• Κηλίδες / mura\n"
-                        + "• Ανομοιομορφία"
+                        + "• Burn-in\n• Ζώνες χρώματος\n• Κηλίδες / mura\n• Ανομοιομορφία"
                         : "Did you notice any display issues?\n\n"
-                        + "• Burn-in\n"
-                        + "• Color banding\n"
-                        + "• Stains / mura\n"
-                        + "• Uneven brightness";
+                        + "• Burn-in\n• Color banding\n• Stains / mura\n• Uneven brightness";
 
         AlertDialog.Builder b =
-                new AlertDialog.Builder(
-                        this,
-                        android.R.style.Theme_Material_Dialog_NoActionBar
-                );
+                new AlertDialog.Builder(this,
+                        android.R.style.Theme_Material_Dialog_NoActionBar);
         b.setCancelable(false);
 
         LinearLayout root = buildPopupRoot(this);
 
-        root.addView(
-                buildPopupHeaderWithMute(
-                        this,
-                        gr ? "Οπτικός Έλεγχος" : "Visual Inspection"
-                )
-        );
+        root.addView(buildHeaderWithMute(
+                gr ? "Οπτικός Έλεγχος" : "Visual Inspection"
+        ));
 
         SpannableString span = new SpannableString(text);
         span.setSpan(
@@ -271,20 +236,14 @@ public class DisplayProTestActivity extends Activity {
                 Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
         );
 
-        TextView msg = buildMessage(this, span);
-        root.addView(msg);
+        root.addView(buildMessage(span));
 
         LinearLayout buttons = new LinearLayout(this);
         buttons.setOrientation(LinearLayout.HORIZONTAL);
         buttons.setGravity(Gravity.CENTER);
 
-        Button no  = gelButton(this,
-                gr ? "ΟΧΙ\nΗ οθόνη είναι ΟΚ" : "NO\nScreen OK",
-                0xFF0F8A3B);
-
-        Button yes = gelButton(this,
-                gr ? "ΝΑΙ\nΥπάρχουν προβλήματα" : "YES\nIssues found",
-                0xFFB00020);
+        Button no  = gelButton(gr ? "ΟΧΙ\nΟΚ" : "NO\nOK", 0xFF0F8A3B);
+        Button yes = gelButton(gr ? "ΝΑΙ\nΠρόβλημα" : "YES\nIssue", 0xFFB00020);
 
         setDualButtons(no, yes, buttons);
         root.addView(buttons);
@@ -302,47 +261,43 @@ public class DisplayProTestActivity extends Activity {
 
         no.setOnClickListener(v -> {
             AppTTS.stop();
-            Intent i = new Intent();
-            i.putExtra("display_issues", false);
-            setResult(RESULT_OK, i);
+            setResult(RESULT_OK);
             finish();
         });
 
         yes.setOnClickListener(v -> {
             AppTTS.stop();
-            Intent i = new Intent();
-            i.putExtra("display_issues", true);
-            setResult(RESULT_OK, i);
+            setResult(RESULT_OK);
             finish();
         });
     }
 
     // ============================================================
-    // UI HELPERS
+    // UI HELPERS (LOCAL)
     // ============================================================
     private LinearLayout buildPopupRoot(Context ctx) {
-
-        LinearLayout root = new LinearLayout(ctx);
-        root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(dp(24), dp(22), dp(24), dp(18));
+        LinearLayout r = new LinearLayout(ctx);
+        r.setOrientation(LinearLayout.VERTICAL);
+        r.setPadding(dp(24), dp(22), dp(24), dp(18));
 
         GradientDrawable bg = new GradientDrawable();
         bg.setColor(0xFF101010);
         bg.setCornerRadius(dp(18));
         bg.setStroke(dp(4), 0xFFFFD700);
-        root.setBackground(bg);
-
-        return root;
+        r.setBackground(bg);
+        return r;
     }
 
-    private LinearLayout buildPopupHeaderWithMute(Context ctx, String titleText) {
+    private LinearLayout buildHeaderWithMute(String titleText) {
 
-        LinearLayout header = new LinearLayout(ctx);
-        header.setOrientation(LinearLayout.HORIZONTAL);
-        header.setGravity(Gravity.CENTER_VERTICAL);
-        header.setPadding(0, 0, 0, dp(12));
+        final boolean gr = AppLang.isGreek(this);
 
-        TextView title = new TextView(ctx);
+        LinearLayout h = new LinearLayout(this);
+        h.setOrientation(LinearLayout.HORIZONTAL);
+        h.setGravity(Gravity.CENTER_VERTICAL);
+        h.setPadding(0, 0, 0, dp(12));
+
+        TextView title = new TextView(this);
         title.setText(titleText);
         title.setTextColor(Color.WHITE);
         title.setTextSize(18f);
@@ -352,86 +307,78 @@ public class DisplayProTestActivity extends Activity {
                         LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
         );
 
-        Button mute = gelButton(
-                ctx,
+        Button mute = new Button(this);
+        mute.setAllCaps(false);
+        mute.setTextSize(14f);
+        mute.setPadding(dp(16), dp(8), dp(16), dp(8));
+        mute.setMinWidth(0);
+        mute.setMinimumWidth(0);
+
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(0xFF444444);
+        bg.setCornerRadius(dp(12));
+        bg.setStroke(dp(2), 0xFFFFD700);
+        mute.setBackground(bg);
+
+        mute.setText(
                 AppTTS.isMuted()
-                        ? (AppLang.isGreek(ctx) ? "Ήχος ON" : "Unmute")
-                        : (AppLang.isGreek(ctx) ? "Σίγαση" : "Mute"),
-                0xFF444444
+                        ? (gr ? "Ήχος ON" : "Unmute")
+                        : (gr ? "Σίγαση" : "Mute")
         );
 
         mute.setOnClickListener(v -> {
             boolean m = !AppTTS.isMuted();
-            AppTTS.setMuted(ctx, m);
+            AppTTS.setMuted(this, m);
             mute.setText(
                     m
-                            ? (AppLang.isGreek(ctx) ? "Ήχος ON" : "Unmute")
-                            : (AppLang.isGreek(ctx) ? "Σίγαση" : "Mute")
+                            ? (gr ? "Ήχος ON" : "Unmute")
+                            : (gr ? "Σίγαση" : "Mute")
             );
             if (m) AppTTS.stop();
         });
 
-        header.addView(title);
-        header.addView(mute);
-
-        return header;
+        h.addView(title);
+        h.addView(mute);
+        return h;
     }
 
-    private TextView buildMessage(Context ctx, CharSequence text) {
-
-        TextView tv = new TextView(ctx);
+    private TextView buildMessage(CharSequence text) {
+        TextView tv = new TextView(this);
         tv.setText(text);
         tv.setTextColor(0xFF39FF14);
         tv.setTextSize(15f);
         tv.setGravity(Gravity.CENTER);
         tv.setPadding(0, 0, 0, dp(16));
-
-        tv.setLayoutParams(
-                new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT
-                )
-        );
-
+        tv.setLayoutParams(new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT));
         return tv;
     }
 
-    private Button gelButton(Context ctx, String text, int bgColor) {
-
-        Button b = new Button(ctx);
+    private Button gelButton(String text, int color) {
+        Button b = new Button(this);
         b.setText(text);
         b.setAllCaps(false);
         b.setTextColor(Color.WHITE);
         b.setTextSize(15f);
 
         GradientDrawable bg = new GradientDrawable();
-        bg.setColor(bgColor);
+        bg.setColor(color);
         bg.setCornerRadius(dp(14));
         bg.setStroke(dp(3), 0xFFFFD700);
         b.setBackground(bg);
 
         LinearLayout.LayoutParams lp =
-                new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        dp(52)
-                );
+                new LinearLayout.LayoutParams(0, dp(52), 1f);
         lp.setMargins(dp(6), 0, dp(6), 0);
         b.setLayoutParams(lp);
-
         return b;
     }
 
-    private void setDualButtons(Button left, Button right, LinearLayout parent) {
-        parent.removeAllViews();
-        parent.addView(left);
-        parent.addView(space(dp(12)));
-        parent.addView(right);
-    }
-
-    private View space(int w) {
-        View v = new View(this);
-        v.setLayoutParams(new LinearLayout.LayoutParams(w, 1));
-        return v;
+    private void setDualButtons(Button l, Button r, LinearLayout p) {
+        p.removeAllViews();
+        p.addView(l);
+        p.addView(r);
     }
 
     private int dp(int v) {

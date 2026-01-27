@@ -177,7 +177,7 @@ private void showOledWarning() {
     d.show();
 
     // TTS
-    AppTTS.speak(this, text, gr);
+    AppTTS.speak(this, text);
 
     cancel.setOnClickListener(v -> {
         AppTTS.stop();

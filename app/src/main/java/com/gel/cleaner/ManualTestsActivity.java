@@ -118,6 +118,9 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import android.speech.tts.TextToSpeech;
+import android.widget.CheckBox;
+
 // ============================================================
 // ANDROIDX
 // ============================================================

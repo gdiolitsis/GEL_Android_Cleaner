@@ -1716,35 +1716,30 @@ private void showLab14PreTestAdvisory(Runnable onContinue) {
             );
     b.setCancelable(true);
 
-    // ROOT (helper)
     LinearLayout root = buildGELPopupRoot(this);
 
-    // HEADER + MUTE (helper)
     root.addView(
             buildPopupHeaderWithMute(
                     this,
                     gr
-        ? "Δοκιμή Καταπόνησης Μπαταρίας — Προειδοποίηση"
-        : "Battery Stress Test — Pre-Test Check",
-AppTTS::stop
+                            ? "Δοκιμή Καταπόνησης Μπαταρίας — Προειδοποίηση"
+                            : "Battery Stress Test — Pre-Test Check",
+                    AppTTS::stop
             )
     );
 
-    // ==========================
-    // MESSAGE
-    // ==========================
     final String text =
-        gr
-        ? "Για μεγαλύτερη διαγνωστική ακρίβεια, συνιστάται το τεστ "
-          + "να εκτελείται μετά από επανεκκίνηση της συσκευής.\n\n"
-          + "Μπορείς να συνεχίσεις χωρίς επανεκκίνηση, όμως "
-          + "πρόσφατη έντονη χρήση μπορεί να επηρεάσει τα αποτελέσματα.\n\n"
-          + "Μην χρησιμοποιήσεις τη συσκευή για τα επόμενα 5 λεπτά."
-        : "For best diagnostic accuracy, it is recommended to run this test "
-          + "after a system restart.\n\n"
-          + "You may continue without restarting, but recent heavy usage "
-          + "can affect the results.\n\n"
-          + "Do not use your device for the next 5 minutes.";
+            gr
+                    ? "Για μεγαλύτερη διαγνωστική ακρίβεια, συνιστάται το τεστ "
+                      + "να εκτελείται μετά από επανεκκίνηση της συσκευής.\n\n"
+                      + "Μπορείς να συνεχίσεις χωρίς επανεκκίνηση, όμως "
+                      + "πρόσφατη έντονη χρήση μπορεί να επηρεάσει τα αποτελέσματα.\n\n"
+                      + "Μην χρησιμοποιήσεις τη συσκευή για τα επόμενα 5 λεπτά."
+                    : "For best diagnostic accuracy, it is recommended to run this test "
+                      + "after a system restart.\n\n"
+                      + "You may continue without restarting, but recent heavy usage "
+                      + "can affect the results.\n\n"
+                      + "Do not use your device for the next 5 minutes.";
 
     TextView msg = new TextView(this);
     msg.setText(text);
@@ -1753,12 +1748,9 @@ AppTTS::stop
     msg.setLineSpacing(0f, 1.2f);
     root.addView(msg);
 
-    // ==========================
-    // CONTINUE BUTTON (GEL)
-    // ==========================
     Button btnContinue = gelButton(
             this,
-            gr ? "Συνέχεια παρ’ όλα αυτά" : "Continue anyway"
+            gr ? "Συνέχεια παρ’ όλα αυτά" : "Continue anyway",
             0xFF0B5D1E
     );
 
@@ -1769,7 +1761,6 @@ AppTTS::stop
             );
     lp.setMargins(0, dp(18), 0, 0);
     btnContinue.setLayoutParams(lp);
-
     root.addView(btnContinue);
 
     b.setView(root);
@@ -1782,9 +1773,6 @@ AppTTS::stop
 
     dlg.show();
 
-    // ==========================
-    // TTS
-    // ==========================
     AppTTS.speak(this, text, gr);
 
     btnContinue.setOnClickListener(v -> {
@@ -1813,13 +1801,11 @@ private void showLab14RunningDialog() {
 
         LinearLayout root = buildGELPopupRoot(this);
 
-        // HEADER ( mute )
         TextView title = new TextView(this);
         title.setText(
                 gr
-                        gr
-        ? "LAB 14 — Δοκιμή σε εξέλιξη…"
-        : "LAB 14 — Running stress test…"
+                        ? "LAB 14 — Δοκιμή σε εξέλιξη…"
+                        : "LAB 14 — Running stress test…"
         );
         title.setTextColor(Color.WHITE);
         title.setTextSize(18f);
@@ -1830,11 +1816,10 @@ private void showLab14RunningDialog() {
         TextView msg = new TextView(this);
         msg.setText(
                 gr
-                        gr
-        ? "Κράτησε την εφαρμογή ανοιχτή.\n"
-          + "Μην φορτίζεις τη συσκευή κατά τη διάρκεια της δοκιμής."
-        : "Please keep the app open.\n"
-          + "Do not charge the device during this test."
+                        ? "Κράτησε την εφαρμογή ανοιχτή.\n"
+                          + "Μην φορτίζεις τη συσκευή κατά τη διάρκεια της δοκιμής."
+                        : "Please keep the app open.\n"
+                          + "Do not charge the device during this test."
         );
         msg.setTextColor(0xFFDDDDDD);
         msg.setTextSize(14f);

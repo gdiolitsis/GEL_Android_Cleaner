@@ -146,5 +146,6 @@ public final class AppTTS {
         } catch (Throwable ignore) {}
         tts = null;
         ready = false;
+        prefsLoaded = false;
     }
 }

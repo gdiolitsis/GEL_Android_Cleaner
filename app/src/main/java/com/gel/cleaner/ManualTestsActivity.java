@@ -230,8 +230,8 @@ private final BroadcastReceiver lab13BtReceiver = new BroadcastReceiver() {
 // ============================================================
 // GLOBAL TTS (for labs that need shared access)
 // ============================================================
-private TextToSpeech tts;
-private boolean ttsReady = false;
+private TextToSpeech[] tts = new TextToSpeech[1];
+private boolean[] ttsReady = { false };
 
 // ============================================================
 // GLOBAL TTS PREF
@@ -256,13 +256,13 @@ private void setTtsMuted(boolean muted) {
 
     if (prefs != null) {
         prefs.edit()
-             .putBoolean(PREF_TTS_MUTED, muted)
-             .apply();
+                .putBoolean(PREF_TTS_MUTED, muted)
+                .apply();
     }
 
-    // 🔇 αν γίνεται mute, κόβουμε άμεσα τον ήχο
-    if (muted && tts != null) {
-        tts.stop();
+    // 🔇 άμεσο κόψιμο ήχου αν γίνει mute
+    if (muted && tts != null && tts[0] != null) {
+        tts[0].stop();
     }
 }
 
@@ -566,7 +566,7 @@ protected void onCreate(@Nullable Bundle savedInstanceState) {
     body1.addView(makeTestButton("5. Vibration Motor Test", this::lab5Vibration));  
 
     // ============================================================  
-    // SECTION 2: DISPLAY & SENSORS — LABS 6â€“9  
+    // SECTION 2: DISPLAY & SENSORS — LABS 6 - 9  
     // ============================================================  
     LinearLayout body2 = makeSectionBody();  
     Button header2 = makeSectionHeader(getString(R.string.manual_cat_2), body2);  
@@ -579,7 +579,7 @@ protected void onCreate(@Nullable Bundle savedInstanceState) {
     body2.addView(makeTestButton("9. Sensors Check", this::lab9SensorsCheck));  
 
     // ============================================================  
-    // SECTION 3: WIRELESS & CONNECTIVITY — LABS 10â€“13  
+    // SECTION 3: WIRELESS & CONNECTIVITY — LABS 10 - 13  
     // ============================================================  
     LinearLayout body3 = makeSectionBody();  
     Button header3 = makeSectionHeader(getString(R.string.manual_cat_3), body3);  
@@ -591,7 +591,7 @@ protected void onCreate(@Nullable Bundle savedInstanceState) {
     body3.addView(makeTestButton("12. Call Function Interpretation", this::lab12CallFunctionInterpretation));  
     body3.addView(makeTestButton("13. Bluetooth Connectivity Check",this::lab13BluetoothConnectivityCheck));
     // ============================================================  
-    // SECTION 4: BATTERY & THERMAL — LABS 14â€“17  
+    // SECTION 4: BATTERY & THERMAL — LABS 14 - 17  
     // ============================================================  
     LinearLayout body4 = makeSectionBody();  
     Button header4 = makeSectionHeader(getString(R.string.manual_cat_4), body4);  
@@ -605,7 +605,7 @@ protected void onCreate(@Nullable Bundle savedInstanceState) {
     body4.addView(makeTestButtonGreenGold("17. Intelligent System Health Analysis",this::lab17RunAuto));  
 
     // ============================================================  
-    // SECTION 5: STORAGE & PERFORMANCE — LABS 18â€“20  
+    // SECTION 5: STORAGE & PERFORMANCE — LABS 18 - 20  
     // ============================================================  
     LinearLayout body5 = makeSectionBody();  
     Button header5 = makeSectionHeader(getString(R.string.manual_cat_5), body5);  
@@ -617,7 +617,7 @@ protected void onCreate(@Nullable Bundle savedInstanceState) {
     body5.addView(makeTestButton("20. Uptime & Reboot Pattern Analysis", this::lab20UptimeHints));  
 
     // ============================================================  
-    // SECTION 6: SECURITY & SYSTEM HEALTH — LABS 21â€“24  
+    // SECTION 6: SECURITY & SYSTEM HEALTH — LABS 21 - 24  
     // ============================================================  
     LinearLayout body6 = makeSectionBody();  
     Button header6 = makeSectionHeader(getString(R.string.manual_cat_6), body6);  
@@ -630,7 +630,7 @@ protected void onCreate(@Nullable Bundle savedInstanceState) {
     body6.addView(makeTestButton("24. Root / Bootloader Suspicion", this::lab24RootSuspicion));  
 
     // ============================================================  
-    // SECTION 7: ADVANCED / LOGS — LABS 25â€“29  
+    // SECTION 7: ADVANCED / LOGS — LABS 25 - 30 
     // ============================================================  
     LinearLayout body7 = makeSectionBody();  
     Button header7 = makeSectionHeader(getString(R.string.manual_cat_7), body7);  
@@ -718,12 +718,12 @@ protected void onPause() {
     SystemClock.sleep(120);
     restoreLab3Audio();
 
-    // ==========================
+// ==========================
     // TTS STOP
     // ==========================
     try {
         if (tts != null && tts[0] != null) {
-            tts[0].stop();   
+            tts[0].stop();
         }
     } catch (Throwable ignore) {}
 
@@ -745,6 +745,7 @@ protected void onDestroy() {
             tts[0].shutdown();
         } catch (Throwable ignore) {}
         tts[0] = null;
+        ttsReady[0] = false;
     }
 
     super.onDestroy();
@@ -755,22 +756,22 @@ protected void onDestroy() {
 // ============================================================
 private void initTTS() {
 
-    if (tts != null) return;
+    if (tts[0] != null) return;
 
-    tts = new TextToSpeech(this, status -> {
+    tts[0] = new TextToSpeech(this, status -> {
         if (status == TextToSpeech.SUCCESS) {
 
-            int res = tts.setLanguage(Locale.US);
+            int res = tts[0].setLanguage(Locale.US);
             if (res == TextToSpeech.LANG_MISSING_DATA ||
                 res == TextToSpeech.LANG_NOT_SUPPORTED) {
 
-                tts.setLanguage(Locale.ENGLISH);
+                tts[0].setLanguage(Locale.ENGLISH);
             }
 
-            ttsReady = true;
+            ttsReady[0] = true;
 
             if (pendingTtsText != null) {
-                tts.speak(
+                tts[0].speak(
                         pendingTtsText,
                         TextToSpeech.QUEUE_FLUSH,
                         null,
@@ -3617,15 +3618,10 @@ View.OnClickListener toggleMute = v -> {
 muteRow.setOnClickListener(toggleMute);
 muteLabel.setOnClickListener(toggleMute);
 
-// το checkbox απλώς συγχρονίζεται
-muteCheck.setOnCheckedChangeListener((b, checked) -> {
-    if (checked != AppTTS.isMuted(this)) {
-        AppTTS.setMuted(this, checked);
-    }
-});
-
 muteRow.addView(muteCheck);
 muteRow.addView(muteLabel);
+
+root.addView(muteRow);
 
 // ---------------------------
 // MESSAGE

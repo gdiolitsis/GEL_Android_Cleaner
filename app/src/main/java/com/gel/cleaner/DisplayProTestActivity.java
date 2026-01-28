@@ -76,23 +76,11 @@ protected void onCreate(Bundle savedInstanceState) {
 // ============================================================
 // SAFE CANCEL — USER ABORT (GLOBAL)
 // ============================================================
+
 private void safeCancel() {
-
-    if (userCanceled) return; // idempotent
-
-    userCanceled  = true;
-    activityAlive = false;
-
-    // 🧾 LOG — USER ACTION (ΟΧΙ error, ΟΧΙ success)
-    GELServiceLog.logInfo(
-            "Display Pro Test — CANCELED by user"
-    );
-
-    try { h.removeCallbacksAndMessages(null); } catch (Throwable ignore) {}
-    try { AppTTS.stop(); } catch (Throwable ignore) {}
-
-    setResult(RESULT_CANCELED);
-    finish();
+    if (userCanceled) return;
+    userCanceled = true;
+    endTest(false, false);
 }
 
 @Override
@@ -101,6 +89,38 @@ protected void onDestroy() {
     h.removeCallbacksAndMessages(null);
     AppTTS.stop();
     super.onDestroy();
+}
+
+private void endTest(boolean completed, boolean issues) {
+
+    if (!activityAlive) return;
+
+    activityAlive = false;
+    try { h.removeCallbacksAndMessages(null); } catch (Throwable ignore) {}
+    try { AppTTS.stop(); } catch (Throwable ignore) {}
+
+    if (userCanceled) {
+        GELServiceLog.logInfo(
+                "LAB Display Pro Test — CANCELED by user"
+        );
+        setResult(RESULT_CANCELED);
+        finish();
+        return;
+    }
+
+    if (completed) {
+        if (issues) {
+            GELServiceLog.logInfo(
+                    "LAB Display Pro Test — COMPLETED (ISSUES DETECTED)"
+            );
+        } else {
+            GELServiceLog.logInfo(
+                    "LAB Display Pro Test — COMPLETED"
+            );
+        }
+        setResult(RESULT_OK);
+        finish();
+    }
 }
 
     // ============================================================
@@ -255,19 +275,22 @@ public void onBackPressed() {
         return;
     }
 
-    if (System.currentTimeMillis() - startTimeMs > MAX_RUNTIME_MS) {
-        finishTest();
+// MAX RUNTIME
+if (System.currentTimeMillis() - startTimeMs > MAX_RUNTIME_MS) {
+    finishTest();   // ❌ ΟΧΙ endTest
+    return;
+}
+
+// LOOPS
+if (stepIndex >= steps.length) {
+    stepIndex = 0;
+    loopIndex++;
+
+    if (loopIndex >= LOOP_COUNT) {
+        finishTest();   // ❌ ΟΧΙ endTest
         return;
     }
-
-    if (stepIndex >= steps.length) {
-        stepIndex = 0;
-        loopIndex++;
-        if (loopIndex >= LOOP_COUNT) {
-            finishTest();
-            return;
-        }
-    }
+}
 
     TestStep s = steps[stepIndex];
     s.apply(root);
@@ -287,7 +310,12 @@ public void onBackPressed() {
 // ============================================================
 private void finishTest() {
 
-    if (userCanceled || isFinishing() || isDestroyed()) {
+    if (userCanceled) {
+        endTest(false, false);
+        return;
+    }
+
+    if (isFinishing() || isDestroyed()) {
         return;
     }
 
@@ -349,29 +377,8 @@ private void finishTest() {
         }
     }, 120);
 
-    no.setOnClickListener(v -> {
-
-    if (userCanceled) return; // 🔒
-
-    AppTTS.stop();
-    GELServiceLog.logInfo(
-        "Display Pro Test — COMPLETED"
-    );
-    setResult(RESULT_OK);
-    finish();
-});
-
-yes.setOnClickListener(v -> {
-
-    if (userCanceled) return; // 🔒
-
-    AppTTS.stop();
-    GELServiceLog.logInfo(
-        "Display Pro Test — COMPLETED (ISSUES DETECTED)"
-    );
-    setResult(RESULT_OK);
-    finish();
-});
+    no.setOnClickListener(v -> endTest(true, false));
+yes.setOnClickListener(v -> endTest(true, true));
 }
 
     // ============================================================

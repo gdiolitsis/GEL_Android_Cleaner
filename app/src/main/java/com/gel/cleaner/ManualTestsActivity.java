@@ -3728,11 +3728,18 @@ private void lab6DisplayTouch() {
 
     d.show();
     
-new Handler(Looper.getMainLooper()).postDelayed(() -> {
-    if (activeDialog == d && pendingTtsText != null && !AppTTS.isMuted()) {
-        AppTTS.ensureSpeak(this, pendingTtsText);
+d.setOnShowListener(dialog -> {
+    pendingTtsText = message;
+    activeDialog = d;
+
+    if (d.getWindow() != null) {
+        d.getWindow().getDecorView().postDelayed(() -> {
+            if (activeDialog == d && pendingTtsText != null && !AppTTS.isMuted()) {
+                AppTTS.ensureSpeak(this, pendingTtsText);
+            }
+        }, 300);
     }
-}, 120);
+});
 
     // ---------------------------
     // ACTION

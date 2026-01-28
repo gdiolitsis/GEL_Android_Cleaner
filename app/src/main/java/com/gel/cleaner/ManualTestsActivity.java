@@ -3566,14 +3566,14 @@ private void lab6DisplayTouch() {
     final boolean gr = AppLang.isGreek(this);
 
     final String title =
-            gr ? "Έλεγχος Αφής Οθόνης" : "Display Touch Test";
+            gr ? "Έλεγχος Οθόνης Αφηςής" : "Display Touch Test";
 
     final String message =
             gr
-            ? "Άγγιξε όλα τα σημεία στην οθόνη για να ολοκληρωθεί το τεστ αφής.\n\n"
-              + "Το τεστ ελέγχει αν υπάρχουν νεκρές ή μη αποκρινόμενες περιοχές."
-            : "Touch all dots on the screen to complete the touch test.\n\n"
-              + "This test checks for unresponsive or dead touch areas.";
+            ? "Άγγιξε όλα τα σημεία στην οθόνη, για να ολοκληρωθεί το τεστ αφής.\n\n"
+              + "Το τεστ ελέγχει, αν υπάρχουν νεκρές, ή μη αποκρινόμενες περιοχές."
+            : "Touch all dots on the screen, to complete the touch test.\n\n"
+              + "This test checks, for unresponsive, or dead touch areas.";
 
     // ---------------------------
     // POPUP

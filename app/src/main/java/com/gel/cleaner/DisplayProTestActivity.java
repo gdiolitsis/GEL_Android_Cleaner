@@ -336,14 +336,13 @@ Button start  = gelButton(gr ? "ΕΝΑΡΞΗ" : "START",  0xFF0F8A3B);
         d.show();
 
         new Handler(Looper.getMainLooper()).postDelayed(() -> {
-            if (!testFinished && !AppTTS.isMuted()) {
-                AppTTS.ensureSpeak(this, text);
-            }
-        }, 120);
-
-        no.setOnClickListener(v -> endTest(false));
-        yes.setOnClickListener(v -> endTest(true));
+    if (!testFinished && !AppTTS.isMuted(this)) {
+        AppTTS.ensureSpeak(this, text);
     }
+}, 120);
+
+no.setOnClickListener(v -> endTest(false));
+yes.setOnClickListener(v -> endTest(true));
 
     // ============================================================
     // FINAL TERMINATION

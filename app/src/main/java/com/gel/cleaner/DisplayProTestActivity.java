@@ -80,6 +80,9 @@ protected void onCreate(Bundle savedInstanceState) {
 private void safeCancel() {
     if (userCanceled) return;
     userCanceled = true;
+
+    try { h.removeCallbacksAndMessages(null); } catch (Throwable ignore) {}
+
     endTest(false, false);
 }
 
@@ -101,7 +104,7 @@ private void endTest(boolean completed, boolean issues) {
 
     if (userCanceled) {
         GELServiceLog.logInfo(
-                "LAB Display Pro Test — CANCELED by user"
+                "Display Pro Test — CANCELED by user"
         );
         setResult(RESULT_CANCELED);
         finish();
@@ -111,11 +114,11 @@ private void endTest(boolean completed, boolean issues) {
     if (completed) {
         if (issues) {
             GELServiceLog.logInfo(
-                    "LAB Display Pro Test — COMPLETED (ISSUES DETECTED)"
+                    "Display Pro Test — COMPLETED (ISSUES DETECTED)"
             );
         } else {
             GELServiceLog.logInfo(
-                    "LAB Display Pro Test — COMPLETED"
+                    "Display Pro Test — COMPLETED"
             );
         }
         setResult(RESULT_OK);
@@ -315,7 +318,7 @@ private void finishTest() {
         return;
     }
 
-    if (isFinishing() || isDestroyed()) {
+    if (!activityAlive || isFinishing() || isDestroyed()) {
         return;
     }
 

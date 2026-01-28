@@ -1,144 +1,129 @@
-// ============================================================
-// AppTTS.java — FINAL (GEL) — LOCKED
-// • App language aware (via AppLang)
-// • Realtime Greek TTS detect with EN fallback
-// • Persistent mute
-// • SAFE global entry point (ensureSpeak)
-// • Zero UI dependency
-// ============================================================
-
 package com.gel.cleaner;
 
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.speech.tts.TextToSpeech;
-import android.os.Handler;
-import android.os.Looper;
-
 import java.util.Locale;
 
 public final class AppTTS {
 
-    private static final String PREF_NAME = "GEL_TTS_PREF";
-    private static final String KEY_MUTE  = "tts_muted";
+    private static final String PREFS_NAME = "gel_prefs";
+    private static final String PREF_TTS_MUTED = "tts_muted_global";
 
     private static TextToSpeech tts;
-    private static boolean ready = false;
+    private static boolean ttsReady = false;
     private static boolean muted = false;
-    private static boolean prefsLoaded = false;
 
-    // 🔑 realtime capability flag
-    private static boolean greekEverWorked = false;
+    private static String pendingSpeakText = null;
 
     private AppTTS() {}
 
     // ============================================================
-    // INIT (SAFE / IDLE)
+    // INIT — CALL ONCE (SAFE)
     // ============================================================
-    private static synchronized void init(Context ctx) {
-
-        if (!prefsLoaded) {
-            SharedPreferences p =
-                    ctx.getApplicationContext()
-                       .getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
-            muted = p.getBoolean(KEY_MUTE, false);
-            prefsLoaded = true;
-        }
+    public static void init(Context ctx) {
 
         if (tts != null) return;
 
-        tts = new TextToSpeech(
-                ctx.getApplicationContext(),
-                status -> ready = (status == TextToSpeech.SUCCESS)
+        // 🔒 φόρτωμα mute ΜΙΑ ΦΟΡΑ
+        SharedPreferences prefs =
+                ctx.getApplicationContext()
+                   .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        muted = prefs.getBoolean(PREF_TTS_MUTED, false);
+
+        tts = new TextToSpeech(ctx.getApplicationContext(), status -> {
+            if (status == TextToSpeech.SUCCESS) {
+
+                int res = tts.setLanguage(Locale.US);
+                if (res == TextToSpeech.LANG_MISSING_DATA ||
+                    res == TextToSpeech.LANG_NOT_SUPPORTED) {
+
+                    tts.setLanguage(Locale.ENGLISH);
+                }
+
+                ttsReady = true;
+
+                // 🔑 μιλάει ΜΟΝΟ αν ΔΕΝ είναι muted
+                if (!muted && pendingSpeakText != null) {
+                    tts.speak(
+                            pendingSpeakText,
+                            TextToSpeech.QUEUE_FLUSH,
+                            null,
+                            "GEL_TTS_PENDING"
+                    );
+                }
+
+                pendingSpeakText = null;
+            }
+        });
+    }
+
+    // ============================================================
+    // SPEAK — GLOBAL MUTE RESPECTED
+    // ============================================================
+    public static void ensureSpeak(Context ctx, String text) {
+
+        if (text == null || text.isEmpty()) return;
+
+        init(ctx);
+
+        if (muted) return; // 🔇 GLOBAL SILENCE
+
+        if (!ttsReady) {
+            pendingSpeakText = text;
+            return;
+        }
+
+        tts.speak(
+                text,
+                TextToSpeech.QUEUE_FLUSH,
+                null,
+                "GEL_TTS"
         );
     }
 
     // ============================================================
-    // 🔒 GLOBAL ENTRY POINT — USE ONLY THIS
+    // MUTE CONTROL — GLOBAL & PERSISTENT
     // ============================================================
-    public static void ensureSpeak(Context ctx, String text) {
+    public static void setMuted(Context ctx, boolean m) {
 
-        if (ctx == null || text == null || text.trim().isEmpty())
-            return;
+        muted = m;
 
-        if (muted)
-            return;
-
-        init(ctx);
-
-        if (!ready || tts == null)
-            return;
-
-        // force to main thread (TTS is sensitive)
-        new Handler(Looper.getMainLooper()).post(() -> speakInternal(ctx, text));
-    }
-
-    // ============================================================
-    // INTERNAL SPEAK (DO NOT CALL DIRECTLY)
-    // ============================================================
-    private static void speakInternal(Context ctx, String text) {
-
-        try {
-            boolean wantGreek = AppLang.isGreek(ctx);
-            boolean greekOk = false;
-
-            if (wantGreek) {
-                int res = tts.setLanguage(new Locale("el", "GR"));
-                greekOk =
-                        res != TextToSpeech.LANG_MISSING_DATA &&
-                        res != TextToSpeech.LANG_NOT_SUPPORTED;
-
-                if (greekOk) {
-                    greekEverWorked = true;
-                }
-            }
-
-            if (!greekOk) {
-                tts.setLanguage(Locale.US);
-            }
-
-            tts.speak(
-                    text,
-                    TextToSpeech.QUEUE_FLUSH,
-                    null,
-                    "GEL_TTS_" + System.currentTimeMillis()
-            );
-
-        } catch (Throwable ignore) {}
-    }
-
-    // ============================================================
-    // MUTE
-    // ============================================================
-    public static void setMuted(Context ctx, boolean value) {
-
-        muted = value;
-
-        SharedPreferences p =
+        SharedPreferences prefs =
                 ctx.getApplicationContext()
-                   .getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
-        p.edit().putBoolean(KEY_MUTE, value).apply();
+                   .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
 
-        if (muted && tts != null) tts.stop();
+        prefs.edit().putBoolean(PREF_TTS_MUTED, m).apply();
+
+        if (muted && tts != null) {
+            tts.stop(); // κόβει άμεσα τον ήχο
+        }
     }
 
-    public static boolean isMuted() {
+    public static boolean isMuted(Context ctx) {
+        init(ctx);
         return muted;
     }
 
     // ============================================================
-    // CONTROL
+    // STOP
     // ============================================================
     public static void stop() {
-        if (tts != null) tts.stop();
+        if (tts != null) {
+            tts.stop();
+        }
     }
 
+    // ============================================================
+    // RELEASE (OPTIONAL)
+    // ============================================================
     public static void shutdown() {
         if (tts != null) {
             tts.stop();
             tts.shutdown();
+            tts = null;
+            ttsReady = false;
+            pendingSpeakText = null;
         }
-        tts = null;
-        ready = false;
     }
 }

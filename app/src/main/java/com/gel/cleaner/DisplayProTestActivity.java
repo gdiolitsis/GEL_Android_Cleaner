@@ -92,10 +92,10 @@ public class DisplayProTestActivity extends Activity {
         finish();
     }
 
-    @Override
-    protected void onBackPressed() {
-        safeCancel();
-    }
+@Override
+public void onBackPressed() {
+    safeCancel();
+}
 
     @Override
     protected void onDestroy() {

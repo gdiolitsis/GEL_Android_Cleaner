@@ -3715,6 +3715,7 @@ if (d.getWindow() != null) {
 }
 
 d.setOnShowListener(dialog -> {
+    AppTTS.setMuted(this, false);
     AppTTS.ensureSpeak(this, message);
 });
 

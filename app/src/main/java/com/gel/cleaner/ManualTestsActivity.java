@@ -482,14 +482,34 @@ protected void attachBaseContext(Context base) {
 }  
 
 @Override
-
 protected void onCreate(@Nullable Bundle savedInstanceState) {
-super.onCreate(savedInstanceState);
+    super.onCreate(savedInstanceState);
 
-prefs = getSharedPreferences("GEL_DIAG", MODE_PRIVATE);  
-p     = prefs;  
+    prefs = getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
+    p = prefs;
 
-ui = new Handler(Looper.getMainLooper());
+    ui = new Handler(Looper.getMainLooper());
+
+    // init TTS (safe, one time)
+    initTTS();
+
+    // ============================================================
+    // ROOT SCROLL + LAYOUT
+    // ============================================================
+    scroll = new ScrollView(this);
+    scroll.setFillViewport(true);
+
+    LinearLayout root = new LinearLayout(this);
+    root.setOrientation(LinearLayout.VERTICAL);
+    int pad = dp(16);
+    root.setPadding(pad, pad, pad, pad);
+    root.setBackgroundColor(0xFF101010); // GEL black
+
+    scroll.addView(root);
+    setContentView(scroll);
+
+    // 👉 εδώ συνεχίζει ΟΛΟ το UI build (addView, buttons κτλ)
+}
 
 // ============================================================
 // GLOBAL TTS INIT — ONE TIME ONLY (SAFE)
@@ -510,7 +530,7 @@ private void initTTS() {
 
             ttsReady = true;
 
-            // 🔑 ΜΙΛΑΕΙ ΜΟΛΙΣ ΓΙΝΕΙ READY
+            // 🔑 μιλάει μόλις γίνει ready
             if (pendingTtsText != null) {
                 tts.speak(
                         pendingTtsText,
@@ -523,38 +543,6 @@ private void initTTS() {
         }
     });
 }
-
-private void speakNow(String text) {
-
-    if (text == null || text.isEmpty()) return;
-
-    initTTS();
-
-    if (!ttsReady) {
-        // ⬅️ κρατάμε το κείμενο μέχρι να ετοιμαστεί το TTS
-        pendingTtsText = text;
-        return;
-    }
-
-    tts.speak(
-            text,
-            TextToSpeech.QUEUE_FLUSH,
-            null,
-            "GEL_TTS"
-    );
-}
-
-// ============================================================  
-// ROOT SCROLL + LAYOUT  
-// ============================================================  
-scroll = new ScrollView(this);  
-scroll.setFillViewport(true);  
-
-LinearLayout root = new LinearLayout(this);  
-root.setOrientation(LinearLayout.VERTICAL);  
-int pad = dp(16);  
-root.setPadding(pad, pad, pad, pad);  
-root.setBackgroundColor(0xFF101010); // GEL black  
 
     // ============================================================  
     // TITLE  

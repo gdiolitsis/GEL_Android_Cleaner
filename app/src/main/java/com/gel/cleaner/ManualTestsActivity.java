@@ -230,8 +230,8 @@ private final BroadcastReceiver lab13BtReceiver = new BroadcastReceiver() {
 // ============================================================
 // GLOBAL TTS (for labs that need shared access)
 // ============================================================
-private TextToSpeech[] tts = new TextToSpeech[1];
-private boolean[] ttsReady = { false };
+private TextToSpeech tts;
+private boolean ttsReady = false;
 
 // ============================================================
 // GLOBAL TTS PREF

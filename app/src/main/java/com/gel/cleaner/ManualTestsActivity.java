@@ -174,6 +174,22 @@ private static final int REQ_LAB6_COLOR = 6007;
 private AlertDialog lab14RunningDialog;
 private static final int REQ_LAB13_BT_CONNECT = 1313;
 
+private AlertDialog activeDialog;
+private String pendingTtsText;
+
+@Override
+protected void onResume() {
+    super.onResume();
+
+    if (activeDialog != null
+            && activeDialog.isShowing()
+            && pendingTtsText != null
+            && !AppTTS.isMuted()) {
+
+        AppTTS.ensureSpeak(this, pendingTtsText);
+    }
+}
+
 // ============================================================
 // LAB 8.1 — STATE (CLASS FIELDS)
 // ============================================================
@@ -3559,21 +3575,21 @@ enableSingleExportButton();
 
 // ============================================================
 // LAB 6 — Display Touch (POPUP + MUTE + TTS + GR/EN)
-// FINAL — SAFE with AppTTS.ensureSpeak
+// FINAL — LIFECYCLE SAFE
 // ============================================================
 private void lab6DisplayTouch() {
 
     final boolean gr = AppLang.isGreek(this);
 
     final String title =
-            gr ? "Έλεγχος Οθόνης Αφηςής" : "Display Touch Test";
+            gr ? "Έλεγχος Οθόνης Αφής" : "Display Touch Test";
 
     final String message =
             gr
-            ? "Άγγιξε όλα τα σημεία στην οθόνη, για να ολοκληρωθεί το τεστ αφής.\n\n"
-              + "Το τεστ ελέγχει, αν υπάρχουν νεκρές, ή μη αποκρινόμενες περιοχές."
-            : "Touch all dots on the screen, to complete the touch test.\n\n"
-              + "This test checks, for unresponsive, or dead touch areas.";
+                    ? "Άγγιξε όλα τα σημεία στην οθόνη, για να ολοκληρωθεί το τεστ αφής.\n\n"
+                    + "Το τεστ ελέγχει, αν υπάρχουν νεκρές, ή μη αποκρινόμενες περιοχές."
+                    : "Touch all dots on the screen, to complete the touch test.\n\n"
+                    + "This test checks, for unresponsive, or dead touch areas.";
 
     // ---------------------------
     // POPUP
@@ -3652,7 +3668,7 @@ private void lab6DisplayTouch() {
     root.addView(header);
 
     // ---------------------------
-    // MESSAGE (TEXT FOR DEAF USERS)
+    // MESSAGE
     // ---------------------------
     TextView tvMsg = new TextView(this);
     tvMsg.setText(message);
@@ -3660,7 +3676,6 @@ private void lab6DisplayTouch() {
     tvMsg.setTextSize(15f);
     tvMsg.setGravity(Gravity.CENTER);
     tvMsg.setPadding(0, 0, 0, 32);
-
     root.addView(tvMsg);
 
     // ---------------------------
@@ -3695,23 +3710,28 @@ private void lab6DisplayTouch() {
                 new ColorDrawable(Color.TRANSPARENT)
         );
 
-    d.show();
+    // ---------------------------
+    // LIFECYCLE SAFE TTS BIND
+    // ---------------------------
+    d.setOnShowListener(dialog -> {
+        pendingTtsText = message;
+        activeDialog = d;
+    });
 
-// ---------------------------
-// TTS (SAFE GLOBAL ENTRY)
-// ---------------------------
-d.setOnShowListener(dialog -> {
-    root.postDelayed(() -> {
-        if (!AppTTS.isMuted()) {
-            AppTTS.ensureSpeak(this, message);
-        }
-    }, 300);
-});
+    d.setOnDismissListener(dialog -> {
+        pendingTtsText = null;
+        activeDialog = null;
+        AppTTS.stop();
+    });
+
+    d.show();
 
     // ---------------------------
     // ACTION
     // ---------------------------
     startBtn.setOnClickListener(v -> {
+        pendingTtsText = null;
+        activeDialog = null;
         AppTTS.stop();
         d.dismiss();
 

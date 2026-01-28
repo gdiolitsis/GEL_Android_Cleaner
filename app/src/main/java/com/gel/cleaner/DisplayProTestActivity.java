@@ -343,6 +343,7 @@ Button start  = gelButton(gr ? "ΕΝΑΡΞΗ" : "START",  0xFF0F8A3B);
 
 no.setOnClickListener(v -> endTest(false));
 yes.setOnClickListener(v -> endTest(true));
+}
 
     // ============================================================
     // FINAL TERMINATION

@@ -16,7 +16,9 @@ import android.text.SpannableString;
 import android.text.style.ForegroundColorSpan;
 import android.view.Gravity;
 import android.view.WindowManager;
+import android.view.View
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -132,12 +134,15 @@ public void onBackPressed() {
         ));
         root.addView(buildMessage(text));
 
-        LinearLayout buttons = new LinearLayout(this);
-        buttons.setOrientation(LinearLayout.HORIZONTAL);
-        buttons.setGravity(Gravity.CENTER);
+// 👇 ΕΔΩ ΜΠΑΙΝΕΙ ΤΟ MUTE
+root.addView(buildMuteRow());
 
-        Button cancel = gelButton(gr ? "ΑΚΥΡΩΣΗ" : "CANCEL", 0xFFB00020);
-        Button start  = gelButton(gr ? "ΕΝΑΡΞΗ" : "START",  0xFF0F8A3B);
+LinearLayout buttons = new LinearLayout(this);
+buttons.setOrientation(LinearLayout.HORIZONTAL);
+buttons.setGravity(Gravity.CENTER);
+
+Button cancel = gelButton(gr ? "ΑΚΥΡΩΣΗ" : "CANCEL", 0xFFB00020);
+Button start  = gelButton(gr ? "ΕΝΑΡΞΗ" : "START",  0xFF0F8A3B);
 
         setDualButtons(cancel, start, buttons);
         root.addView(buttons);
@@ -365,73 +370,89 @@ public void onBackPressed() {
         finish();
     }
 
-    // ============================================================
-    // UI HELPERS
-    // ============================================================
-    private LinearLayout buildPopupRoot(Context ctx) {
-        LinearLayout r = new LinearLayout(ctx);
-        r.setOrientation(LinearLayout.VERTICAL);
-        r.setPadding(dp(24), dp(22), dp(24), dp(18));
+// ============================================================
+// UI HELPERS
+// ============================================================
 
-        GradientDrawable bg = new GradientDrawable();
-        bg.setColor(0xFF101010);
-        bg.setCornerRadius(dp(18));
-        bg.setStroke(dp(4), 0xFFFFD700);
-        r.setBackground(bg);
-        return r;
-    }
+private LinearLayout buildPopupRoot(Context ctx) {
+    LinearLayout r = new LinearLayout(ctx);
+    r.setOrientation(LinearLayout.VERTICAL);
+    r.setPadding(dp(24), dp(22), dp(24), dp(18));
 
-    private LinearLayout buildHeaderWithMute(String titleText) {
+    GradientDrawable bg = new GradientDrawable();
+    bg.setColor(0xFF101010);
+    bg.setCornerRadius(dp(18));
+    bg.setStroke(dp(4), 0xFFFFD700);
+    r.setBackground(bg);
 
-        final boolean gr = AppLang.isGreek(this);
+    return r;
+}
 
-        LinearLayout h = new LinearLayout(this);
-        h.setOrientation(LinearLayout.HORIZONTAL);
-        h.setGravity(Gravity.CENTER_VERTICAL);
-        h.setPadding(0, 0, 0, dp(12));
+// ------------------------------------------------------------
+// HEADER (TITLE ONLY — NO MUTE HERE)
+// ------------------------------------------------------------
+private LinearLayout buildHeader(String titleText) {
 
-        TextView title = new TextView(this);
-        title.setText(titleText);
-        title.setTextColor(Color.WHITE);
-        title.setTextSize(18f);
-        title.setTypeface(null, Typeface.BOLD);
-        title.setLayoutParams(
-                new LinearLayout.LayoutParams(0,
-                        LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
-        );
+    LinearLayout h = new LinearLayout(this);
+    h.setOrientation(LinearLayout.VERTICAL);
+    h.setPadding(0, 0, 0, dp(12));
 
-        Button mute = new Button(this);
-        mute.setAllCaps(false);
-        mute.setTextSize(14f);
-        mute.setPadding(dp(16), dp(8), dp(16), dp(8));
+    TextView title = new TextView(this);
+    title.setText(titleText);
+    title.setTextColor(Color.WHITE);
+    title.setTextSize(18f);
+    title.setTypeface(null, Typeface.BOLD);
 
-        GradientDrawable bg = new GradientDrawable();
-        bg.setColor(0xFF444444);
-        bg.setCornerRadius(dp(12));
-        bg.setStroke(dp(2), 0xFFFFD700);
-        mute.setBackground(bg);
+    h.addView(title);
+    return h;
+}
 
-        mute.setText(
-                AppTTS.isMuted()
-                        ? (gr ? "Ήχος ON" : "Unmute")
-                        : (gr ? "Σίγαση" : "Mute")
-        );
+// ------------------------------------------------------------
+// MUTE ROW (CHECKBOX + LABEL — ABOVE BUTTONS)
+// ------------------------------------------------------------
+private LinearLayout buildMuteRow() {
 
-        mute.setOnClickListener(v -> {
-            boolean m = !AppTTS.isMuted();
-            AppTTS.setMuted(this, m);
-            mute.setText(
-                    m
-                            ? (gr ? "Ήχος ON" : "Unmute")
-                            : (gr ? "Σίγαση" : "Mute")
-            );
-            if (m) AppTTS.stop();
-        });
+    final boolean gr = AppLang.isGreek(this);
 
-        h.addView(title);
-        h.addView(mute);
-        return h;
-    }
+    LinearLayout row = new LinearLayout(this);
+    row.setOrientation(LinearLayout.HORIZONTAL);
+    row.setGravity(Gravity.CENTER_VERTICAL);
+    row.setPadding(0, dp(8), 0, dp(16));
+
+    CheckBox muteCheck = new CheckBox(this);
+    muteCheck.setChecked(AppTTS.isMuted(this));
+    muteCheck.setPadding(0, 0, dp(6), 0);
+
+    TextView label = new TextView(this);
+    label.setText(
+            gr
+                    ? "Σίγαση φωνητικών οδηγιών"
+                    : "Mute voice instructions"
+    );
+    label.setTextColor(0xFFAAAAAA);
+    label.setTextSize(14f);
+
+    // ένα σημείο αλήθειας: AppTTS
+    View.OnClickListener toggle = v -> {
+        boolean newState = !AppTTS.isMuted(this);
+        AppTTS.setMuted(this, newState);
+        muteCheck.setChecked(newState);
+    };
+
+    row.setOnClickListener(toggle);
+    label.setOnClickListener(toggle);
+
+    muteCheck.setOnCheckedChangeListener((b, checked) -> {
+        if (checked != AppTTS.isMuted(this)) {
+            AppTTS.setMuted(this, checked);
+        }
+    });
+
+    row.addView(muteCheck);
+    row.addView(label);
+
+    return row;
+}
 
     private TextView buildMessage(CharSequence text) {
         TextView tv = new TextView(this);
@@ -472,6 +493,52 @@ public void onBackPressed() {
     private int dp(int v) {
         return (int) (v * getResources().getDisplayMetrics().density + 0.5f);
     }
+
+// ============================================================
+// MUTE ROW — GLOBAL TTS
+// ============================================================
+private LinearLayout buildMuteRow() {
+
+    final boolean gr = AppLang.isGreek(this);
+
+    LinearLayout row = new LinearLayout(this);
+    row.setOrientation(LinearLayout.HORIZONTAL);
+    row.setGravity(Gravity.CENTER_VERTICAL);
+    row.setPadding(0, dp(8), 0, dp(16));
+
+    CheckBox muteCheck = new CheckBox(this);
+    muteCheck.setChecked(AppTTS.isMuted(this));
+    muteCheck.setPadding(0, 0, dp(6), 0);
+
+    TextView label = new TextView(this);
+    label.setText(
+            gr
+                    ? "Σίγαση φωνητικών οδηγιών"
+                    : "Mute voice instructions"
+    );
+    label.setTextColor(0xFFAAAAAA);
+    label.setTextSize(14f);
+
+    View.OnClickListener toggle = v -> {
+        boolean newState = !AppTTS.isMuted(this);
+        AppTTS.setMuted(this, newState);
+        muteCheck.setChecked(newState);
+    };
+
+    row.setOnClickListener(toggle);
+    label.setOnClickListener(toggle);
+
+    muteCheck.setOnCheckedChangeListener((b, checked) -> {
+        if (checked != AppTTS.isMuted(this)) {
+            AppTTS.setMuted(this, checked);
+        }
+    });
+
+    row.addView(muteCheck);
+    row.addView(label);
+
+    return row;
+}
 
     // ============================================================
     // STEP TYPES

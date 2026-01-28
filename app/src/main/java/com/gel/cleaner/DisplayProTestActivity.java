@@ -85,7 +85,7 @@ private void safeCancel() {
 
     // 🧾 LOG — USER ACTION (ΟΧΙ error, ΟΧΙ success)
     GELServiceLog.logInfo(
-            "LAB Display Pro Test — CANCELED by user"
+            "Display Pro Test — CANCELED by user"
     );
 
     try { h.removeCallbacksAndMessages(null); } catch (Throwable ignore) {}
@@ -281,26 +281,23 @@ public void onBackPressed() {
     h.postDelayed(this::runStep, STEP_DURATION_MS);
 }
 
-    // ============================================================
-    // POPUP 2 — FINAL QUESTION
-    // ============================================================
+// ============================================================
+// POPUP 2 — FINAL QUESTION
+// ============================================================
 private void finishTest() {
 
     if (userCanceled || isFinishing() || isDestroyed()) {
-    activityAlive = false;
-    setResult(RESULT_CANCELED);
-    finish();
-    return;
-}
+        return;
+    }
 
     final boolean gr = AppLang.isGreek(this);
 
     final String text =
             gr
                     ? "Παρατήρησες κάποιο πρόβλημα στην οθόνη;\n\n"
-                    + "• Burn-in\n• Ζώνες χρώματος\n• Κηλίδες / mura\n• Ανομοιομορφία"
+                    + "• Burn-in;\n• Ζώνες χρώματος;\n• Κηλίδες / mura;\n• Ανομοιομορφία;"
                     : "Did you notice any display issues?\n\n"
-                    + "• Burn-in\n• Color banding\n• Stains / mura\n• Uneven brightness";
+                    + "• Burn-in?\n• Color banding?\n• Stains / mura?\n• Uneven brightness?";
 
     AlertDialog.Builder b =
             new AlertDialog.Builder(this,
@@ -352,18 +349,24 @@ private void finishTest() {
     }, 120);
 
     no.setOnClickListener(v -> {
+
+    if (userCanceled) return; // 🔒
+
     AppTTS.stop();
     GELServiceLog.logInfo(
-        "LAB Display Pro Test — COMPLETED"
+        "Display Pro Test — COMPLETED"
     );
     setResult(RESULT_OK);
     finish();
 });
 
 yes.setOnClickListener(v -> {
+
+    if (userCanceled) return; // 🔒
+
     AppTTS.stop();
     GELServiceLog.logInfo(
-        "LAB Display Pro Test — COMPLETED (ISSUES DETECTED)"
+        "Display Pro Test — COMPLETED (ISSUES DETECTED)"
     );
     setResult(RESULT_OK);
     finish();

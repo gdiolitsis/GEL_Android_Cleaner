@@ -3593,169 +3593,145 @@ private void lab6DisplayTouch() {
                     : "Touch all dots on the screen, to complete the touch test.\n\n"
                     + "This test checks, for unresponsive, or dead touch areas.";
 
-    // ---------------------------
-    // POPUP
-    // ---------------------------
-    AlertDialog.Builder b =
-            new AlertDialog.Builder(
-                    this,
-                    android.R.style.Theme_Material_Dialog_NoActionBar
-            );
-    b.setCancelable(false);
+// ---------------------------
+// POPUP
+// ---------------------------
+AlertDialog.Builder b =
+        new AlertDialog.Builder(
+                this,
+                android.R.style.Theme_Material_Dialog_NoActionBar
+        );
+b.setCancelable(false);
 
-    LinearLayout root = new LinearLayout(this);
-    root.setOrientation(LinearLayout.VERTICAL);
-    root.setPadding(32, 28, 32, 24);
+LinearLayout root = new LinearLayout(this);
+root.setOrientation(LinearLayout.VERTICAL);
+root.setPadding(32, 28, 32, 24);
 
-    GradientDrawable bg = new GradientDrawable();
-    bg.setColor(0xFF101010);
-    bg.setCornerRadius(28);
-    bg.setStroke(4, 0xFFFFD700);
-    root.setBackground(bg);
+GradientDrawable bg = new GradientDrawable();
+bg.setColor(0xFF101010);
+bg.setCornerRadius(28);
+bg.setStroke(4, 0xFFFFD700);
+root.setBackground(bg);
 
-    // ---------------------------
-    // HEADER + MUTE
-    // ---------------------------
-    LinearLayout header = new LinearLayout(this);
-    header.setOrientation(LinearLayout.HORIZONTAL);
-    header.setGravity(Gravity.CENTER_VERTICAL);
-    header.setPadding(0, 0, 0, 24);
+// ---------------------------
+// HEADER + MUTE
+// ---------------------------
+LinearLayout header = new LinearLayout(this);
+header.setOrientation(LinearLayout.HORIZONTAL);
+header.setGravity(Gravity.CENTER_VERTICAL);
+header.setPadding(0, 0, 0, 24);
 
-    TextView tvTitle = new TextView(this);
-    tvTitle.setText(title);
-    tvTitle.setTextColor(Color.WHITE);
-    tvTitle.setTextSize(18f);
-    tvTitle.setTypeface(null, Typeface.BOLD);
-    tvTitle.setLayoutParams(
-            new LinearLayout.LayoutParams(
-                    0,
-                    LinearLayout.LayoutParams.WRAP_CONTENT,
-                    1f
-            )
-    );
+TextView tvTitle = new TextView(this);
+tvTitle.setText(title);
+tvTitle.setTextColor(Color.WHITE);
+tvTitle.setTextSize(18f);
+tvTitle.setTypeface(null, Typeface.BOLD);
+tvTitle.setLayoutParams(
+        new LinearLayout.LayoutParams(
+                0,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                1f
+        )
+);
 
-    Button muteBtn = new Button(this);
-    muteBtn.setAllCaps(false);
-    muteBtn.setTextColor(Color.WHITE);
-    muteBtn.setTextSize(14f);
-    muteBtn.setPadding(24, 12, 24, 12);
-    muteBtn.setMinWidth(0);
-    muteBtn.setMinimumWidth(0);
+Button muteBtn = new Button(this);
+muteBtn.setAllCaps(false);
+muteBtn.setTextColor(Color.WHITE);
+muteBtn.setTextSize(14f);
+muteBtn.setPadding(24, 12, 24, 12);
 
-    GradientDrawable muteBg = new GradientDrawable();
-    muteBg.setColor(0xFF444444);
-    muteBg.setCornerRadius(20);
-    muteBg.setStroke(2, 0xFFFFD700);
-    muteBtn.setBackground(muteBg);
+GradientDrawable muteBg = new GradientDrawable();
+muteBg.setColor(0xFF444444);
+muteBg.setCornerRadius(20);
+muteBg.setStroke(2, 0xFFFFD700);
+muteBtn.setBackground(muteBg);
 
+muteBtn.setText(
+        AppTTS.isMuted()
+                ? (gr ? "Ήχος ON" : "Unmute")
+                : (gr ? "Σίγαση" : "Mute")
+);
+
+muteBtn.setOnClickListener(v -> {
+    boolean m = !AppTTS.isMuted();
+    AppTTS.setMuted(this, m);
     muteBtn.setText(
-            AppTTS.isMuted()
+            m
                     ? (gr ? "Ήχος ON" : "Unmute")
                     : (gr ? "Σίγαση" : "Mute")
     );
-
-    muteBtn.setOnClickListener(v -> {
-        boolean m = !AppTTS.isMuted();
-        AppTTS.setMuted(this, m);
-        muteBtn.setText(
-                m
-                        ? (gr ? "Ήχος ON" : "Unmute")
-                        : (gr ? "Σίγαση" : "Mute")
-        );
-        if (m) AppTTS.stop();
-    });
-
-    header.addView(tvTitle);
-    header.addView(muteBtn);
-    root.addView(header);
-
-    // ---------------------------
-    // MESSAGE
-    // ---------------------------
-    TextView tvMsg = new TextView(this);
-    tvMsg.setText(message);
-    tvMsg.setTextColor(0xFF39FF14);
-    tvMsg.setTextSize(15f);
-    tvMsg.setGravity(Gravity.CENTER);
-    tvMsg.setPadding(0, 0, 0, 32);
-    root.addView(tvMsg);
-
-    // ---------------------------
-    // START BUTTON
-    // ---------------------------
-    Button startBtn = new Button(this);
-    startBtn.setAllCaps(false);
-    startBtn.setText(gr ? "ΕΝΑΡΞΗ ΤΕΣΤ" : "START TEST");
-    startBtn.setTextColor(Color.WHITE);
-    startBtn.setTextSize(16f);
-
-    GradientDrawable startBg = new GradientDrawable();
-    startBg.setColor(0xFF0F8A3B);
-    startBg.setCornerRadius(24);
-    startBg.setStroke(3, 0xFFFFD700);
-    startBtn.setBackground(startBg);
-
-    LinearLayout.LayoutParams lpStart =
-            new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    120
-            );
-    startBtn.setLayoutParams(lpStart);
-
-    root.addView(startBtn);
-
-    b.setView(root);
-
-    AlertDialog d = b.create();
-    if (d.getWindow() != null)
-        d.getWindow().setBackgroundDrawable(
-                new ColorDrawable(Color.TRANSPARENT)
-        );
-
-    // ---------------------------
-    // LIFECYCLE SAFE TTS BIND
-    // ---------------------------
-    d.setOnShowListener(dialog -> {
-        pendingTtsText = message;
-        activeDialog = d;
-    });
-
-    d.setOnDismissListener(dialog -> {
-        pendingTtsText = null;
-        activeDialog = null;
-        AppTTS.stop();
-    });
-
-    d.show();
-    
-d.setOnShowListener(dialog -> {
-    pendingTtsText = message;
-    activeDialog = d;
-
-    if (d.getWindow() != null) {
-        d.getWindow().getDecorView().postDelayed(() -> {
-            if (activeDialog == d && pendingTtsText != null && !AppTTS.isMuted()) {
-                AppTTS.ensureSpeak(this, pendingTtsText);
-            }
-        }, 300);
-    }
+    if (m) AppTTS.stop();
 });
 
-    // ---------------------------
-    // ACTION
-    // ---------------------------
-    startBtn.setOnClickListener(v -> {
-        pendingTtsText = null;
-        activeDialog = null;
-        AppTTS.stop();
-        d.dismiss();
+header.addView(tvTitle);
+header.addView(muteBtn);
+root.addView(header);
 
-        startActivityForResult(
-                new Intent(this, TouchGridTestActivity.class),
-                6006
+// ---------------------------
+// MESSAGE
+// ---------------------------
+TextView tvMsg = new TextView(this);
+tvMsg.setText(message);
+tvMsg.setTextColor(0xFF39FF14);
+tvMsg.setTextSize(15f);
+tvMsg.setGravity(Gravity.CENTER);
+tvMsg.setPadding(0, 0, 0, 32);
+root.addView(tvMsg);
+
+// ---------------------------
+// START BUTTON
+// ---------------------------
+Button startBtn = new Button(this);
+startBtn.setAllCaps(false);
+startBtn.setText(gr ? "ΕΝΑΡΞΗ ΤΕΣΤ" : "START TEST");
+startBtn.setTextColor(Color.WHITE);
+startBtn.setTextSize(16f);
+
+GradientDrawable startBg = new GradientDrawable();
+startBg.setColor(0xFF0F8A3B);
+startBg.setCornerRadius(24);
+startBg.setStroke(3, 0xFFFFD700);
+startBtn.setBackground(startBg);
+
+LinearLayout.LayoutParams lpStart =
+        new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                120
         );
-    });
+startBtn.setLayoutParams(lpStart);
+
+root.addView(startBtn);
+
+b.setView(root);
+
+// ---------------------------
+// SHOW + TTS (ΩΜΟ, ΑΜΕΣΟ)
+// ---------------------------
+AlertDialog d = b.create();
+if (d.getWindow() != null) {
+    d.getWindow().setBackgroundDrawable(
+            new ColorDrawable(Color.TRANSPARENT)
+    );
 }
+
+d.setOnShowListener(dialog -> {
+    AppTTS.ensureSpeak(this, message);
+});
+
+d.show();
+
+// ---------------------------
+// ACTION
+// ---------------------------
+startBtn.setOnClickListener(v -> {
+    AppTTS.stop();
+    d.dismiss();
+
+    startActivityForResult(
+            new Intent(this, TouchGridTestActivity.class),
+            6006
+    );
+});
 
 // ============================================================
 // LAB 7 — Rotation + Proximity Sensors (MANUAL)

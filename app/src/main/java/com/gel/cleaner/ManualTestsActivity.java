@@ -1771,15 +1771,16 @@ private void showLab14PreTestAdvisory(Runnable onContinue) {
 
     LinearLayout root = buildGELPopupRoot(this);
 
-    root.addView(
-            buildPopupHeaderWithMute(
-                    this,
-                    gr
-                            ? "Δοκιμή Καταπόνησης Μπαταρίας — Προειδοποίηση"
-                            : "Battery Stress Test — Pre-Test Check"
-            )
-    );
+    // HEADER (TITLE ONLY)
+root.addView(
+        buildHeader(
+                gr
+                        ? "Δοκιμή Καταπόνησης Μπαταρίας — Προειδοποίηση"
+                        : "Battery Stress Test — Pre-Test Check"
+        )
+);
 
+// MUTE ROW (CHECKBOX)
 root.addView(buildMuteRow());
 
     final String text =

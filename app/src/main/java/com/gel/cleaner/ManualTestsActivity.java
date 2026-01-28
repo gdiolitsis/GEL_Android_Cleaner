@@ -182,12 +182,12 @@ protected void onResume() {
     super.onResume();
 
     if (activeDialog != null
-            && activeDialog.isShowing()
-            && pendingTtsText != null
-            && !AppTTS.isMuted()) {
+        && activeDialog.isShowing()
+        && pendingTtsText != null
+        && !AppTTS.isMuted(this)) {
 
-        AppTTS.ensureSpeak(this, pendingTtsText);
-    }
+    AppTTS.ensureSpeak(this, pendingTtsText);
+}
 }
 
 private boolean lab6ProCanceled = false;
@@ -1776,21 +1776,22 @@ private void showLab14PreTestAdvisory(Runnable onContinue) {
                     this,
                     gr
                             ? "Δοκιμή Καταπόνησης Μπαταρίας — Προειδοποίηση"
-                            : "Battery Stress Test — Pre-Test Check",
-                    AppTTS::stop
+                            : "Battery Stress Test — Pre-Test Check"
             )
     );
 
+root.addView(buildMuteRow());
+
     final String text =
             gr
-                    ? "Για μεγαλύτερη διαγνωστική ακρίβεια, συνιστάται το τεστ "
+                    ? "Για μεγαλύτερη διαγνωστική ακρίβεια, συνιστάται, το τεστ "
                       + "να εκτελείται μετά από επανεκκίνηση της συσκευής.\n\n"
-                      + "Μπορείς να συνεχίσεις χωρίς επανεκκίνηση, όμως "
-                      + "πρόσφατη έντονη χρήση μπορεί να επηρεάσει τα αποτελέσματα.\n\n"
-                      + "Μην χρησιμοποιήσεις τη συσκευή για τα επόμενα 5 λεπτά."
-                    : "For best diagnostic accuracy, it is recommended to run this test "
+                      + "Μπορείς να συνεχίσεις χωρίς επανεκκίνηση, όμως, "
+                      + "πρόσφατη έντονη χρήση, μπορεί να επηρεάσει τα αποτελέσματα.\n\n"
+                      + "Μην χρησιμοποιήσεις τη συσκευή, για τα επόμενα 5 λεπτά."
+                    : "For best diagnostic accuracy, it is recommended to run this test, "
                       + "after a system restart.\n\n"
-                      + "You may continue without restarting, but recent heavy usage "
+                      + "You may continue without restarting, but recent heavy usage, "
                       + "can affect the results.\n\n"
                       + "Do not use your device for the next 5 minutes.";
 
@@ -1826,7 +1827,12 @@ private void showLab14PreTestAdvisory(Runnable onContinue) {
 
     dlg.show();
 
-    AppTTS.ensureSpeak(this, text);
+    // 🔊 TTS — ΜΟΝΟ αν δεν είναι muted
+    new Handler(Looper.getMainLooper()).postDelayed(() -> {
+        if (dlg.isShowing() && !AppTTS.isMuted(this)) {
+            AppTTS.ensureSpeak(this, text);
+        }
+    }, 120);
 
     btnContinue.setOnClickListener(v -> {
         AppTTS.stop();
@@ -2812,7 +2818,7 @@ private LinearLayout buildGELPopupRoot(Context ctx) {
 }
 
 // ============================================================
-// LAB 28 — TECHNICIAN POPUP (FINAL / HELPER-BASED)
+// LAB 28 — TECHNICIAN POPUP (FINAL / CHECKBOX MUTE)
 // ============================================================
 private void showLab28Popup() {
 
@@ -2833,18 +2839,19 @@ private void showLab28Popup() {
         LinearLayout root = buildGELPopupRoot(this);
 
         // ==========================
-        // HEADER (TITLE + MUTE) — HELPER
+        // HEADER (TITLE ONLY)
         // ==========================
-        LinearLayout header =
-                buildPopupHeaderWithMute(
-                        this,
-                        gr
-                                ? "LAB 28 — Τεχνική Ανάλυση"
-                                : "LAB 28 — Technician Analysis",
-                        AppTTS::stop
-                );
-
+        LinearLayout header = buildHeader(
+                gr
+                        ? "LAB 28 — Τεχνική Ανάλυση"
+                        : "LAB 28 — Technician Analysis"
+        );
         root.addView(header);
+
+        // ==========================
+        // MUTE ROW (CHECKBOX)
+        // ==========================
+        root.addView(buildMuteRow());
 
         // ==========================
         // MESSAGE
@@ -2856,6 +2863,7 @@ private void showLab28Popup() {
         msg.setTextColor(0xFFDDDDDD);
         msg.setTextSize(15f);
         msg.setLineSpacing(0f, 1.15f);
+        msg.setPadding(0, 0, 0, dp(8));
         root.addView(msg);
 
         // ==========================
@@ -2865,6 +2873,7 @@ private void showLab28Popup() {
         okBtn.setText("OK");
         okBtn.setAllCaps(false);
         okBtn.setTextColor(Color.WHITE);
+        okBtn.setTextSize(15f);
 
         GradientDrawable okBg = new GradientDrawable();
         okBg.setColor(0xFF0F8A3B);
@@ -2888,18 +2897,23 @@ private void showLab28Popup() {
         b.setView(root);
         AlertDialog d = b.create();
 
-        if (d.getWindow() != null)
+        if (d.getWindow() != null) {
             d.getWindow().setBackgroundDrawable(
                     new ColorDrawable(Color.TRANSPARENT)
             );
+        }
 
         d.setOnDismissListener(dialog -> AppTTS.stop());
         d.show();
 
         // ==========================
-        // SPEAK ON SHOW
+        // SPEAK (ONLY IF NOT MUTED)
         // ==========================
-        AppTTS.ensureSpeak(this, text);
+        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+            if (d.isShowing() && !AppTTS.isMuted(this)) {
+                AppTTS.ensureSpeak(this, text);
+            }
+        }, 120);
 
         okBtn.setOnClickListener(v -> {
             AppTTS.stop();

@@ -190,6 +190,8 @@ protected void onResume() {
     }
 }
 
+private boolean lab6ProCanceled = false;
+
 // ============================================================
 // LAB 8.1 — STATE (CLASS FIELDS)
 // ============================================================
@@ -3725,6 +3727,12 @@ private void lab6DisplayTouch() {
     });
 
     d.show();
+    
+new Handler(Looper.getMainLooper()).postDelayed(() -> {
+    if (activeDialog == d && pendingTtsText != null && !AppTTS.isMuted()) {
+        AppTTS.ensureSpeak(this, pendingTtsText);
+    }
+}, 120);
 
     // ---------------------------
     // ACTION
@@ -12063,44 +12071,61 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
         return;
     }
 
-    // ============================================================
-    // LAB 6 PRO — DISPLAY COLOR / UNIFORMITY / ARTIFACTS
-    // ============================================================
-    if (requestCode == REQ_LAB6_COLOR) {
+// ============================================================
+// LAB 6 PRO — DISPLAY COLOR / UNIFORMITY / ARTIFACTS
+// ============================================================
+if (requestCode == REQ_LAB6_COLOR) {
+
+    if (resultCode == RESULT_CANCELED) {
 
         appendHtml("<br>");
         logLine();
         logSection("LAB 6 PRO — Display Color & Uniformity");
         logLine();
 
-        boolean issues =
-                data != null && data.getBooleanExtra("display_issues", false);
-
-        if (!issues) {
-            logOk("Visual inspection result", "No visible artifacts reported");
-            logOk("Display uniformity", "OK");
-            logOk("Burn-in / banding", "Not observed");
-        } else {
-            logWarn("Visual inspection result", "User reported visual anomalies");
-            logWarn("Possible findings:");
-            logWarn("• Burn-in / image retention");
-            logWarn("• Color banding / gradient steps");
-            logWarn("• Screen stains / mura / tint shift");
-        }
+        logWarn("LAB 6 PRO — Display Color & Uniformity — CANCELED by user");
+        logInfo("Visual inspection was not performed.");
 
         appendHtml("<br>");
-        logSection("LAB 6 — Final Result");
-        logLine();
-
-        logOk("Display touch integrity and visual inspection completed.");
-
-        appendHtml("<br>");
-        logOk("LAB 6 finished.");
         logLine();
 
         enableSingleExportButton();
         return;
     }
+
+    appendHtml("<br>");
+    logLine();
+    logSection("LAB 6 PRO — Display Color & Uniformity");
+    logLine();
+
+    boolean issues =
+            data != null && data.getBooleanExtra("display_issues", false);
+
+    if (!issues) {
+        logOk("Visual inspection result", "No visible artifacts reported");
+        logOk("Display uniformity", "OK");
+        logOk("Burn-in / banding", "Not observed");
+    } else {
+        logWarn("Visual inspection result", "User reported visual anomalies");
+        logWarn("Possible findings:");
+        logWarn("• Burn-in / image retention");
+        logWarn("• Color banding / gradient steps");
+        logWarn("• Screen stains / mura / tint shift");
+    }
+
+    appendHtml("<br>");
+    logSection("LAB 6 — Final Result");
+    logLine();
+
+    logOk("Display touch integrity and visual inspection completed.");
+
+    appendHtml("<br>");
+    logOk("LAB 6 finished.");
+    logLine();
+
+    enableSingleExportButton();
+    return;
+}
 
     // ============================================================
     // LAB 7 — Rotation + Proximity Sensors

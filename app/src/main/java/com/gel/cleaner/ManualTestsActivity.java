@@ -238,13 +238,32 @@ private boolean[] ttsReady = { false };
 // ============================================================
 private static final String PREF_TTS_MUTED = "tts_muted_global";
 
+private boolean ttsMuted = false;
+
+// Καλείται π.χ. στο onCreate / onResume
+private void loadTtsMuted() {
+    if (prefs != null) {
+        ttsMuted = prefs.getBoolean(PREF_TTS_MUTED, false);
+    }
+}
+
 private boolean isTtsMuted() {
-return prefs != null && prefs.getBoolean(PREF_TTS_MUTED, false);
+    return ttsMuted;
 }
 
 private void setTtsMuted(boolean muted) {
-if (prefs != null)
-prefs.edit().putBoolean(PREF_TTS_MUTED, muted).apply();
+    ttsMuted = muted;
+
+    if (prefs != null) {
+        prefs.edit()
+             .putBoolean(PREF_TTS_MUTED, muted)
+             .apply();
+    }
+
+    // 🔇 αν γίνεται mute, κόβουμε άμεσα τον ήχο
+    if (muted && tts != null) {
+        tts.stop();
+    }
 }
 
 // ============================================================
@@ -475,24 +494,55 @@ ui = new Handler(Looper.getMainLooper());
 // ============================================================
 // GLOBAL TTS INIT — ONE TIME ONLY (SAFE)
 // ============================================================
-tts[0] = new TextToSpeech(this, status -> {
-if (status == TextToSpeech.SUCCESS) {
+private void initTTS() {
 
-if (tts[0] == null) return; 
+    if (tts != null) return;
 
-    int res = tts[0].setLanguage(Locale.US);  
+    tts = new TextToSpeech(this, status -> {
+        if (status == TextToSpeech.SUCCESS) {
 
-    if (res == TextToSpeech.LANG_MISSING_DATA ||  
-        res == TextToSpeech.LANG_NOT_SUPPORTED) {  
+            int res = tts.setLanguage(Locale.US);
+            if (res == TextToSpeech.LANG_MISSING_DATA ||
+                res == TextToSpeech.LANG_NOT_SUPPORTED) {
 
-        // fallback  
-        tts[0].setLanguage(Locale.ENGLISH);  
-    }  
+                tts.setLanguage(Locale.ENGLISH);
+            }
 
-    ttsReady[0] = true;  
+            ttsReady = true;
+
+            // 🔑 ΜΙΛΑΕΙ ΜΟΛΙΣ ΓΙΝΕΙ READY
+            if (pendingTtsText != null) {
+                tts.speak(
+                        pendingTtsText,
+                        TextToSpeech.QUEUE_FLUSH,
+                        null,
+                        "GEL_TTS_PENDING"
+                );
+                pendingTtsText = null;
+            }
+        }
+    });
 }
 
-});
+private void speakNow(String text) {
+
+    if (text == null || text.isEmpty()) return;
+
+    initTTS();
+
+    if (!ttsReady) {
+        // ⬅️ κρατάμε το κείμενο μέχρι να ετοιμαστεί το TTS
+        pendingTtsText = text;
+        return;
+    }
+
+    tts.speak(
+            text,
+            TextToSpeech.QUEUE_FLUSH,
+            null,
+            "GEL_TTS"
+    );
+}
 
 // ============================================================  
 // ROOT SCROLL + LAYOUT  
@@ -2731,52 +2781,43 @@ private LinearLayout buildPopupHeaderWithMute(
             );
     title.setLayoutParams(lpTitle);
 
-    // =========================
-    // MUTE BUTTON (LAB 28 STYLE)
-    // =========================
-    Button muteBtn = new Button(ctx);
-    muteBtn.setAllCaps(false);
-    muteBtn.setTextColor(Color.WHITE);
+// =========================
+// MUTE ROW (GLOBAL TTS)
+// =========================
+private LinearLayout buildMuteRow(Context ctx) {
 
-    GradientDrawable muteBg = new GradientDrawable();
-    muteBg.setColor(0xFF444444);
-    muteBg.setCornerRadius(dpCtx(ctx, 12));
-    muteBg.setStroke(dpCtx(ctx, 2), 0xFFFFD700);
-    muteBtn.setBackground(muteBg);
+    final boolean gr = AppLang.isGreek(ctx);
 
-    LinearLayout.LayoutParams lpMute =
-            new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.WRAP_CONTENT,
-                    dpCtx(ctx, 48)
-            );
-    muteBtn.setLayoutParams(lpMute);
+    LinearLayout row = new LinearLayout(ctx);
+    row.setOrientation(LinearLayout.HORIZONTAL);
+    row.setGravity(Gravity.CENTER_VERTICAL);
+    row.setPadding(0, dpCtx(ctx, 8), 0, dpCtx(ctx, 12));
 
-    // initial label
-muteBtn.setText(
-        AppTTS.isMuted()
-                ? (gr ? "Ήχος ON" : "Unmute")
-                : (gr ? "Ήχος OFF"       : "Mute")
-);
+    CheckBox muteCheck = new CheckBox(ctx);
+    muteCheck.setChecked(AppTTS.isMuted(ctx));
+    muteCheck.setPadding(0, 0, dpCtx(ctx, 6), 0);
 
-muteBtn.setOnClickListener(v -> {
-
-    boolean newState = !AppTTS.isMuted();
-    AppTTS.setMuted(this, newState);
-
-    muteBtn.setText(
-            newState
-                    ? (gr ? "Ήχος ON" : "Unmute")
-                    : (gr ? "Ήχος OFF" : "Mute")
+    TextView label = new TextView(ctx);
+    label.setText(
+            gr
+                    ? "Σίγαση φωνητικών οδηγιών"
+                    : "Mute voice instructions"
     );
+    label.setTextColor(0xFFAAAAAA);
+    label.setTextSize(14f);
 
-    if (newState) AppTTS.stop();
-    if (onMuteToggle != null) onMuteToggle.run();
-});
+    View.OnClickListener toggle = v -> {
+        AppTTS.setMuted(ctx, !AppTTS.isMuted(ctx));
+        muteCheck.setChecked(AppTTS.isMuted(ctx));
+    };
 
-    header.addView(title);
-    header.addView(muteBtn);
+    muteCheck.setOnClickListener(toggle);
+    label.setOnClickListener(toggle);
 
-    return header;
+    row.addView(muteCheck);
+    row.addView(label);
+
+    return row;
 }
 
 // ============================================================
@@ -3614,58 +3655,49 @@ bg.setStroke(4, 0xFFFFD700);
 root.setBackground(bg);
 
 // ---------------------------
-// HEADER + MUTE
+// MUTE ROW (ABOVE BUTTONS)
 // ---------------------------
-LinearLayout header = new LinearLayout(this);
-header.setOrientation(LinearLayout.HORIZONTAL);
-header.setGravity(Gravity.CENTER_VERTICAL);
-header.setPadding(0, 0, 0, 24);
+LinearLayout muteRow = new LinearLayout(this);
+muteRow.setOrientation(LinearLayout.HORIZONTAL);
+muteRow.setGravity(Gravity.CENTER_VERTICAL);
+muteRow.setPadding(0, dp(8), 0, dp(16));
 
-TextView tvTitle = new TextView(this);
-tvTitle.setText(title);
-tvTitle.setTextColor(Color.WHITE);
-tvTitle.setTextSize(18f);
-tvTitle.setTypeface(null, Typeface.BOLD);
-tvTitle.setLayoutParams(
-        new LinearLayout.LayoutParams(
-                0,
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                1f
-        )
+// CheckBox
+CheckBox muteCheck = new CheckBox(this);
+muteCheck.setChecked(AppTTS.isMuted(this));
+muteCheck.setPadding(0, 0, dp(6), 0);
+
+// Label δίπλα στο checkbox
+TextView muteLabel = new TextView(this);
+muteLabel.setText(
+        gr
+                ? "Σίγαση φωνητικών οδηγιών"
+                : "Mute voice instructions"
 );
+muteLabel.setTextColor(0xFFAAAAAA);
+muteLabel.setTextSize(14f);
+muteLabel.setPadding(0, 0, 0, 0);
 
-Button muteBtn = new Button(this);
-muteBtn.setAllCaps(false);
-muteBtn.setTextColor(Color.WHITE);
-muteBtn.setTextSize(14f);
-muteBtn.setPadding(24, 12, 24, 12);
+// ΕΝΑ toggle point (για να μη γίνεται διπλό fire)
+View.OnClickListener toggleMute = v -> {
+    boolean newState = !AppTTS.isMuted(this);
+    AppTTS.setMuted(this, newState);
+    muteCheck.setChecked(newState);
+};
 
-GradientDrawable muteBg = new GradientDrawable();
-muteBg.setColor(0xFF444444);
-muteBg.setCornerRadius(20);
-muteBg.setStroke(2, 0xFFFFD700);
-muteBtn.setBackground(muteBg);
+// μόνο το row & label κάνουν toggle
+muteRow.setOnClickListener(toggleMute);
+muteLabel.setOnClickListener(toggleMute);
 
-muteBtn.setText(
-        AppTTS.isMuted()
-                ? (gr ? "Ήχος ON" : "Unmute")
-                : (gr ? "Σίγαση" : "Mute")
-);
-
-muteBtn.setOnClickListener(v -> {
-    boolean m = !AppTTS.isMuted();
-    AppTTS.setMuted(this, m);
-    muteBtn.setText(
-            m
-                    ? (gr ? "Ήχος ON" : "Unmute")
-                    : (gr ? "Σίγαση" : "Mute")
-    );
-    if (m) AppTTS.stop();
+// το checkbox απλώς συγχρονίζεται
+muteCheck.setOnCheckedChangeListener((b, checked) -> {
+    if (checked != AppTTS.isMuted(this)) {
+        AppTTS.setMuted(this, checked);
+    }
 });
 
-header.addView(tvTitle);
-header.addView(muteBtn);
-root.addView(header);
+muteRow.addView(muteCheck);
+muteRow.addView(muteLabel);
 
 // ---------------------------
 // MESSAGE
@@ -3715,8 +3747,7 @@ if (d.getWindow() != null) {
 }
 
 d.setOnShowListener(dialog -> {
-    AppTTS.setMuted(this, false);
-    AppTTS.ensureSpeak(this, message);
+    speakNow(message);
 });
 
 d.show();

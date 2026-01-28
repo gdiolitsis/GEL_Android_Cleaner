@@ -490,7 +490,6 @@ protected void onCreate(@Nullable Bundle savedInstanceState) {
 
     ui = new Handler(Looper.getMainLooper());
 
-    // init TTS (safe, one time)
     initTTS();
 
     // ============================================================
@@ -503,90 +502,54 @@ protected void onCreate(@Nullable Bundle savedInstanceState) {
     root.setOrientation(LinearLayout.VERTICAL);
     int pad = dp(16);
     root.setPadding(pad, pad, pad, pad);
-    root.setBackgroundColor(0xFF101010); // GEL black
+    root.setBackgroundColor(0xFF101010);
 
     scroll.addView(root);
     setContentView(scroll);
 
-    // 👉 εδώ συνεχίζει ΟΛΟ το UI build (addView, buttons κτλ)
-}
+    // ============================================================
+    // TITLE
+    // ============================================================
+    TextView title = new TextView(this);
+    title.setText(getString(R.string.manual_hospital_title));
+    title.setTextSize(20f);
+    title.setTextColor(0xFFFFD700);
+    title.setGravity(Gravity.CENTER_HORIZONTAL);
+    title.setPadding(0, 0, 0, dp(6));
+    root.addView(title);
 
-// ============================================================
-// GLOBAL TTS INIT — ONE TIME ONLY (SAFE)
-// ============================================================
-private void initTTS() {
+    // ============================================================
+    // SUBTITLE
+    // ============================================================
+    TextView sub = new TextView(this);
+    sub.setText(getString(R.string.manual_hospital_sub));
+    sub.setTextSize(13f);
+    sub.setTextColor(0xFF39FF14);
+    sub.setGravity(Gravity.CENTER_HORIZONTAL);
+    sub.setPadding(0, 0, 0, dp(12));
+    root.addView(sub);
 
-    if (tts != null) return;
+    // ============================================================
+    // SECTION TITLE
+    // ============================================================
+    TextView sec1 = new TextView(this);
+    sec1.setText(getString(R.string.manual_section1));
+    sec1.setTextSize(17f);
+    sec1.setTextColor(0xFFFFD700);
+    sec1.setGravity(Gravity.CENTER_HORIZONTAL);
+    sec1.setPadding(0, dp(10), 0, dp(6));
+    root.addView(sec1);
 
-    tts = new TextToSpeech(this, status -> {
-        if (status == TextToSpeech.SUCCESS) {
-
-            int res = tts.setLanguage(Locale.US);
-            if (res == TextToSpeech.LANG_MISSING_DATA ||
-                res == TextToSpeech.LANG_NOT_SUPPORTED) {
-
-                tts.setLanguage(Locale.ENGLISH);
-            }
-
-            ttsReady = true;
-
-            // 🔑 μιλάει μόλις γίνει ready
-            if (pendingTtsText != null) {
-                tts.speak(
-                        pendingTtsText,
-                        TextToSpeech.QUEUE_FLUSH,
-                        null,
-                        "GEL_TTS_PENDING"
-                );
-                pendingTtsText = null;
-            }
-        }
-    });
-}
-
-    // ============================================================  
-    // TITLE  
-    // ============================================================  
-    TextView title = new TextView(this);  
-    title.setText(getString(R.string.manual_hospital_title));  
-    title.setTextSize(20f);  
-    title.setTextColor(0xFFFFD700);  
-    title.setGravity(Gravity.CENTER_HORIZONTAL);  
-    title.setPadding(0, 0, 0, dp(6));  
-    root.addView(title);  
-
-    // ============================================================  
-    // SUBTITLE  
-    // ============================================================  
-    TextView sub = new TextView(this);  
-    sub.setText(getString(R.string.manual_hospital_sub));  
-    sub.setTextSize(13f);  
-    sub.setTextColor(0xFF39FF14);  
-    sub.setGravity(Gravity.CENTER_HORIZONTAL);  
-    sub.setPadding(0, 0, 0, dp(12));  
-    root.addView(sub);  
-
-    // ============================================================  
-    // SECTION TITLE  
-    // ============================================================  
-    TextView sec1 = new TextView(this);  
-    sec1.setText(getString(R.string.manual_section1));  
-    sec1.setTextSize(17f);  
-    sec1.setTextColor(0xFFFFD700);  
-    sec1.setGravity(Gravity.CENTER_HORIZONTAL);  
-    sec1.setPadding(0, dp(10), 0, dp(6));  
-    root.addView(sec1);  
-
-    // ------------------------------------------------------------  
-    // DOTS (running indicator) — UI ONLY (LAB 14 uses its own dialog dots)  
-    // ------------------------------------------------------------  
-    lab14DotsView = new TextView(this);  
-    lab14DotsView.setText("•");  
-    lab14DotsView.setTextSize(22f);  
-    lab14DotsView.setTextColor(0xFF39FF14);  
-    lab14DotsView.setPadding(0, dp(6), 0, dp(10));  
-    lab14DotsView.setGravity(Gravity.CENTER_HORIZONTAL);  
-    root.addView(lab14DotsView);  
+    // ------------------------------------------------------------
+    // DOTS (running indicator)
+    // ------------------------------------------------------------
+    lab14DotsView = new TextView(this);
+    lab14DotsView.setText("•");
+    lab14DotsView.setTextSize(22f);
+    lab14DotsView.setTextColor(0xFF39FF14);
+    lab14DotsView.setPadding(0, dp(6), 0, dp(10));
+    lab14DotsView.setGravity(Gravity.CENTER_HORIZONTAL);
+    root.addView(lab14DotsView);
 
     // ============================================================  
     // SECTION 1: AUDIO & VIBRATION — LABS 1â€“5  
@@ -785,6 +748,38 @@ protected void onDestroy() {
     }
 
     super.onDestroy();
+}
+
+// ============================================================
+// GLOBAL TTS INIT — ONE TIME ONLY (SAFE)
+// ============================================================
+private void initTTS() {
+
+    if (tts != null) return;
+
+    tts = new TextToSpeech(this, status -> {
+        if (status == TextToSpeech.SUCCESS) {
+
+            int res = tts.setLanguage(Locale.US);
+            if (res == TextToSpeech.LANG_MISSING_DATA ||
+                res == TextToSpeech.LANG_NOT_SUPPORTED) {
+
+                tts.setLanguage(Locale.ENGLISH);
+            }
+
+            ttsReady = true;
+
+            if (pendingTtsText != null) {
+                tts.speak(
+                        pendingTtsText,
+                        TextToSpeech.QUEUE_FLUSH,
+                        null,
+                        "GEL_TTS_PENDING"
+                );
+                pendingTtsText = null;
+            }
+        }
+    });
 }
 
 // ============================================================  

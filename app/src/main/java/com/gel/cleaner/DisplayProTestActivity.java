@@ -30,6 +30,10 @@ public class DisplayProTestActivity extends Activity {
     private static final int LOOP_COUNT = 3;
     private static final long MAX_RUNTIME_MS = 5 * 60 * 1000;
 
+private volatile boolean userCanceled = false;
+
+private volatile boolean activityAlive = true;
+
     // ============================================================
     // STATE
     // ============================================================
@@ -50,20 +54,62 @@ public class DisplayProTestActivity extends Activity {
         super.attachBaseContext(LocaleHelper.apply(base));
     }
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        showOledWarning();
-    }
+@Override
+protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+
+    activityAlive = true;
+
+    // dummy root ώστε το Activity να έχει window token
+    FrameLayout dummy = new FrameLayout(this);
+    dummy.setBackgroundColor(Color.BLACK);
+    setContentView(dummy);
+
+    // δείξε popup ΜΟΝΟ αφού “δέσει” το window
+    dummy.post(() -> {
+        if (!isFinishing() && !isDestroyed() && activityAlive) {
+            showOledWarning();
+        }
+    });
+}
+
+// ============================================================
+// SAFE CANCEL — USER ABORT (GLOBAL)
+// ============================================================
+private void safeCancel() {
+
+    if (userCanceled) return; // idempotent
+
+    userCanceled  = true;
+    activityAlive = false;
+
+    // 🧾 LOG — USER ACTION (ΟΧΙ error, ΟΧΙ success)
+    GELServiceLog.logInfo(
+            "LAB Display Pro Test — CANCELED by user"
+    );
+
+    try { h.removeCallbacksAndMessages(null); } catch (Throwable ignore) {}
+    try { AppTTS.stop(); } catch (Throwable ignore) {}
+
+    setResult(RESULT_CANCELED);
+    finish();
+}
+
+@Override
+protected void onDestroy() {
+    activityAlive = false;
+    h.removeCallbacksAndMessages(null);
+    AppTTS.stop();
+    super.onDestroy();
+}
 
     // ============================================================
     // BACK = EXIT TEST
     // ============================================================
-    @Override
-    public void onBackPressed() {
-        AppTTS.stop();
-        finish();
-    }
+@Override
+public void onBackPressed() {
+    safeCancel();
+}
 
     // ============================================================
     // POPUP 1 — OLED WARNING
@@ -117,17 +163,16 @@ public class DisplayProTestActivity extends Activity {
                 120
         );
 
-        cancel.setOnClickListener(v -> {
-            AppTTS.stop();
-            d.dismiss();
-            finish();
-        });
+    cancel.setOnClickListener(v -> {
+    d.dismiss();
+    safeCancel();
+});
 
-        start.setOnClickListener(v -> {
-            AppTTS.stop();
-            d.dismiss();
-            initAndStart();
-        });
+    start.setOnClickListener(v -> {
+    AppTTS.stop();
+    d.dismiss();
+    initAndStart();
+});
     }
 
     // ============================================================
@@ -191,9 +236,8 @@ public class DisplayProTestActivity extends Activity {
         exitBtn.setLayoutParams(lpExit);
 
         exitBtn.setOnClickListener(v -> {
-            AppTTS.stop();
-            finish();
-        });
+    safeCancel();
+});
 
         root.addView(exitBtn);
         setContentView(root);
@@ -207,103 +251,124 @@ public class DisplayProTestActivity extends Activity {
 
     private void runStep() {
 
-        if (System.currentTimeMillis() - startTimeMs > MAX_RUNTIME_MS) {
+    if (!activityAlive || userCanceled || isFinishing() || isDestroyed())
+        return;
+
+    if (System.currentTimeMillis() - startTimeMs > MAX_RUNTIME_MS) {
+        finishTest();
+        return;
+    }
+
+    if (stepIndex >= steps.length) {
+        stepIndex = 0;
+        loopIndex++;
+        if (loopIndex >= LOOP_COUNT) {
             finishTest();
             return;
         }
-
-        if (stepIndex >= steps.length) {
-            stepIndex = 0;
-            loopIndex++;
-            if (loopIndex >= LOOP_COUNT) {
-                finishTest();
-                return;
-            }
-        }
-
-        TestStep s = steps[stepIndex];
-        s.apply(root);
-
-        hint.setText(
-                s.label + "\n\n" +
-                        (AppLang.isGreek(this) ? "Κύκλος " : "Cycle ") +
-                        (loopIndex + 1) + " / " + LOOP_COUNT
-        );
-
-        stepIndex++;
-        h.postDelayed(this::runStep, STEP_DURATION_MS);
     }
+
+    TestStep s = steps[stepIndex];
+    s.apply(root);
+
+    hint.setText(
+            s.label + "\n\n" +
+            (AppLang.isGreek(this) ? "Κύκλος " : "Cycle ") +
+            (loopIndex + 1) + " / " + LOOP_COUNT
+    );
+
+    stepIndex++;
+    h.postDelayed(this::runStep, STEP_DURATION_MS);
+}
 
     // ============================================================
     // POPUP 2 — FINAL QUESTION
     // ============================================================
-    private void finishTest() {
+private void finishTest() {
 
-        final boolean gr = AppLang.isGreek(this);
+    if (userCanceled || isFinishing() || isDestroyed()) {
+    activityAlive = false;
+    setResult(RESULT_CANCELED);
+    finish();
+    return;
+}
 
-        final String text =
-                gr
-                        ? "Παρατήρησες κάποιο πρόβλημα στην οθόνη;\n\n"
-                        + "• Burn-in\n• Ζώνες χρώματος\n• Κηλίδες / mura\n• Ανομοιομορφία"
-                        : "Did you notice any display issues?\n\n"
-                        + "• Burn-in\n• Color banding\n• Stains / mura\n• Uneven brightness";
+    final boolean gr = AppLang.isGreek(this);
 
-        AlertDialog.Builder b =
-                new AlertDialog.Builder(this,
-                        android.R.style.Theme_Material_Dialog_NoActionBar);
-        b.setCancelable(false);
+    final String text =
+            gr
+                    ? "Παρατήρησες κάποιο πρόβλημα στην οθόνη;\n\n"
+                    + "• Burn-in\n• Ζώνες χρώματος\n• Κηλίδες / mura\n• Ανομοιομορφία"
+                    : "Did you notice any display issues?\n\n"
+                    + "• Burn-in\n• Color banding\n• Stains / mura\n• Uneven brightness";
 
-        LinearLayout root = buildPopupRoot(this);
+    AlertDialog.Builder b =
+            new AlertDialog.Builder(this,
+                    android.R.style.Theme_Material_Dialog_NoActionBar);
+    b.setCancelable(false);
 
-        root.addView(buildHeaderWithMute(
-                gr ? "Οπτικός Έλεγχος" : "Visual Inspection"
-        ));
+    LinearLayout root = buildPopupRoot(this);
 
-        SpannableString span = new SpannableString(text);
-        span.setSpan(
-                new ForegroundColorSpan(0xFF39FF14),
-                0,
-                text.indexOf("\n"),
-                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-        );
+    root.addView(buildHeaderWithMute(
+            gr ? "Οπτικός Έλεγχος" : "Visual Inspection"
+    ));
 
-        root.addView(buildMessage(span));
+    SpannableString span = new SpannableString(text);
+    span.setSpan(
+            new ForegroundColorSpan(0xFF39FF14),
+            0,
+            text.indexOf("\n"),
+            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+    );
 
-        LinearLayout buttons = new LinearLayout(this);
-        buttons.setOrientation(LinearLayout.HORIZONTAL);
-        buttons.setGravity(Gravity.CENTER);
+    root.addView(buildMessage(span));
 
-        Button no  = gelButton(gr ? "ΟΧΙ\nΟΚ" : "NO\nOK", 0xFF0F8A3B);
-        Button yes = gelButton(gr ? "ΝΑΙ\nΠρόβλημα" : "YES\nIssue", 0xFFB00020);
+    LinearLayout buttons = new LinearLayout(this);
+    buttons.setOrientation(LinearLayout.HORIZONTAL);
+    buttons.setGravity(Gravity.CENTER);
 
-        setDualButtons(no, yes, buttons);
-        root.addView(buttons);
+    Button no  = gelButton(gr ? "ΟΧΙ\nΟΚ" : "NO\nOK", 0xFF0F8A3B);
+    Button yes = gelButton(gr ? "ΝΑΙ\nΠρόβλημα" : "YES\nIssue", 0xFFB00020);
 
-        b.setView(root);
+    setDualButtons(no, yes, buttons);
+    root.addView(buttons);
 
-        AlertDialog d = b.create();
-        if (d.getWindow() != null)
-            d.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+    b.setView(root);
 
+    AlertDialog d = b.create();
+    if (d.getWindow() != null)
+        d.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+
+    if (!isFinishing() && !isDestroyed()) {
         d.show();
-
-        new Handler(Looper.getMainLooper()).postDelayed(
-                () -> AppTTS.ensureSpeak(this, text),
-                120
-        );
-
-        no.setOnClickListener(v -> {
-            AppTTS.stop();
-            setResult(RESULT_OK);
-            finish();
-        });
-
-        yes.setOnClickListener(v -> {
-            AppTTS.stop();
-            setResult(RESULT_OK);
-            finish();
-        });
+    } else {
+        return;
     }
+
+    new Handler(Looper.getMainLooper()).postDelayed(() -> {
+        if (activityAlive && !AppTTS.isMuted()) {
+            AppTTS.ensureSpeak(this, text);
+        }
+    }, 120);
+
+    no.setOnClickListener(v -> {
+    AppTTS.stop();
+    GELServiceLog.logInfo(
+        "LAB Display Pro Test — COMPLETED"
+    );
+    setResult(RESULT_OK);
+    finish();
+});
+
+yes.setOnClickListener(v -> {
+    AppTTS.stop();
+    GELServiceLog.logInfo(
+        "LAB Display Pro Test — COMPLETED (ISSUES DETECTED)"
+    );
+    setResult(RESULT_OK);
+    finish();
+});
+}
 
     // ============================================================
     // UI HELPERS (LOCAL)

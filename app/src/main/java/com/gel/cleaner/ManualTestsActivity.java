@@ -2746,26 +2746,15 @@ private boolean detectPowerInstability() {
 }
 
 // ============================================================
-// POPUP HEADER + MUTE — GEL STYLE (LAB 28) — FINAL (PORTABLE)
-// • Works from ANY Activity (no dependency on dp() method)
-// • AppLang-aware labels (GR/EN)
-// • Uses AppTTS global mute
+// POPUP HEADER + TITLE (NO MUTE BUTTON HERE)
 // ============================================================
-private LinearLayout buildPopupHeaderWithMute(
-        Context ctx,
-        String titleText,
-        Runnable onMuteToggle
-) {
-    final boolean gr = AppLang.isGreek(ctx);
+private LinearLayout buildPopupHeader(Context ctx, String titleText) {
 
     LinearLayout header = new LinearLayout(ctx);
     header.setOrientation(LinearLayout.HORIZONTAL);
     header.setGravity(Gravity.CENTER_VERTICAL);
     header.setPadding(0, 0, 0, dpCtx(ctx, 12));
 
-    // =========================
-    // TITLE
-    // =========================
     TextView title = new TextView(ctx);
     title.setText(titleText);
     title.setTextColor(Color.WHITE);
@@ -2781,52 +2770,8 @@ private LinearLayout buildPopupHeaderWithMute(
             );
     title.setLayoutParams(lpTitle);
 
-// =========================
-// MUTE ROW (GLOBAL TTS)
-// =========================
-private LinearLayout buildMuteRow(Context ctx) {
-
-    final boolean gr = AppLang.isGreek(ctx);
-
-    LinearLayout row = new LinearLayout(ctx);
-    row.setOrientation(LinearLayout.HORIZONTAL);
-    row.setGravity(Gravity.CENTER_VERTICAL);
-    row.setPadding(0, dpCtx(ctx, 8), 0, dpCtx(ctx, 12));
-
-    CheckBox muteCheck = new CheckBox(ctx);
-    muteCheck.setChecked(AppTTS.isMuted(ctx));
-    muteCheck.setPadding(0, 0, dpCtx(ctx, 6), 0);
-
-    TextView label = new TextView(ctx);
-    label.setText(
-            gr
-                    ? "Σίγαση φωνητικών οδηγιών"
-                    : "Mute voice instructions"
-    );
-    label.setTextColor(0xFFAAAAAA);
-    label.setTextSize(14f);
-
-    View.OnClickListener toggle = v -> {
-        AppTTS.setMuted(ctx, !AppTTS.isMuted(ctx));
-        muteCheck.setChecked(AppTTS.isMuted(ctx));
-    };
-
-    muteCheck.setOnClickListener(toggle);
-    label.setOnClickListener(toggle);
-
-    row.addView(muteCheck);
-    row.addView(label);
-
-    return row;
-}
-
-// ============================================================
-// DP HELPER — CONTEXT SAFE (GLOBAL POPUPS)
-// ============================================================
-private static int dpCtx(Context ctx, int v) {
-    if (ctx == null) return v;
-    float d = ctx.getResources().getDisplayMetrics().density;
-    return (int) (v * d + 0.5f);
+    header.addView(title);
+    return header;
 }
 
 // ============================================================

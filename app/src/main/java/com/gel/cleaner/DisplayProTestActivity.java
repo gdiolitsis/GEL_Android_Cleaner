@@ -251,8 +251,9 @@ public void onBackPressed() {
 
     private void runStep() {
 
-    if (!activityAlive || userCanceled || isFinishing() || isDestroyed())
+    if (userCanceled || !activityAlive || isFinishing() || isDestroyed()) {
         return;
+    }
 
     if (System.currentTimeMillis() - startTimeMs > MAX_RUNTIME_MS) {
         finishTest();

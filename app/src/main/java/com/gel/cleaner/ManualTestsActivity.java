@@ -3697,13 +3697,15 @@ private void lab6DisplayTouch() {
 
     d.show();
 
-    // ---------------------------
-    // TTS (SAFE GLOBAL ENTRY)
-    // ---------------------------
-    new Handler(Looper.getMainLooper()).postDelayed(
-            () -> AppTTS.ensureSpeak(this, message),
-            120
-    );
+// ---------------------------
+// TTS (SAFE GLOBAL ENTRY)
+// ---------------------------
+AppTTS.ensureSpeak(this, " "); // warm-up
+
+new Handler(Looper.getMainLooper()).postDelayed(
+        () -> AppTTS.ensureSpeak(this, message),
+        120
+);
 
     // ---------------------------
     // ACTION

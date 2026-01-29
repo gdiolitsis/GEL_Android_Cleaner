@@ -3651,6 +3651,13 @@ muteRow.setPadding(0, dp(8), 0, dp(16));
 // CheckBox
 CheckBox muteCheck = new CheckBox(this);
 muteCheck.setChecked(AppTTS.isMuted(this));
+
+muteCheck.setOnCheckedChangeListener((buttonView, isChecked) -> {
+    if (isChecked != AppTTS.isMuted(this)) {
+        AppTTS.setMuted(this, isChecked);
+    }
+});
+
 muteCheck.setPadding(0, 0, dp(6), 0);
 
 // Label δίπλα στο checkbox

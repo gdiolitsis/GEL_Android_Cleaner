@@ -1364,6 +1364,8 @@ float d = getResources().getDisplayMetrics().density;
 return (int) (v * d + 0.5f);
 }
 
+
+
 private View space(int w) {
     View v = new View(this);
     v.setLayoutParams(new LinearLayout.LayoutParams(w, 1));
@@ -2745,7 +2747,7 @@ private LinearLayout buildPopupHeader(Context ctx, String titleText) {
     LinearLayout header = new LinearLayout(ctx);
     header.setOrientation(LinearLayout.HORIZONTAL);
     header.setGravity(Gravity.CENTER_VERTICAL);
-    header.setPadding(0, 0, 0, dpCtx(ctx, 12));
+    header.setPadding(0, 0, 0, dp(12));
 
     TextView title = new TextView(ctx);
     title.setText(titleText);

@@ -4568,17 +4568,19 @@ new Handler(Looper.getMainLooper()).postDelayed(() -> {
     };
 
     yes.setOnClickListener(v -> {
-        overall.previewOkCount++;
-        logLabelOkValue("User confirmation", "Live preview visible");
-        finishAndNext.run();
-    });
+    AppTTS.stop(); // ⛔ ΚΟΒΕΙ ΑΜΕΣΑ ΤΗ ΦΩΝΗ
+    overall.previewOkCount++;
+    logLabelOkValue("User confirmation", "Live preview visible");
+    finishAndNext.run();
+});
 
-    no.setOnClickListener(v -> {
-        overall.previewFailCount++;
-        logLabelErrorValue("User confirmation", "NO live preview");
-        logInfo("Possible camera module, driver, permission, or routing issue.");
-        finishAndNext.run();
-    });
+no.setOnClickListener(v -> {
+    AppTTS.stop(); // ⛔ ΚΟΒΕΙ ΑΜΕΣΑ ΤΗ ΦΩΝΗ
+    overall.previewFailCount++;
+    logLabelErrorValue("User confirmation", "NO live preview");
+    logInfo("Possible camera module, driver, permission, or routing issue.");
+    finishAndNext.run();
+});
 
     // Start camera when texture is ready
     if (tv.isAvailable()) {
@@ -5043,23 +5045,21 @@ private void showLab8_1Prompt() {
             }
         }, 120);
 
-        ok.setOnClickListener(v -> {
-            AppTTS.stop();
-            d.dismiss();
-
         yes.setOnClickListener(v -> {
-            d.dismiss();
-            startLab8_1CameraCapabilities();
-        });
+    AppTTS.stop();
+    d.dismiss();
+    startLab8_1CameraCapabilities();
+});
 
-        no.setOnClickListener(v -> {
-            d.dismiss();
-            logInfo("LAB 8.1 skipped by user.");
-            logLine();
-            logLabelOkValue("Lab 8", "Finished");
-            logLine();
-            enableSingleExportButton();
-        });
+no.setOnClickListener(v -> {
+    AppTTS.stop();
+    d.dismiss();
+    logInfo("LAB 8.1 skipped by user.");
+    logLine();
+    logLabelOkValue("Lab 8", "Finished");
+    logLine();
+    enableSingleExportButton();
+});
     });
 }
 

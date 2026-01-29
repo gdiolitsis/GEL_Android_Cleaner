@@ -351,25 +351,28 @@ yes.setOnClickListener(v -> endTest(true));
     // ============================================================
     private void endTest(boolean issuesDetected) {
 
-        if (testFinished) return;
-        testFinished = true;
+    if (testFinished) return;
+    testFinished = true;
 
-        try { h.removeCallbacksAndMessages(null); } catch (Throwable ignore) {}
-        try { AppTTS.stop(); } catch (Throwable ignore) {}
+    try { h.removeCallbacksAndMessages(null); } catch (Throwable ignore) {}
+    try { AppTTS.stop(); } catch (Throwable ignore) {}
 
-        if (issuesDetected) {
-            GELServiceLog.logInfo(
-                    "LAB Display Pro Test — COMPLETED (ISSUES DETECTED)"
-            );
-        } else {
-            GELServiceLog.logInfo(
-                    "LAB Display Pro Test — COMPLETED"
-            );
-        }
-
-        setResult(RESULT_OK);
-        finish();
+    if (issuesDetected) {
+        GELServiceLog.logInfo(
+                "LAB Display Pro Test — COMPLETED (ISSUES DETECTED)"
+        );
+    } else {
+        GELServiceLog.logInfo(
+                "LAB Display Pro Test — COMPLETED"
+        );
     }
+
+    Intent result = new Intent();
+    result.putExtra("display_issues", issuesDetected);
+
+    setResult(RESULT_OK, result);
+    finish();
+}
 
 // ============================================================
 // UI HELPERS

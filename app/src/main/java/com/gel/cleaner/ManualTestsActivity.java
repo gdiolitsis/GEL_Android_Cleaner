@@ -3772,19 +3772,21 @@ private void lab7RotationAndProximityManual() {
                         : "LAB 7 — Rotation & Proximity Sensors";
 
         final String messageText =
-                gr
-                        ? "Βήμα 1:\n"
-                          + "Περιστρέψτε αργά τη συσκευή.\n"
-                          + "Η οθόνη πρέπει να ακολουθεί τον προσανατολισμό.\n\n"
-                          + "Βήμα 2:\n"
-                          + "Καλύψτε τον αισθητήρα εγγύτητας.\n"
-                          + "Η οθόνη πρέπει να σβήσει."
-                        : "Step 1:\n"
-                          + "Rotate the device slowly.\n"
-                          + "The screen should follow orientation.\n\n"
-                          + "Step 2:\n"
-                          + "Cover the proximity sensor.\n"
-                          + "The screen should turn off.";
+        gr
+                ? "Βήμα 1:\n"
+                  + "Περιστρέψτε αργά τη συσκευή.\n"
+                  + "Η οθόνη πρέπει να ακολουθεί τον προσανατολισμό.\n\n"
+                  + "Βήμα 2:\n"
+                  + "Καλύψτε με το χέρι σας τον αισθητήρα εγγύτητας, "
+                  + "στο επάνω μέρος της οθόνης, στην περιοχή ειδοποιήσεων.\n"
+                  + "Η οθόνη πρέπει να σβήσει."
+                : "Step 1:\n"
+                  + "Rotate the device slowly.\n"
+                  + "The screen should rotate accordingly.\n\n"
+                  + "Step 2:\n"
+                  + "Cover the proximity sensor with your hand, "
+                  + "at the top of the screen, to the notification area.\n"
+                  + "The screen should turn off.";
 
         AlertDialog.Builder b =
                 new AlertDialog.Builder(

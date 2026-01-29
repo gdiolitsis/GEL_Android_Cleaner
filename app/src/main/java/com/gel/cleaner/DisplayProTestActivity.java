@@ -132,8 +132,9 @@ public void onBackPressed() {
         root.addView(buildHeader(
         gr ? "Δοκιμή Καταπόνησης Οθόνης" : "Display Stress Test"
 ));
-root.addView(buildMuteRow());
+
         root.addView(buildMessage(text));
+root.addView(buildMuteRow());
 
 LinearLayout buttons = new LinearLayout(this);
 buttons.setOrientation(LinearLayout.HORIZONTAL);
@@ -305,7 +306,6 @@ Button start  = gelButton(gr ? "ΕΝΑΡΞΗ" : "START",  0xFF0F8A3B);
         root.addView(buildHeader(
         gr ? "Οπτικός Έλεγχος" : "Visual Inspection"
 ));
-root.addView(buildMuteRow());
 
         SpannableString span = new SpannableString(text);
         span.setSpan(
@@ -316,6 +316,7 @@ root.addView(buildMuteRow());
         );
 
         root.addView(buildMessage(span));
+root.addView(buildMuteRow());
 
         LinearLayout buttons = new LinearLayout(this);
         buttons.setOrientation(LinearLayout.HORIZONTAL);

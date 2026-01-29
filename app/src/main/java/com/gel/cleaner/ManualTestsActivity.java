@@ -4923,18 +4923,17 @@ private void showLab8_1Prompt() {
                         : "Camera Capabilities Analysis";
 
         final String messageText =
-                gr
-                        ? "Το LAB 8.1 εξηγεί, τι μπορεί πραγματικά να κάνει η κάμερά σου,\n"
-                          + "με απλούς όρους.\n\n"
-                          + "• Ποιότητα φωτογραφίας,\n"
-                          + "• Ανάλυση & ομαλότητα βίντεο,\n"
-                          + "• Επαγγελματικές δυνατότητες (RAW).\n\n"
-    
-                        : "LAB 8.1 explains, what your camera can actually do,\n"
-                          + "in simple, terms.\n\n"
-                          + "• Photo quality,\n"
-                          + "• Video resolution & smoothness,\n"
-                          + "• Professional features (RAW)\n\n"
+        gr
+                ? "Το LAB 8.1 εξηγεί, τι μπορεί πραγματικά να κάνει η κάμερά σου,\n"
+                  + "με απλούς όρους.\n\n"
+                  + "• Ποιότητα φωτογραφίας,\n"
+                  + "• Ανάλυση & ομαλότητα βίντεο,\n"
+                  + "• Επαγγελματικές δυνατότητες (RAW).\n\n"
+                : "LAB 8.1 explains, what your camera can actually do,\n"
+                  + "in simple terms.\n\n"
+                  + "• Photo quality,\n"
+                  + "• Video resolution & smoothness,\n"
+                  + "• Professional features (RAW).\n\n";
                         
 
         AlertDialog.Builder b =

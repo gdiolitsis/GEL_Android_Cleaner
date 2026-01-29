@@ -3641,6 +3641,19 @@ bg.setStroke(4, 0xFFFFD700);
 root.setBackground(bg);
 
 // ---------------------------
+// TITLE
+// ---------------------------
+TextView titleView = new TextView(this);
+titleView.setText(title);
+titleView.setTextColor(Color.WHITE);
+titleView.setTextSize(18f);
+titleView.setTypeface(null, Typeface.BOLD);
+titleView.setGravity(Gravity.CENTER);
+titleView.setPadding(0, 0, 0, dp(14));
+
+root.addView(titleView);
+
+// ---------------------------
 // MUTE ROW (ABOVE BUTTONS)
 // ---------------------------
 LinearLayout muteRow = new LinearLayout(this);
@@ -3817,16 +3830,41 @@ private void lab7RotationAndProximityManual() {
         title.setPadding(0, 0, 0, dp(12));
         root.addView(title);
 
-        // ---------------------------
-        // MESSAGE
-        // ---------------------------
-        TextView msg = new TextView(this);
-        msg.setText(messageText);
-        msg.setTextColor(0xFFDDDDDD);
-        msg.setTextSize(15f);
-        msg.setGravity(Gravity.CENTER);
-        msg.setLineSpacing(0f, 1.15f);
-        root.addView(msg);
+// ---------------------------
+// MESSAGE (NEON GREEN EXCEPT "Βήμα X")
+// ---------------------------
+SpannableString span = new SpannableString(messageText);
+
+int neonGreen = 0xFF39FF14;
+
+// Βήμα 1
+int step1Start = messageText.indexOf("Βήμα 1:");
+int step2Start = messageText.indexOf("Βήμα 2:");
+
+if (step1Start != -1 && step2Start != -1) {
+    span.setSpan(
+            new ForegroundColorSpan(neonGreen),
+            step1Start + "Βήμα 1:".length(),
+            step2Start,
+            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+    );
+
+    span.setSpan(
+            new ForegroundColorSpan(neonGreen),
+            step2Start + "Βήμα 2:".length(),
+            messageText.length(),
+            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+    );
+}
+
+TextView msg = new TextView(this);
+msg.setText(span);
+msg.setTextColor(0xFFFFFFFF); // default για "Βήμα"
+msg.setTextSize(15f);
+msg.setGravity(Gravity.CENTER);
+msg.setLineSpacing(0f, 1.15f);
+
+root.addView(msg);
 
         // ---------------------------
         // MUTE ROW (STANDARD GEL)
@@ -4060,7 +4098,7 @@ for (Lab8Cam c : cams) {
     if ("BACK".equals(c.facing))
         logOk("Facing", c.facing);
     else
-        logWarn("Facing", c.facing);
+        logOk("Facing", c.facing);
 
     // Flash
     if (c.hasFlash)
@@ -4182,15 +4220,16 @@ private void showLab8IntroAndStart(
     title.setPadding(0, 0, 0, dp(12));
     root.addView(title);
 
-    // ---------------------------
-    // MESSAGE
-    // ---------------------------
-    TextView msg = new TextView(this);
-    msg.setText(messageText);
-    msg.setTextColor(0xFFDDDDDD);
-    msg.setTextSize(15f);
-    msg.setGravity(Gravity.CENTER);
-    root.addView(msg);
+// ---------------------------
+// MESSAGE (NEON GREEN)
+// ---------------------------
+TextView msg = new TextView(this);
+msg.setText(messageText);
+msg.setTextColor(0xFF39FF14); // NEON GREEN
+msg.setTextSize(15f);
+msg.setGravity(Gravity.CENTER);
+msg.setLineSpacing(0f, 1.15f);
+root.addView(msg);
 
     // ---------------------------
     // MUTE ROW (ABOVE START)
@@ -4448,15 +4487,17 @@ private void lab8ShowPreviewDialogForCamera(
     root.addView(title);
 
     // ---------------------------
-    // MESSAGE
+    // MESSAGE 
     // ---------------------------
-    TextView hint = new TextView(this);
-    hint.setText(messageText);
-    hint.setTextColor(0xFFDDDDDD);
-    hint.setTextSize(14f);
-    hint.setGravity(Gravity.CENTER);
-    hint.setPadding(0, 0, 0, dp(10));
-    root.addView(hint);
+
+TextView hint = new TextView(this);
+hint.setText(messageText);
+hint.setTextColor(0xFF39FF14); // NEON GREEN
+hint.setTextSize(14f);
+hint.setGravity(Gravity.CENTER);
+hint.setPadding(0, 0, 0, dp(10));
+hint.setLineSpacing(0f, 1.15f);
+root.addView(hint);
 
     // ---------------------------
     // PREVIEW (TextureView)
@@ -4969,11 +5010,12 @@ private void showLab8_1Prompt() {
         // MESSAGE
         // ---------------------------
         TextView msg = new TextView(this);
-        msg.setText(messageText);
-        msg.setTextColor(0xFFDDDDDD);
-        msg.setTextSize(14f);
-        msg.setGravity(Gravity.CENTER);
-        root.addView(msg);
+msg.setText(messageText);
+msg.setTextColor(0xFF39FF14); // NEON GREEN
+msg.setTextSize(14f);
+msg.setGravity(Gravity.CENTER);
+msg.setLineSpacing(0f, 1.15f);
+root.addView(msg);
 
         // ---------------------------
         // MUTE ROW (ABOVE BUTTON)
@@ -5042,7 +5084,7 @@ private void showLab8_1Prompt() {
 no.setOnClickListener(v -> {
     AppTTS.stop();
     d.dismiss();
-    logInfo("LAB 8.1 skipped by user.");
+    logWarn("LAB 8.1 skipped by user.");
     logLine();
     logLabelOkValue("Lab 8", "Finished");
     logLine();
@@ -12189,11 +12231,6 @@ if (requestCode == REQ_LAB6_COLOR) {
 
     if (resultCode == RESULT_CANCELED) {
 
-        appendHtml("<br>");
-        logLine();
-        logSection("LAB 6 PRO — Display Color & Uniformity");
-        logLine();
-
         logWarn("LAB 6 PRO — Display Color & Uniformity — CANCELED by user");
         logInfo("Visual inspection was not performed.");
 
@@ -12203,11 +12240,6 @@ if (requestCode == REQ_LAB6_COLOR) {
         enableSingleExportButton();
         return;
     }
-
-    appendHtml("<br>");
-    logLine();
-    logSection("LAB 6 PRO — Display Color & Uniformity");
-    logLine();
 
     boolean issues =
             data != null && data.getBooleanExtra("display_issues", false);

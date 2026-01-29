@@ -3685,8 +3685,6 @@ muteLabel.setOnClickListener(toggleMute);
 muteRow.addView(muteCheck);
 muteRow.addView(muteLabel);
 
-root.addView(muteRow);
-
 // ---------------------------
 // MESSAGE
 // ---------------------------
@@ -3719,6 +3717,8 @@ LinearLayout.LayoutParams lpStart =
                 120
         );
 startBtn.setLayoutParams(lpStart);
+
+root.addView(muteRow);
 
 root.addView(startBtn);
 
@@ -3869,7 +3869,7 @@ root.addView(step2Desc);
     if (tts != null && tts[0] != null && ttsReady[0] && !ttsMuted[0]) {
         tts[0].stop();
         tts[0].speak(
-                "Rotate the device, then cover the proximity sensor.",
+                "Rotate the device. The screen should follow orientation. Τhen cover the proximity sensor.The screen should turn off.",
                 TextToSpeech.QUEUE_FLUSH,
                 null,
                 "LAB7_INTRO"
@@ -4132,7 +4132,7 @@ lab8CmFor81 = cm;
 }
 
 // ============================================================
-// LAB 8 — Intro dialog
+// LAB 8 — Intro dialog (TTS + MUTE + GR/EN)
 // ============================================================
 private void showLab8IntroAndStart(
         ArrayList<Lab8Cam> cams,
@@ -4140,6 +4140,30 @@ private void showLab8IntroAndStart(
         CameraManager cm,
         Lab8Overall overall
 ) {
+
+    final boolean gr = AppLang.isGreek(this);
+
+    final String titleText =
+            gr ? "LAB 8 — Έλεγχος Καμερών (Πλήρης)"
+               : "LAB 8 — Camera Lab (Full)";
+
+    final String messageText =
+            gr
+                    ? "Αυτό το τεστ, θα ελέγξει ΟΛΕΣ τις κάμερες, μία-μία.\n\n"
+                      + "Για κάθε κάμερα:\n"
+                      + "• Θα ανοίξει ζωντανή προεπισκόπηση.\n"
+                      + "• Θα μετρηθεί η ροή καρέ.\n"
+                      + "• Θα εκτιμηθεί η καθυστέρηση pipeline.\n"
+                      + "• Θα ενεργοποιηθεί το φλας, όπου υπάρχει.\n\n"
+                      + "Μετά από κάθε κάμερα, θα σου ζητηθεί επιβεβαίωση."
+                    : "This lab, will test ALL cameras, one by one.\n\n"
+                      + "For each camera:\n"
+                      + "• Live preview will open.\n"
+                      + "• Frame stream will be sampled.\n"
+                      + "• Pipeline latency, will be estimated\n"
+                      + "• Flash will be toggled, where available\n\n"
+                      + "After each camera, you will be asked to confirm.";
+
     AlertDialog.Builder b =
             new AlertDialog.Builder(
                     ManualTestsActivity.this,
@@ -4157,34 +4181,40 @@ private void showLab8IntroAndStart(
     bg.setStroke(dp(4), 0xFFFFD700);
     root.setBackground(bg);
 
+    // ---------------------------
+    // TITLE
+    // ---------------------------
     TextView title = new TextView(this);
-    title.setText("LAB 8 — Camera Lab (Full)");
-    title.setTextColor(0xFFFFFFFF);
+    title.setText(titleText);
+    title.setTextColor(Color.WHITE);
     title.setTextSize(18f);
     title.setTypeface(null, Typeface.BOLD);
     title.setGravity(Gravity.CENTER);
     title.setPadding(0, 0, 0, dp(12));
     root.addView(title);
 
+    // ---------------------------
+    // MESSAGE
+    // ---------------------------
     TextView msg = new TextView(this);
-    msg.setText(
-            "This lab will test ALL cameras one-by-one.\n\n" +
-            "For each camera:\n" +
-            "• Live preview will open\n" +
-            "• We sample frame stream (FPS / drops / black frames)\n" +
-            "• We estimate pipeline latency\n" +
-            "• Flash (torch) will be toggled where available\n\n" +
-            "After each camera you will confirm if you saw live image."
-    );
+    msg.setText(messageText);
     msg.setTextColor(0xFFDDDDDD);
     msg.setTextSize(15f);
     msg.setGravity(Gravity.CENTER);
     root.addView(msg);
 
+    // ---------------------------
+    // MUTE ROW (ABOVE START)
+    // ---------------------------
+    root.addView(buildMuteRow());
+
+    // ---------------------------
+    // START BUTTON
+    // ---------------------------
     Button start = new Button(this);
-    start.setText("START TEST");
+    start.setText(gr ? "ΕΝΑΡΞΗ ΤΕΣΤ" : "START TEST");
     start.setAllCaps(false);
-    start.setTextColor(0xFFFFFFFF);
+    start.setTextColor(Color.WHITE);
 
     GradientDrawable startBg = new GradientDrawable();
     startBg.setColor(0xFF39FF14);
@@ -4202,12 +4232,23 @@ private void showLab8IntroAndStart(
     root.addView(start);
 
     b.setView(root);
+
     final AlertDialog d = b.create();
     if (d.getWindow() != null)
-        d.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        d.getWindow().setBackgroundDrawable(
+                new ColorDrawable(Color.TRANSPARENT)
+        );
+
+    d.setOnShowListener(dialog -> {
+        if (!AppTTS.isMuted(this)) {
+            AppTTS.ensureSpeak(this, messageText);
+        }
+    });
+
     d.show();
 
     start.setOnClickListener(v -> {
+        AppTTS.stop();
         d.dismiss();
         lab8RunNextCamera(cams, idx, cm, overall);
     });
@@ -4363,7 +4404,7 @@ private void lab8TryTorchToggle(String camId, Lab8Cam cam, Lab8Overall overall) 
 }
 
 // ============================================================
-// LAB 8 — Preview dialog + stream sampling
+// LAB 8 — Preview dialog + stream sampling (TTS + MUTE + GR/EN)
 // ============================================================
 private void lab8ShowPreviewDialogForCamera(
         Lab8Cam cam,
@@ -4371,7 +4412,23 @@ private void lab8ShowPreviewDialogForCamera(
         Lab8Overall overall,
         Runnable onDone
 ) {
-    // UI container
+
+    final boolean gr = AppLang.isGreek(this);
+
+    final String titleText =
+            gr
+                    ? "Προεπισκόπηση Κάμερας — " + cam.facing + " (ID " + cam.id + ")"
+                    : "Camera Preview — " + cam.facing + " (ID " + cam.id + ")";
+
+    final String messageText =
+            gr
+                    ? "Περίμενε περίπου 5 δευτερόλεπτα, όσο γίνεται δειγματοληψία καρέ.\n\n"
+                      + "Στη συνέχεια απάντησε:\n"
+                      + "Είδες ζωντανή εικόνα από την κάμερα;"
+                    : "Please wait about 5 seconds, while frames are sampled.\n\n"
+                      + "Then answer:\n"
+                      + "Did you see live image from the camera?";
+
     AlertDialog.Builder b =
             new AlertDialog.Builder(
                     ManualTestsActivity.this,
@@ -4389,27 +4446,32 @@ private void lab8ShowPreviewDialogForCamera(
     bg.setStroke(dp(4), 0xFFFFD700);
     root.setBackground(bg);
 
+    // ---------------------------
+    // TITLE
+    // ---------------------------
     TextView title = new TextView(this);
-    title.setText("Camera Preview — " + cam.facing + " (ID " + cam.id + ")");
-    title.setTextColor(0xFFFFFFFF);
+    title.setText(titleText);
+    title.setTextColor(Color.WHITE);
     title.setTextSize(16f);
     title.setTypeface(null, Typeface.BOLD);
     title.setGravity(Gravity.CENTER);
     title.setPadding(0, 0, 0, dp(10));
     root.addView(title);
 
+    // ---------------------------
+    // MESSAGE
+    // ---------------------------
     TextView hint = new TextView(this);
-    hint.setText(
-            "Wait ~5 seconds while we sample frames.\n" +
-            "Then confirm: did you see live image?"
-    );
+    hint.setText(messageText);
     hint.setTextColor(0xFFDDDDDD);
     hint.setTextSize(14f);
     hint.setGravity(Gravity.CENTER);
     hint.setPadding(0, 0, 0, dp(10));
     root.addView(hint);
 
-    // TextureView for preview
+    // ---------------------------
+    // PREVIEW (TextureView)
+    // ---------------------------
     final TextureView tv = new TextureView(this);
     LinearLayout.LayoutParams lpTv =
             new LinearLayout.LayoutParams(
@@ -4418,6 +4480,11 @@ private void lab8ShowPreviewDialogForCamera(
             );
     tv.setLayoutParams(lpTv);
     root.addView(tv);
+
+    // ---------------------------
+    // MUTE ROW (ABOVE YES / NO)
+    // ---------------------------
+    root.addView(buildMuteRow());
 
     // Buttons row
     LinearLayout row = new LinearLayout(this);

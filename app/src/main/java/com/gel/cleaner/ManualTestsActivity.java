@@ -1773,7 +1773,8 @@ private void showLab14PreTestAdvisory(Runnable onContinue) {
 
     // HEADER (TITLE ONLY)
 root.addView(
-        buildHeader(
+        buildPopupHeader(
+                this,
                 gr
                         ? "Δοκιμή Καταπόνησης Μπαταρίας — Προειδοποίηση"
                         : "Battery Stress Test — Pre-Test Check"
@@ -2842,11 +2843,12 @@ private void showLab28Popup() {
         // ==========================
         // HEADER (TITLE ONLY)
         // ==========================
-        LinearLayout header = buildHeader(
-                gr
-                        ? "LAB 28 — Τεχνική Ανάλυση"
-                        : "LAB 28 — Technician Analysis"
-        );
+        LinearLayout header = buildPopupHeader(
+        this,
+        gr
+                ? "LAB 28 — Τεχνική Ανάλυση"
+                : "LAB 28 — Technician Analysis"
+);
         root.addView(header);
 
         // ==========================
@@ -3686,7 +3688,9 @@ if (d.getWindow() != null) {
 }
 
 d.setOnShowListener(dialog -> {
-    speakNow(message);
+    if (!AppTTS.isMuted(this)) {
+        AppTTS.ensureSpeak(this, message);
+    }
 });
 
 d.show();

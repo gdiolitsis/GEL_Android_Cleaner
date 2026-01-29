@@ -129,13 +129,11 @@ public void onBackPressed() {
         b.setCancelable(false);
 
         LinearLayout root = buildPopupRoot(this);
-        root.addView(buildHeaderWithMute(
-                gr ? "Δοκιμή Καταπόνησης Οθόνης" : "Display Stress Test"
-        ));
-        root.addView(buildMessage(text));
-
-// 👇 ΕΔΩ ΜΠΑΙΝΕΙ ΤΟ MUTE
+        root.addView(buildHeader(
+        gr ? "Δοκιμή Καταπόνησης Οθόνης" : "Display Stress Test"
+));
 root.addView(buildMuteRow());
+        root.addView(buildMessage(text));
 
 LinearLayout buttons = new LinearLayout(this);
 buttons.setOrientation(LinearLayout.HORIZONTAL);
@@ -155,10 +153,11 @@ Button start  = gelButton(gr ? "ΕΝΑΡΞΗ" : "START",  0xFF0F8A3B);
 
         d.show();
 
-        new Handler(Looper.getMainLooper()).postDelayed(
-                () -> AppTTS.ensureSpeak(this, text),
-                120
-        );
+        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+    if (!AppTTS.isMuted(this)) {
+        AppTTS.ensureSpeak(this, text);
+    }
+}, 120);
 
         cancel.setOnClickListener(v -> {
             d.dismiss();
@@ -303,9 +302,10 @@ Button start  = gelButton(gr ? "ΕΝΑΡΞΗ" : "START",  0xFF0F8A3B);
         b.setCancelable(false);
 
         LinearLayout root = buildPopupRoot(this);
-        root.addView(buildHeaderWithMute(
-                gr ? "Οπτικός Έλεγχος" : "Visual Inspection"
-        ));
+        root.addView(buildHeader(
+        gr ? "Οπτικός Έλεγχος" : "Visual Inspection"
+));
+root.addView(buildMuteRow());
 
         SpannableString span = new SpannableString(text);
         span.setSpan(

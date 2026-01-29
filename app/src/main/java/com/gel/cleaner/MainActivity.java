@@ -681,7 +681,7 @@ box.setLayoutParams(
 
         // ---------------- TITLE ----------------
 TextView t = new TextView(this);
-t.setText("SELECT PLATFORM");
+t.setText("SELECT DEVICE");
 t.setTextColor(Color.WHITE);
 t.setTextSize(18f);
 t.setTypeface(null, Typeface.BOLD);
@@ -698,7 +698,7 @@ box.addView(t);
 // 🤖 ANDROID "BUTTON" (TextView)
 // =================================================
 TextView androidBtn = new TextView(this);
-androidBtn.setText("🤖  ANDROID DEVICE");
+androidBtn.setText("🤖  MY ANDROID DEVICE");
 androidBtn.setTextColor(Color.WHITE);
 androidBtn.setTextSize(16f);
 androidBtn.setTypeface(null, Typeface.BOLD);
@@ -733,7 +733,7 @@ androidBtn.setEllipsize(null);
 // 🍎 APPLE "BUTTON" (TextView)
 // =================================================
 TextView appleBtn = new TextView(this);
-appleBtn.setText("🍎  APPLE DEVICE");
+appleBtn.setText("🍎 OTHER APPLE DEVICE");
 appleBtn.setTextColor(Color.WHITE);
 appleBtn.setTextSize(16f);
 appleBtn.setTypeface(null, Typeface.BOLD);

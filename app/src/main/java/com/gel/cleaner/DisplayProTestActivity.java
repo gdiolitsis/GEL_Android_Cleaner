@@ -479,7 +479,7 @@ private LinearLayout buildMuteRow() {
         b.setBackground(bg);
 
         LinearLayout.LayoutParams lp =
-                new LinearLayout.LayoutParams(0, dp(52), 1f);
+                new LinearLayout.LayoutParams(0, dp(58), 1f);
         lp.setMargins(dp(6), 0, dp(6), 0);
         b.setLayoutParams(lp);
         return b;

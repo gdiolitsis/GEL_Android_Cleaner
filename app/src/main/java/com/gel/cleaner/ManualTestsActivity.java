@@ -3758,134 +3758,121 @@ startBtn.setOnClickListener(v -> {
 }
 
 // ============================================================
-// LAB 7 — Rotation + Proximity Sensors (MANUAL)
+// LAB 7 — Rotation + Proximity Sensors (MANUAL • MODERN)
 // ============================================================
 private void lab7RotationAndProximityManual() {
 
-runOnUiThread(() -> {
+    runOnUiThread(() -> {
 
-    final boolean[] ttsMuted = {
-            prefs.getBoolean(PREF_TTS_MUTED, false)
-    };
+        final boolean gr = AppLang.isGreek(this);
 
-    AlertDialog.Builder b =
-            new AlertDialog.Builder(
-                    ManualTestsActivity.this,
-                    android.R.style.Theme_Material_Dialog_NoActionBar
+        final String titleText =
+                gr
+                        ? "LAB 7 — Αισθητήρες Περιστροφής & Εγγύτητας"
+                        : "LAB 7 — Rotation & Proximity Sensors";
+
+        final String messageText =
+                gr
+                        ? "Βήμα 1:\n"
+                          + "Περιστρέψτε αργά τη συσκευή.\n"
+                          + "Η οθόνη πρέπει να ακολουθεί τον προσανατολισμό.\n\n"
+                          + "Βήμα 2:\n"
+                          + "Καλύψτε τον αισθητήρα εγγύτητας.\n"
+                          + "Η οθόνη πρέπει να σβήσει."
+                        : "Step 1:\n"
+                          + "Rotate the device slowly.\n"
+                          + "The screen should follow orientation.\n\n"
+                          + "Step 2:\n"
+                          + "Cover the proximity sensor.\n"
+                          + "The screen should turn off.";
+
+        AlertDialog.Builder b =
+                new AlertDialog.Builder(
+                        this,
+                        android.R.style.Theme_Material_Dialog_NoActionBar
+                );
+        b.setCancelable(false);
+
+        LinearLayout root = new LinearLayout(this);
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.setPadding(dp(24), dp(20), dp(24), dp(18));
+
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(0xFF101010);
+        bg.setCornerRadius(dp(18));
+        bg.setStroke(dp(4), 0xFFFFD700);
+        root.setBackground(bg);
+
+        // ---------------------------
+        // TITLE
+        // ---------------------------
+        TextView title = new TextView(this);
+        title.setText(titleText);
+        title.setTextColor(Color.WHITE);
+        title.setTextSize(18f);
+        title.setTypeface(null, Typeface.BOLD);
+        title.setGravity(Gravity.CENTER);
+        title.setPadding(0, 0, 0, dp(12));
+        root.addView(title);
+
+        // ---------------------------
+        // MESSAGE
+        // ---------------------------
+        TextView msg = new TextView(this);
+        msg.setText(messageText);
+        msg.setTextColor(0xFFDDDDDD);
+        msg.setTextSize(15f);
+        msg.setGravity(Gravity.CENTER);
+        msg.setLineSpacing(0f, 1.15f);
+        root.addView(msg);
+
+        // ---------------------------
+        // MUTE ROW (STANDARD GEL)
+        // ---------------------------
+        root.addView(buildMuteRow());
+
+        // ---------------------------
+        // START BUTTON
+        // ---------------------------
+        Button start = gelButton(
+                this,
+                gr ? "ΕΝΑΡΞΗ ΤΕΣΤ" : "START TEST",
+                0xFF39FF14
+        );
+        root.addView(start);
+
+        b.setView(root);
+
+        AlertDialog d = b.create();
+        if (d.getWindow() != null)
+            d.getWindow().setBackgroundDrawable(
+                    new ColorDrawable(Color.TRANSPARENT)
             );
-    b.setCancelable(false);
 
-    LinearLayout root = new LinearLayout(this);
-    root.setOrientation(LinearLayout.VERTICAL);
-    root.setPadding(dp(24), dp(20), dp(24), dp(18));
+        d.show();
 
-    GradientDrawable bg = new GradientDrawable();
-    bg.setColor(0xFF101010);
-    bg.setCornerRadius(dp(18));
-    bg.setStroke(dp(4), 0xFFFFD700);
-    root.setBackground(bg);
+        // ---------------------------
+        // TTS (ONLY IF NOT MUTED)
+        // ---------------------------
+        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+            if (d.isShowing() && !AppTTS.isMuted(this)) {
+                AppTTS.ensureSpeak(this, messageText);
+            }
+        }, 120);
 
-    TextView title = new TextView(this);
-    title.setText("LAB 7 — Rotation & Proximity Sensors");
-    title.setTextColor(0xFFFFFFFF);
-    title.setTextSize(18f);
-    title.setTypeface(null, Typeface.BOLD);
-    title.setGravity(Gravity.CENTER);
-    title.setPadding(0, 0, 0, dp(12));
-    root.addView(title);
+        // ---------------------------
+        // ACTION
+        // ---------------------------
+        start.setOnClickListener(v -> {
+            AppTTS.stop();
+            d.dismiss();
 
-    // STEP 1 — TITLE
-TextView step1 = new TextView(this);
-step1.setText("Step 1: Rotate the device slowly.");
-step1.setTextColor(0xFFFFFFFF); // white
-step1.setTextSize(15f);
-step1.setGravity(Gravity.CENTER);
-root.addView(step1);
-
-// STEP 1 — DESCRIPTION
-TextView step1Desc = new TextView(this);
-step1Desc.setText("The screen should follow orientation.");
-step1Desc.setTextColor(0xFF39FF14); // green
-step1Desc.setTextSize(14f);
-step1Desc.setGravity(Gravity.CENTER);
-step1Desc.setPadding(0, dp(4), 0, dp(12));
-root.addView(step1Desc);
-
-// STEP 2 — TITLE
-TextView step2 = new TextView(this);
-step2.setText("Step 2: Cover the proximity sensor.");
-step2.setTextColor(0xFFFFFFFF); // white
-step2.setTextSize(15f);
-step2.setGravity(Gravity.CENTER);
-root.addView(step2);
-
-// STEP 2 — DESCRIPTION
-TextView step2Desc = new TextView(this);
-step2Desc.setText("The screen should turn off.");
-step2Desc.setTextColor(0xFF39FF14); // green
-step2Desc.setTextSize(14f);
-step2Desc.setGravity(Gravity.CENTER);
-root.addView(step2Desc);
-
-    // ==========================
-    // MUTE
-    // ==========================
-    CheckBox muteBox = new CheckBox(this);
-    muteBox.setChecked(ttsMuted[0]);
-    muteBox.setText("Mute voice instructions");
-    muteBox.setTextColor(0xFFDDDDDD);
-    muteBox.setGravity(Gravity.CENTER);
-    muteBox.setPadding(0, dp(10), 0, dp(10));
-    root.addView(muteBox);
-
-    muteBox.setOnCheckedChangeListener((v, checked) -> {
-        ttsMuted[0] = checked;
-        prefs.edit().putBoolean(PREF_TTS_MUTED, checked).apply();
-        if (checked && tts != null && tts[0] != null) tts[0].stop();
+            startActivityForResult(
+                    new Intent(this, RotationCheckActivity.class),
+                    7007
+            );
+        });
     });
-
-    // ==========================
-    // START
-    // ==========================
-    Button start = new Button(this);
-    start.setText("START TEST");
-    start.setAllCaps(false);
-    start.setTextColor(0xFFFFFFFF);
-
-    GradientDrawable startBg = new GradientDrawable();
-    startBg.setColor(0xFF39FF14);
-    startBg.setCornerRadius(dp(14));
-    startBg.setStroke(dp(3), 0xFFFFD700);
-    start.setBackground(startBg);
-    root.addView(start);
-
-    b.setView(root);
-    final AlertDialog d = b.create();
-    if (d.getWindow() != null)
-        d.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-    d.show();
-
-    // TTS
-    if (tts != null && tts[0] != null && ttsReady[0] && !ttsMuted[0]) {
-        tts[0].stop();
-        tts[0].speak(
-                "Rotate the device. The screen should follow orientation. Τhen cover the proximity sensor.The screen should turn off.",
-                TextToSpeech.QUEUE_FLUSH,
-                null,
-                "LAB7_INTRO"
-        );
-    }
-
-    start.setOnClickListener(v -> {
-        if (tts != null && tts[0] != null) tts[0].stop();
-        d.dismiss();
-
-        startActivityForResult(
-                new Intent(this, RotationCheckActivity.class),
-                7007
-        );
-    });
-});
 }
 
 // ============================================================

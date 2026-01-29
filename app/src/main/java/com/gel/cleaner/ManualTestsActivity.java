@@ -4531,6 +4531,15 @@ private void lab8ShowPreviewDialogForCamera(
     if (d.getWindow() != null)
         d.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
     d.show();
+    
+// ---------------------------
+// TTS (ONLY IF NOT MUTED)
+// ---------------------------
+new Handler(Looper.getMainLooper()).postDelayed(() -> {
+    if (d.isShowing() && !AppTTS.isMuted(this)) {
+        AppTTS.ensureSpeak(this, messageText);
+    }
+}, 120);
 
     // Disable buttons until sampling done (avoid instant wrong click)
     yes.setEnabled(false);
@@ -4909,17 +4918,40 @@ private static class Lab8Session {
 }
 
 // ============================================================
-// LAB 8.1 — PROMPT (FINAL)
+// LAB 8.1 — PROMPT (FINAL + TTS + MUTE + GR/EN)
 // ============================================================
 private void showLab8_1Prompt() {
 
     runOnUiThread(() -> {
+
+        final boolean gr = AppLang.isGreek(this);
+
+        final String titleText =
+                gr
+                        ? "Ανάλυση Δυνατοτήτων Κάμερας"
+                        : "Camera Capabilities Analysis";
+
+        final String messageText =
+                gr
+                        ? "Το LAB 8.1 εξηγεί τι μπορεί πραγματικά να κάνει η κάμερά σου,\n"
+                          + "με απλούς, ανθρώπινους όρους.\n\n"
+                          + "• Ποιότητα φωτογραφίας\n"
+                          + "• Ανάλυση & ομαλότητα βίντεο\n"
+                          + "• Επαγγελματικές δυνατότητες (RAW)\n\n"
+                          + "Χωρίς βαθμολογίες. Χωρίς επιτυχία ή αποτυχία."
+                        : "LAB 8.1 explains what your camera can actually do,\n"
+                          + "in simple, human terms.\n\n"
+                          + "• Photo quality\n"
+                          + "• Video resolution & smoothness\n"
+                          + "• Professional features (RAW)\n\n"
+                          + "No scores. No pass/fail.";
 
         AlertDialog.Builder b =
                 new AlertDialog.Builder(
                         ManualTestsActivity.this,
                         android.R.style.Theme_Material_Dialog_NoActionBar
                 );
+        b.setCancelable(false);
 
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
@@ -4931,8 +4963,11 @@ private void showLab8_1Prompt() {
         bg.setStroke(dp(4), 0xFFFFD700);
         root.setBackground(bg);
 
+        // ---------------------------
+        // TITLE
+        // ---------------------------
         TextView title = new TextView(this);
-        title.setText("Camera Capabilities Analysis");
+        title.setText(titleText);
         title.setTextColor(Color.WHITE);
         title.setTextSize(17f);
         title.setTypeface(null, Typeface.BOLD);
@@ -4940,19 +4975,20 @@ private void showLab8_1Prompt() {
         title.setPadding(0, 0, 0, dp(10));
         root.addView(title);
 
+        // ---------------------------
+        // MESSAGE
+        // ---------------------------
         TextView msg = new TextView(this);
-        msg.setText(
-                "LAB 8.1 explains what your camera can actually do,\n" +
-                "in simple, human terms.\n\n" +
-                "• Photo quality\n" +
-                "• Video resolution & smoothness\n" +
-                "• Professional features (RAW)\n\n" +
-                "No scores. No pass/fail."
-        );
+        msg.setText(messageText);
         msg.setTextColor(0xFFDDDDDD);
         msg.setTextSize(14f);
         msg.setGravity(Gravity.CENTER);
         root.addView(msg);
+
+        // ---------------------------
+        // MUTE ROW (ABOVE BUTTON)
+        // ---------------------------
+        root.addView(buildMuteRow());
 
         LinearLayout buttons = new LinearLayout(this);
         buttons.setOrientation(LinearLayout.HORIZONTAL);
@@ -4997,6 +5033,19 @@ private void showLab8_1Prompt() {
         if (d.getWindow() != null)
             d.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         d.show();
+        
+// ---------------------------
+        // TTS (ONLY IF NOT MUTED)
+        // ---------------------------
+        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+            if (d.isShowing() && !AppTTS.isMuted(this)) {
+                AppTTS.ensureSpeak(this, messageText);
+            }
+        }, 120);
+
+        ok.setOnClickListener(v -> {
+            AppTTS.stop();
+            d.dismiss();
 
         yes.setOnClickListener(v -> {
             d.dismiss();

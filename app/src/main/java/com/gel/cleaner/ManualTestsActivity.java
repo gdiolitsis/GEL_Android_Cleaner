@@ -685,12 +685,6 @@ startActivity(new Intent(this, ServiceReportActivity.class))
 root.addView(btnExport);
 
 // ============================================================
-// FINAL BIND
-// ============================================================
-scroll.addView(root);
-setContentView(scroll);
-
-// ============================================================
 // SERVICE LOG — INIT (Android Manual Tests)
 // ============================================================
 

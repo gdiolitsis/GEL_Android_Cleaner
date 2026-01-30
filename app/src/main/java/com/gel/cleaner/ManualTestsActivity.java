@@ -6654,20 +6654,6 @@ if (lab13CounterText != null) {
     );
 }
 
-// ---------------------------
-// TTS (ONLY ONCE, ONLY IF NOT MUTED)
-// ---------------------------
-new Handler(Looper.getMainLooper()).postDelayed(() -> {
-    if (!lab13MonitoringStarted
-            && !lab13WaitTtsPlayed
-            && !AppTTS.isMuted(this)) {
-
-        lab13WaitTtsPlayed = true;
-        AppTTS.ensureSpeak(this, waitText);
-    }
-}, 120);
-}
-
 // ============================================================
 // MONITOR LOOP (60s) — polls connected devices + detects flips
 // ============================================================

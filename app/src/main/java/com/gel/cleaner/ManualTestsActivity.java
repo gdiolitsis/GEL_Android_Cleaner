@@ -1842,99 +1842,6 @@ root.addView(buildMuteRow());
     });
 }
 
-// ============================================================
-// LAB 14 — RUNNING POPUP (HELPERS + AppLang + AppTTS)
-// ============================================================
-private void showLab14RunningDialog() {
-
-    ui.post(() -> {
-        if (isFinishing() || isDestroyed()) return;
-
-        final boolean gr = AppLang.isGreek(this);
-
-        final String messageText =
-                gr
-                        ? "Κράτησε την εφαρμογή ανοιχτή.\n\n"
-                          + "Μην φορτίζεις τη συσκευή κατά τη διάρκεια της δοκιμής."
-                        : "Please keep the app open.\n\n"
-                          + "Do not charge the device during this test.";
-
-        AlertDialog.Builder b =
-                new AlertDialog.Builder(
-                        this,
-                        android.R.style.Theme_Material_Dialog_NoActionBar
-                );
-        b.setCancelable(false);
-
-        LinearLayout root = buildGELPopupRoot(this);
-
-        // ---------------------------
-        // TITLE (WHITE)
-        // ---------------------------
-        TextView title = new TextView(this);
-        title.setText(
-                gr
-                        ? "LAB 14 — Δοκιμή σε εξέλιξη…"
-                        : "LAB 14 — Running stress test…"
-        );
-        title.setTextColor(Color.WHITE);
-        title.setTextSize(18f);
-        title.setTypeface(null, Typeface.BOLD);
-        title.setGravity(Gravity.CENTER);
-        title.setPadding(0, 0, 0, dp(10));
-        root.addView(title);
-
-        // ---------------------------
-        // MESSAGE (NEON GREEN)
-        // ---------------------------
-        TextView msg = new TextView(this);
-        msg.setText(messageText);
-        msg.setTextColor(0xFF39FF14); // GEL neon green
-        msg.setTextSize(14.5f);
-        msg.setGravity(Gravity.CENTER);
-        msg.setLineSpacing(0f, 1.2f);
-        root.addView(msg);
-
-        // ---------------------------
-        // MUTE ROW
-        // ---------------------------
-        root.addView(buildMuteRow());
-
-        b.setView(root);
-
-        lab14RunningDialog = b.create();
-        if (lab14RunningDialog.getWindow() != null) {
-            lab14RunningDialog.getWindow().setBackgroundDrawable(
-                    new ColorDrawable(Color.TRANSPARENT)
-            );
-        }
-
-        lab14RunningDialog.show();
-
-        // ---------------------------
-        // TTS (ONLY IF NOT MUTED)
-        // ---------------------------
-        new Handler(Looper.getMainLooper()).postDelayed(() -> {
-            if (lab14RunningDialog != null
-                    && lab14RunningDialog.isShowing()
-                    && !AppTTS.isMuted(this)) {
-
-                AppTTS.ensureSpeak(this, messageText);
-            }
-        }, 120);
-    });
-}
-
-private void dismissLab14RunningDialog() {
-ui.post(() -> {
-try {
-if (lab14RunningDialog != null && lab14RunningDialog.isShowing())
-lab14RunningDialog.dismiss();
-} catch (Throwable ignore) {}
-lab14RunningDialog = null;
-});
-}
-
 // ------------------------------------------------------------
 // Brightness + keep screen on (LAB stress)
 // ------------------------------------------------------------
@@ -7221,11 +7128,17 @@ bg.setCornerRadius(dp(18));
 bg.setStroke(dp(4), 0xFFFFD700);  // GOLD border
 root.setBackground(bg);
 
+final boolean gr = AppLang.isGreek(this);
+
 // ============================================================
-// ðŸ”¹ TITLE — INSIDE POPUP (LAB 14)
+// 🔹 TITLE — INSIDE POPUP (LAB 14)
 // ============================================================
 TextView title = new TextView(this);
-title.setText("LAB 14 — Battery's health stress test");
+title.setText(
+        gr
+                ? "LAB 14 — Δοκιμή Καταπόνησης Υγείας Μπαταρίας"
+                : "LAB 14 — Battery Health Stress Test"
+);
 title.setTextColor(0xFFFFFFFF);
 title.setTextSize(18f);
 title.setTypeface(null, Typeface.BOLD);
@@ -7233,84 +7146,119 @@ title.setGravity(Gravity.CENTER);
 title.setPadding(0, 0, 0, dp(12));
 root.addView(title);
 
-final TextView statusText = new TextView(this);  
-    statusText.setText("Stress test running...");  
-    statusText.setTextColor(0xFF39FF14);  
-    statusText.setTextSize(15f);  
-    root.addView(statusText);  
+// ============================================================
+// STATUS
+// ============================================================
+final TextView statusText = new TextView(this);
+statusText.setText(
+        gr
+                ? "Η δοκιμή βρίσκεται σε εξέλιξη…"
+                : "Stress test running…"
+);
+statusText.setTextColor(0xFF39FF14);
+statusText.setTextSize(15f);
+statusText.setGravity(Gravity.CENTER);
+root.addView(statusText);
 
-    final TextView dotsView = new TextView(this);  
-    dotsView.setText("•");  
-    dotsView.setTextColor(0xFF39FF14);  
-    dotsView.setTextSize(22f);  
-    dotsView.setGravity(Gravity.CENTER);  
-    root.addView(dotsView);  
+// ============================================================
+// DOTS
+// ============================================================
+final TextView dotsView = new TextView(this);
+dotsView.setText("•");
+dotsView.setTextColor(0xFF39FF14);
+dotsView.setTextSize(22f);
+dotsView.setGravity(Gravity.CENTER);
+root.addView(dotsView);
 
-    final TextView counterText = new TextView(this);  
-    counterText.setText("Progress: 0 / " + durationSec + " sec");  
-    counterText.setTextColor(0xFF39FF14);  
-    counterText.setGravity(Gravity.CENTER);  
-    root.addView(counterText);  
+// ============================================================
+// COUNTER
+// ============================================================
+final TextView counterText = new TextView(this);
+counterText.setText(
+        gr
+                ? "Πρόοδος: 0 / " + durationSec + " δευτ."
+                : "Progress: 0 / " + durationSec + " sec"
+);
+counterText.setTextColor(0xFF39FF14);
+counterText.setGravity(Gravity.CENTER);
+root.addView(counterText);
 
-    final LinearLayout progressBar = new LinearLayout(this);  
-    progressBar.setOrientation(LinearLayout.HORIZONTAL);  
-    progressBar.setGravity(Gravity.CENTER);  
+// ============================================================
+// PROGRESS BAR
+// ============================================================
+final LinearLayout progressBar = new LinearLayout(this);
+progressBar.setOrientation(LinearLayout.HORIZONTAL);
+progressBar.setGravity(Gravity.CENTER);
 
-    for (int i = 0; i < 10; i++) {  
-        View seg = new View(this);  
-        LinearLayout.LayoutParams lp =  
-                new LinearLayout.LayoutParams(0, dp(10), 1f);  
-        lp.setMargins(dp(3), 0, dp(3), 0);  
-        seg.setLayoutParams(lp);  
-        seg.setBackgroundColor(0xFF333333);  
-        progressBar.addView(seg);  
-    }  
-    root.addView(progressBar);  
+for (int i = 0; i < 10; i++) {
+    View seg = new View(this);
+    LinearLayout.LayoutParams lp =
+            new LinearLayout.LayoutParams(0, dp(10), 1f);
+    lp.setMargins(dp(3), 0, dp(3), 0);
+    seg.setLayoutParams(lp);
+    seg.setBackgroundColor(0xFF333333);
+    progressBar.addView(seg);
+}
+root.addView(progressBar);
 
-    Button exitBtn = new Button(this);  
-    exitBtn.setText("Exit test");  
-    exitBtn.setAllCaps(false);  
-    exitBtn.setTextColor(0xFFFFFFFF);  
-    exitBtn.setTypeface(null, Typeface.BOLD);  
+// ============================================================
+// EXIT BUTTON
+// ============================================================
+Button exitBtn = new Button(this);
+exitBtn.setText(
+        gr
+                ? "Έξοδος από το τεστ"
+                : "Exit test"
+);
+exitBtn.setAllCaps(false);
+exitBtn.setTextColor(0xFFFFFFFF);
+exitBtn.setTypeface(null, Typeface.BOLD);
 
-    GradientDrawable exitBg = new GradientDrawable();  
-    exitBg.setColor(0xFF8B0000);  
-    exitBg.setCornerRadius(dp(14));  
-    exitBg.setStroke(dp(3), 0xFFFFD700);  
-    exitBtn.setBackground(exitBg);  
+GradientDrawable exitBg = new GradientDrawable();
+exitBg.setColor(0xFF8B0000);
+exitBg.setCornerRadius(dp(14));
+exitBg.setStroke(dp(3), 0xFFFFD700);
+exitBtn.setBackground(exitBg);
 
-    LinearLayout.LayoutParams lpExit =  
-            new LinearLayout.LayoutParams(  
-                    LinearLayout.LayoutParams.MATCH_PARENT,  
-                    dp(52)  
-            );  
-    lpExit.setMargins(0, dp(14), 0, 0);  
-    exitBtn.setLayoutParams(lpExit);  
+LinearLayout.LayoutParams lpExit =
+        new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                dp(52)
+        );
+lpExit.setMargins(0, dp(14), 0, 0);
+exitBtn.setLayoutParams(lpExit);
 
-    exitBtn.setOnClickListener(v -> {  
-        // USER ABORT  
-        try { stopCpuBurn(); } catch (Throwable ignore) {}  
-        try { restoreBrightnessAndKeepOn(); } catch (Throwable ignore) {}  
-        lab14Running = false;  
+exitBtn.setOnClickListener(v -> {
+    // USER ABORT
+    try { stopCpuBurn(); } catch (Throwable ignore) {}
+    try { restoreBrightnessAndKeepOn(); } catch (Throwable ignore) {}
+    lab14Running = false;
 
-        try {  
-            if (lab14Dialog != null && lab14Dialog.isShowing())  
-                lab14Dialog.dismiss();  
-        } catch (Throwable ignore) {}  
-        lab14Dialog = null;  
+    try {
+        if (lab14Dialog != null && lab14Dialog.isShowing())
+            lab14Dialog.dismiss();
+    } catch (Throwable ignore) {}
+    lab14Dialog = null;
 
-        logWarn(" LAB 14 cancelled by user.");  
-    });  
+    logWarn(
+            gr
+                    ? "LAB 14 ακυρώθηκε από τον χρήστη."
+                    : "LAB 14 cancelled by user."
+    );
+});
 
-    root.addView(exitBtn);  
+root.addView(exitBtn);
 
-    b.setView(root);  
-    lab14Dialog = b.create();  
-    if (lab14Dialog.getWindow() != null) {  
-        lab14Dialog.getWindow()  
-                .setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));  
-    }  
-    lab14Dialog.show();  
+// ============================================================
+// SHOW DIALOG
+// ============================================================
+b.setView(root);
+lab14Dialog = b.create();
+if (lab14Dialog.getWindow() != null) {
+    lab14Dialog.getWindow()
+            .setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+}
+lab14Dialog.show();
 
     // ------------------------------------------------------------  
     // 4) START STRESS (CPU burn + max brightness)  

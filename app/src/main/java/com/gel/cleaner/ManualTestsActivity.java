@@ -6668,6 +6668,7 @@ new Handler(Looper.getMainLooper()).postDelayed(() -> {
         AppTTS.ensureSpeak(this, waitText);
     }
 }, 120);
+}
 
 // ============================================================
 // MONITOR LOOP (60s) — polls connected devices + detects flips

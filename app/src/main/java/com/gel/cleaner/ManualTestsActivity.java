@@ -6653,6 +6653,7 @@ if (lab13CounterText != null) {
                     : "Monitoring: waiting…"
     );
 }
+}
 
 // ============================================================
 // MONITOR LOOP (60s) — polls connected devices + detects flips

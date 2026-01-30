@@ -6638,21 +6638,6 @@ if (Build.VERSION.SDK_INT >= 31 &&
 // WAIT FOR EXTERNAL DEVICE — RECEIVER-BASED (MODERN)
 // ------------------------------------------------------------
 
-final String waitText =
-        gr
-                ? "Αναμονή για εξωτερική Bluetooth συσκευή…\n\n"
-                  + "Σύνδεσε ΜΙΑ εξωτερική Bluetooth συσκευή.\n"
-                  + "Κράτησέ την συνδεδεμένη για τουλάχιστον 1 λεπτό.\n"
-                  + "Μην αποσυνδέσεις τη συσκευή κατά τη διάρκεια του τεστ.\n\n"
-                  + "Κράτησε τη συσκευή σε απόσταση έως 10 μέτρα\n"
-                  + "και μην απομακρυνθείς."
-                : "Waiting for an external Bluetooth device…\n\n"
-                  + "Connect ONE external Bluetooth device.\n"
-                  + "Keep it connected for at least one minute.\n"
-                  + "Do not disconnect during the test.\n\n"
-                  + "Keep the device within 10 meters\n"
-                  + "and do not move away.";
-
 if (!lab13MonitoringStarted && lab13StatusText != null) {
     lab13StatusText.setText(
             gr

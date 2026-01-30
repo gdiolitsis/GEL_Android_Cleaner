@@ -228,6 +228,8 @@ private final BroadcastReceiver lab13BtReceiver = new BroadcastReceiver() {
     }
 };
 
+private boolean lab13WaitTtsPlayed = false;
+
 // ============================================================
 // GLOBAL TTS (for labs that need shared access)
 // ============================================================
@@ -6109,13 +6111,40 @@ private void lab13BluetoothConnectivityCheck() {
 }
 
 // ============================================================
-// LAB 13 — GATE POPUP (Skip / Continue)
+// LAB 13 — GATE POPUP (Skip / Continue) — MODERN
+// AppLang + AppTTS + GEL UI
 // ============================================================
 private void showLab13GatePopup() {
 
-    AlertDialog.Builder b = new AlertDialog.Builder(this);
+    final boolean gr = AppLang.isGreek(this);
 
-    // GEL Dark+Gold custom view (like LAB 15)
+    final String titleText =
+            gr
+                    ? "LAB 13 — Έλεγχος Εξωτερικής Συσκευηςής Bluetooth"
+                    : "LAB 13 — External Bluetooth Device Check";
+
+    final String messageText =
+            gr
+                    ? "Σύνδεσε ΜΙΑ εξωτερική συσκευη Bluetooth.\n\n"
+                      + "π.χ. ακουστικά, σύστημα αυτοκινήτου, πληκτρολόγιο.\n\n"
+                      + "Το τεστ, αξιολογεί τη σταθερότητα της σύνδεσης Bluetooth.\n\n"
+                      + "Αν δεν έχεις συνδεδεμένη εξωτερική συσκευή,\n"
+                      + "μπορείς να παραλείψεις αυτό το βήμα,\n"
+                      + "και να συνεχίσεις με τον έλεγχο του Bluetooth του συστήματος."
+                    : "Connect ONE external Bluetooth device.\n\n"
+                      + "e.g. headphones, car kit, keyboard.\n\n"
+                      + "This test, evaluates Bluetooth connection stability.\n\n"
+                      + "If no external device is connected,\n"
+                      + "you may skip this step,\n"
+                      + "and continue with the system Bluetooth check.";
+
+    AlertDialog.Builder b =
+            new AlertDialog.Builder(
+                    this,
+                    android.R.style.Theme_Material_Dialog_NoActionBar
+            );
+    b.setCancelable(true);
+
     LinearLayout root = new LinearLayout(this);
     root.setOrientation(LinearLayout.VERTICAL);
     root.setPadding(dp(24), dp(20), dp(24), dp(18));
@@ -6126,113 +6155,90 @@ private void showLab13GatePopup() {
     bg.setStroke(dp(4), 0xFFFFD700);
     root.setBackground(bg);
 
+    // ---------------------------
+    // TITLE (WHITE)
+    // ---------------------------
     TextView title = new TextView(this);
-    title.setText(
-            "LAB 13 — External Bluetooth Device Check\n\n" +
-            "Please connect ONE external Bluetooth device.\n" +
-            "(e.g. headphones, car kit, keyboard).\n\n" +
-            "This test evaluates Bluetooth connection stability.\n\n" +
-            "If no external device is connected,\n" +
-            "you may skip this step, to continue\n" +
-            "with the system Bluetooth check."
-    );
-    title.setTextColor(0xFFFFFFFF);
+    title.setText(titleText);
+    title.setTextColor(Color.WHITE);
     title.setTextSize(18f);
     title.setTypeface(null, Typeface.BOLD);
     title.setGravity(Gravity.CENTER);
     title.setPadding(0, 0, 0, dp(12));
     root.addView(title);
 
-    // Small note line
-    TextView note = new TextView(this);
-    note.setText("Tip: keep the Bluetooth device within 10 meters.");
-    note.setTextColor(0xFFAAAAAA);
-    note.setTextSize(14f);
-    note.setGravity(Gravity.CENTER);
-    note.setPadding(0, 0, 0, dp(10));
-    root.addView(note);
+    // ---------------------------
+    // MESSAGE (NEON GREEN)
+    // ---------------------------
+    TextView msg = new TextView(this);
+    msg.setText(messageText);
+    msg.setTextColor(0xFF39FF14);
+    msg.setTextSize(15f);
+    msg.setGravity(Gravity.CENTER);
+    msg.setLineSpacing(0f, 1.15f);
+    root.addView(msg);
 
-    // Buttons row
-    LinearLayout row = new LinearLayout(this);
-    row.setOrientation(LinearLayout.HORIZONTAL);
-    row.setGravity(Gravity.CENTER);
-    row.setPadding(0, dp(6), 0, 0);
+    // ---------------------------
+    // MUTE ROW (ABOVE BUTTONS)
+    // ---------------------------
+    root.addView(buildMuteRow());
 
-    Button cancelBtn = new Button(this);
-    cancelBtn.setAllCaps(false);
-    cancelBtn.setText("Skip");
-    cancelBtn.setTextColor(0xFFFFFFFF);
+    // ---------------------------
+    // BUTTONS
+    // ---------------------------
+    LinearLayout buttons = new LinearLayout(this);
+    buttons.setOrientation(LinearLayout.HORIZONTAL);
+    buttons.setPadding(0, dp(14), 0, 0);
 
-    GradientDrawable cancelBg = new GradientDrawable();
-    cancelBg.setColor(0xFF444444);
-    cancelBg.setCornerRadius(dp(14));
-    cancelBg.setStroke(dp(3), 0xFFFFD700);
-    cancelBtn.setBackground(cancelBg);
+    Button skip = gelButton(
+            gr ? "ΠΑΡΑΛΕΙΨΗ" : "SKIP",
+            0xFF444444
+    );
 
-    LinearLayout.LayoutParams lpC =
-            new LinearLayout.LayoutParams(0, dp(52), 1f);
-    lpC.setMargins(0, 0, dp(8), 0);
-    cancelBtn.setLayoutParams(lpC);
+    Button cont = gelButton(
+            gr ? "ΣΥΝΕΧΕΙΑ" : "CONTINUE",
+            0xFF0F8A3B
+    );
 
-    Button contBtn = new Button(this);
-    contBtn.setAllCaps(false);
-    contBtn.setText("Continue");
-    contBtn.setTextColor(0xFFFFFFFF);
-    contBtn.setTypeface(null, Typeface.BOLD);
-
-    GradientDrawable contBg = new GradientDrawable();
-    contBg.setColor(0xFF0F8A3B);
-    contBg.setCornerRadius(dp(14));
-    contBg.setStroke(dp(3), 0xFFFFD700);
-    contBtn.setBackground(contBg);
-
-    LinearLayout.LayoutParams lpK =
-            new LinearLayout.LayoutParams(0, dp(52), 1f);
-    lpK.setMargins(dp(8), 0, 0, 0);
-    contBtn.setLayoutParams(lpK);
-
-    row.addView(cancelBtn);
-    row.addView(contBtn);
-    root.addView(row);
+    setDualButtons(skip, cont, buttons);
+    root.addView(buttons);
 
     b.setView(root);
 
     final AlertDialog gate = b.create();
     if (gate.getWindow() != null) {
-        gate.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        gate.getWindow().setBackgroundDrawable(
+                new ColorDrawable(Color.TRANSPARENT)
+        );
     }
 
-    cancelBtn.setOnClickListener(v -> {
-        try { if (tts != null && tts[0] != null) tts[0].stop(); } catch (Throwable ignore) {}
+    gate.show();
+
+    // ---------------------------
+    // TTS (ONLY IF NOT MUTED)
+    // ---------------------------
+    new Handler(Looper.getMainLooper()).postDelayed(() -> {
+        if (gate.isShowing() && !AppTTS.isMuted(this)) {
+            AppTTS.ensureSpeak(this, messageText);
+        }
+    }, 120);
+
+    // ---------------------------
+    // ACTIONS
+    // ---------------------------
+    skip.setOnClickListener(v -> {
+        AppTTS.stop();
         lab13SkipExternalTest = true;
         gate.dismiss();
         runLab13BluetoothCheckCore();   // system-only
     });
 
-    contBtn.setOnClickListener(v -> {
-        try { if (tts != null && tts[0] != null) tts[0].stop(); } catch (Throwable ignore) {}
+    cont.setOnClickListener(v -> {
+        AppTTS.stop();
         lab13SkipExternalTest = false;
         gate.dismiss();
         runLab13BluetoothCheckCore();   // full test
     });
-
-    gate.setCancelable(true);
-    gate.show();
-
-    // TTS (optional)
-    if (tts != null && tts[0] != null && ttsReady[0] && !isTtsMuted()) {
-        try { tts[0].stop(); } catch (Throwable ignore) {}
-
-        tts[0].speak(
-                "Please connect one external Bluetooth device now. " +
-                "This test evaluates Bluetooth connection stability. " +
-                "If no external device is connected, you may skip this step, " +
-                "to continue with the system Bluetooth check.",
-                TextToSpeech.QUEUE_FLUSH,
-                null,
-                "LAB13_GATE"
-        );
-    }
 }
 
 // ============================================================
@@ -6375,132 +6381,180 @@ if (!enabled) {
 
     try { unregisterReceiver(lab13BtReceiver); } catch (Throwable ignore) {}
 
-    // ------------------------------------------------------------
-    // REGISTER BLUETOOTH RECEIVER (LAB 13)
-    // ------------------------------------------------------------
-    IntentFilter f = new IntentFilter();
-    f.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
-    f.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
+// ------------------------------------------------------------
+// REGISTER BLUETOOTH RECEIVER (LAB 13)
+// ------------------------------------------------------------
+IntentFilter f = new IntentFilter();
+f.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
+f.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
+registerReceiver(lab13BtReceiver, f);
 
-    registerReceiver(lab13BtReceiver, f);
+// ------------------------------------------------------------
+// UI — GEL DARK GOLD MONITOR DIALOG (MODERN)
+// ------------------------------------------------------------
 
-    // ---------- SHOW GEL DARK-GOLD MONITOR DIALOG
-    AlertDialog.Builder b = new AlertDialog.Builder(this);
+final String titleText =
+        gr
+                ? "LAB 13 — Παρακολούθηση Σταθερότητας Bluetooth"
+                : "LAB 13 — Bluetooth Stability Monitor";
 
-    LinearLayout root = new LinearLayout(this);
-    root.setOrientation(LinearLayout.VERTICAL);
-    root.setPadding(dp(24), dp(20), dp(24), dp(18));
+final String messageText =
+        gr
+                ? "Σύνδεσε ΜΙΑ εξωτερική συσκευή Bluetooth.\n\n"
+                  + "Κράτησέ την συνδεδεμένη, για τουλάχιστον 1 λεπτό.\n"
+                  + "Μην αποσυνδέσεις τη συσκευή κατά τη διάρκεια του τεστ.\n\n"
+                  + "Κράτησε τη συσκευή Bluetooth σε απόσταση\n"
+                  + "έως 10 μέτρα από το τηλέφωνο.\n"
+                  + "Μην απομακρυνθείς κατά την παρακολούθηση."
+                : "Connect ONE external Bluetooth device.\n\n"
+                  + "Keep it connected for at least one minute.\n"
+                  + "Do not disconnect during the test.\n\n"
+                  + "Keep the Bluetooth device within\n"
+                  + "10 meters from the phone.\n"
+                  + "Do not move away during monitoring.";
 
-    GradientDrawable bg = new GradientDrawable();
-    bg.setColor(0xFF101010);
-    bg.setCornerRadius(dp(18));
-    bg.setStroke(dp(4), 0xFFFFD700);
-    root.setBackground(bg);
+AlertDialog.Builder b =
+        new AlertDialog.Builder(
+                this,
+                android.R.style.Theme_Material_Dialog_NoActionBar
+        );
+b.setCancelable(false);
 
-    TextView title = new TextView(this);
-    title.setText(
-            "LAB 13 — Bluetooth Stability Monitor\n\n" +
-            "Connect one external Bluetooth device. " +
-            "Keep it connected, for at least one minute. " +
-            "Do not disconnect during the test. " +
-            "Keep the Bluetooth device, within ten meters of the phone. " +
-            "Do not move away from the device, during monitoring."
+LinearLayout root = new LinearLayout(this);
+root.setOrientation(LinearLayout.VERTICAL);
+root.setPadding(dp(24), dp(20), dp(24), dp(18));
+
+GradientDrawable bg = new GradientDrawable();
+bg.setColor(0xFF101010);
+bg.setCornerRadius(dp(18));
+bg.setStroke(dp(4), 0xFFFFD700);
+root.setBackground(bg);
+
+// ---------------------------
+// TITLE (WHITE)
+// ---------------------------
+TextView title = new TextView(this);
+title.setText(titleText);
+title.setTextColor(Color.WHITE);
+title.setTextSize(18f);
+title.setTypeface(null, Typeface.BOLD);
+title.setGravity(Gravity.CENTER);
+title.setPadding(0, 0, 0, dp(12));
+root.addView(title);
+
+// ---------------------------
+// MESSAGE (NEON GREEN)
+// ---------------------------
+TextView msg = new TextView(this);
+msg.setText(messageText);
+msg.setTextColor(0xFF39FF14);
+msg.setTextSize(15f);
+msg.setGravity(Gravity.CENTER);
+msg.setLineSpacing(0f, 1.15f);
+root.addView(msg);
+
+// ---------------------------
+// STATUS TEXT
+// ---------------------------
+lab13StatusText = new TextView(this);
+lab13StatusText.setText(
+        gr
+                ? "Αναμονή για σταθερή σύνδεση Bluetooth…"
+                : "Waiting for stable Bluetooth connection…"
+);
+lab13StatusText.setTextColor(0xFFAAAAAA);
+lab13StatusText.setTextSize(15f);
+lab13StatusText.setGravity(Gravity.CENTER);
+lab13StatusText.setPadding(0, dp(10), 0, 0);
+root.addView(lab13StatusText);
+
+// ---------------------------
+// DOTS (NEON)
+// ---------------------------
+lab13DotsView = new TextView(this);
+lab13DotsView.setText("•••");
+lab13DotsView.setTextColor(0xFF39FF14);
+lab13DotsView.setTextSize(22f);
+lab13DotsView.setGravity(Gravity.CENTER);
+root.addView(lab13DotsView);
+
+// ---------------------------
+// COUNTER
+// ---------------------------
+lab13CounterText = new TextView(this);
+lab13CounterText.setText(
+        gr
+                ? "Παρακολούθηση: 0 / 60 δευτ."
+                : "Monitoring: 0 / 60 sec"
+);
+lab13CounterText.setTextColor(0xFF39FF14);
+lab13CounterText.setGravity(Gravity.CENTER);
+root.addView(lab13CounterText);
+
+// ---------------------------
+// PROGRESS BAR (SEGMENTS)
+// ---------------------------
+lab13ProgressBar = new LinearLayout(this);
+lab13ProgressBar.setOrientation(LinearLayout.HORIZONTAL);
+lab13ProgressBar.setGravity(Gravity.CENTER);
+lab13ProgressBar.setPadding(0, dp(10), 0, 0);
+
+for (int i = 0; i < 6; i++) {
+    View seg = new View(this);
+    LinearLayout.LayoutParams lp =
+            new LinearLayout.LayoutParams(0, dp(10), 1f);
+    lp.setMargins(dp(3), 0, dp(3), 0);
+    seg.setLayoutParams(lp);
+    seg.setBackgroundColor(0xFF333333);
+    lab13ProgressBar.addView(seg);
+}
+root.addView(lab13ProgressBar);
+
+// ---------------------------
+// MUTE ROW (GLOBAL APP TTS)
+// ---------------------------
+root.addView(buildMuteRow());
+
+// ---------------------------
+// EXIT BUTTON
+// ---------------------------
+Button exitBtn = gelButton(
+        gr ? "ΕΞΟΔΟΣ ΤΕΣΤ" : "EXIT TEST",
+        0xFF8B0000
+);
+LinearLayout.LayoutParams lpExit =
+        new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                dp(52)
+        );
+lpExit.setMargins(0, dp(14), 0, 0);
+exitBtn.setLayoutParams(lpExit);
+
+exitBtn.setOnClickListener(v -> {
+    AppTTS.stop();
+    abortLab13ByUser();
+});
+root.addView(exitBtn);
+
+b.setView(root);
+
+lab13Dialog = b.create();
+if (lab13Dialog.getWindow() != null) {
+    lab13Dialog.getWindow().setBackgroundDrawable(
+            new ColorDrawable(Color.TRANSPARENT)
     );
+}
 
-    title.setTextColor(0xFFFFFFFF);
-    title.setTextSize(18f);
-    title.setTypeface(null, Typeface.BOLD);
-    title.setGravity(Gravity.CENTER);
-    title.setPadding(0, 0, 0, dp(12));
-    root.addView(title);
+lab13Dialog.show();
 
-    lab13StatusText = new TextView(this);
-    lab13StatusText.setText("Waiting for stable Bluetooth connection...");
-    lab13StatusText.setTextColor(0xFFAAAAAA);
-    lab13StatusText.setTextSize(15f);
-    lab13StatusText.setGravity(Gravity.CENTER);
-    root.addView(lab13StatusText);
-
-    lab13DotsView = new TextView(this);
-    lab13DotsView.setText("•••");
-    lab13DotsView.setTextColor(0xFF39FF14);
-    lab13DotsView.setTextSize(22f);
-    lab13DotsView.setGravity(Gravity.CENTER);
-    root.addView(lab13DotsView);
-
-    lab13CounterText = new TextView(this);
-    lab13CounterText.setText("Monitoring: 0 / 60 sec");
-    lab13CounterText.setTextColor(0xFF39FF14);
-    lab13CounterText.setGravity(Gravity.CENTER);
-    root.addView(lab13CounterText);
-
-    lab13ProgressBar = new LinearLayout(this);
-    lab13ProgressBar.setOrientation(LinearLayout.HORIZONTAL);
-    lab13ProgressBar.setGravity(Gravity.CENTER);
-
-    for (int i = 0; i < 6; i++) {
-        View seg = new View(this);
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, dp(10), 1f);
-        lp.setMargins(dp(3), 0, dp(3), 0);
-        seg.setLayoutParams(lp);
-        seg.setBackgroundColor(0xFF333333);
-        lab13ProgressBar.addView(seg);
+// ---------------------------
+// TTS (ONLY IF NOT MUTED)
+// ---------------------------
+new Handler(Looper.getMainLooper()).postDelayed(() -> {
+    if (lab13Dialog.isShowing() && !AppTTS.isMuted(this)) {
+        AppTTS.ensureSpeak(this, messageText);
     }
-    root.addView(lab13ProgressBar);
-
-    // MUTE (GLOBAL)
-    CheckBox muteBox = new CheckBox(this);
-    muteBox.setChecked(isTtsMuted());
-    muteBox.setText("Mute voice instructions");
-    muteBox.setTextColor(0xFFDDDDDD);
-    muteBox.setGravity(Gravity.CENTER);
-    muteBox.setPadding(0, dp(10), 0, dp(10));
-    root.addView(muteBox);
-
-    muteBox.setOnCheckedChangeListener((v, checked) -> {
-        setTtsMuted(checked);
-        if (checked && tts != null && tts[0] != null) {
-            try { tts[0].stop(); } catch (Throwable ignore) {}
-        }
-    });
-
-    // EXIT BUTTON
-    Button exitBtn = new Button(this);
-    exitBtn.setText("Exit test");
-    exitBtn.setAllCaps(false);
-    exitBtn.setTextColor(0xFFFFFFFF);
-    exitBtn.setTypeface(null, Typeface.BOLD);
-
-    GradientDrawable exitBg = new GradientDrawable();
-    exitBg.setColor(0xFF8B0000);
-    exitBg.setCornerRadius(dp(14));
-    exitBg.setStroke(dp(3), 0xFFFFD700);
-    exitBtn.setBackground(exitBg);
-
-    LinearLayout.LayoutParams lpExit =
-            new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    dp(52)
-            );
-    lpExit.setMargins(0, dp(14), 0, 0);
-    exitBtn.setLayoutParams(lpExit);
-
-    exitBtn.setOnClickListener(v -> {
-        try { if (tts != null && tts[0] != null) tts[0].stop(); } catch (Throwable ignore) {}
-        abortLab13ByUser();
-    });
-
-    root.addView(exitBtn);
-
-    b.setView(root);
-    lab13Dialog = b.create();
-
-    if (lab13Dialog.getWindow() != null) {
-        lab13Dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-    }
-
-    lab13Dialog.setCancelable(false);
-    lab13Dialog.show();
+}, 120);
 
     // ------------------------------------------------------------
     // RESET MONITOR FLAGS (NEW RUN)
@@ -6509,22 +6563,44 @@ if (!enabled) {
     lab13HadAnyConnection = false;
     lab13LastConnected = false;
 
-    // ------------------------------------------------------------
-    // ANDROID 12+ PERMISSION — MUST BE FIRST
-    // ------------------------------------------------------------
-    if (Build.VERSION.SDK_INT >= 31 &&
-            checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT)
-                    != PackageManager.PERMISSION_GRANTED) {
+// ------------------------------------------------------------
+// ANDROID 12+ PERMISSION — MUST BE FIRST
+// ------------------------------------------------------------
+if (Build.VERSION.SDK_INT >= 31 &&
+        checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT)
+                != PackageManager.PERMISSION_GRANTED) {
 
-        if (lab13StatusText != null)
-            lab13StatusText.setText("Bluetooth permission required.");
+    final boolean gr = AppLang.isGreek(this);
 
-        requestPermissions(
-                new String[]{ Manifest.permission.BLUETOOTH_CONNECT },
-                REQ_LAB13_BT_CONNECT
+    final String permText =
+            gr
+                    ? "Απαιτείται άδεια Bluetooth.\n\n"
+                      + "Παραχώρησε την άδεια, για να συνεχιστεί το τεστ."
+                    : "Bluetooth permission is required.\n\n"
+                      + "Please grant the permission to continue the test.";
+
+    if (lab13StatusText != null) {
+        lab13StatusText.setText(
+                gr
+                        ? "Απαιτείται άδεια Bluetooth."
+                        : "Bluetooth permission required."
         );
-        return;
     }
+
+    // TTS — μία φορά, αν δεν είναι muted
+    new Handler(Looper.getMainLooper()).postDelayed(() -> {
+        if (!AppTTS.isMuted(this)) {
+            AppTTS.ensureSpeak(this, permText);
+        }
+    }, 120);
+
+    requestPermissions(
+            new String[]{ Manifest.permission.BLUETOOTH_CONNECT },
+            REQ_LAB13_BT_CONNECT
+    );
+
+    return;
+}
 
     // ------------------------------------------------------------
     // SNAPSHOT CHECK — already connected device (AFTER UI READY)
@@ -6543,31 +6619,53 @@ if (!enabled) {
         return;
     }
 
-    // ------------------------------------------------------------
-    // WAIT FOR EXTERNAL DEVICE — RECEIVER-BASED
-    // ------------------------------------------------------------
-    if (!lab13MonitoringStarted && lab13StatusText != null)
-        lab13StatusText.setText("Waiting for an external Bluetooth device...");
+// ------------------------------------------------------------
+// WAIT FOR EXTERNAL DEVICE — RECEIVER-BASED (MODERN)
+// ------------------------------------------------------------
 
-    if (lab13CounterText != null)
-        lab13CounterText.setText("Monitoring: waiting...");
+final String waitText =
+        gr
+                ? "Αναμονή για εξωτερική Bluetooth συσκευή…\n\n"
+                  + "Σύνδεσε ΜΙΑ εξωτερική Bluetooth συσκευή.\n"
+                  + "Κράτησέ την συνδεδεμένη για τουλάχιστον 1 λεπτό.\n"
+                  + "Μην αποσυνδέσεις τη συσκευή κατά τη διάρκεια του τεστ.\n\n"
+                  + "Κράτησε τη συσκευή σε απόσταση έως 10 μέτρα\n"
+                  + "και μην απομακρυνθείς."
+                : "Waiting for an external Bluetooth device…\n\n"
+                  + "Connect ONE external Bluetooth device.\n"
+                  + "Keep it connected for at least one minute.\n"
+                  + "Do not disconnect during the test.\n\n"
+                  + "Keep the device within 10 meters\n"
+                  + "and do not move away.";
 
-    // TTS
-    if (tts != null && tts[0] != null && ttsReady[0] && !isTtsMuted()) {
-        try { tts[0].stop(); } catch (Throwable ignore) {}
-
-        tts[0].speak(
-                "Connect one external Bluetooth device. " +
-                "Keep it connected, for at least one minute. " +
-                "Do not disconnect during the test. " +
-                "Keep the Bluetooth device, within ten meters of the phone. " +
-                "Do not move away from the device, during monitoring.",
-                TextToSpeech.QUEUE_FLUSH,
-                null,
-                "LAB13_GATE"
-        );
-    }
+if (!lab13MonitoringStarted && lab13StatusText != null) {
+    lab13StatusText.setText(
+            gr
+                    ? "Αναμονή για εξωτερική Bluetooth συσκευή…"
+                    : "Waiting for an external Bluetooth device…"
+    );
 }
+
+if (lab13CounterText != null) {
+    lab13CounterText.setText(
+            gr
+                    ? "Παρακολούθηση: σε αναμονή…"
+                    : "Monitoring: waiting…"
+    );
+}
+
+// ---------------------------
+// TTS (ONLY ONCE, ONLY IF NOT MUTED)
+// ---------------------------
+new Handler(Looper.getMainLooper()).postDelayed(() -> {
+    if (!lab13MonitoringStarted
+            && !lab13WaitTtsPlayed
+            && !AppTTS.isMuted(this)) {
+
+        lab13WaitTtsPlayed = true;
+        AppTTS.ensureSpeak(this, waitText);
+    }
+}, 120);
 
 // ============================================================
 // MONITOR LOOP (60s) — polls connected devices + detects flips
@@ -6604,8 +6702,12 @@ private void startLab13Monitor60s() {
     if (connectedNow) lab13HadAnyConnection = true;
 
     if (lab13StatusText != null) {
-        lab13StatusText.setText("Monitoring Bluetooth stability...");
-    }
+    lab13StatusText.setText(
+            AppLang.isGreek(this)
+                    ? "Παρακολούθηση σταθερότητας Bluetooth…"
+                    : "Monitoring Bluetooth stability…"
+    );
+}
 
     if (lab13CounterText != null) {
         lab13CounterText.setText("Monitoring: 0 / 60 sec");
@@ -6960,7 +7062,7 @@ private void abortLab13ByUser() {
     try { unregisterReceiver(lab13BtReceiver); } catch (Throwable ignore) {}
 
     // stop TTS
-    try { if (tts != null && tts[0] != null) tts[0].stop(); } catch (Throwable ignore) {}
+    AppTTS.stop(); } catch (Throwable ignore) {}
 
     // ------------------------------------------------------------
     // ABORT LOG

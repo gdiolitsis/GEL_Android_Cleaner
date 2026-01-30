@@ -1780,9 +1780,6 @@ root.addView(
         )
 );
 
-// MUTE ROW (CHECKBOX)
-root.addView(buildMuteRow());
-
     final String text =
             gr
                     ? "Για μεγαλύτερη διαγνωστική ακρίβεια, συνιστάται, το τεστ "
@@ -1798,10 +1795,13 @@ root.addView(buildMuteRow());
 
     TextView msg = new TextView(this);
     msg.setText(text);
-    msg.setTextColor(Color.WHITE);
+    msg.setTextColor(0xFF39FF14);
     msg.setTextSize(14.5f);
     msg.setLineSpacing(0f, 1.2f);
     root.addView(msg);
+    
+// MUTE ROW (CHECKBOX)
+root.addView(buildMuteRow());
 
     Button btnContinue = gelButton(
             this,
@@ -1843,14 +1843,21 @@ root.addView(buildMuteRow());
 }
 
 // ============================================================
-// LAB 14 — RUNNING POPUP (HELPERS + AppLang)
+// LAB 14 — RUNNING POPUP (HELPERS + AppLang + AppTTS)
 // ============================================================
 private void showLab14RunningDialog() {
 
     ui.post(() -> {
-        if (isFinishing()) return;
+        if (isFinishing() || isDestroyed()) return;
 
         final boolean gr = AppLang.isGreek(this);
+
+        final String messageText =
+                gr
+                        ? "Κράτησε την εφαρμογή ανοιχτή.\n\n"
+                          + "Μην φορτίζεις τη συσκευή κατά τη διάρκεια της δοκιμής."
+                        : "Please keep the app open.\n\n"
+                          + "Do not charge the device during this test.";
 
         AlertDialog.Builder b =
                 new AlertDialog.Builder(
@@ -1861,6 +1868,9 @@ private void showLab14RunningDialog() {
 
         LinearLayout root = buildGELPopupRoot(this);
 
+        // ---------------------------
+        // TITLE (WHITE)
+        // ---------------------------
         TextView title = new TextView(this);
         title.setText(
                 gr
@@ -1870,31 +1880,48 @@ private void showLab14RunningDialog() {
         title.setTextColor(Color.WHITE);
         title.setTextSize(18f);
         title.setTypeface(null, Typeface.BOLD);
+        title.setGravity(Gravity.CENTER);
         title.setPadding(0, 0, 0, dp(10));
         root.addView(title);
 
+        // ---------------------------
+        // MESSAGE (NEON GREEN)
+        // ---------------------------
         TextView msg = new TextView(this);
-        msg.setText(
-                gr
-                        ? "Κράτησε την εφαρμογή ανοιχτή.\n"
-                          + "Μην φορτίζεις τη συσκευή κατά τη διάρκεια της δοκιμής."
-                        : "Please keep the app open.\n"
-                          + "Do not charge the device during this test."
-        );
-        msg.setTextColor(0xFFDDDDDD);
-        msg.setTextSize(14f);
-        msg.setLineSpacing(0f, 1.15f);
+        msg.setText(messageText);
+        msg.setTextColor(0xFF39FF14); // GEL neon green
+        msg.setTextSize(14.5f);
+        msg.setGravity(Gravity.CENTER);
+        msg.setLineSpacing(0f, 1.2f);
         root.addView(msg);
+
+        // ---------------------------
+        // MUTE ROW
+        // ---------------------------
+        root.addView(buildMuteRow());
 
         b.setView(root);
 
         lab14RunningDialog = b.create();
-        if (lab14RunningDialog.getWindow() != null)
+        if (lab14RunningDialog.getWindow() != null) {
             lab14RunningDialog.getWindow().setBackgroundDrawable(
                     new ColorDrawable(Color.TRANSPARENT)
             );
+        }
 
         lab14RunningDialog.show();
+
+        // ---------------------------
+        // TTS (ONLY IF NOT MUTED)
+        // ---------------------------
+        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+            if (lab14RunningDialog != null
+                    && lab14RunningDialog.isShowing()
+                    && !AppTTS.isMuted(this)) {
+
+                AppTTS.ensureSpeak(this, messageText);
+            }
+        }, 120);
     });
 }
 
@@ -7149,7 +7176,7 @@ logInfo("… Battery capacity baseline (counter-based): N/A");
 // Cycles
 logInfo("… Cycle count: " + (cycles > 0 ? String.valueOf(cycles) : "N/A"));
 
-// Stress environment (explicit — ÏŒÏ€Ï‰Ï‚ ÏƒÏ„Î¿ Ï€Î±Î»Î¹ÏŒ lab)
+// Stress environment
 logInfo("… Screen state: brightness forced to MAX, screen lock ON");
 logInfo("… CPU stress threads: " +
 Runtime.getRuntime().availableProcessors() +
@@ -7535,46 +7562,46 @@ float delta = endBatteryTemp - startBatteryTemp;
 logInfo("Thermal change:");
 
 if (delta >= 3.0f) {
-// Î¿Ï…ÏƒÎ¹Î±ÏƒÏ„Î¹ÎºÎ® Î¸ÎµÏÎ¼Î¹ÎºÎ® Î¬Î½Î¿Î´Î¿Ï‚
-logWarn(String.format(
-Locale.US,
-"+%.1f°C",
-delta
-));
+    // Ουσιαστική θερμική άνοδος
+    logWarn(String.format(
+            Locale.US,
+            "+%.1f°C",
+            delta
+    ));
 
 } else if (delta >= 0.5f) {
-// Ï†Ï…ÏƒÎ¹Î¿Î»Î¿Î³Î¹ÎºÎ® Î¬Î½Î¿Î´Î¿Ï‚ Î±Ï€ÏŒ stress
-logOk(String.format(
-Locale.US,
-"+%.1f°C",
-delta
-));
+    // Φυσιολογική άνοδος από stress
+    logOk(String.format(
+            Locale.US,
+            "+%.1f°C",
+            delta
+    ));
 
 } else if (delta <= -0.5f) {
-// Ï€Ï„ÏŽÏƒÎ· Î¸ÎµÏÎ¼Î¿ÎºÏÎ±ÏƒÎ¯Î±Ï‚ (ÎºÎ±Î»ÏŒ)
-logOk(String.format(
-Locale.US,
-"%.1f°C",
-delta
-));
+    // Πτώση θερμοκρασίας (καλό)
+    logOk(String.format(
+            Locale.US,
+            "%.1f°C",
+            delta
+    ));
 
 } else {
-// Ï€ÏÎ±ÎºÏ„Î¹ÎºÎ¬ ÏƒÏ„Î±Î¸ÎµÏÏŒ
-logOk(String.format(
-Locale.US,
-"%.1f°C",
-delta
-));
+    // Πρακτικά σταθερό
+    logOk(String.format(
+            Locale.US,
+            "%.1f°C",
+            delta
+    ));
 }
 
 logInfo("Battery behaviour:");
 logOk(String.format(
-Locale.US,
-"Start: %d mAh | End: %d mAh | Drop: %d mAh | Time: %.1f sec",
-startMah,
-endMah,
-Math.max(0, drainMah),
-dtMs / 1000.0
+        Locale.US,
+        "Start: %d mAh | End: %d mAh | Drop: %d mAh | Time: %.1f sec",
+        startMah,
+        endMah,
+        Math.max(0, drainMah),
+        dtMs / 1000.0
 ));
 
 // ----------------------------------------------------
@@ -7592,7 +7619,7 @@ logWarn(" Invalid (counter anomaly or no drop)");
 logWarn(" Counter anomaly detected (PMIC / system-level behavior). Repeat test after system reboot");
 }
 
-// SCORE (Î±ÏÎ¹Î¸Î¼ÏŒÏ‚ + runs)
+// SCORE
 logInfo("Measurement consistency score:");
 logOk(String.format(
 Locale.US,

@@ -6191,16 +6191,31 @@ private void showLab13GatePopup() {
     buttons.setPadding(0, dp(14), 0, 0);
 
     Button skip = gelButton(
-            gr ? "ΠΑΡΑΛΕΙΨΗ" : "SKIP",
-            0xFF444444
-    );
+        this,
+        gr ? "ΠΑΡΑΛΕΙΨΗ" : "SKIP",
+        0xFF444444
+);
 
-    Button cont = gelButton(
+    Button cont = gelButton(this, gr ?
             gr ? "ΣΥΝΕΧΕΙΑ" : "CONTINUE",
             0xFF0F8A3B
     );
 
-    setDualButtons(skip, cont, buttons);
+    LinearLayout.LayoutParams lp =
+        new LinearLayout.LayoutParams(0, dp(52), 1f);
+
+lp.setMargins(0, 0, dp(8), 0);
+skip.setLayoutParams(lp);
+
+LinearLayout.LayoutParams lp2 =
+        new LinearLayout.LayoutParams(0, dp(52), 1f);
+
+lp2.setMargins(dp(8), 0, 0, 0);
+cont.setLayoutParams(lp2);
+
+buttons.addView(skip);
+buttons.addView(cont);
+
     root.addView(buttons);
 
     b.setView(root);
@@ -6520,8 +6535,7 @@ root.addView(buildMuteRow());
 // ---------------------------
 // EXIT BUTTON
 // ---------------------------
-Button exitBtn = gelButton(
-        gr ? "ΕΞΟΔΟΣ ΤΕΣΤ" : "EXIT TEST",
+Button exitBtn = gelButton(this, gr ? "ΕΞΟΔΟΣ ΤΕΣΤ" : "EXIT TEST",
         0xFF8B0000
 );
 LinearLayout.LayoutParams lpExit =
@@ -6571,9 +6585,7 @@ new Handler(Looper.getMainLooper()).postDelayed(() -> {
 if (Build.VERSION.SDK_INT >= 31 &&
         checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT)
                 != PackageManager.PERMISSION_GRANTED) {
-
-    final boolean gr = AppLang.isGreek(this);
-
+                    
     final String permText =
             gr
                     ? "Απαιτείται άδεια Bluetooth.\n\n"

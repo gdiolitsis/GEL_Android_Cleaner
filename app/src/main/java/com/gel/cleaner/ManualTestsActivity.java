@@ -6393,6 +6393,8 @@ registerReceiver(lab13BtReceiver, f);
 // UI — GEL DARK GOLD MONITOR DIALOG (MODERN)
 // ------------------------------------------------------------
 
+final boolean gr = AppLang.isGreek(this);
+
 final String titleText =
         gr
                 ? "LAB 13 — Παρακολούθηση Σταθερότητας Bluetooth"
@@ -7061,8 +7063,8 @@ private void abortLab13ByUser() {
     // unregister BT receiver (safety)
     try { unregisterReceiver(lab13BtReceiver); } catch (Throwable ignore) {}
 
-    // stop TTS
-    AppTTS.stop(); } catch (Throwable ignore) {}
+// stop TTS
+AppTTS.stop();
 
     // ------------------------------------------------------------
     // ABORT LOG

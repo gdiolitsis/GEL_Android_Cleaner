@@ -6196,10 +6196,11 @@ private void showLab13GatePopup() {
         0xFF444444
 );
 
-    Button cont = gelButton(this, gr ?
-            gr ? "ΣΥΝΕΧΕΙΑ" : "CONTINUE",
-            0xFF0F8A3B
-    );
+    Button cont = gelButton(
+        this,
+        gr ? "ΣΥΝΕΧΕΙΑ" : "CONTINUE",
+        0xFF0F8A3B
+);
 
     LinearLayout.LayoutParams lp =
         new LinearLayout.LayoutParams(0, dp(52), 1f);

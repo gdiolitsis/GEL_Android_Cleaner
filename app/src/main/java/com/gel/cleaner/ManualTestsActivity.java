@@ -3440,7 +3440,7 @@ if ("LOW".equalsIgnoreCase(r.confidence)) {
 
 /* ============================================================
    LAB 3 — Earpiece Audio Path Check (MANUAL)
-   FINAL — dialog → tones → confirmation
+   Custom GEL Dialog — START → tones → confirmation
    ============================================================ */
 private void lab3EarpieceManual() {
 
@@ -3462,7 +3462,7 @@ private void lab3EarpieceManual() {
     lab3OldSpeaker = am.isSpeakerphoneOn();
 
     logInfo("Saving audio state.");
-    logInfo("Routing audio to earpiece.");
+    logInfo("Preparing earpiece routing.");
 
     try {
         am.stopBluetoothSco();
@@ -3476,42 +3476,44 @@ private void lab3EarpieceManual() {
         return;
     }
 
-    SystemClock.sleep(300);
+    SystemClock.sleep(250);
 
     runOnUiThread(() -> {
 
         // ============================================================
-        // EARPIECE TEST — PROMPT (BILINGUAL + TTS)
+        // LANGUAGE
         // ============================================================
-
         final boolean gr = AppLang.isGreek(this);
 
-        String msgText = gr
+        String titleText = gr
+                ? "LAB 3 — Έλεγχος ακουστικού"
+                : "LAB 3 — Earpiece Audio Test";
+
+        String bodyText = gr
                 ? "Τοποθέτησε το ακουστικό του τηλεφώνου στο αυτί σου.\n\n"
-                  + "Πάτησε OK για να ξεκινήσει ο ηχητικός έλεγχος."
-                : "Put the phone earpiece to your ear.\n\n"
-                  + "Press OK to start the audio test.";
+                  + "Θα αναπαραχθούν δοκιμαστικοί ήχοι από το ακουστικό."
+                : "Place the phone earpiece to your ear.\n\n"
+                  + "Test tones will be played through the earpiece.";
 
         String ttsText = gr
                 ? "Τοποθέτησε το ακουστικό του τηλεφώνου στο αυτί σου. "
-                  + "Πάτησε ΟΚ για να ξεκινήσει ο έλεγχος ήχου."
-                : "Put the phone earpiece to your ear. "
-                  + "Press OK to start the audio test.";
+                  + "Πάτησε έναρξη για να ξεκινήσει ο έλεγχος."
+                : "Place the phone earpiece to your ear. "
+                  + "Press start to begin the test.";
 
+        // ============================================================
+        // DIALOG
+        // ============================================================
         AlertDialog.Builder b =
                 new AlertDialog.Builder(
                         this,
                         android.R.style.Theme_Material_Dialog_NoActionBar
                 );
-
         b.setCancelable(false);
 
-        // ==========================
-        // ROOT
-        // ==========================
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(dp(24), dp(22), dp(24), dp(20));
+        root.setPadding(dp(26), dp(24), dp(26), dp(22));
 
         GradientDrawable bg = new GradientDrawable();
         bg.setColor(0xFF101010);
@@ -3519,57 +3521,65 @@ private void lab3EarpieceManual() {
         bg.setStroke(dp(3), 0xFFFFD700);
         root.setBackground(bg);
 
-        // ==========================
-        // MESSAGE
-        // ==========================
+        // ------------------------------------------------------------
+        // TITLE
+        // ------------------------------------------------------------
+        TextView title = new TextView(this);
+        title.setText(titleText);
+        title.setTextColor(Color.WHITE);
+        title.setTextSize(17f);
+        title.setTypeface(null, Typeface.BOLD);
+        title.setGravity(Gravity.CENTER);
+        title.setPadding(0, 0, 0, dp(14));
+        root.addView(title);
+
+        // ------------------------------------------------------------
+        // MESSAGE (NEON GREEN)
+        // ------------------------------------------------------------
         TextView msg = new TextView(this);
-        msg.setText(msgText);
-        msg.setTextColor(0xFFFFFFFF);
-        msg.setTextSize(15f);
+        msg.setText(bodyText);
+        msg.setTextColor(0xFF39FF14); // GEL neon green
+        msg.setTextSize(14.5f);
         msg.setGravity(Gravity.CENTER);
-        msg.setLineSpacing(1.1f, 1.1f);
+        msg.setLineSpacing(1.1f, 1.15f);
         msg.setPadding(0, 0, 0, dp(18));
         root.addView(msg);
 
-        // ==========================
-        // MUTE TOGGLE (GLOBAL)
-        // ==========================
+        // ------------------------------------------------------------
+        // MUTE CHECKBOX
+        // ------------------------------------------------------------
         CheckBox muteBox = new CheckBox(this);
         muteBox.setChecked(isTtsMuted());
         muteBox.setText(gr ? "Σίγαση φωνητικών οδηγιών" : "Mute voice instructions");
         muteBox.setTextColor(0xFFDDDDDD);
         muteBox.setGravity(Gravity.CENTER);
-        muteBox.setPadding(0, 0, 0, dp(12));
+        muteBox.setPadding(0, 0, 0, dp(16));
         root.addView(muteBox);
 
-        // ==========================
-        // OK BUTTON
-        // ==========================
-        Button ok = new Button(this);
-        ok.setText("OK");
-        ok.setAllCaps(false);
-        ok.setTextSize(15f);
-        ok.setTextColor(0xFFFFFFFF);
+        // ------------------------------------------------------------
+        // START BUTTON
+        // ------------------------------------------------------------
+        Button start = new Button(this);
+        start.setText(gr ? "ΕΝΑΡΞΗ ΕΛΕΓΧΟΥ" : "START TEST");
+        start.setAllCaps(false);
+        start.setTextSize(15f);
+        start.setTextColor(Color.BLACK);
 
-        GradientDrawable okBg = new GradientDrawable();
-        okBg.setColor(0xFF0B5F3B);          // GEL dark green
-        okBg.setCornerRadius(dp(14));
-        okBg.setStroke(dp(3), 0xFFFFD700);
-        ok.setBackground(okBg);
+        GradientDrawable startBg = new GradientDrawable();
+        startBg.setColor(0xFF39FF14); // neon green
+        startBg.setCornerRadius(dp(16));
+        startBg.setStroke(dp(3), 0xFFFFD700);
+        start.setBackground(startBg);
 
         LinearLayout.LayoutParams lp =
                 new LinearLayout.LayoutParams(
-                        ViewGroup.LayoutParams.WRAP_CONTENT,
-                        ViewGroup.LayoutParams.WRAP_CONTENT
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        dp(52)
                 );
-        lp.gravity = Gravity.CENTER_HORIZONTAL;
-        ok.setLayoutParams(lp);
+        lp.setMargins(0, dp(6), 0, 0);
+        start.setLayoutParams(lp);
+        root.addView(start);
 
-        root.addView(ok);
-
-        // ==========================
-        // BUILD DIALOG
-        // ==========================
         b.setView(root);
         AlertDialog d = b.create();
 
@@ -3579,33 +3589,37 @@ private void lab3EarpieceManual() {
             );
         }
 
-        // ==========================
-        // MUTE LOGIC (GLOBAL)
-        // ==========================
+        // ------------------------------------------------------------
+        // MUTE LOGIC
+        // ------------------------------------------------------------
         muteBox.setOnCheckedChangeListener((v, checked) -> {
             setTtsMuted(checked);
-            if (checked && tts != null && tts[0] != null) {
-                tts[0].stop();
-            }
+            try {
+                if (checked && tts != null && tts[0] != null) {
+                    tts[0].stop();
+                }
+            } catch (Throwable ignore) {}
         });
 
-        // ==========================
-        // TTS — INTRO
-        // ==========================
+        // ------------------------------------------------------------
+        // TTS INTRO
+        // ------------------------------------------------------------
         if (tts != null && tts[0] != null && ttsReady[0] && !isTtsMuted()) {
-            tts[0].stop();
-            tts[0].speak(
-                    ttsText,
-                    TextToSpeech.QUEUE_FLUSH,
-                    null,
-                    "EARPIECE_PROMPT"
-            );
+            try {
+                tts[0].stop();
+                tts[0].speak(
+                        ttsText,
+                        TextToSpeech.QUEUE_FLUSH,
+                        null,
+                        "LAB3_EARPIECE_INTRO"
+                );
+            } catch (Throwable ignore) {}
         }
 
-        // ==========================
-        // OK ACTION
-        // ==========================
-        ok.setOnClickListener(v -> {
+        // ------------------------------------------------------------
+        // START ACTION
+        // ------------------------------------------------------------
+        start.setOnClickListener(v -> {
 
             try {
                 if (tts != null && tts[0] != null) {
@@ -3622,13 +3636,13 @@ private void lab3EarpieceManual() {
                     for (int i = 1; i <= 3; i++) {
                         logInfo("Tone " + i + " / 3");
                         playEarpieceBeep();
-                        SystemClock.sleep(600);
+                        SystemClock.sleep(650);
                     }
 
-                    logOk("Tone playback completed.");
+                    logOk("Earpiece tone playback completed.");
 
                 } catch (Throwable t) {
-                    logError("Tone playback failed.");
+                    logError("Earpiece tone playback failed.");
                 } finally {
                     askUserEarpieceConfirmation();
                 }

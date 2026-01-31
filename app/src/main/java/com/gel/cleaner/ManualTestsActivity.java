@@ -10526,6 +10526,10 @@ logLine();
 // ============================================================
 // 1) USB DEBUGGING FLAG
 // ============================================================
+
+private void lab23DeveloperOptionsRisk() {
+
+    int risk = 0;
 boolean usbDebug = false;
 
 try {
@@ -10693,6 +10697,7 @@ appendHtml("<br>");
 logOk("LAB 23 finished.");
 logLine();
 }
+
 
 // ============================================================
 // UI BUBBLES (GEL)

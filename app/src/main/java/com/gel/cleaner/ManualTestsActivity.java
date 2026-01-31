@@ -3067,34 +3067,50 @@ private void lab1SpeakerTone() {
                         am.isWiredHeadsetOn();
             } catch (Throwable ignore) {}
 
-            // ------------------------------------------------------------
-            // BLOCKED AUDIO PATH  STOP & ASK RE-RUN
-            // ------------------------------------------------------------
-            if (volumeMuted || bluetoothRouted || wiredRouted) {
-                logWarn("Audio output path is not clear.");
-                
-                if (volumeMuted) {
-    logWarn("Detected", "Media volume is muted (volume = 0)");
+// ------------------------------------------------------------
+// BLOCKED AUDIO PATH — STOP & ASK RE-RUN
+// ------------------------------------------------------------
+if (volumeMuted || bluetoothRouted || wiredRouted) {
+
+    logLine();
+    logInfo("Audio output path check");
+
+    logLabelWarnValue("Status", "Not clear (blocked)");
+
+    if (volumeMuted) {
+        logLabelWarnValue(
+                "Detected",
+                "Media volume is muted (volume = 0)"
+        );
+    }
+
+    if (bluetoothRouted) {
+        logLabelWarnValue(
+                "Detected",
+                "Audio routed to Bluetooth device"
+        );
+    }
+
+    if (wiredRouted) {
+        logLabelWarnValue(
+                "Detected",
+                "Audio routed to wired or USB device"
+        );
+    }
+
+    logLabelOkValue(
+            "Action required",
+            "Fix the condition(s) above and re-run LAB 1"
+    );
+
+    appendHtml("<br>");
+    logLabelWarnValue(
+            "LAB 1 result",
+            "Inconclusive (audio path blocked)"
+    );
+    logLine();
+    return;
 }
-
-if (bluetoothRouted) {
-    logWarn("Detected", "Audio is routed to a Bluetooth device");
-}
-
-if (wiredRouted) {
-    logWarn("Detected", "Audio is routed to a wired or USB device");
-}
-
-                logWarn(
-                        "Please correct the above condition(s) " +
-                        "and re-run LAB 1 for accurate diagnostics."
-                );
-
-                appendHtml("<br>");
-                logInfo("LAB 1 result: Inconclusive (audio path blocked).");
-                logLine();
-                return;
-            }
 
             // ------------------------------------------------------------
             // PLAY TEST TONE
@@ -3103,20 +3119,43 @@ if (wiredRouted) {
             tg.startTone(ToneGenerator.TONE_DTMF_1, 1200);
             SystemClock.sleep(1400);
 
-            // ------------------------------------------------------------
-            // MIC ANALYSIS
-            // ------------------------------------------------------------
-            MicDiagnosticEngine.Result r =
-                    MicDiagnosticEngine.run(this);
+// ------------------------------------------------------------
+// MIC ANALYSIS
+// ------------------------------------------------------------
+MicDiagnosticEngine.Result r =
+        MicDiagnosticEngine.run(this);
 
-            logOk("Mic RMS", String.valueOf((int) r.rms));
-            logOk("Mic Peak", String.valueOf((int) r.peak));
-            if ("HIGH".equals(r.confidence)) {
-    logOk("Confidence", r.confidence);
-} else if ("MEDIUM".equals(r.confidence)) {
-    logWarn("Confidence", r.confidence);
+logLabelOkValue(
+        "Mic RMS",
+        String.valueOf((int) r.rms)
+);
+
+logLabelOkValue(
+        "Mic Peak",
+        String.valueOf((int) r.peak)
+);
+
+// Confidence (informational)
+if ("HIGH".equalsIgnoreCase(r.confidence)) {
+
+    logLabelOkValue(
+            "Confidence",
+            r.confidence
+    );
+
+} else if ("MEDIUM".equalsIgnoreCase(r.confidence)) {
+
+    logLabelWarnValue(
+            "Confidence",
+            r.confidence
+    );
+
 } else {
-    logError("Confidence", r.confidence);
+
+    logLabelErrorValue(
+            "Confidence",
+            r.confidence
+    );
 }
 
 // ------------------------------------------------------------
@@ -3125,6 +3164,9 @@ if (wiredRouted) {
 SpeakerOutputState state = evaluateSpeakerOutput(r);
 
 if (state == SpeakerOutputState.NO_OUTPUT) {
+
+    logLine();
+    logInfo("Speaker output evaluation");
 
     logLabelErrorValue(
             "Speaker output",
@@ -3142,16 +3184,25 @@ if (state == SpeakerOutputState.NO_OUTPUT) {
     );
 
     logLabelOkValue(
-            "Recommended",
+            "Recommended action",
             "Re-run the test once more. If silence persists, hardware inspection is advised"
     );
 
+    appendHtml("<br>");
+    logLabelWarnValue(
+            "LAB 1 result",
+            "Inconclusive (no speaker output)"
+    );
+    logLine();
     return;
 }
 
 // ------------------------------------------------------------
 // OUTPUT DETECTED — CONFIDENCE IS INFORMATIONAL ONLY
 // ------------------------------------------------------------
+logLine();
+logInfo("Speaker output evaluation");
+
 logLabelOkValue(
         "Speaker output",
         "Acoustic signal detected"
@@ -3164,7 +3215,7 @@ String conf =
 
 if (conf.contains("LOW")) {
 
-    logLabelValue(
+    logLabelWarnValue(
             "Note",
             "Low confidence may be caused by DSP noise cancellation, "
           + "microphone placement, or acoustic design"
@@ -3172,7 +3223,7 @@ if (conf.contains("LOW")) {
 
 } else {
 
-    logLabelValue(
+    logLabelOkValue(
             "Note",
             "Speaker signal detected successfully"
     );
@@ -3180,14 +3231,28 @@ if (conf.contains("LOW")) {
 
 } catch (Throwable t) {
 
-    logError("Speaker tone test failed.");
+    logLine();
+    logInfo("Speaker tone test");
+    logLabelErrorValue(
+            "Status",
+            "Failed"
+    );
+    logLabelWarnValue(
+            "Reason",
+            "Speaker tone test execution error"
+    );
 
 } finally {
 
-    if (tg != null) tg.release();
+    if (tg != null) {
+        tg.release();
+    }
 
     appendHtml("<br>");
-    logOk("Lab 1 finished.");
+    logLabelOkValue(
+            "LAB 1",
+            "Finished"
+    );
     logLine();
 }
 
@@ -3230,22 +3295,47 @@ private void lab2SpeakerSweep() {
                 SystemClock.sleep(550);
             }
 
-            // ----------------------------------------------------
-            // MIC FEEDBACK ANALYSIS
-            // ----------------------------------------------------
-            MicDiagnosticEngine.Result r =
-                    MicDiagnosticEngine.run(this);
+// ----------------------------------------------------
+// MIC FEEDBACK ANALYSIS
+// ----------------------------------------------------
+MicDiagnosticEngine.Result r =
+        MicDiagnosticEngine.run(this);
 
-            logOk("Mic RMS",  String.valueOf((int) r.rms));
-logOk("Mic Peak", String.valueOf((int) r.peak));
+logLabelOkValue(
+        "Mic RMS",
+        String.valueOf((int) r.rms)
+);
 
-String c = (r.confidence == null) ? "" : r.confidence.trim().toUpperCase(Locale.US);
-if (c.contains("LOW") || c.contains("WEAK")) {
-    logWarn("Confidence", r.confidence);
-} else if (c.contains("FAIL") || c.contains("NONE") || c.contains("NO")) {
-    logError("Confidence", r.confidence);
+logLabelOkValue(
+        "Mic Peak",
+        String.valueOf((int) r.peak)
+);
+
+String c =
+        (r.confidence == null)
+                ? ""
+                : r.confidence.trim().toUpperCase(Locale.US);
+
+if (c.contains("FAIL") || c.contains("NONE") || c.contains("NO")) {
+
+    logLabelErrorValue(
+            "Confidence",
+            r.confidence
+    );
+
+} else if (c.contains("LOW") || c.contains("WEAK")) {
+
+    logLabelWarnValue(
+            "Confidence",
+            r.confidence
+    );
+
 } else {
-    logOk("Confidence", r.confidence);
+
+    logLabelOkValue(
+            "Confidence",
+            r.confidence
+    );
 }
 
 // ------------------------------------------------------------
@@ -3353,139 +3443,289 @@ SystemClock.sleep(300);
 
 runOnUiThread(() -> {  
 
-    AlertDialog.Builder b =  
-            new AlertDialog.Builder(  
-                    ManualTestsActivity.this,  
-                    android.R.style.Theme_Material_Dialog_NoActionBar  
-            );  
-    b.setCancelable(false);  
+    // ============================================================
+// EARPIECE TEST — PROMPT (BILINGUAL + TTS)
+// ============================================================
 
-    LinearLayout root = new LinearLayout(this);  
-    root.setOrientation(LinearLayout.VERTICAL);  
-    root.setPadding(dp(24), dp(20), dp(24), dp(18));  
+final boolean gr = AppLang.isGreek(this);
 
-    GradientDrawable bg = new GradientDrawable();  
-    bg.setColor(0xFF101010);  
-    bg.setCornerRadius(dp(18));  
-    bg.setStroke(dp(4), 0xFFFFD700);  
-    root.setBackground(bg);  
+String msgText = gr
+        ? "Τοποθέτησε το ακουστικό του τηλεφώνου στο αυτί σου.\n\n"
+        + "Πάτησε OK για να ξεκινήσει ο ηχητικός έλεγχος."
+        : "Put the phone earpiece to your ear.\n\n"
+        + "Press OK to start the audio test.";
 
-    TextView msg = new TextView(this);  
-    msg.setText("Put the phone earpiece to your ear.\n\nPress OK to start.\n");  
-    msg.setTextColor(0xFFFFFFFF);  
-    msg.setGravity(Gravity.CENTER);  
-    root.addView(msg);  
+String ttsText = gr
+        ? "Τοποθέτησε το ακουστικό του τηλεφώνου στο αυτί σου. "
+        + "Πάτησε ΟΚ για να ξεκινήσει ο έλεγχος ήχου."
+        : "Put the phone earpiece to your ear. "
+        + "Press OK to start the audio test.";
 
-    Button ok = new Button(this);
+AlertDialog.Builder b =
+        new AlertDialog.Builder(
+                this,
+                android.R.style.Theme_Material_Dialog_NoActionBar
+        );
 
+b.setCancelable(false);
+
+// ==========================
+// ROOT
+// ==========================
+LinearLayout root = new LinearLayout(this);
+root.setOrientation(LinearLayout.VERTICAL);
+root.setPadding(dp(24), dp(22), dp(24), dp(20));
+
+GradientDrawable bg = new GradientDrawable();
+bg.setColor(0xFF101010);
+bg.setCornerRadius(dp(18));
+bg.setStroke(dp(3), 0xFFFFD700);
+root.setBackground(bg);
+
+// ==========================
+// MESSAGE
+// ==========================
+TextView msg = new TextView(this);
+msg.setText(msgText);
+msg.setTextColor(0xFFFFFFFF);
+msg.setTextSize(15f);
+msg.setGravity(Gravity.CENTER);
+msg.setLineSpacing(1.1f, 1.1f);
+msg.setPadding(0, 0, 0, dp(18));
+root.addView(msg);
+
+// ==========================
+// MUTE TOGGLE (GLOBAL)
+// ==========================
+CheckBox muteBox = new CheckBox(this);
+muteBox.setChecked(isTtsMuted());
+muteBox.setText(gr ? "Σίγαση φωνητικών οδηγιών" : "Mute voice instructions");
+muteBox.setTextColor(0xFFDDDDDD);
+muteBox.setGravity(Gravity.CENTER);
+muteBox.setPadding(0, 0, 0, dp(12));
+root.addView(muteBox);
+
+// ==========================
+// OK BUTTON
+// ==========================
+Button ok = new Button(this);
 ok.setText("OK");
 ok.setAllCaps(false);
+ok.setTextSize(15f);
 ok.setTextColor(0xFFFFFFFF);
 
-// DARK GREEN BUTTON (GEL style)
 GradientDrawable okBg = new GradientDrawable();
-okBg.setColor(0xFF0B5F3B);          
+okBg.setColor(0xFF0B5F3B);          // GEL dark green
 okBg.setCornerRadius(dp(14));
-okBg.setStroke(dp(3), 0xFFFFD700); 
+okBg.setStroke(dp(3), 0xFFFFD700);
 ok.setBackground(okBg);
+
+LinearLayout.LayoutParams lp =
+        new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+lp.gravity = Gravity.CENTER_HORIZONTAL;
+ok.setLayoutParams(lp);
 
 root.addView(ok);
 
-b.setView(root);  
+// ==========================
+// BUILD DIALOG
+// ==========================
+b.setView(root);
+AlertDialog d = b.create();
 
-    final AlertDialog d = b.create();  
-    if (d.getWindow() != null)  
-        d.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));  
+if (d.getWindow() != null) {
+    d.getWindow().setBackgroundDrawable(
+            new ColorDrawable(Color.TRANSPARENT)
+    );
+}
 
-    ok.setOnClickListener(v -> {  
-        d.dismiss();  
+// ==========================
+// MUTE LOGIC (GLOBAL)
+// ==========================
+muteBox.setOnCheckedChangeListener((v, checked) -> {
 
-        new Thread(() -> {  
-            try {  
-                logInfo("Playing earpiece test tones.");  
+    setTtsMuted(checked);
 
-                for (int i = 1; i <= 3; i++) {  
-                    logInfo("Tone " + i + " / 3");  
-                    playEarpieceBeep();  
-                    SystemClock.sleep(600);  
-                }  
+    if (checked && tts != null && tts[0] != null) {
+        tts[0].stop();   // μόνο stop
+    }
+});
 
-                logOk("Tone playback completed.");  
+// ==========================
+// TTS — INTRO
+// ==========================
+if (tts != null && tts[0] != null && ttsReady[0] && !isTtsMuted()) {
 
-            } catch (Throwable t) {  
-                logError("Tone playback failed.");  
-            } finally {  
-                askUserEarpieceConfirmation();  
-            }  
-        }).start();  
-    });  
+    tts[0].stop();
 
-    d.show();  
+    tts[0].speak(
+            ttsText,
+            TextToSpeech.QUEUE_FLUSH,
+            null,
+            "EARPIECE_PROMPT"
+    );
+}
+
+// ==========================
+// OK ACTION
+// ==========================
+ok.setOnClickListener(v -> {
+
+    try {
+        if (tts != null && tts[0] != null) {
+            tts[0].stop();
+        }
+    } catch (Throwable ignore) {}
+
+    d.dismiss();
+
+    new Thread(() -> {
+        try {
+            logInfo("Playing earpiece test tones.");
+
+            for (int i = 1; i <= 3; i++) {
+                logInfo("Tone " + i + " / 3");
+                playEarpieceBeep();
+                SystemClock.sleep(600);
+            }
+
+            logOk("Tone playback completed.");
+
+        } catch (Throwable t) {
+            logError("Tone playback failed.");
+        } finally {
+            askUserEarpieceConfirmation();
+        }
+    }).start();
+});
+
+d.show();
 });
 
 }
 
 /* ============================================================
 LAB 4 — Microphone Recording Check (BOTTOM + TOP)
+FINAL — BILINGUAL + TTS + LABEL LOGS
 ============================================================ */
 private void lab4MicManual() {
 
-appendHtml("<br>");  
-logLine();  
-logSection("LAB 4 — Microphone Recording Check (BOTTOM + TOP)");  
-logLine();  
+    appendHtml("<br>");
+    logLine();
+    logSection("LAB 4 — Microphone Recording Check (BOTTOM + TOP)");
+    logLine();
 
-new Thread(() -> {  
+    final boolean gr = AppLang.isGreek(this);
 
-    try {  
+    new Thread(() -> {
 
-        MicDiagnosticEngine.Result bottom =
-        MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.BOTTOM);
+        try {
 
-logOk("Bottom Mic RMS",  String.valueOf((int) bottom.rms));
-logOk("Bottom Mic Peak", String.valueOf((int) bottom.peak));
+            // ====================================================
+            // BOTTOM MIC — USER INSTRUCTION
+            // ====================================================
+            logLine();
+            logInfo(gr ? "Έλεγχος κάτω μικροφώνου:" : "Bottom microphone test:");
+            logLabelOkValue(
+                    gr ? "Οδηγία" : "Instruction",
+                    gr
+                            ? "Μίλησε κανονικά κοντά στο κάτω μικρόφωνο"
+                            : "Speak normally near the bottom microphone"
+            );
 
-String bConf = bottom.confidence == null ? "" : bottom.confidence.toUpperCase(Locale.US);
-if (bConf.contains("LOW") || bConf.contains("WEAK")) {
-    logWarn("Bottom Mic Confidence", bottom.confidence);
-} else if (bConf.contains("FAIL") || bConf.contains("NO")) {
-    logError("Bottom Mic Confidence", bottom.confidence);
-} else {
-    logOk("Bottom Mic Confidence", bottom.confidence);
-}
+            speakOnce(
+                    gr
+                            ? "Μίλησε κανονικά κοντά στο κάτω μικρόφωνο."
+                            : "Speak normally near the bottom microphone."
+            );
 
-MicDiagnosticEngine.Result top =
-        MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.TOP);
+            MicDiagnosticEngine.Result bottom =
+                    MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.BOTTOM);
 
-logOk("Top Mic RMS",  String.valueOf((int) top.rms));
-logOk("Top Mic Peak", String.valueOf((int) top.peak));
+            logLabelOkValue("Bottom Mic RMS",  String.valueOf((int) bottom.rms));
+            logLabelOkValue("Bottom Mic Peak", String.valueOf((int) bottom.peak));
 
-String tConf = top.confidence == null ? "" : top.confidence.toUpperCase(Locale.US);
-if (tConf.contains("LOW") || tConf.contains("WEAK")) {
-    logWarn("Top Mic Confidence", top.confidence);
-} else if (tConf.contains("FAIL") || tConf.contains("NO")) {
-    logError("Top Mic Confidence", top.confidence);
-} else {
-    logOk("Top Mic Confidence", top.confidence);
-}
+            String bConf = bottom.confidence == null
+                    ? ""
+                    : bottom.confidence.trim().toUpperCase(Locale.US);
 
-logOk("Microphone Path", "Recording path executed");
+            if (bConf.contains("LOW") || bConf.contains("WEAK")) {
+                logLabelWarnValue("Bottom Mic Confidence", bottom.confidence);
+            } else if (bConf.contains("FAIL") || bConf.contains("NO")) {
+                logLabelErrorValue("Bottom Mic Confidence", bottom.confidence);
+            } else {
+                logLabelOkValue("Bottom Mic Confidence", bottom.confidence);
+            }
 
-    } catch (Throwable t) {  
+            // ====================================================
+            // TOP MIC — USER INSTRUCTION
+            // ====================================================
+            logLine();
+            logInfo(gr ? "Έλεγχος άνω μικροφώνου:" : "Top microphone test:");
+            logLabelOkValue(
+                    gr ? "Οδηγία" : "Instruction",
+                    gr
+                            ? "Μίλησε κοντά στο άνω μικρόφωνο (περιοχή ακουστικού)"
+                            : "Speak near the top microphone (earpiece area)"
+            );
 
-        logError("Lab 4 failed");  
+            speakOnce(
+                    gr
+                            ? "Μίλησε κοντά στο άνω μικρόφωνο, στο ακουστικό."
+                            : "Speak near the top microphone, at the earpiece area."
+            );
 
-    } finally {  
+            MicDiagnosticEngine.Result top =
+                    MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.TOP);
 
-        appendHtml("<br>");  
-        logOk("Lab 4 finished.");  
-        logLine();  
+            logLabelOkValue("Top Mic RMS",  String.valueOf((int) top.rms));
+            logLabelOkValue("Top Mic Peak", String.valueOf((int) top.peak));
 
-        runOnUiThread(this::enableSingleExportButton);  
-    }  
+            String tConf = top.confidence == null
+                    ? ""
+                    : top.confidence.trim().toUpperCase(Locale.US);
 
-}).start();
+            if (tConf.contains("LOW") || tConf.contains("WEAK")) {
+                logLabelWarnValue("Top Mic Confidence", top.confidence);
+            } else if (tConf.contains("FAIL") || tConf.contains("NO")) {
+                logLabelErrorValue("Top Mic Confidence", top.confidence);
+            } else {
+                logLabelOkValue("Top Mic Confidence", top.confidence);
+            }
 
+            // ====================================================
+            // PATH CONFIRMATION
+            // ====================================================
+            logLine();
+            logLabelOkValue(
+                    gr ? "Διαδρομή μικροφώνων" : "Microphone Path",
+                    gr
+                            ? "Η διαδρομή εγγραφής εκτελέστηκε κανονικά"
+                            : "Recording path executed successfully"
+            );
+
+        } catch (Throwable t) {
+
+            logLabelErrorValue(
+                    gr ? "Σφάλμα" : "Error",
+                    gr
+                            ? "Αποτυχία ελέγχου μικροφώνων"
+                            : "Microphone diagnostic failed"
+            );
+
+        } finally {
+
+            appendHtml("<br>");
+            logOk("Lab 4 finished.");
+            logLine();
+
+            runOnUiThread(this::enableSingleExportButton);
+        }
+
+    }).start();
 }
 
 /* ============================================================
@@ -3870,7 +4110,7 @@ private void lab8CameraHardwareCheck() {
 
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
         logWarn("Camera2 not supported on this Android version.");
-        logInfo("Fallback: opening system camera app (basic check).");
+        logOk("Fallback: opening system camera app (basic check).");
         try {
             startActivityForResult(new Intent(MediaStore.ACTION_IMAGE_CAPTURE), 9009);
         } catch (Throwable t) {
@@ -3943,8 +4183,8 @@ private void lab8CameraHardwareCheck() {
         return;
     }
 
-    logOk("Camera subsystem detected.");
-    logLabelValue("Total camera IDs", String.valueOf(ids.length));
+    logLabelOkValue("Camera subsystem", "Detected");
+logLabelOkValue("Total camera IDs", String.valueOf(ids.length));
 
     // ------------------------------------------------------------
     // Build per-camera descriptors
@@ -4033,33 +4273,33 @@ for (Lab8Cam c : cams) {
 
     // Facing
     if ("BACK".equals(c.facing))
-        logOk("Facing", c.facing);
+        logLabelOkValue("Facing", c.facing);
     else
-        logOk("Facing", c.facing);
+        logLabelOkValue("Facing", c.facing);
 
     // Flash
     if (c.hasFlash)
-        logOk("Flash", "YES");
+        logLabelOkValue("Flash", "YES");
     else
-        logWarn("Flash", "NO");
+        logLabelWarnValue("Flash", "NO");
 
     // RAW
     if (c.hasRaw)
-        logOk("RAW", "YES");
+        logLabelOkValue("RAW", "YES");
     else
-        logWarn("RAW", "NO");
+        logLabelWarnValue("RAW", "NO");
 
     // Manual sensor
     if (c.hasManual)
-        logOk("Manual sensor", "YES");
+        logLabelOkValue("Manual sensor", "YES");
     else
-        logWarn("Manual sensor", "NO");
+        logLabelWarnValue("Manual sensor", "NO");
 
     // Depth
     if (c.hasDepth)
-        logOk("Depth output", "YES");
+        logLabelOkValue("Depth output", "YES");
     else
-        logWarn("Depth output", "NO");
+        logLabelWarnValue("Depth output", "NO");
 
     // Focal length
     if (c.focal != null) {
@@ -4297,7 +4537,7 @@ if (cameraSubsystemOk) {
             "(resolution, formats, FPS, RAW support, slow-motion, etc)."
     );
 
-    //    LAB 8.1
+    // LAB 8.1
     runOnUiThread(this::showLab8_1Prompt);
     return;
 
@@ -4305,7 +4545,7 @@ if (cameraSubsystemOk) {
 
     //  FAIL PATH
     logLabelErrorValue("Camera subsystem", "NOT reliable");
-    logInfo("One or more cameras failed basic operation checks.");
+    logError("One or more cameras failed basic operation checks.");
 
     appendHtml("<br>");
     logLabelOkValue("Lab 8", "Finished");
@@ -4363,7 +4603,7 @@ private void lab8TryTorchToggle(String camId, Lab8Cam cam, Lab8Overall overall) 
 
     } catch (Throwable t) {
         logLabelErrorValue("Flash", "Torch control failed");
-        logInfo("Possible flash hardware, driver, or permission issue.");
+        logWarn("Possible flash hardware, driver, or permission issue.");
         overall.torchFailCount++;
     }
 }
@@ -4545,7 +4785,7 @@ no.setOnClickListener(v -> {
     AppTTS.stop(); // ⛔ ΚΟΒΕΙ ΑΜΕΣΑ ΤΗ ΦΩΝΗ
     overall.previewFailCount++;
     logLabelErrorValue("User confirmation", "NO live preview");
-    logInfo("Possible camera module, driver, permission, or routing issue.");
+    logWarn("Possible camera module, driver, permission, or routing issue.");
     finishAndNext.run();
 });
 
@@ -5041,7 +5281,7 @@ private void startLab8_1CameraCapabilities() {
 
     if (lab8CmFor81 == null || lab8CamsFor81 == null || lab8CamsFor81.isEmpty()) {
         logLabelErrorValue("LAB 8.1", "Missing camera context");
-        logInfo("Please re-run LAB 8.");
+        logOk("Please re-run LAB 8.");
         logLine();
         enableSingleExportButton();
         return;
@@ -5284,31 +5524,36 @@ private void lab9SensorsCheck() {
     logLine();
 
     try {
-        SensorManager sm = (SensorManager) getSystemService(SENSOR_SERVICE);
-        if (sm == null) {
-            logError("SensorManager", "Not available (framework issue)");
-            return;
-        }
+    SensorManager sm = (SensorManager) getSystemService(SENSOR_SERVICE);
+    if (sm == null) {
+        logLabelErrorValue("SensorManager", "Not available (framework issue)");
+        return;
+    }
 
-        List<Sensor> sensors = sm.getSensorList(Sensor.TYPE_ALL);
-        int total = (sensors == null ? 0 : sensors.size());
-        logOk("Total sensors reported", String.valueOf(total));
+    List<Sensor> sensors = sm.getSensorList(Sensor.TYPE_ALL);
+    int total = (sensors == null ? 0 : sensors.size());
 
-        // ------------------------------------------------------------
-        // QUICK PRESENCE CHECK
-        // ------------------------------------------------------------
-        checkSensor(sm, Sensor.TYPE_ACCELEROMETER, "Accelerometer");
-        checkSensor(sm, Sensor.TYPE_GYROSCOPE, "Gyroscope");
-        checkSensor(sm, Sensor.TYPE_MAGNETIC_FIELD, "Magnetometer / Compass");
-        checkSensor(sm, Sensor.TYPE_LIGHT, "Ambient Light");
-        checkSensor(sm, Sensor.TYPE_PROXIMITY, "Proximity");
+    logLabelOkValue("Total sensors reported", String.valueOf(total));
 
-        if (sensors == null || sensors.isEmpty()) {
-            logError("Sensor list", "No sensors reported by the system");
-            return;
-        }
+    // ------------------------------------------------------------
+    // QUICK PRESENCE CHECK
+    // ------------------------------------------------------------
+    checkSensor(sm, Sensor.TYPE_ACCELEROMETER, "Accelerometer");
+    checkSensor(sm, Sensor.TYPE_GYROSCOPE, "Gyroscope");
+    checkSensor(sm, Sensor.TYPE_MAGNETIC_FIELD, "Magnetometer / Compass");
+    checkSensor(sm, Sensor.TYPE_LIGHT, "Ambient Light");
+    checkSensor(sm, Sensor.TYPE_PROXIMITY, "Proximity");
 
-        logLine();
+    if (sensors == null || sensors.isEmpty()) {
+        logLabelErrorValue("Sensor list", "No sensors reported by the system");
+        return;
+    }
+
+    logLine();
+
+} catch (Throwable t) {
+    logError("Sensor inspection failed.");
+}
 
         // ------------------------------------------------------------
         // RAW SENSOR LIST
@@ -5361,42 +5606,81 @@ private void lab9SensorsCheck() {
 
         if (alsCount >= 2) hasDualALS = true;
 
-        // ------------------------------------------------------------
-        // SENSOR INTERPRETATION SUMMARY — ONE LINE PER ITEM
-        // ------------------------------------------------------------
-        logLine();
+// ------------------------------------------------------------
+// SENSOR INTERPRETATION SUMMARY — ONE LINE PER ITEM
+// ------------------------------------------------------------
+logLine();
 
-        if (hasVirtualGyro)
-            logOk("Virtual Gyroscope", "Detected (sensor fusion — expected behavior)");
-        else
-            logWarn("Virtual Gyroscope", "Not reported");
+if (hasVirtualGyro)
+    logLabelOkValue(
+            "Virtual Gyroscope",
+            "Detected (sensor fusion — expected behavior)"
+    );
+else
+    logLabelWarnValue(
+            "Virtual Gyroscope",
+            "Not reported"
+    );
 
-        if (hasDualALS)
-            logOk("Ambient Light Sensors", "Dual ALS (front + rear)");
-        else
-            logWarn("Ambient Light Sensors", "Single ALS");
+if (hasDualALS)
+    logLabelOkValue(
+            "Ambient Light Sensors",
+            "Dual ALS (front + rear)"
+    );
+else
+    logLabelWarnValue(
+            "Ambient Light Sensors",
+            "Single ALS"
+    );
 
-        if (hasSAR)
-            logOk("SAR Sensors", "Present (proximity / RF tuning)");
-        else
-            logWarn("SAR Sensors", "Not reported");
+if (hasSAR)
+    logLabelOkValue(
+            "SAR Sensors",
+            "Present (proximity / RF tuning)"
+    );
+else
+    logLabelWarnValue(
+            "SAR Sensors",
+            "Not reported"
+    );
 
-        if (hasPickup)
-            logOk("Pickup Sensor", "Present (lift-to-wake supported)");
-        else
-            logWarn("Pickup Sensor", "Not reported");
+if (hasPickup)
+    logLabelOkValue(
+            "Pickup Sensor",
+            "Present (lift-to-wake supported)"
+    );
+else
+    logLabelWarnValue(
+            "Pickup Sensor",
+            "Not reported"
+    );
 
-        if (hasLargeTouch)
-            logOk("Large Area Touch", "Present (palm rejection / accuracy)");
-        else
-            logWarn("Large Area Touch", "Not reported");
+if (hasLargeTouch)
+    logLabelOkValue(
+            "Large Area Touch",
+            "Present (palm rejection / accuracy)"
+    );
+else
+    logLabelWarnValue(
+            "Large Area Touch",
+            "Not reported"
+    );
 
-        if (hasGameRotation)
-            logOk("Game Rotation Vector", "Present (gaming orientation)");
-        else
-            logWarn("Game Rotation Vector", "Not reported");
+if (hasGameRotation)
+    logLabelOkValue(
+            "Game Rotation Vector",
+            "Present (gaming orientation)"
+    );
+else
+    logLabelWarnValue(
+            "Game Rotation Vector",
+            "Not reported"
+    );
 
-        logOk("Overall Assessment", "Sensor suite complete and healthy for this device");
+logLabelOkValue(
+        "Overall Assessment",
+        "Sensor suite complete and healthy for this device"
+);
 
     } catch (Throwable e) {
         logError("Sensors analysis error", e.getMessage());
@@ -5412,12 +5696,20 @@ private void lab9SensorsCheck() {
 Helper — Sensor Presence
 ============================================================ */
 private void checkSensor(SensorManager sm, int type, String name) {
-boolean ok = sm.getDefaultSensor(type) != null;
-if (ok) {
-    logOk(name, "Available");
-} else {
-    logWarn(name, "Not reported (dependent features may be limited or missing)");
-}
+
+    boolean ok = sm.getDefaultSensor(type) != null;
+
+    if (ok) {
+        logLabelOkValue(
+                name,
+                "Available"
+        );
+    } else {
+        logLabelWarnValue(
+                name,
+                "Not reported (dependent features may be limited or missing)"
+        );
+    }
 }
 
 // ============================================================
@@ -5473,7 +5765,7 @@ private void lab10WifiConnectivityCheck() {
                     REQ_LOCATION_LAB10
             );
 
-            logInfo("Grant permission, then Lab 10 will auto-retry.");
+            logOk("Grant permission, then Lab 10 will auto-retry.");
             return;
         }
 
@@ -5498,36 +5790,54 @@ private void lab10WifiConnectivityCheck() {
         }
     }
 
-    // ------------------------------------------------------------
-    // 2) Wi-Fi snapshot
-    // ------------------------------------------------------------
-    WifiInfo info = wm.getConnectionInfo();
-    if (info == null) {
-        logError("Wi-Fi info not available.");
-        return;
-    }
+// ------------------------------------------------------------
+// 2) Wi-Fi snapshot
+// ------------------------------------------------------------
+WifiInfo info = wm.getConnectionInfo();
+if (info == null) {
+    logLabelErrorValue("Wi-Fi", "Connection info not available");
+    return;
+}
 
-    String ssid = cleanSsid(info.getSSID());
-    String bssid = info.getBSSID();
-    int rssi = info.getRssi();
-    int speed = info.getLinkSpeed();
-    int freqMhz = 0;
-    try { freqMhz = info.getFrequency(); } catch (Throwable ignore) {}
+String ssid  = cleanSsid(info.getSSID());
+String bssid = info.getBSSID();
+int rssi     = info.getRssi();
+int speed    = info.getLinkSpeed();
 
-    String band = (freqMhz > 3000) ? "5 GHz" : "2.4 GHz";
+int freqMhz = 0;
+try { freqMhz = info.getFrequency(); } catch (Throwable ignore) {}
 
-    logLabelValue("SSID", ssid);
+String band = (freqMhz > 3000) ? "5 GHz" : "2.4 GHz";
+
+// ---------------- IDENTIFIERS ----------------
+logLabelValue("SSID", ssid);
 
 if (bssid != null)
     logLabelValue("BSSID", bssid);
 
-logLabelValue(
+// ---------------- BAND ----------------
+logLabelOkValue(
         "Band",
         band + (freqMhz > 0 ? " (" + freqMhz + " MHz)" : "")
 );
 
-logLabelValue("Link speed", speed + " Mbps");
-logLabelValue("RSSI", rssi + " dBm");
+// ---------------- LINK SPEED ----------------
+if (speed >= 150) {
+    logLabelOkValue("Link speed", speed + " Mbps");
+} else if (speed >= 54) {
+    logLabelWarnValue("Link speed", speed + " Mbps");
+} else {
+    logLabelErrorValue("Link speed", speed + " Mbps");
+}
+
+// ---------------- SIGNAL (RSSI) ----------------
+if (rssi >= -60) {
+    logLabelOkValue("Signal strength", rssi + " dBm");
+} else if (rssi >= -75) {
+    logLabelWarnValue("Signal strength", rssi + " dBm");
+} else {
+    logLabelErrorValue("Signal strength", rssi + " dBm");
+}
 
 // SSID status — single line, new system
 if ("Unknown".equalsIgnoreCase(ssid)) {
@@ -5607,7 +5917,7 @@ private void runWifiDeepScan(WifiManager wm) {
 
         try {
             logLine();
-            logInfo("GEL Network DeepScan v3.0 started...");
+            logOk("GEL Network DeepScan v3.0 started...");
 
             String gatewayStr = null;
             try {
@@ -5712,66 +6022,115 @@ logLabelOkValue("DeepScan", "Finished");
                 logError("Internet quick check error: " + e.getMessage());
             }
 
-            // ====================================================
-            // NETWORK / PRIVACY EXPOSURE
-            // ====================================================
-            try {
-                logInfo("Network Exposure Snapshot (no traffic inspection).");
+// ====================================================
+// NETWORK / PRIVACY EXPOSURE
+// ====================================================
+try {
+    logLine();
+    logInfo("Network / Privacy Exposure Snapshot");
+    logInfo("(Capabilities only — no traffic inspection)");
 
-                PackageManager pm2 = getPackageManager();
-                ApplicationInfo ai = getApplicationInfo();
+    PackageManager pm2 = getPackageManager();
+    ApplicationInfo ai = getApplicationInfo();
 
-                boolean hasInternetPerm =
-                        pm2.checkPermission(
-                                Manifest.permission.INTERNET,
-                                ai.packageName)
-                                == PackageManager.PERMISSION_GRANTED;
+    // ----------------------------------------------------
+    // INTERNET PERMISSION
+    // ----------------------------------------------------
+    boolean hasInternetPerm =
+            pm2.checkPermission(
+                    Manifest.permission.INTERNET,
+                    ai.packageName
+            ) == PackageManager.PERMISSION_GRANTED;
 
-                if (hasInternetPerm)
-                    logWarn("INTERNET permission present (capability only).");
-                else
-                    logOk("No INTERNET permission detected.");
+    if (hasInternetPerm)
+        logLabelWarnValue(
+                "Internet capability",
+                "INTERNET permission present"
+        );
+    else
+        logLabelOkValue(
+                "Internet capability",
+                "No INTERNET permission detected"
+        );
 
-                boolean cleartextAllowed = true;
-                try {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                        cleartextAllowed =
-                                android.security
-                                        .NetworkSecurityPolicy
-                                        .getInstance()
-                                        .isCleartextTrafficPermitted();
-                    }
-                } catch (Throwable ignore) {}
-
-                if (cleartextAllowed)
-                    logWarn("Cleartext traffic ALLOWED.");
-                else
-                    logOk("Cleartext traffic NOT allowed.");
-
-                boolean bgPossible =
-                        pm2.checkPermission(
-                                Manifest.permission.RECEIVE_BOOT_COMPLETED,
-                                ai.packageName)
-                                == PackageManager.PERMISSION_GRANTED;
-
-                if (bgPossible)
-                    logWarn("Background network possible after boot.");
-                else
-                    logOk("No boot-time background network capability.");
-
-                logOk("Network exposure assessment completed.");
-
-            } catch (Throwable e) {
-                logWarn("Network exposure snapshot unavailable: " + e.getMessage());
-            }
-
-            appendHtml("<br>");
-            logOk("Lab 10 finished.");
-            logLine();
-
-        } catch (Exception e) {
-            logError("DeepScan error: " + e.getMessage());
+    // ----------------------------------------------------
+    // CLEARTEXT TRAFFIC
+    // ----------------------------------------------------
+    boolean cleartextAllowed = true;
+    try {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            cleartextAllowed =
+                    android.security.NetworkSecurityPolicy
+                            .getInstance()
+                            .isCleartextTrafficPermitted();
         }
+    } catch (Throwable ignore) {}
+
+    if (cleartextAllowed)
+        logLabelWarnValue(
+                "Cleartext traffic",
+                "Allowed by network security policy"
+        );
+    else
+        logLabelOkValue(
+                "Cleartext traffic",
+                "Not allowed (encrypted traffic enforced)"
+        );
+
+    // ----------------------------------------------------
+    // BACKGROUND NETWORK (BOOT)
+    // ----------------------------------------------------
+    boolean bgPossible =
+            pm2.checkPermission(
+                    Manifest.permission.RECEIVE_BOOT_COMPLETED,
+                    ai.packageName
+            ) == PackageManager.PERMISSION_GRANTED;
+
+    if (bgPossible)
+        logLabelWarnValue(
+                "Background network",
+                "Possible after boot"
+        );
+    else
+        logLabelOkValue(
+                "Background network",
+                "No boot-time network capability"
+        );
+
+    // ----------------------------------------------------
+    // SUMMARY
+    // ----------------------------------------------------
+    logLabelOkValue(
+            "Assessment",
+            "Network exposure snapshot completed"
+    );
+
+} catch (Throwable e) {
+    logLabelWarnValue(
+            "Network exposure",
+            "Snapshot unavailable: " + e.getMessage()
+    );
+}
+
+appendHtml("<br>");
+logOk("Lab 10 finished.");
+logLine();
+
+} catch (Exception e) {
+
+    logLine();
+    logInfo("DeepScan");
+
+    logLabelErrorValue(
+            "Status",
+            "Failed"
+    );
+
+    logLabelWarnValue(
+            "Reason",
+            e.getMessage() != null ? e.getMessage() : "Unknown error"
+    );
+}
 
     }).start();
 }
@@ -9116,17 +9475,20 @@ try {
     int pctFree = (int) ((free * 100L) / Math.max(1L, total));  
     int pctUsed = 100 - pctFree;  
 
-    // ------------------------------------------------------------  
-    // BASIC SNAPSHOT  
-    // ------------------------------------------------------------  
-    logInfo("Storage usage:");  
-    logOk(  
-            humanBytes(used) + " used / " +  
-            humanBytes(total) +  
-            " (free " + humanBytes(free) + ", " + pctFree + "%)"  
-    );  
-    
-    // ---------------- MEMORY PRESSURE INDICATORS ----------------
+// ------------------------------------------------------------
+// BASIC SNAPSHOT
+// ------------------------------------------------------------
+logInfo("Storage usage:");
+logLabelOkValue(
+        "Usage",
+        humanBytes(used) + " used / " +
+        humanBytes(total) +
+        " (free " + humanBytes(free) + ", " + pctFree + "%)"
+);
+
+// ------------------------------------------------------------
+// MEMORY PRESSURE INDICATORS
+// ------------------------------------------------------------
 MemSnapshot snap = readMemSnapshotSafe();
 
 long swapUsedKb = 0;
@@ -9144,113 +9506,121 @@ String zramDep = zramDependency(swapUsedKb, total);
 String humanPressure = humanPressureLabel(pressureLevel);
 
 logLine();
-logInfo("Memory Pressure Indicators:");
+logInfo("Memory pressure indicators:");
 
-logOk("Memory Pressure: " + humanPressure);
-logInfo("Pressure Level: " + pressureLevel);
-logInfo("ZRAM Swap Dependency: " + zramDep);
+logLabelOkValue("Memory pressure", humanPressure);
+logLabelOkValue("Pressure level", pressureLevel);
+logLabelOkValue("ZRAM dependency", zramDep);
 
 if (swapUsedKb > 0) {
-    logInfo("Swap used: " + humanBytes(swapUsedKb * 1024L));
+    logLabelWarnValue(
+            "Swap used",
+            humanBytes(swapUsedKb * 1024L)
+    );
 }
+
 if (snap.memFreeKb > 0) {
-    logInfo("MemFree: " + humanBytes(snap.memFreeKb * 1024L));
+    logLabelOkValue(
+            "MemFree",
+            humanBytes(snap.memFreeKb * 1024L)
+    );
 }
+
 if (snap.cachedKb > 0) {
-    logInfo("Cached: " + humanBytes(snap.cachedKb * 1024L) + " (reclaimable)");
+    logLabelOkValue(
+            "Cached",
+            humanBytes(snap.cachedKb * 1024L) + " (reclaimable)"
+    );
 }
 
-    // ------------------------------------------------------------  
-    // PRESSURE LEVEL (HUMAN SCALE)  
-    // ------------------------------------------------------------  
-    boolean critical = pctFree < 7;  
-    boolean pressure = pctFree < 15;  
+// ------------------------------------------------------------
+// PRESSURE LEVEL (HUMAN SCALE)
+// ------------------------------------------------------------
+boolean critical = pctFree < 7;
+boolean pressure = pctFree < 15;
 
-    if (critical) {  
+logLine();
+logInfo("Storage pressure assessment:");
 
-        logError(" Storage critically low.");  
-        logError("System stability may be affected.");  
-        logWarn("Apps may crash, updates may fail, UI may slow down.");  
+if (critical) {
 
-    } else if (pressure) {  
+    logLabelErrorValue("Status", "Critically low storage");
+    logLabelErrorValue("Impact", "System stability may be affected");
+    logLabelWarnValue("Risk", "Apps may crash, updates may fail, UI may slow down");
 
-        logWarn(" Storage under pressure.");  
-        logWarn("System may feel slower when handling files and updates.");  
+} else if (pressure) {
 
-    } else {  
+    logLabelWarnValue("Status", "Storage under pressure");
+    logLabelWarnValue("Impact", "System may feel slower during file operations");
 
-        logOk("… Storage level is healthy for daily usage.");  
-    }  
+} else {
 
-    // ------------------------------------------------------------  
-    // FILESYSTEM INFO (BEST EFFORT)  
-    // ------------------------------------------------------------  
-    try {  
-        String fsType = s.getClass().getMethod("getFilesystemType") != null  
-                ? (String) s.getClass().getMethod("getFilesystemType").invoke(s)  
-                : null;  
+    logLabelOkValue("Status", "Healthy storage level for daily usage");
+}
 
-        if (fsType != null) {  
-            logInfo("Filesystem type:");  
-            logOk(fsType.toUpperCase(Locale.US));  
-        }  
-    } catch (Throwable ignore) {}  
+// ------------------------------------------------------------
+// FILESYSTEM INFO (BEST EFFORT)
+// ------------------------------------------------------------
+try {
+    String fsType = s.getClass().getMethod("getFilesystemType") != null
+            ? (String) s.getClass().getMethod("getFilesystemType").invoke(s)
+            : null;
 
-    // ------------------------------------------------------------  
-    // ROOT AWARE INTELLIGENCE  
-    // ------------------------------------------------------------  
-    boolean rooted = isDeviceRooted();  
+    if (fsType != null) {
+        logInfo("Filesystem:");
+        logLabelOkValue("Type", fsType.toUpperCase(Locale.US));
+    }
+} catch (Throwable ignore) {}
 
-    if (rooted) {  
+// ------------------------------------------------------------
+// ROOT AWARE INTELLIGENCE
+// ------------------------------------------------------------
+boolean rooted = isDeviceRooted();
 
-        logLine();  
-        logInfo("Advanced storage analysis (root access):");  
+if (rooted) {
 
-        boolean wearSignals = detectStorageWearSignals(); // SAFE / HEURISTIC  
-        boolean reservedPressure = pctFree < 12;  
+    logLine();
+    logInfo("Advanced storage analysis (root access):");
 
-        if (wearSignals) {  
+    boolean wearSignals = detectStorageWearSignals(); // heuristic
+    boolean reservedPressure = pctFree < 12;
 
-            logWarn(" Internal signs of long-term storage wear detected.");  
-            logInfo("This does NOT indicate failure.");  
-            logOk("Flash memory wear increases gradually over time.");  
+    if (wearSignals) {
+        logLabelWarnValue("Wear indicators", "Detected (long-term usage)");
+        logLabelOkValue("Note", "Does not indicate imminent failure");
+    } else {
+        logLabelOkValue("Wear indicators", "Not detected");
+    }
 
-        } else {  
+    if (reservedPressure) {
+        logLabelWarnValue(
+                "System reserve",
+                "Compressed — Android may limit background tasks"
+        );
+    }
 
-            logOk("No internal storage wear indicators detected.");  
-        }  
+    logLabelOkValue(
+            "Recommendation",
+            "Keep free storage above 15% for optimal performance"
+    );
+}
 
-        if (reservedPressure) {  
-            logWarn(" System reserved space is being compressed.");  
-            logInfo("Android may limit background tasks to protect stability.");  
-        }  
+// ------------------------------------------------------------
+// FINAL HUMAN SUMMARY
+// ------------------------------------------------------------
+logLine();
+logInfo("Storage summary:");
 
-        logOk("Recommendation: keep free storage above 15% for best performance.");  
+if (critical) {
+    logLabelErrorValue("Action", "Immediate cleanup strongly recommended");
+} else if (pressure) {
+    logLabelWarnValue("Action", "Cleanup recommended to restore performance");
+} else {
+    logLabelOkValue("Action", "No action required");
+}
 
-    }  
-
-    // ------------------------------------------------------------  
-    // FINAL HUMAN SUMMARY  
-    // ------------------------------------------------------------  
-      
-    logInfo("Storage summary:");  
-
-    if (critical) {  
-        logError(" Immediate cleanup strongly recommended.");  
-    } else if (pressure) {  
-        logWarn(" Cleanup recommended to restore smooth performance.");  
-    } else {  
-        logOk("… No action required.");  
-    }  
-
-} catch (Throwable t) {  
-
-    logError("Storage inspection failed.");  
-    logWarn("Unable to access filesystem statistics safely.");  
-}  
-
-appendHtml("<br>");  
-logOk("Lab 18 finished.");  
+appendHtml("<br>");
+logOk("Lab 18 finished.");
 logLine();
 
 }
@@ -9266,127 +9636,199 @@ logLine();
 // ============================================================
 private void lab19RamSnapshot() {
 
-appendHtml("<br>");  
-logLine();  
-logInfo("LAB 19 — Live RAM Health Snapshot");  
-logLine();  
+    appendHtml("<br>");
+    logLine();
+    logInfo("LAB 19 — Live RAM Health Snapshot");
+    logLine();
 
-try {  
-    ActivityManager am =  
-            (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);  
+    try {
 
-    if (am == null) {  
-        logError("Memory service not available.");  
-        return;  
-    }  
+        ActivityManager am =
+                (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
 
-    ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();  
-    am.getMemoryInfo(mi);  
+        if (am == null) {
+            logLabelErrorValue("Service", "Memory service not available");
+            return;
+        }
 
-    long total = mi.totalMem;  
-    long free  = mi.availMem;  
-    long used  = total - free;  
+        ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
+        am.getMemoryInfo(mi);
 
-    int pctFree = (int) ((free * 100L) / Math.max(1L, total));  
+        long total = mi.totalMem;
+        long free  = mi.availMem;
+        long used  = total - free;
 
-    logInfo("Current RAM usage:");  
-    logOk(  
-            humanBytes(used) + " used / " +  
-            humanBytes(total) +  
-            " (free " + humanBytes(free) + ", " + pctFree + "%)"  
-    );  
+        int pctFree = (int) ((free * 100L) / Math.max(1L, total));
 
-    // ---------------- HUMAN INTERPRETATION ----------------  
-    if (pctFree < 8) {  
-        logError(" Critical RAM pressure.");  
-        logError("System is actively killing background apps to survive.");  
-        logWarn("User experience: strong lag, reloads, UI stutter.");  
+        // ------------------------------------------------------------
+        // BASIC SNAPSHOT
+        // ------------------------------------------------------------
+        logInfo("Current RAM usage:");
+        logLabelOkValue(
+                "Usage",
+                humanBytes(used) + " used / " +
+                humanBytes(total) +
+                " (free " + humanBytes(free) + ", " + pctFree + "%)"
+        );
 
-    } else if (pctFree < 15) {  
-        logWarn(" High RAM pressure detected.");  
-        logWarn("Multitasking may be unstable under load.");  
+        // ------------------------------------------------------------
+        // HUMAN INTERPRETATION
+        // ------------------------------------------------------------
+        logLine();
+        logInfo("RAM pressure assessment:");
 
-    } else if (pctFree < 25) {  
-        logInfo("RAM usage is elevated.");  
-        logInfo("This is normal during heavy apps or gaming.");  
+        if (pctFree < 8) {
 
-    } else {  
-        logOk("… RAM level is healthy at this moment.");  
-    }  
-    
-    // ---------------- MEMORY PRESSURE INDICATORS ----------------
-try {
-    MemSnapshot snap = readMemSnapshotSafe();
-
-    long swapUsedKb = 0;
-    if (snap.swapTotalKb > 0 && snap.swapFreeKb > 0) {
-        swapUsedKb = snap.swapTotalKb - snap.swapFreeKb;
-    }
-
-    String pressure =
-            pressureLevel(
-                    snap.memFreeKb,
-                    snap.cachedKb,
-                    swapUsedKb
+            logLabelErrorValue("Status", "Critical RAM pressure");
+            logLabelErrorValue(
+                    "System behaviour",
+                    "Aggressive background app killing"
+            );
+            logLabelWarnValue(
+                    "User impact",
+                    "Strong lag, reloads and UI stutter"
             );
 
-    String pressureHuman =
-            humanPressureLabel(pressure);
+        } else if (pctFree < 15) {
 
-    String zramDep =
-            zramDependency(swapUsedKb, total);
+            logLabelWarnValue("Status", "High RAM pressure");
+            logLabelWarnValue(
+                    "User impact",
+                    "Multitasking may become unstable"
+            );
 
+        } else if (pctFree < 25) {
+
+            logLabelOkValue("Status", "Elevated RAM usage");
+            logLabelOkValue(
+                    "Note",
+                    "Normal during heavy apps or gaming"
+            );
+
+        } else {
+
+            logLabelOkValue("Status", "Healthy RAM level");
+        }
+
+        // ------------------------------------------------------------
+        // MEMORY PRESSURE INDICATORS (LOW-LEVEL)
+        // ------------------------------------------------------------
+        try {
+
+            MemSnapshot snap = readMemSnapshotSafe();
+
+            long swapUsedKb = 0;
+            if (snap.swapTotalKb > 0 && snap.swapFreeKb >= 0) {
+                swapUsedKb = Math.max(0, snap.swapTotalKb - snap.swapFreeKb);
+            }
+
+            String pressureLevel =
+                    pressureLevel(
+                            snap.memFreeKb,
+                            snap.cachedKb,
+                            swapUsedKb
+                    );
+
+            String pressureHuman =
+                    humanPressureLabel(pressureLevel);
+
+            String zramDep =
+                    zramDependency(swapUsedKb, total);
+
+            logLine();
+            logInfo("Memory pressure indicators:");
+
+            logLabelOkValue("Pressure level", pressureHuman);
+            logLabelOkValue("ZRAM / Swap dependency", zramDep);
+
+            if (swapUsedKb > 0) {
+                logLabelWarnValue(
+                        "Swap used",
+                        humanBytes(swapUsedKb * 1024L)
+                );
+            }
+
+            if (snap.memFreeKb > 0) {
+                logLabelOkValue(
+                        "MemFree",
+                        humanBytes(snap.memFreeKb * 1024L)
+                );
+            }
+
+            if (snap.cachedKb > 0) {
+                logLabelOkValue(
+                        "Cached",
+                        humanBytes(snap.cachedKb * 1024L) + " (reclaimable)"
+                );
+            }
+
+        } catch (Throwable ignore) {}
+
+        // ------------------------------------------------------------
+        // ANDROID LOW-MEMORY SIGNAL
+        // ------------------------------------------------------------
+        if (mi.lowMemory) {
+
+            logLine();
+            logLabelWarnValue(
+                    "Android signal",
+                    "Low-memory state reported"
+            );
+            logLabelWarnValue(
+                    "System response",
+                    "Memory protection mechanisms active"
+            );
+        }
+
+        // ------------------------------------------------------------
+        // ROOT-AWARE INTELLIGENCE
+        // ------------------------------------------------------------
+        boolean rooted = isDeviceRooted();
+
+        if (rooted) {
+
+            logLine();
+            logInfo("Advanced RAM analysis (root access):");
+
+            boolean zramActive = isZramActiveSafe();
+            boolean swapActive = isSwapActiveSafe();
+
+            if (zramActive || swapActive) {
+
+                logLabelWarnValue(
+                        "Memory extension",
+                        "Compression / swap detected"
+                );
+                logLabelOkValue(
+                        "Effect",
+                        "Improves stability but may reduce performance"
+                );
+
+            } else {
+
+                logLabelOkValue(
+                        "Memory extension",
+                        "No swap or compression detected"
+                );
+            }
+
+            long cachedKb = readCachedMemoryKbSafe();
+            if (cachedKb > 0) {
+                logLabelOkValue(
+                        "Cached memory",
+                        humanBytes(cachedKb * 1024L) +
+                        " (reclaimable by system)"
+                );
+            }
+        }
+
+    } catch (Throwable t) {
+        logLabelErrorValue("RAM snapshot", "Failed to read memory state");
+    }
+
+    appendHtml("<br>");
+    logOk("Lab 19 finished.");
     logLine();
-    logInfo("Memory Pressure:");
-    logOk("Level: " + pressureHuman);
-
-    logInfo("ZRAM / Swap Dependency:");
-    logOk(zramDep);
-
-} catch (Throwable ignore) {}
-
-    // ---------------- LOW MEMORY STATE ----------------  
-    if (mi.lowMemory) {  
-        logWarn(" Android reports low-memory state.");  
-        logWarn("System protection mechanisms are active.");  
-    }  
-
-    // ---------------- ROOT-AWARE INTELLIGENCE ----------------  
-    boolean rooted = isDeviceRooted();  
-
-    if (rooted) {  
-        logLine();  
-        logInfo("Advanced RAM analysis:");  
-
-        boolean zramActive = isZramActiveSafe();   // swap/zram check  
-        boolean swapActive = isSwapActiveSafe();   // generic swap  
-
-        if (zramActive || swapActive) {  
-            logWarn(" Memory compression / swap detected.");  
-            logInfo("System is extending RAM using CPU cycles.");  
-            logOk("This improves stability but may reduce performance.");  
-        } else {  
-            logOk("No swap or memory compression detected.");  
-        }  
-
-        long cachedKb = readCachedMemoryKbSafe();  
-        if (cachedKb > 0) {  
-            logInfo(  
-                    "Cached memory: " +  
-                    humanBytes(cachedKb * 1024L) +  
-                    " (reclaimable by system)"  
-            );  
-        }  
-    }  
-
-} catch (Throwable t) {  
-    logError("RAM snapshot failed.");  
-}  
-
-appendHtml("<br>");  
-logOk("Lab 19 finished.");  
-logLine();
-
 }
 
 // ============================================================
@@ -9395,7 +9837,7 @@ logLine();
 // ============================================================
 private void lab20UptimeHints() {
 
-    boolean frequentReboots = false;   // â­ Ï€ÏÎ­Ï€ÎµÎ¹ Î½Î± ÎµÎ¯Î½Î±Î¹ ÎµÎ´ÏŽ, ÎŸÎ§Î™ Î¼Î­ÏƒÎ± ÏƒÎµ if
+    boolean frequentReboots = false;   // must be here (shared summary flag)
 
     appendHtml("<br>");
     logLine();
@@ -9408,77 +9850,128 @@ private void lab20UptimeHints() {
         String upStr = formatUptime(upMs);
 
         logInfo("System uptime:");
-        logOk(upStr);
+        logLabelOkValue("Uptime", upStr);
 
-        boolean veryRecentReboot = upMs < 2L * 60L * 60L * 1000L;        // < 2h
-        boolean veryLongUptime   = upMs > 7L * 24L * 60L * 60L * 1000L; // > 7 days
-        boolean extremeUptime    = upMs > 14L * 24L * 60L * 60L * 1000L;
+        boolean veryRecentReboot =
+                upMs < 2L * 60L * 60L * 1000L;        // < 2 hours
+        boolean veryLongUptime =
+                upMs > 7L * 24L * 60L * 60L * 1000L; // > 7 days
+        boolean extremeUptime =
+                upMs > 14L * 24L * 60L * 60L * 1000L;
 
         // ----------------------------------------------------
         // HUMAN INTERPRETATION (NON-ROOT)
         // ----------------------------------------------------
+        logLine();
+        logInfo("Uptime assessment:");
+
         if (veryRecentReboot) {
 
-            logWarn(" Recent reboot detected.");
-            logWarn("Some issues may be temporarily masked (memory, thermal, background load).");
-            logInfo("Diagnostics are valid, but not fully representative yet.");
+            logLabelWarnValue("Status", "Recent reboot detected");
+            logLabelWarnValue(
+                    "Impact",
+                    "Some issues may be temporarily masked"
+            );
+            logLabelOkValue(
+                    "Note",
+                    "Diagnostics are valid but not fully representative yet"
+            );
 
         } else if (veryLongUptime) {
 
-            logWarn(" Long uptime detected.");
-            logWarn("Background processes and memory pressure may accumulate over time.");
+            logLabelWarnValue("Status", "Long uptime detected");
+            logLabelWarnValue(
+                    "Risk",
+                    "Background load and memory pressure may accumulate"
+            );
 
             if (extremeUptime) {
-                logError(" Extremely long uptime (>14 days).");
-                logError("Strongly recommended: reboot before drawing final conclusions.");
+                logLabelErrorValue(
+                        "Severity",
+                        "Extremely long uptime (> 14 days)"
+                );
+                logLabelErrorValue(
+                        "Recommendation",
+                        "Reboot strongly recommended before final conclusions"
+                );
             } else {
-                logInfo("Recommendation:");
-                logOk("A reboot can help reset system state before deep diagnostics.");
+                logLabelOkValue(
+                        "Recommendation",
+                        "A reboot can help reset system state"
+                );
             }
 
         } else {
 
-            logOk("… Uptime is within a healthy range for diagnostics.");
+            logLabelOkValue(
+                    "Status",
+                    "Uptime within healthy diagnostic range"
+            );
         }
 
         // ----------------------------------------------------
-        // ROOT-AWARE INTELLIGENCE (SILENT IF NOT ROOTED)
+        // ROOT-AWARE INTELLIGENCE
         // ----------------------------------------------------
         if (isDeviceRooted()) {
 
             logLine();
-            logInfo("Advanced uptime signals:");
+            logInfo("Advanced uptime signals (root access):");
 
-            boolean lowMemoryPressure = readLowMemoryKillCountSafe() < 5;
-            frequentReboots = detectFrequentRebootsHint();   // â­ ASSIGN, ÏŒÏ‡Î¹ Î½Î­Î± Î´Î®Î»Ï‰ÏƒÎ·
+            boolean lowMemoryPressure =
+                    readLowMemoryKillCountSafe() < 5;
+
+            frequentReboots =
+                    detectFrequentRebootsHint();
 
             if (frequentReboots) {
-                logWarn(" Repeated reboot pattern detected.");
-                logWarn("This may indicate instability, crashes or watchdog resets.");
+                logLabelWarnValue(
+                        "Reboot pattern",
+                        "Repeated reboots detected"
+                );
+                logLabelWarnValue(
+                        "Possible causes",
+                        "Instability, crashes or watchdog resets"
+                );
             } else {
-                logOk("No abnormal reboot patterns detected.");
+                logLabelOkValue(
+                        "Reboot pattern",
+                        "No abnormal reboot behaviour detected"
+                );
             }
 
             if (!lowMemoryPressure) {
-                logWarn(" Memory pressure events detected during uptime.");
-                logInfo("System may be aggressively managing apps in background.");
+                logLabelWarnValue(
+                        "Memory pressure",
+                        "Background pressure events detected"
+                );
+                logLabelWarnValue(
+                        "System behaviour",
+                        "Aggressive background app management"
+                );
             } else {
-                logOk("No significant memory pressure signals detected.");
+                logLabelOkValue(
+                        "Memory pressure",
+                        "No significant pressure signals detected"
+                );
             }
 
-            logInfo("Interpretation:");
-            logOk("Uptime behaviour appears consistent with normal system operation.");
+            logLabelOkValue(
+                    "Interpretation",
+                    "Uptime behaviour consistent with normal system operation"
+            );
         }
 
     } catch (Throwable t) {
-        logError("Uptime analysis failed.");
+        logLabelErrorValue("Uptime analysis", "Failed to evaluate system uptime");
     }
 
     // ----------------------------------------------------
     // SUMMARY LINE (FOR LAB 28 & CROSS-LAB LOGIC)
     // ----------------------------------------------------
-    GELServiceLog.info("SUMMARY: REBOOT_PATTERN=" +
-            (frequentReboots ? "ABNORMAL" : "NORMAL"));
+    GELServiceLog.info(
+            "SUMMARY: REBOOT_PATTERN=" +
+            (frequentReboots ? "ABNORMAL" : "NORMAL")
+    );
 
     appendHtml("<br>");
     logOk("Lab 20 finished.");
@@ -9512,43 +10005,44 @@ logLine();
 // ------------------------------------------------------------  
 // PART A — LOCK CONFIG + STATE  
 // ------------------------------------------------------------  
-boolean secure = false;  
-boolean lockedNow = false;  
+boolean secure = false;
+boolean lockedNow = false;
 
-try {  
-    android.app.KeyguardManager km =  
-            (android.app.KeyguardManager) getSystemService(KEYGUARD_SERVICE);  
+try {
+    KeyguardManager km =
+            (KeyguardManager) getSystemService(KEYGUARD_SERVICE);
 
-    if (km != null) {  
+    if (km != null) {
 
-        secure = km.isDeviceSecure();  
+        secure = km.isDeviceSecure();
 
-        try { lockedNow = km.isKeyguardLocked(); } catch (Throwable ignore) {}  
+        try {
+            lockedNow = km.isKeyguardLocked();
+        } catch (Throwable ignore) {}
 
-        if (secure) {  
-            logOk("Secure lock configured (PIN / Pattern / Password).");  
-        } else {  
-            logError("NO secure lock configured — device is UNPROTECTED!");  
-            logWarn("Risk: anyone with physical access can access data.");  
-        }  
+        logInfo("Screen lock configuration:");
+        if (secure) {
+            logLabelOkValue("Credential", "Configured (PIN / Pattern / Password)");
+        } else {
+            logLabelErrorValue("Credential", "NOT configured");
+            logLabelWarnValue("Risk", "Physical access = full data exposure");
+        }
 
-        if (secure) {  
-logInfo("Current state:");  
-if (lockedNow) {  
-    logOk("LOCKED (keyguard active).");  
-} else {  
-    logWarn("UNLOCKED right now (device open).");  
+        if (secure) {
+            logInfo("Current lock state:");
+            if (lockedNow)
+                logLabelOkValue("State", "LOCKED (keyguard active)");
+            else
+                logLabelWarnValue("State", "UNLOCKED (device currently open)");
+        }
+
+    } else {
+        logLabelWarnValue("Keyguard", "Service unavailable");
+    }
+
+} catch (Throwable e) {
+    logLabelWarnValue("Lock detection", "Failed: " + e.getMessage());
 }
-
-}
-
-} else {  
-        logWarn("KeyguardManager not available — cannot read lock status.");  
-    }  
-
-} catch (Throwable e) {  
-    logWarn("Screen lock detection failed: " + e.getMessage());  
-}  
 
 // ------------------------------------------------------------  
 // PART B — BIOMETRIC CAPABILITY (FRAMEWORK, NO ANDROIDX)  
@@ -9556,253 +10050,278 @@ if (lockedNow) {
 
 boolean biometricSupported = false;
 
-if (android.os.Build.VERSION.SDK_INT >= 29) {
-try {
-android.hardware.biometrics.BiometricManager bm =
-getSystemService(android.hardware.biometrics.BiometricManager.class);
+if (Build.VERSION.SDK_INT >= 29) {
+    try {
+        android.hardware.biometrics.BiometricManager bm =
+                getSystemService(android.hardware.biometrics.BiometricManager.class);
 
-if (bm != null) {  
-        int result = bm.canAuthenticate(  
-                android.hardware.biometrics.BiometricManager.Authenticators.BIOMETRIC_STRONG  
-        );  
+        if (bm != null) {
+            int r = bm.canAuthenticate(
+                    android.hardware.biometrics.BiometricManager.Authenticators.BIOMETRIC_STRONG
+            );
 
-        if (result == android.hardware.biometrics.BiometricManager.BIOMETRIC_SUCCESS) {  
-            biometricSupported = true;  
-            logOk("Biometric hardware PRESENT (system reports available).");  
-        } else {  
-            logWarn("Biometric hardware PRESENT but NOT ready / not usable.");  
-        }  
-    } else {  
-        logWarn("BiometricManager unavailable.");  
-    }  
-} catch (Throwable e) {  
-    logWarn("Biometric capability check failed: " + e.getMessage());  
-}
-
+            if (r == android.hardware.biometrics.BiometricManager.BIOMETRIC_SUCCESS) {
+                biometricSupported = true;
+                logLabelOkValue("Biometrics", "Hardware present & usable");
+            } else {
+                logLabelWarnValue("Biometrics", "Present but not ready");
+            }
+        } else {
+            logLabelWarnValue("Biometrics", "Manager unavailable");
+        }
+    } catch (Throwable e) {
+        logLabelWarnValue("Biometrics", "Check failed: " + e.getMessage());
+    }
 } else {
-logWarn("Biometric framework not supported on this Android version.");
+    logLabelWarnValue("Biometrics", "Not supported on this Android version");
 }
 
 // ------------------------------------------------------------  
 // PART C — ROOT-AWARE AUTH INFRA CHECK (POLICY / FILES)  
 // ------------------------------------------------------------  
-boolean hasLockDb = false;  
-boolean hasGatekeeper = false;  
-boolean hasKeystore = false;  
+boolean hasLockDb = false;
+boolean hasGatekeeper = false;
+boolean hasKeystore = false;
 
-boolean root = isRootAvailable();  
-if (root) {  
+boolean root = isRootAvailable();
 
-    logInfo("Root mode:");  
-    logOk("AVAILABLE (extra infrastructure checks enabled).");  
+logInfo("Root access:");
+if (root) {
+    logLabelOkValue("Root mode", "AVAILABLE");
 
-    hasLockDb     = rootPathExists("/data/system/locksettings.db");  
-    hasGatekeeper = rootPathExists("/data/system/gatekeeper.password.key") ||  
-                    rootPathExists("/data/system/gatekeeper.pattern.key") ||  
-                    rootGlobExists("/data/system/gatekeeper*");  
-    hasKeystore   = rootPathExists("/data/misc/keystore") ||  
-                    rootPathExists("/data/misc/keystore/");  
+    hasLockDb     = rootPathExists("/data/system/locksettings.db");
+    hasGatekeeper = rootGlobExists("/data/system/gatekeeper*");
+    hasKeystore   = rootPathExists("/data/misc/keystore");
 
-    if (hasGatekeeper) logOk("Gatekeeper artifacts found (auth infrastructure likely active).");  
-    else logWarn("No gatekeeper artifacts detected (lock disabled OR vendor storage).");  
+    logLabelOkValue("Gatekeeper", hasGatekeeper ? "Detected" : "Not detected");
+    logLabelOkValue("Lock DB",    hasLockDb     ? "Detected" : "Not detected");
+    logLabelOkValue("Keystore",   hasKeystore   ? "Detected" : "Not detected");
 
-    if (hasLockDb) logOk("Locksettings database found (lock configuration maintained).");  
-    else logWarn("Locksettings database not detected (ROM/vendor variation possible).");  
-
-    if (hasKeystore) logOk("System keystore path detected (secure storage present).");  
-    else logWarn("Keystore path not detected (vendor / Android version variation possible).");  
-
-} else {  
-    logInfo("Root mode:");  
-    logOk("not available (standard checks only).");  
-}  
+} else {
+    logLabelOkValue("Root mode", "Not available");
+}
 
 // ============================================================  
 // LAB 21 — TRUST BOUNDARY AWARENESS  
 // ============================================================  
 
-try {  
-    if (secure) {  
-logInfo("Post-reboot protection:");  
-logOk("authentication REQUIRED before data access.");
+logLine();
+logInfo("Trust boundary analysis:");
 
+if (secure) {
+    logLabelOkValue(
+            "Post-reboot protection",
+            "Authentication required before data access"
+    );
 } else {
-logInfo("Post-reboot protection:");
-logError("NOT enforced — data exposure risk after reboot.");
-}
-} catch (Throwable ignore) {}
-
-if (secure) {  
-logInfo("Primary security layer:");  
-logOk("knowledge-based credential (PIN / Pattern / Password).");
-
-} else {
-logInfo("Primary security layer:");
-logWarn("NONE (no credential configured).");
+    logLabelErrorValue(
+            "Post-reboot protection",
+            "NOT enforced (data exposed after reboot)"
+    );
 }
 
-if (biometricSupported) {
-logInfo("Convenience layer:");
-logOk("biometrics available (user-facing).");
-} else {
-logInfo("Convenience layer:");
-logWarn("biometrics not available or not ready (non-critical).");
+logLabelOkValue(
+        "Primary security layer",
+        secure ? "Knowledge-based credential" : "NONE"
+);
+
+logLabelOkValue(
+        "Convenience layer",
+        biometricSupported ? "Biometrics available" : "Not available"
+);
+
+if (secure && !lockedNow) {
+    logLabelWarnValue(
+            "Live risk",
+            "Unlocked device is NOT protected by biometrics"
+    );
 }
 
-if (secure && !lockedNow) {  
-    logWarn("Warning: biometrics do NOT protect an already UNLOCKED device.");  
-}  
-
-if (root) {  
-    if (hasGatekeeper || hasLockDb) logOk("System enforcement signals present (auth infrastructure active).");  
-    else logWarn("Enforcement signals unclear — ROM/vendor variation or relaxed policy.");  
-}  
+if (root) {
+    if (hasGatekeeper || hasLockDb)
+        logLabelOkValue("System enforcement", "Authentication infrastructure active");
+    else
+        logLabelWarnValue("System enforcement", "Signals unclear (ROM/vendor variation)");
+}
 
 // ------------------------------------------------------------  
 // PART D — RISK SCORE (FAST, CLEAR)  
 // ------------------------------------------------------------  
-int risk = 0;  
+int risk = 0;
 
-if (!secure) risk += 70;  
-if (secure && !lockedNow) risk += 10;  
-if (secure && !biometricSupported) risk += 5;  
+if (!secure) risk += 70;
+if (secure && !lockedNow) risk += 10;
+if (secure && !biometricSupported) risk += 5;
 
-if (risk >= 70) logError("Security impact: HIGH (" + risk + "/100)");  
-else if (risk >= 30) logWarn("Security impact: MEDIUM (" + risk + "/100)");  
-else logOk("Security impact: LOW (" + risk + "/100)");
+logLine();
+logInfo("Security impact score:");
+
+if (risk >= 70)
+    logLabelErrorValue("Impact", "HIGH (" + risk + "/100)");
+else if (risk >= 30)
+    logLabelWarnValue("Impact", "MEDIUM (" + risk + "/100)");
+else
+    logLabelOkValue("Impact", "LOW (" + risk + "/100)");
 
 // ------------------------------------------------------------
 // PART E — LIVE BIOMETRIC AUTH TEST (USER-DRIVEN, REAL)
 // ------------------------------------------------------------
 if (!secure) {
-logWarn("Live biometric test skipped: secure lock required.");
 
-appendHtml("<br>");  
-logOk("LAB 21 finished.");  
-logLine();  
-lab21Running = false;  
-return;
+    logLine();
+    logInfo("Live biometric test:");
+    logLabelWarnValue("Status", "Skipped");
+    logLabelWarnValue("Reason", "Secure lock required (PIN / Pattern / Password)");
 
+    appendHtml("<br>");
+    logOk("LAB 21 finished.");
+    logLine();
+    lab21Running = false;
+    return;
 }
 
 if (!biometricSupported) {
-logInfo("Live biometric test not started:");
-logWarn("Biometrics not ready or not available.");
-logInfo("Action:");
-logOk("Enroll biometrics in Settings, then re-run LAB 21.");
 
-appendHtml("<br>");  
-logOk("LAB 21 finished.");  
-logLine();  
-lab21Running = false;  
-return;
+    logLine();
+    logInfo("Live biometric test:");
+    logLabelWarnValue("Status", "Not started");
+    logLabelWarnValue("Reason", "Biometrics not ready or not available");
+    logLabelOkValue("Action", "Enroll biometrics in Settings and re-run LAB 21");
 
+    appendHtml("<br>");
+    logOk("LAB 21 finished.");
+    logLine();
+    lab21Running = false;
+    return;
 }
 
-if (android.os.Build.VERSION.SDK_INT >= 28) {
-try {
-logLine();
-logInfo("LIVE SENSOR TEST:");
-logOk("Place finger / face for biometric authentication NOW.");
-logOk("Result will be recorded as PASS/FAIL (real hardware interaction).");
+if (Build.VERSION.SDK_INT >= 28) {
 
-java.util.concurrent.Executor executor = getMainExecutor();  
-    android.os.CancellationSignal cancel = new android.os.CancellationSignal();  
+    try {
 
-    android.hardware.biometrics.BiometricPrompt.AuthenticationCallback cb =  
-            new android.hardware.biometrics.BiometricPrompt.AuthenticationCallback() {  
+        logLine();
+        logInfo("LIVE SENSOR TEST");
+        logLabelOkValue("Instruction", "Place finger / face for authentication NOW");
+        logLabelOkValue("Result", "PASS / FAIL will be recorded (real hardware)");
 
-                @Override  
-                public void onAuthenticationSucceeded(  
-                        android.hardware.biometrics.BiometricPrompt.AuthenticationResult result) {  
+        Executor executor = getMainExecutor();
+        CancellationSignal cancel = new CancellationSignal();
 
-                    logInfo("LIVE BIOMETRIC TEST:");  
-                    logOk("PASS — biometric sensor and authentication pipeline verified functional.");  
+        android.hardware.biometrics.BiometricPrompt.AuthenticationCallback cb =
+                new android.hardware.biometrics.BiometricPrompt.AuthenticationCallback() {
 
-                    logInfo("Multi-biometric devices:");  
-                    logWarn("Android tests ONE biometric sensor per run.");  
-                    logOk("Disable current biometric in Settings and re-run LAB 21 to test another sensor.");  
-                    logWarn("OEM priority may keep same sensor even after disabling.");  
+                    @Override
+                    public void onAuthenticationSucceeded(
+                            android.hardware.biometrics.BiometricPrompt.AuthenticationResult result) {
 
-                    appendHtml("<br>");  
-                    logOk("LAB 21 finished.");  
-                    logLine();  
-                    lab21Running = false;  
-                }  
+                        logLine();
+                        logInfo("LIVE BIOMETRIC TEST");
+                        logLabelOkValue("Result", "PASS");
+                        logLabelOkValue("Pipeline", "Biometric sensor + auth verified functional");
 
-                @Override  
-                public void onAuthenticationFailed() {  
-                    logInfo("LIVE BIOMETRIC TEST:");  
-                    logError("FAIL — biometric hardware did NOT authenticate during real sensor test.");  
+                        logInfo("Multi-biometric devices");
+                        logLabelWarnValue("Note", "Android tests ONE biometric path per run");
+                        logLabelOkValue("Action", "Disable current biometric in Settings and re-run LAB 21");
+                        logLabelWarnValue("OEM note", "OEM may still prioritize same sensor");
 
-                    logOk("LAB 21 finished.");  
-                    logLine();  
-                    lab21Running = false;  
-                }  
+                        appendHtml("<br>");
+                        logOk("LAB 21 finished.");
+                        logLine();
+                        lab21Running = false;
+                    }
 
-                @Override  
-                public void onAuthenticationError(int errorCode, CharSequence errString) {  
-                    logWarn("System fallback to device credential detected — biometric sensor NOT confirmed functional.");  
+                    @Override
+                    public void onAuthenticationFailed() {
 
-                    appendHtml("<br>");  
-                    logOk("LAB 21 finished.");  
-                    logLine();  
-                    lab21Running = false;  
-                }  
-            };  
+                        logLine();
+                        logInfo("LIVE BIOMETRIC TEST");
+                        logLabelErrorValue("Result", "FAIL");
+                        logLabelWarnValue("Meaning", "Biometric did not authenticate during real sensor test");
 
-    android.hardware.biometrics.BiometricPrompt prompt =  
-            new android.hardware.biometrics.BiometricPrompt.Builder(this)  
-                    .setTitle("LAB 21 — Live Biometric Sensor Test")  
-                    .setSubtitle("Place finger / face to verify sensor works")  
-                    .setDescription("This is a REAL hardware test (no simulation).")  
-                    .setNegativeButton(  
-                            "Cancel test",  
-                            executor,  
-                            (dialog, which) -> {  
-                                logWarn("LIVE BIOMETRIC TEST: cancelled by user.");  
-                                  
-                                appendHtml("<br>");  
-                                logOk("LAB 21 finished.");  
-                                logLine();  
-                                lab21Running = false;  
-                            }  
-                    )  
-                    .setAllowedAuthenticators(  
-                            android.hardware.biometrics.BiometricManager.Authenticators.BIOMETRIC_STRONG  
-                    )  
-                    .build();  
+                        appendHtml("<br>");
+                        logOk("LAB 21 finished.");
+                        logLine();
+                        lab21Running = false;
+                    }
 
-    logInfo("Starting LIVE biometric prompt...");  
-    prompt.authenticate(cancel, executor, cb);  
+                    @Override
+                    public void onAuthenticationError(int errorCode, CharSequence errString) {
 
-} catch (Throwable e) {  
-    logWarn("Live biometric prompt failed: " + e.getMessage());  
-      
-    appendHtml("<br>");  
-    logOk("LAB 21 finished.");  
-    logLine();  
-    lab21Running = false;  
-}
+                        logLine();
+                        logInfo("LIVE BIOMETRIC TEST");
+                        logLabelWarnValue("Result", "Not confirmed");
+                        logLabelWarnValue("System", "Fallback to device credential detected");
+                        logLabelWarnValue("Meaning", "Biometric sensor NOT verified functional");
+
+                        appendHtml("<br>");
+                        logOk("LAB 21 finished.");
+                        logLine();
+                        lab21Running = false;
+                    }
+                };
+
+        android.hardware.biometrics.BiometricPrompt prompt =
+                new android.hardware.biometrics.BiometricPrompt.Builder(this)
+                        .setTitle("LAB 21 — Live Biometric Sensor Test")
+                        .setSubtitle("Place finger / face to verify sensor works")
+                        .setDescription("This is a REAL hardware test (no simulation).")
+                        .setNegativeButton(
+                                "Cancel test",
+                                executor,
+                                (dialog, which) -> {
+
+                                    logLine();
+                                    logInfo("LIVE BIOMETRIC TEST");
+                                    logLabelWarnValue("Result", "Cancelled by user");
+
+                                    appendHtml("<br>");
+                                    logOk("LAB 21 finished.");
+                                    logLine();
+                                    lab21Running = false;
+                                }
+                        )
+                        .setAllowedAuthenticators(
+                                android.hardware.biometrics.BiometricManager.Authenticators.BIOMETRIC_STRONG
+                        )
+                        .build();
+
+        logInfo("Biometric prompt:");
+        logLabelOkValue("Status", "Starting…");
+
+        prompt.authenticate(cancel, executor, cb);
+
+    } catch (Throwable e) {
+
+        logLine();
+        logInfo("Live biometric test:");
+        logLabelErrorValue("Status", "Failed");
+        logLabelWarnValue("Reason", "Biometric prompt error: " + e.getMessage());
+
+        appendHtml("<br>");
+        logOk("LAB 21 finished.");
+        logLine();
+        lab21Running = false;
+    }
 
 } else {
 
-logOk("Live biometric prompt not supported on this Android version.");  
-logInfo("Action required:");  
-logOk("Test biometrics via system lock screen settings, then re-run LAB 21.");  
+    logLine();
+    logInfo("Live biometric test:");
+    logLabelWarnValue("Status", "Not supported");
+    logLabelWarnValue("Reason", "BiometricPrompt framework not available on this Android version");
 
-logInfo("Note:");  
-logOk("Each LAB 21 run verifies ONE biometric sensor path.");  
+    logInfo("Action required");
+    logLabelOkValue("Action", "Test biometrics via system lock screen settings, then re-run LAB 21");
 
-logInfo("Action:");  
-logOk("Disable the active biometric in Settings to test another sensor.");  
-  
-appendHtml("<br>");  
-logOk("LAB 21 finished.");      
-logLine();  
-lab21Running = false;  
+    logInfo("Note");
+    logLabelOkValue("Coverage", "Each LAB 21 run verifies ONE biometric sensor path");
+    logLabelOkValue("Action", "Disable active biometric in Settings to test another sensor");
+
+    appendHtml("<br>");
+    logOk("LAB 21 finished.");
+    logLine();
+    lab21Running = false;
 }
-
 }
 
 // ============================================================
@@ -9856,130 +10375,150 @@ try { if (br != null) br.close(); } catch (Throwable ignore) {}
 }
 }
 
-// ============================================================
-// LAB 22 — Security Patch & Play Protect (AUTO + MANUAL)
-// ============================================================
-private void lab22SecurityPatchManual() {
+// ------------------------------------------------------------
+// 1) Security Patch Level (raw)
+// ------------------------------------------------------------
+String patch = null;
 
-appendHtml("<br>");  
-logLine();  
-logInfo("LAB 22 — Security Patch & Play Protect Check");  
-logLine();  
+try {
+    patch = android.os.Build.VERSION.SECURITY_PATCH;
 
-// ------------------------------------------------------------  
-// 1) Security Patch Level (raw)  
-// ------------------------------------------------------------  
-String patch = null;  
-try {  
-    patch = android.os.Build.VERSION.SECURITY_PATCH;  
-    if (patch != null && !patch.isEmpty()) {  
-        logInfo("Security Patch Level: " + patch);  
-    } else {  
-        logWarn("Security Patch Level not reported by system.");  
-    }  
-} catch (Throwable e) {  
-    logWarn("Security patch read failed: " + e.getMessage());  
-}  
+    logInfo("Security patch level");
+    if (patch != null && !patch.isEmpty()) {
+        logLabelOkValue("Reported", patch);
+    } else {
+        logLabelWarnValue("Reported", "Not provided by system");
+    }
 
-// ------------------------------------------------------------  
-// 2) Patch Freshness Intelligence (AGE + RISK)  
-// ------------------------------------------------------------  
-try {  
-    if (patch != null && !patch.isEmpty()) {  
+} catch (Throwable e) {
+    logLabelWarnValue("Patch read", "Failed (" + e.getMessage() + ")");
+}
 
-        java.text.SimpleDateFormat sdf =  
-                new java.text.SimpleDateFormat(  
-                        "yyyy-MM-dd", java.util.Locale.US);  
-        sdf.setLenient(false);  
+// ------------------------------------------------------------
+// 2) Patch Freshness Intelligence (AGE + RISK)
+// ------------------------------------------------------------
+try {
+    if (patch != null && !patch.isEmpty()) {
 
-        long patchTime = sdf.parse(patch).getTime();  
-        long now = System.currentTimeMillis();  
+        SimpleDateFormat sdf =
+                new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+        sdf.setLenient(false);
 
-        long diffMs = now - patchTime;  
-        long diffDays = diffMs / (1000L * 60 * 60 * 24);  
-        long diffMonths = diffDays / 30;  
+        long patchTime = sdf.parse(patch).getTime();
+        long now = System.currentTimeMillis();
 
-        logInfo("Security patch age: ~" + diffMonths + " months.");  
+        long diffDays   = (now - patchTime) / (1000L * 60 * 60 * 24);
+        long diffMonths = diffDays / 30;
 
-        if (diffMonths <= 3) {  
-            logOk("Patch currency status: RECENT (low known exploit exposure).");  
-        } else if (diffMonths <= 6) {  
-            logWarn("Patch currency status: MODERATELY OUTDATED.");  
-        } else {  
-            logError("Patch currency status: OUTDATED — missing recent security fixes.");  
-        }  
-    }  
-} catch (Throwable e) {  
-    logWarn("Security patch age evaluation failed: " + e.getMessage());  
-}  
+        logInfo("Patch age");
+        logLabelOkValue("Estimated", diffMonths + " months");
 
-// ------------------------------------------------------------  
-// 3) Play Protect Detection (best effort, no root)  
-// ------------------------------------------------------------  
-try {  
-    PackageManager pm = getPackageManager();  
+        logInfo("Patch status");
+        if (diffMonths <= 3) {
+            logLabelOkValue("Risk", "RECENT (low known exploit exposure)");
+        } else if (diffMonths <= 6) {
+            logLabelWarnValue("Risk", "MODERATELY OUTDATED");
+        } else {
+            logLabelErrorValue("Risk", "OUTDATED (missing recent security fixes)");
+        }
+    }
+} catch (Throwable e) {
+    logLabelWarnValue("Patch age analysis", "Failed (" + e.getMessage() + ")");
+}
 
-    boolean gmsPresent = false;  
-    try {  
-        pm.getPackageInfo("com.google.android.gms", 0);  
-        gmsPresent = true;  
-    } catch (Exception ignore) {}  
+// ------------------------------------------------------------
+// 3) Play Protect Detection (best effort, non-root)
+// ------------------------------------------------------------
+try {
+    PackageManager pm = getPackageManager();
 
-    if (!gmsPresent) {  
-        logError("Google Play Services NOT present — Play Protect unavailable.");  
-    } else {  
+    boolean gmsPresent;
+    try {
+        pm.getPackageInfo("com.google.android.gms", 0);
+        gmsPresent = true;
+    } catch (Throwable ignore) {
+        gmsPresent = false;
+    }
 
-        int verify = -1;  
-        try {  
-            verify = Settings.Global.getInt(  
-                    getContentResolver(),  
-                    "package_verifier_enable",  
-                    -1  
-            );  
-        } catch (Exception ignore) {}  
+    logInfo("Play Protect");
 
-        if (verify == 1) {  
-            logOk("Play Protect: ENABLED (Google Verify Apps ON).");  
-        } else if (verify == 0) {  
-            logWarn("Play Protect: DISABLED (Verify Apps OFF).");  
-        } else {  
-            // Fallback detection (activity presence)  
-            Intent i = new Intent();  
-            i.setClassName(  
-                    "com.google.android.gms",  
-                    "com.google.android.gms.security.settings.VerifyAppsSettingsActivity"  
-            );  
+    if (!gmsPresent) {
 
-            if (i.resolveActivity(pm) != null) {  
-                logOk("Play Protect module detected (settings activity present).");  
-            } else {  
-                logWarn("Play Protect status unclear (OEM or restricted build).");  
-            }  
-        }  
-    }  
+        logLabelErrorValue("Google Play Services", "NOT present");
+        logLabelWarnValue("Play Protect", "Unavailable");
 
-} catch (Throwable e) {  
-    logWarn("Play Protect detection error: " + e.getMessage());  
-}  
+    } else {
 
-// ------------------------------------------------------------  
-// 4) Trust Boundary Clarification  
-// ------------------------------------------------------------  
+        int verify = -1;
+        try {
+            verify = Settings.Global.getInt(
+                    getContentResolver(),
+                    "package_verifier_enable",
+                    -1
+            );
+        } catch (Throwable ignore) {}
 
-logInfo("Play Protect scope: malware scanning & app verification.");  
-logWarn("Play Protect does NOT patch system vulnerabilities or firmware flaws.");  
+        if (verify == 1) {
+            logLabelOkValue("Status", "ENABLED (Verify Apps ON)");
+        } else if (verify == 0) {
+            logLabelWarnValue("Status", "DISABLED (Verify Apps OFF)");
+        } else {
 
-// ------------------------------------------------------------  
-// 5) Manual Guidance (Technician)  
-// ------------------------------------------------------------  
-  
-logInfo("Manual checks:");  
-logInfo("1) Settings â†’ About phone â†’ Android version â†’ Security patch level.");  
-logWarn("   Very old patch levels increase exploit exposure.");  
-logInfo("2) Google Play Store â†’ Play Protect â†’ verify scanning is enabled.");  
+            Intent i = new Intent();
+            i.setClassName(
+                    "com.google.android.gms",
+                    "com.google.android.gms.security.settings.VerifyAppsSettingsActivity"
+            );
 
-appendHtml("<br>");  
-logOk("Lab 22 finished.");  
+            if (i.resolveActivity(pm) != null) {
+                logLabelOkValue("Module", "Detected (settings activity present)");
+                logLabelWarnValue("Status", "Unknown (OEM / restricted build)");
+            } else {
+                logLabelWarnValue("Play Protect", "Status unclear");
+            }
+        }
+    }
+
+} catch (Throwable e) {
+    logLabelWarnValue("Play Protect detection", "Failed (" + e.getMessage() + ")");
+}
+
+// ------------------------------------------------------------
+// 4) Trust Boundary Clarification
+// ------------------------------------------------------------
+logLine();
+logInfo("Security scope");
+
+logLabelOkValue(
+        "Play Protect",
+        "Malware scanning and app verification"
+);
+logLabelWarnValue(
+        "Limitation",
+        "Does NOT patch system vulnerabilities or firmware flaws"
+);
+
+// ------------------------------------------------------------
+// 5) Manual Guidance (Technician)
+// ------------------------------------------------------------
+logLine();
+logInfo("Manual verification");
+
+logLabelOkValue(
+        "Check 1",
+        "Settings > About phone > Android version > Security patch level"
+);
+logLabelWarnValue(
+        "Note",
+        "Very old patch levels increase exploit exposure"
+);
+logLabelOkValue(
+        "Check 2",
+        "Google Play Store > Play Protect > Verify scanning enabled"
+);
+
+appendHtml("<br>");
+logOk("Lab 22 finished.");
 logLine();
 
 }
@@ -9988,102 +10527,99 @@ logLine();
 // LAB 23 — Developer Options / ADB Risk Note + UI BUBBLES + AUTO-FIX HINTS
 // GEL Security v3.1 (Realtime Snapshot)
 // ============================================================
-private void lab23DevOptions() {
-
-appendHtml("<br>");
-logLine();
-logInfo("LAB 23 — Developer Options / ADB Risk Note (Realtime).");
-logLine();
-
-int risk = 0;
-
 // ============================================================
-// 1) USB DEBUGGING FLAG (ADB_ENABLED)
+// 1) USB DEBUGGING FLAG
 // ============================================================
 boolean usbDebug = false;
+
 try {
-int adb = Settings.Global.getInt(
-getContentResolver(),
-Settings.Global.ADB_ENABLED,
-0
-);
-usbDebug = (adb == 1);
+    int adb = Settings.Global.getInt(
+            getContentResolver(),
+            Settings.Global.ADB_ENABLED,
+            0
+    );
+    usbDebug = (adb == 1);
 
-logInfo("USB Debugging: " + bubble(usbDebug) + " " + usbDebug);    
+    logInfo("USB Debugging");
 
-if (usbDebug) {    
-    logWarn("USB Debugging ENABLED — physical access risk.");    
-    risk += 30;    
-} else {    
-    logOk("USB Debugging is OFF.");    
-}
+    if (usbDebug) {
+        logLabelWarnValue("Status", "ENABLED");
+        logLabelWarnValue("Risk", "Physical access attack surface");
+        risk += 30;
+    } else {
+        logLabelOkValue("Status", "OFF");
+    }
 
-} catch (Exception e) {
-logWarn("Could not read USB Debugging flag (OEM restriction).");
-risk += 5;
+} catch (Throwable e) {
+    logLabelWarnValue("USB Debugging", "Unable to read (OEM restriction)");
+    risk += 5;
 }
 
 // ============================================================
 // 2) DEVELOPER OPTIONS FLAG
 // ============================================================
 boolean devOpts = false;
+
 try {
-int dev = Settings.Global.getInt(
-getContentResolver(),
-Settings.Global.DEVELOPMENT_SETTINGS_ENABLED,
-0
-);
-devOpts = (dev == 1);
+    int dev = Settings.Global.getInt(
+            getContentResolver(),
+            Settings.Global.DEVELOPMENT_SETTINGS_ENABLED,
+            0
+    );
+    devOpts = (dev == 1);
 
-logInfo("Developer Options: " + bubble(devOpts) + " " + devOpts);    
+    logInfo("Developer options");
 
-if (devOpts) {    
-    logWarn("Developer Options ENABLED.");    
-    risk += 20;    
-} else {    
-    logOk("Developer Options are OFF.");    
-}
+    if (devOpts) {
+        logLabelWarnValue("Status", "ENABLED");
+        logLabelWarnValue("Risk", "Advanced system settings exposed");
+        risk += 20;
+    } else {
+        logLabelOkValue("Status", "OFF");
+    }
 
-} catch (Exception e) {
-logWarn("Could not read Developer Options flag.");
-risk += 5;
+} catch (Throwable e) {
+    logLabelWarnValue("Developer options", "Unable to read");
+    risk += 5;
 }
 
 // ============================================================
-// 3) ADB OVER WIFI (TCP/IP mode — port 5555)
+// 3) ADB OVER WI-FI (TCP/IP 5555)
 // ============================================================
 boolean adbWifi = isPortOpen(5555, 200);
 
-logInfo("ADB over Wi-Fi (5555): " + bubble(adbWifi) + " " + (adbWifi ? "ACTIVE" : "OFF"));
+logInfo("ADB over Wi-Fi");
 
 if (adbWifi) {
-logError("ADB over Wi-Fi ACTIVE — remote debugging possible on local network.");
-risk += 40;
+    logLabelErrorValue("Status", "ACTIVE (port 5555)");
+    logLabelErrorValue("Risk", "Remote debugging possible on local network");
+    risk += 40;
 } else {
-logOk("ADB over Wi-Fi is OFF.");
+    logLabelOkValue("Status", "OFF");
 }
 
 // ============================================================
-// 4) ADB PAIRING MODE (Android 11â€“14 typical ports)
+// 4) ADB PAIRING MODE (Wireless Debugging)
 // ============================================================
 boolean adbPairing =
-isPortOpen(3700, 200) ||   // some OEM pairing
-isPortOpen(7460, 200) ||   // pairing service
-scanPairingPortRange();    // 7460â€“7490
+        isPortOpen(3700, 200) ||
+        isPortOpen(7460, 200) ||
+        scanPairingPortRange();
 
-logInfo("ADB Pairing Mode: " + bubble(adbPairing) + " " + (adbPairing ? "ACTIVE" : "OFF"));
+logInfo("ADB pairing / wireless debugging");
 
 if (adbPairing) {
-logError("ADB Pairing is ACTIVE — device discoverable for pairing.");
-risk += 25;
+    logLabelWarnValue("Status", "ACTIVE");
+    logLabelWarnValue("Risk", "Device discoverable for pairing");
+    risk += 25;
 } else {
-logOk("ADB Pairing is OFF.");
+    logLabelOkValue("Status", "OFF");
 }
 
 // ============================================================
 // 5) FINAL RISK SCORE
 // ============================================================
-if (risk > 100) risk = 100;
+risk = Math.min(100, risk);
 
 String level;
 if (risk <= 10)       level = "LOW";
@@ -10091,51 +10627,71 @@ else if (risk <= 30)  level = "MEDIUM";
 else if (risk <= 60)  level = "HIGH";
 else                  level = "CRITICAL";
 
-logInfo("Security Risk Score:");
+logLine();
+logInfo("Security risk score");
 
 if (risk >= 70) {
-logError(risk + "/100 (" + level + ") " + riskBubble(risk));
+    logLabelErrorValue("Score", risk + "/100 (" + level + ")");
 } else if (risk >= 30) {
-logWarn(risk + "/100 (" + level + ") " + riskBubble(risk));
+    logLabelWarnValue("Score", risk + "/100 (" + level + ")");
 } else {
-logOk(risk + "/100 (" + level + ") " + riskBubble(risk));
+    logLabelOkValue("Score", risk + "/100 (" + level + ")");
 }
 
 // ============================================================
-// 6) AUTO-FIX / ACTION HINTS
+// 6) ACTION RECOMMENDATIONS
 // ============================================================
-
-logInfo("Recommended Actions:");
+logLine();
+logInfo("Recommended actions");
 
 if (usbDebug || devOpts) {
-logWarn("• Disable Developer Options / USB Debugging:");
-logInfo("  Settings â†’ System â†’ Developer options â†’ OFF");
-logInfo("  USB debugging â†’ OFF");
+    logLabelWarnValue(
+            "Disable",
+            "Settings > System > Developer options > OFF"
+    );
+    logLabelWarnValue(
+            "USB Debugging",
+            "Turn OFF"
+    );
 } else {
-logOk("• Developer options & USB debugging look safe.");
+    logLabelOkValue(
+            "Developer settings",
+            "Already safe"
+    );
 }
 
-if (adbWifi) {
-logError("• ADB over Wi-Fi must be disabled:");
-logInfo("  Developer options â†’ Wireless debugging â†’ OFF");
-logInfo("  Or reboot to clear tcpip mode.");
+if (adbWifi || adbPairing) {
+    logLabelErrorValue(
+            "Wireless debugging",
+            "Disable immediately (Developer options)"
+    );
+    logLabelWarnValue(
+            "Tip",
+            "Reboot clears active TCP/IP debugging"
+    );
 } else {
-logOk("• Wireless debugging is not active.");
+    logLabelOkValue(
+            "Wireless debugging",
+            "Not active"
+    );
 }
 
-if (adbPairing) {
-logError("• Turn OFF ADB Pairing / Wireless debugging:");
-logInfo("  Developer options â†’ Wireless debugging â†’ OFF");
+if (risk >= 60) {
+    logLabelErrorValue(
+            "Urgency",
+            "Very high — disable ADB features immediately"
+    );
+} else if (risk >= 30) {
+    logLabelWarnValue(
+            "Urgency",
+            "Partial exposure — review settings"
+    );
 } else {
-logOk("• ADB Pairing is not active.");
+    logLabelOkValue(
+            "Overall",
+            "Risk level acceptable"
+    );
 }
-
-if (risk >= 60)
-logError("Â  Very high risk — disable ADB features immediately!");
-else if (risk >= 30)
-logWarn("Â  Partial exposure — review ADB settings.");
-else
-logOk("ï¸ Risk level acceptable.");
 
 appendHtml("<br>");
 logOk("LAB 23 finished.");
@@ -10146,14 +10702,14 @@ logLine();
 // UI BUBBLES (GEL)
 // ============================================================
 private String bubble(boolean on) {
-return on ? "ðŸ”´" : "ðŸŸ¢";
+    return on ? "[ON]" : "[OFF]";
 }
 
 private String riskBubble(int risk) {
-if (risk <= 10) return "ðŸŸ¢";
-if (risk <= 30) return "ðŸŸ¡";
-if (risk <= 60) return "ðŸŸ ";
-return "ðŸ”´";
+    if (risk <= 10) return "[LOW]";
+    if (risk <= 30) return "[MEDIUM]";
+    if (risk <= 60) return "[HIGH]";
+    return "[CRITICAL]";
 }
 
 // ============================================================
@@ -10402,46 +10958,44 @@ logInfo("FINAL VERDICT:");
 // ------------------------------------------------------------
 // RISK SCORE (colored VALUE only)
 // ------------------------------------------------------------
-String riskLine = "RISK SCORE: " + risk + " / 100";
-SpannableString spRisk = new SpannableString(riskLine);
+logInfo("FINAL VERDICT:");
 
-int color =
-(risk >= 70) ? 0xFFFF3B3B :   // RED
-(risk >= 35) ? 0xFFFFD700 :   // YELLOW
-0xFF39FF14;   // GREEN
-
-int start = riskLine.indexOf(":") + 1;
-
-spRisk.setSpan(
-new ForegroundColorSpan(color),
-start,
-riskLine.length(),
-Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-);
-
-if (txtLog != null) {
-txtLog.append(spRisk);
-txtLog.append("\n");
+if (risk >= 70) {
+    logLabelErrorValue("Risk score", risk + " / 100");
+} else if (risk >= 35) {
+    logLabelWarnValue("Risk score", risk + " / 100");
 } else {
-logInfo(riskLine);
+    logLabelOkValue("Risk score", risk + " / 100");
 }
 
 // ------------------------------------------------------------
 // STATUS
 // ------------------------------------------------------------
+// ------------------------------------------------------------
+// STATUS (GEL LABEL/VALUE STYLE)
+// ------------------------------------------------------------
+logInfo("Final status:");
+
 if (risk >= 70 || suExec || pkgHit) {
-logError("STATUS: ROOTED / SYSTEM MODIFIED (high confidence).");
+    logLabelErrorValue(
+            "Status",
+            "ROOTED / SYSTEM MODIFIED (high confidence)"
+    );
 } else if (risk >= 35) {
-logWarn("STATUS: SUSPICIOUS (possible root / unlocked / custom ROM).");
+    logLabelWarnValue(
+            "Status",
+            "SUSPICIOUS (possible root / unlocked / custom ROM)"
+    );
 } else {
-logOk("STATUS: SAFE (no significant modification evidence).");
+    logLabelOkValue(
+            "Status",
+            "SAFE (no significant modification evidence)"
+    );
 }
 
 appendHtml("<br>");
-logOk("Lab 24 finished.");
+logLabelOkValue("Result", "Lab 24 finished");
 logLine();
-
-} // … Î¤Î•Î›ÎŸÎ£ ÎœÎ•Î˜ÎŸÎ”ÎŸÎ¥
 
 // ============================================================
 // LAB 24 — INTERNAL HELPERS
@@ -10521,7 +11075,7 @@ if (br != null) try { br.close(); } catch (Throwable ignore) {}
 }
 
 // ============================================================
-// LABS 25 — 29: ADVANCED / LOGS
+// LABS 25 — 30: ADVANCED / LOGS
 // ============================================================
 
 // ============================================================
@@ -10544,44 +11098,64 @@ List<String> details = new ArrayList<>();
 // ============================================================
 // (A) Android 11+ — REALTIME ERROR SNAPSHOT (NOT HISTORY)
 // ============================================================
-// REPLACE your whole (A) block with this:
+
 try {
-if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
 
-ActivityManager am = (ActivityManager) getSystemService(ACTIVITY_SERVICE);  
+        ActivityManager am =
+                (ActivityManager) getSystemService(ACTIVITY_SERVICE);
 
-    if (am != null) {  
+        if (am != null) {
 
-        List<ActivityManager.ProcessErrorStateInfo> errs =  
-                am.getProcessesInErrorState();  
+            List<ActivityManager.ProcessErrorStateInfo> errs =
+                    am.getProcessesInErrorState();
 
-        if (errs != null && !errs.isEmpty()) {  
+            if (errs != null && !errs.isEmpty()) {
 
-            logInfo("Realtime Error Snapshot (current state):");  
+                logInfo("Realtime error snapshot");
 
-            for (ActivityManager.ProcessErrorStateInfo e : errs) {  
+                for (ActivityManager.ProcessErrorStateInfo e : errs) {
 
-                String app = (e != null && e.processName != null)  
-                        ? e.processName  
-                        : "(unknown)";  
+                    String app =
+                            (e != null && e.processName != null)
+                                    ? e.processName
+                                    : "(unknown)";
 
-                // Group snapshot per process (ok)  
-                appEvents.put(app, appEvents.getOrDefault(app, 0) + 1);  
+                    // Group snapshot per process
+                    appEvents.put(app, appEvents.getOrDefault(app, 0) + 1);
 
-                if (e.condition == ActivityManager.ProcessErrorStateInfo.CRASHED) {  
-                    details.add("SNAPSHOT CRASH: " + app + " — " + safeStr(e.shortMsg));  
-                } else if (e.condition == ActivityManager.ProcessErrorStateInfo.NOT_RESPONDING) {  
-                    details.add("SNAPSHOT ANR: " + app + " — " + safeStr(e.shortMsg));  
-                } else {  
-                    details.add("SNAPSHOT ERROR: " + app + " — " + safeStr(e.shortMsg));  
-                }  
-            }  
+                    if (e.condition == ActivityManager.ProcessErrorStateInfo.CRASHED) {
 
-            logInfo("Note:");  
-            logOk("snapshot shows ONLY current crashed/ANR processes (not history).");  
-        }  
-    }  
-}
+                        logLabelErrorValue(
+                                "CRASH",
+                                app + " — " + safeStr(e.shortMsg)
+                        );
+
+                    } else if (e.condition ==
+                            ActivityManager.ProcessErrorStateInfo.NOT_RESPONDING) {
+
+                        logLabelWarnValue(
+                                "ANR",
+                                app + " — " + safeStr(e.shortMsg)
+                        );
+
+                    } else {
+
+                        logLabelWarnValue(
+                                "ERROR",
+                                app + " — " + safeStr(e.shortMsg)
+                        );
+                    }
+                }
+
+                logLine();
+                logLabelOkValue(
+                        "Note",
+                        "Snapshot shows ONLY current crashed / ANR processes (not history)"
+                );
+            }
+        }
+    }
 
 } catch (Throwable ignore) {}
 
@@ -10655,35 +11229,38 @@ risk += anrCount * 8;
 risk += systemCount * 15;
 if (risk > 100) risk = 100;
 
-// COLOR INDICATOR
-String riskColor =
-(risk <= 20) ? "" :
-(risk <= 50) ? "" :
-(risk <= 80) ? "" : "";
+logLine();
+logInfo("Stability summary");
 
-logInfo("Crash events:");
-if (crashCount > 0) logWarn(String.valueOf(crashCount));
-else logOk("0");
+logLabelOkValue(
+        "Crash events",
+        String.valueOf(crashCount)
+);
 
-logInfo("ANR events:");
-if (anrCount > 0) logWarn(String.valueOf(anrCount));
-else logOk("0");
+if (anrCount > 0)
+    logLabelWarnValue("ANR events", String.valueOf(anrCount));
+else
+    logLabelOkValue("ANR events", "0");
 
-logInfo("System-level faults:");
-if (systemCount > 0) logError(String.valueOf(systemCount));
-else logOk("0");
+if (systemCount > 0)
+    logLabelErrorValue("System-level faults", String.valueOf(systemCount));
+else
+    logLabelOkValue("System-level faults", "0");
 
-logInfo("Stability Risk Score:");
+logLine();
+logInfo("Stability risk score");
 
 if (risk >= 60)
-logError(risk + "%");
+    logLabelErrorValue("Risk", risk + "%");
 else if (risk >= 30)
-logWarn(risk + "%");
+    logLabelWarnValue("Risk", risk + "%");
 else
-logOk(risk + "%");
+    logLabelOkValue("Risk", risk + "%");
 
-logInfo("Note:");
-logOk("risk score is based on detected system log signals; availability varies by OEM/Android.");
+logLabelOkValue(
+        "Note",
+        "Score based on detected system log signals (availability varies by OEM / Android)"
+);
 
 boolean softwareCrashLikely = (crashCount > 0 || anrCount > 0);
 
@@ -10692,20 +11269,32 @@ boolean softwareCrashLikely = (crashCount > 0 || anrCount > 0);
 // ============================================================
 if (!appEvents.isEmpty()) {
 
-logInfo("Heatmap (Top Categories / Packages — best-effort):");  
+    logLine();
+    logInfo("Heatmap (top offenders)");
 
-appEvents.entrySet()    
-        .stream()    
-        .sorted((a, b) -> b.getValue() - a.getValue())    
-        .limit(5)    
-        .forEach(e -> {    
-            String c = (e.getValue() >= 10) ? "" :    
-                       (e.getValue() >= 5)  ? "" :    
-                       (e.getValue() >= 2)  ? "" :    
-                                              "";    
-            logInfo(" " + c + " " + e.getKey() + " â†’ " + e.getValue() + " events");    
-        });
+    appEvents.entrySet()
+            .stream()
+            .sorted((a, b) -> b.getValue() - a.getValue())
+            .limit(5)
+            .forEach(e -> {
 
+                if (e.getValue() >= 10) {
+                    logLabelErrorValue(
+                            e.getKey(),
+                            e.getValue() + " events"
+                    );
+                } else if (e.getValue() >= 5) {
+                    logLabelWarnValue(
+                            e.getKey(),
+                            e.getValue() + " events"
+                    );
+                } else {
+                    logLabelOkValue(
+                            e.getKey(),
+                            e.getValue() + " events"
+                    );
+                }
+            });
 }
 
 // ============================================================
@@ -10713,28 +11302,31 @@ appEvents.entrySet()
 // ============================================================
 if (!details.isEmpty()) {
 
-logInfo("Detailed Crash Records:");  
+    logLine();
+    logInfo("Detailed crash records");
 
-int count = details.size();  
+    int count = details.size();
 
-if (count == 1) {  
-    logWarn("1 crash record detected:");  
-} else if (count <= 3) {  
-    logWarn(count + " crash records detected:");  
-} else {  
-    logError(count + " crash records detected (HIGH instability).");  
-}  
+    if (count == 1)
+        logLabelWarnValue("Records", "1 crash detected");
+    else if (count <= 3)
+        logLabelWarnValue("Records", count + " crashes detected");
+    else
+        logLabelErrorValue("Records", count + " crashes detected (HIGH instability)");
 
-for (String d : details) {  
-    logInfo("• " + d);  
-}
+    for (String d : details) {
+        logLabelWarnValue("Detail", d);
+    }
 
 } else {
-    logOk("No crash history found.");
+    logLine();
+    logLabelOkValue("Crash history", "No crash records detected");
 }
 
-GELServiceLog.info("SUMMARY: CRASH_ORIGIN=" +
-        (softwareCrashLikely ? "SOFTWARE" : "UNCLEAR"));
+GELServiceLog.info(
+        "SUMMARY: CRASH_ORIGIN=" +
+        (softwareCrashLikely ? "SOFTWARE" : "UNCLEAR")
+);
 
 appendHtml("<br>");
 logOk("Lab 25 finished.");
@@ -10781,8 +11373,7 @@ return (s == null || s.trim().isEmpty()) ? "(no data)" : s;
 //            redundancy, â€œheavy offendersâ€ (by capabilities),
 //            root-only leftovers (orphan data dirs), cache pressure signals
 //  Root-aware: deeper scan ONLY when rooted, otherwise safe-mode
-//
-// NOTE (GEL RULE): Full lab block returned for copy-paste.
+
 // ============================================================
 private void lab26AppsFootprint() {
 
@@ -10792,25 +11383,46 @@ logInfo("LAB 26 — Installed Apps Footprint & System Load");
 logLine();  
 
 final PackageManager pm = getPackageManager();  
-final boolean rooted = isDeviceRooted(); // you already have this  
+final boolean rooted = isDeviceRooted(); 
 
-// -----------------------------  
-// SAFE GUARDS  
-// -----------------------------  
-List<ApplicationInfo> apps;  
-try {  
-    apps = pm.getInstalledApplications(PackageManager.GET_META_DATA);  
-} catch (Throwable t) {  
-    logError("Apps footprint error: cannot read installed applications list.");  
-    logLine();  
-    return;  
-}  
+// -----------------------------
+// SAFE GUARDS
+// -----------------------------
+List<ApplicationInfo> apps;
 
-if (apps == null || apps.isEmpty()) {  
-    logWarn("Cannot read installed applications list (empty).");  
-    logLine();  
-    return;  
-}  
+try {
+    apps = pm.getInstalledApplications(PackageManager.GET_META_DATA);
+} catch (Throwable t) {
+
+    logLine();
+    logInfo("Applications footprint");
+    logLabelErrorValue(
+            "Status",
+            "Failed to read installed applications list"
+    );
+    logLabelWarnValue(
+            "Reason",
+            "PackageManager access error or permission restriction"
+    );
+    logLine();
+    return;
+}
+
+if (apps == null || apps.isEmpty()) {
+
+    logLine();
+    logInfo("Applications footprint");
+    logLabelWarnValue(
+            "Status",
+            "No applications returned"
+    );
+    logLabelWarnValue(
+            "Meaning",
+            "System returned empty app list (OEM / restricted environment)"
+    );
+    logLine();
+    return;
+}
 
 // -----------------------------  
 // COUNTERS / BUCKETS  
@@ -10819,7 +11431,7 @@ int totalPkgs  = apps.size();
 int userApps   = 0;  
 int systemApps = 0;  
 
-// â€œpressureâ€ signals (capability-based, not guesses)  
+// signals (capability-based, not guesses)  
 int bgCapable = 0;            // has background-ish abilities  
 int permHeavy = 0;            // requests many dangerous-ish perms  
 int bootAware = 0;            // has BOOT_COMPLETED receiver declared  
@@ -10838,7 +11450,7 @@ int launchersLike = 0;
 int antivirusLike = 0;  
 int keyboardsLike = 0;  
 
-// top offenders (by â€œcapability scoreâ€, not usage)  
+// top offenders (by capability score, not usage)  
 class Offender {  
     String label;  
     String pkg;  
@@ -10886,7 +11498,7 @@ for (ApplicationInfo ai : apps) {
         if (pi != null) reqPerms = pi.requestedPermissions;  
     } catch (Throwable ignore) {}  
 
-    // Count â€œdanger-ishâ€ permissions (best-effort, honest)  
+    // Count danger-is permissions (best-effort, honest)  
     int dangerCount = 0;  
     boolean hasBoot = false;  
 
@@ -10923,7 +11535,7 @@ for (ApplicationInfo ai : apps) {
 
             if ("android.permission.POST_NOTIFICATIONS".equals(p)) hasPostNotif = true;  
 
-            // â€œdanger-ishâ€ set (not perfect, but honest enough to show â€œpermission loadâ€)  
+            // danger-is set (not perfect, but honest enough to show permission load)  
             if ("android.permission.READ_CONTACTS".equals(p) ||  
                 "android.permission.WRITE_CONTACTS".equals(p) ||  
                 "android.permission.READ_CALL_LOG".equals(p) ||  
@@ -10959,7 +11571,7 @@ for (ApplicationInfo ai : apps) {
     if (hasVpnBind) { score += 6; tags.append("vpn, "); }  
     if (hasPostNotif) { score += 2; tags.append("notifications, "); }  
 
-    // â€œbackground-capableâ€ heuristic (honest: capability, not runtime)  
+    // background-capable heuristic (honest: capability, not runtime)  
     boolean bg =  
             hasBoot || hasLocation || hasVpnBind || hasOverlay || hasPostNotif ||  
             dangerCount >= 5;  
@@ -11017,194 +11629,232 @@ try {
     java.util.Collections.sort(offenders, (a, b) -> Integer.compare(b.score, a.score));  
 } catch (Throwable ignore) {}  
 
-// -----------------------------  
-// HUMAN SUMMARY  
-// -----------------------------  
-logInfo("Installed packages:");  
-logOk("Total: " + totalPkgs + " | User apps: " + userApps + " | System apps: " + systemApps);  
+// -----------------------------
+// HUMAN SUMMARY
+// -----------------------------
+logInfo("Installed packages");
+logLabelOkValue(
+        "Totals",
+        "All: " + totalPkgs +
+        " | User: " + userApps +
+        " | System: " + systemApps
+);
 
-// -----------------------------  
-// PRESSURE METRICS (capability-based)  
-// -----------------------------  
-int pctBg = (int) Math.round((bgCapable * 100.0) / Math.max(1, userApps));  
-int pctPerm = (int) Math.round((permHeavy * 100.0) / Math.max(1, userApps));  
+// -----------------------------
+// PRESSURE METRICS (capability-based)
+// -----------------------------
+int pctBg   = (int) Math.round((bgCapable * 100.0) / Math.max(1, userApps));
+int pctPerm = (int) Math.round((permHeavy * 100.0) / Math.max(1, userApps));
 
-logInfo("System load indicators (capability-based):");  
-logOk("Background-capable user apps: " + bgCapable + " (" + pctBg + "%)");  
-logOk("Permission-heavy user apps: " + permHeavy + " (" + pctPerm + "%)");  
-logInfo("(Percentages above 100% mean multiple capabilities per app — this is normal.)");  
+logInfo("System load indicators (capability-based)");
+logLabelOkValue(
+        "Background-capable",
+        bgCapable + " (" + pctBg + "%)"
+);
+logLabelOkValue(
+        "Permission-heavy",
+        permHeavy + " (" + pctPerm + "%)"
+);
 
-logInfo("Capability map (user apps):");  
-logOk("Boot-aware: " + bootAware +  
-        " | Location: " + locationLike +  
-        " | Microphone: " + micLike +  
-        " | Camera: " + cameraLike);  
-logOk("Overlay: " + overlayLike +  
-        " | VPN-capable: " + vpnLike +  
-        " | Storage access: " + storageLike +  
-        " | Notifications: " + notifLike);  
+logInfo("Capability map (user apps)");
+logLabelOkValue(
+        "Boot / Location / Mic / Camera",
+        bootAware + " | " + locationLike + " | " + micLike + " | " + cameraLike
+);
+logLabelOkValue(
+        "Overlay / VPN / Storage / Notifications",
+        overlayLike + " | " + vpnLike + " | " + storageLike + " | " + notifLike
+);
 
-// -----------------------------  
-// REDUNDANCY (honest)  
-// -----------------------------  
-logInfo("Redundancy signals (heuristic):");  
-if (cleanersLike >= 2) logWarn("• Multiple cleaner/optimizer-style apps detected (" + cleanersLike + ").");  
-else logOk("• Cleaner/optimizer-style apps: " + cleanersLike);  
+// -----------------------------
+// REDUNDANCY (honest)
+// -----------------------------
+logInfo("Redundancy signals (heuristic)");
 
-if (launchersLike >= 2) logWarn("• Multiple launchers detected (" + launchersLike + ").");  
-else logOk("• Launchers: " + launchersLike);  
+if (cleanersLike >= 2)
+    logLabelWarnValue("Cleaners / Optimizers", String.valueOf(cleanersLike));
+else
+    logLabelOkValue("Cleaners / Optimizers", String.valueOf(cleanersLike));
 
-if (antivirusLike >= 2) logWarn("• Multiple antivirus suites detected (" + antivirusLike + ").");  
-else logOk("• Antivirus suites: " + antivirusLike);  
+if (launchersLike >= 2)
+    logLabelWarnValue("Launchers", String.valueOf(launchersLike));
+else
+    logLabelOkValue("Launchers", String.valueOf(launchersLike));
 
-if (keyboardsLike >= 2) logWarn("• Multiple keyboards detected (" + keyboardsLike + ").");  
-else logOk("• Keyboards: " + keyboardsLike);  
+if (antivirusLike >= 2)
+    logLabelWarnValue("Antivirus suites", String.valueOf(antivirusLike));
+else
+    logLabelOkValue("Antivirus suites", String.valueOf(antivirusLike));
 
-// -----------------------------  
-// VERDICT LOGIC (honest thresholds)  
-// -----------------------------  
-// NOTE: These are risk heuristics, not guarantees.  
-boolean countHigh = userApps >= 120;  
-boolean countMed  = userApps >= 85;  
+if (keyboardsLike >= 2)
+    logLabelWarnValue("Keyboards", String.valueOf(keyboardsLike));
+else
+    logLabelOkValue("Keyboards", String.valueOf(keyboardsLike));
 
-boolean bgHigh = pctBg >= 45 || bgCapable >= 45;  
-boolean bgMed  = pctBg >= 30 || bgCapable >= 30;  
+// -----------------------------
+// VERDICT LOGIC (unchanged)
+// -----------------------------
+boolean countHigh = userApps >= 120;
+boolean countMed  = userApps >= 85;
 
-boolean permHigh = pctPerm >= 25 || permHeavy >= 25;  
-boolean permMed  = pctPerm >= 15 || permHeavy >= 15;  
+boolean bgHigh = pctBg >= 45 || bgCapable >= 45;
+boolean bgMed  = pctBg >= 30 || bgCapable >= 30;
 
-boolean redundancy = (cleanersLike >= 2) || (launchersLike >= 2) || (antivirusLike >= 2);  
+boolean permHigh = pctPerm >= 25 || permHeavy >= 25;
+boolean permMed  = pctPerm >= 15 || permHeavy >= 15;
 
-int riskPoints = 0;  
-if (countHigh) riskPoints += 3;  
-else if (countMed) riskPoints += 2;  
+boolean redundancy =
+        cleanersLike >= 2 ||
+        launchersLike >= 2 ||
+        antivirusLike >= 2;
 
-if (bgHigh) riskPoints += 3;  
-else if (bgMed) riskPoints += 2;  
+int riskPoints = 0;
+if (countHigh) riskPoints += 3;
+else if (countMed) riskPoints += 2;
 
-if (permHigh) riskPoints += 3;  
-else if (permMed) riskPoints += 2;  
+if (bgHigh) riskPoints += 3;
+else if (bgMed) riskPoints += 2;
 
-if (redundancy) riskPoints += 1;  
+if (permHigh) riskPoints += 3;
+else if (permMed) riskPoints += 2;
 
-logInfo("Human verdict:");  
-  
-if (riskPoints >= 8) {  
-logWarn(" High app pressure detected.");  
-logWarn("This increases the probability of lag, or background drain over time.");  
-logInfo("What this means (simple terms):");  
-logWarn("Your phone runs many apps with background or high-permission capabilities.");  
-logOk("This is common on power-user devices and is NOT a hardware fault.");  
-logOk("Recommendation: keep only what you really use and reduce duplicates if you want extra smoothness.");  
+if (redundancy) riskPoints += 1;
 
-} else if (riskPoints >= 5) {  
-    logWarn(" Moderate app pressure detected.");  
-    logWarn("Performance may degrade over time depending on usage patterns.");  
-    logInfo("What this means (simple terms):");  
-    logOk("Several apps can run or react in the background, even if you don’t open them daily.");  
-    logOk("Recommendation: review redundant apps and background-heavy categories.");  
+// -----------------------------
+// HUMAN VERDICT
+// -----------------------------
+logInfo("Human verdict");
 
-} else {  
-    logOk("App footprint looks healthy for daily usage.");  
-    logOk("No strong indicators of app-driven system overload detected.");  
-}  
+if (riskPoints >= 8) {
 
-// -----------------------------  
-// TOP OFFENDERS (capability-heavy)  
-// -----------------------------  
-if (!offenders.isEmpty()) {  
-    logLine();  
-    logInfo("TOP 10 High-capability user apps (not accused — just flagged):");  
+    logLabelWarnValue("Pressure level", "HIGH");
+    logLabelWarnValue(
+            "Meaning",
+            "Many background / high-permission apps detected"
+    );
+    logLabelOkValue(
+            "Note",
+            "Common on power-user devices — NOT a hardware fault"
+    );
+    logLabelOkValue(
+            "Recommendation",
+            "Keep only actively used apps and reduce duplicates for extra smoothness"
+    );
 
-    int limit = Math.min(10, offenders.size());  
-    for (int i = 0; i < limit; i++) {  
-        Offender o = offenders.get(i);  
-        logWarn("• " + o.label + "  [" + o.tags + "]");  
-        logInfo("  " + o.pkg);  
-    }  
+} else if (riskPoints >= 5) {
 
-    logInfo("Note:");  
-    logOk("These apps are NOT confirmed as â€œbadâ€. They simply have strong background/permission capabilities.");  
-}  
+    logLabelWarnValue("Pressure level", "MODERATE");
+    logLabelOkValue(
+            "Meaning",
+            "Several apps may run or react in background"
+    );
+    logLabelOkValue(
+            "Recommendation",
+            "Review redundant or background-heavy categories"
+    );
 
+} else {
+
+    logLabelOkValue("Pressure level", "NORMAL");
+    logLabelOkValue(
+            "Status",
+            "App footprint looks healthy for daily usage"
+    );
+}
+
+// -----------------------------
+// TOP OFFENDERS (capability-heavy)
+// -----------------------------
+if (!offenders.isEmpty()) {
+
+    logLine();
+    logInfo("Top capability-heavy user apps (flagged, not accused)");
+
+    int limit = Math.min(10, offenders.size());
+    for (int i = 0; i < limit; i++) {
+        Offender o = offenders.get(i);
+        logLabelWarnValue(
+                o.label,
+                o.tags
+        );
+        logInfo(o.pkg);
+    }
+
+    logLabelOkValue(
+            "Note",
+            "These apps are NOT confirmed as bad — they simply have strong capabilities"
+    );
+}
+
+// -----------------------------
+// ROOT AWARE INTELLIGENCE — LEFTOVERS
+// -----------------------------
 int orphanDirs = 0;
 long orphanBytes = 0L;
 
-// ============================================================  
-// ROOT AWARE INTELLIGENCE — LEFTOVERS / ORPHANS  
-// ============================================================  
-if (rooted) {  
+if (rooted) {
 
-    logLine();  
-    logInfo("Advanced (root-aware) inspection:");  
+    logLine();
+    logInfo("Advanced (root-aware) inspection");
 
-    // Build set of installed package names for quick lookup  
-    java.util.HashSet<String> installed = new java.util.HashSet<>();  
-    for (ApplicationInfo ai : apps) {  
-        if (ai != null && ai.packageName != null) installed.add(ai.packageName);  
-    }  
+    java.util.HashSet<String> installed = new java.util.HashSet<>();
+    for (ApplicationInfo ai : apps) {
+        if (ai != null && ai.packageName != null)
+            installed.add(ai.packageName);
+    }
 
-    // Orphan data dirs check (honest: some dirs can be system-managed)  
+    try {
+        File base = new File("/data/user/0");
+        if (!base.exists() || !base.isDirectory())
+            base = new File("/data/data");
 
-    try {  
-        // /data/user/0 is common; fall back to /data/data  
-        File base = new File("/data/user/0");  
-        if (!base.exists() || !base.isDirectory()) base = new File("/data/data");  
+        File[] dirs = base.listFiles();
+        if (dirs != null) {
+            for (File d : dirs) {
+                if (d == null || !d.isDirectory()) continue;
+                String name = d.getName();
+                if (name == null || name.length() < 3) continue;
 
-        File[] dirs = base.listFiles();  
-        if (dirs != null) {  
-            for (File d : dirs) {  
-                if (d == null || !d.isDirectory()) continue;  
-                String name = d.getName();  
-                if (name == null || name.length() < 3) continue;  
+                if (!installed.contains(name)) {
+                    long sz = dirSizeBestEffortRoot(d);
+                    if (sz > (3L * 1024L * 1024L)) {
+                        orphanDirs++;
+                        orphanBytes += sz;
+                    }
+                }
+            }
+        }
+    } catch (Throwable ignore) {}
 
-                // if not installed -> orphan candidate  
-                if (!installed.contains(name)) {  
-                    long sz = dirSizeBestEffortRoot(d);  
-                    // ignore tiny noise  
-                    if (sz > (3L * 1024L * 1024L)) { // >3MB  
-                        orphanDirs++;  
-                        orphanBytes += sz;  
-                    }  
-                }  
-            }  
-        }  
-    } catch (Throwable ignore) {}  
+    if (orphanDirs > 0) {
+        logLabelWarnValue("Leftover app data", orphanDirs + " folders");
+        logLabelOkValue("Approx size", humanBytes(orphanBytes));
+        logLabelOkValue(
+                "Meaning",
+                "Uninstalled apps may have left data behind (not dangerous)"
+        );
+    } else {
+        logLabelOkValue(
+                "Leftover app data",
+                "No significant orphan folders detected"
+        );
+    }
 
-    if (orphanDirs > 0) {  
-        logWarn(" Leftover app data detected (orphan folders).");  
-        logOk("Count: " + orphanDirs + " | Approx size: " + humanBytes(orphanBytes));  
-        logInfo("Human meaning:");  
-        logOk("Uninstalled apps may have left data behind. Not dangerous, but adds clutter.");  
-    } else {  
-        logOk("No significant orphan app-data folders detected.");  
-    }  
+    logLabelOkValue(
+            "Root-aware note",
+            "Results are best-effort and vendor dependent"
+    );
+}
 
-    // Cache pressure hint (root-only best effort)  
-    try {  
-        File cache = new File("/data/cache");  
-        long cacheSz = dirSizeBestEffortRoot(cache);  
-        if (cacheSz > (700L * 1024L * 1024L)) {  
-            logWarn(" System cache is very large (" + humanBytes(cacheSz) + ").");  
-            logOk("This can contribute to storage pressure on some devices.");  
-        } else if (cacheSz > (350L * 1024L * 1024L)) {  
-            logInfo("System cache size: " + humanBytes(cacheSz) + " (moderate).");  
-        } else if (cacheSz > 0) {  
-            logOk("System cache size: " + humanBytes(cacheSz) + " (normal).");  
-        }  
-    } catch (Throwable ignore) {}  
+boolean appsImpactHigh =
+        orphanDirs > 0 || orphanBytes > (200L * 1024L * 1024L);
 
-logInfo("Root-aware note:");  
-logOk("Results are best-effort and device/vendor dependent. No false certainty reported.");  
-}  
+GELServiceLog.info(
+        "SUMMARY: APPS_IMPACT=" + (appsImpactHigh ? "HIGH" : "NORMAL")
+);
 
-boolean appsImpactHigh = orphanDirs > 0 || orphanBytes > (200L * 1024L * 1024L);
-
-GELServiceLog.info("SUMMARY: APPS_IMPACT=" +
-        (appsImpactHigh ? "HIGH" : "NORMAL"));
-
-appendHtml("<br>");  
-logOk("Lab 26 finished.");  
+appendHtml("<br>");
+logOk("Lab 26 finished.");
 logLine();
 }
 
@@ -11362,59 +12012,92 @@ logError("Permissions scan error: " + e.getMessage());
 // ============================================================
 int maxRiskRef = 300; // theoretical max
 int riskPct = Math.min(100, (riskTotal * 100) / maxRiskRef);
-String riskColor =
-(riskPct <= 20) ? "" :
-(riskPct <= 50) ? "" :
-(riskPct <= 80) ? "" : "";
 
-logInfo("Apps scanned:");
-logOk(String.valueOf(totalApps));
+logInfo("Scan summary");
 
-logInfo("Dangerous permissions GRANTED (total count):");
-if (dangTotal == 0)
-logOk(String.valueOf(dangTotal));
-else if (dangTotal <= 5)
-logWarn(String.valueOf(dangTotal));
-else
-logError(String.valueOf(dangTotal));
+logLabelOkValue(
+        "Apps scanned",
+        String.valueOf(totalApps)
+);
 
-logInfo("Flagged apps:");
-if (flaggedApps == 0)
-logOk(String.valueOf(flaggedApps));
-else if (flaggedApps <= 2)
-logWarn(String.valueOf(flaggedApps));
-else
-logError(String.valueOf(flaggedApps));
+// ------------------------------------------------------------
+// Dangerous permissions
+// ------------------------------------------------------------
+if (dangTotal == 0) {
+    logLabelOkValue(
+            "Dangerous permissions granted",
+            String.valueOf(dangTotal)
+    );
+} else if (dangTotal <= 5) {
+    logLabelWarnValue(
+            "Dangerous permissions granted",
+            String.valueOf(dangTotal)
+    );
+} else {
+    logLabelErrorValue(
+            "Dangerous permissions granted",
+            String.valueOf(dangTotal)
+    );
+}
 
-logInfo("Privacy Risk Score:");
-if (riskPct >= 70)
-logError(riskPct + "%");
-else if (riskPct >= 30)
-logWarn(riskPct + "%");
-else
-logOk(riskPct + "%");
+// ------------------------------------------------------------
+// Flagged apps
+// ------------------------------------------------------------
+if (flaggedApps == 0) {
+    logLabelOkValue(
+            "Flagged apps",
+            String.valueOf(flaggedApps)
+    );
+} else if (flaggedApps <= 2) {
+    logLabelWarnValue(
+            "Flagged apps",
+            String.valueOf(flaggedApps)
+    );
+} else {
+    logLabelErrorValue(
+            "Flagged apps",
+            String.valueOf(flaggedApps)
+    );
+}
+
+// ------------------------------------------------------------
+// Privacy Risk Score
+// ------------------------------------------------------------
+logInfo("Privacy risk score");
+
+if (riskPct >= 70) {
+    logLabelErrorValue("Risk", riskPct + "%");
+} else if (riskPct >= 30) {
+    logLabelWarnValue("Risk", riskPct + "%");
+} else {
+    logLabelOkValue("Risk", riskPct + "%");
+}
 
 // ============================================================
 // TOP OFFENDERS
 // ============================================================
 if (!appRisk.isEmpty()) {
 
-logInfo("Top Privacy Offenders:");    
+    logLine();
+    logInfo("Top privacy offenders (highest risk)");
 
-appRisk.entrySet()    
-        .stream()    
-        .sorted((a, b) -> b.getValue() - a.getValue())    
-        .limit(8)    
-        .forEach(e -> {    
-            String c =    
-                    (e.getValue() >= 60) ? "??" :    
-                    (e.getValue() >= 30) ? "" :    
-                    (e.getValue() >= 15) ? "" : "";    
+    appRisk.entrySet()
+            .stream()
+            .sorted((a, b) -> b.getValue() - a.getValue())
+            .limit(8)
+            .forEach(e -> {
 
-            logInfo(" " + c + " " + safeLabel(pm, e.getKey())    
-                    + " — Risk " + e.getValue());    
-        });
+                String label = safeLabel(pm, e.getKey());
+                String riskVal = e.getValue() + "";
 
+                if (e.getValue() >= 60) {
+                    logLabelErrorValue(label, "Risk " + riskVal);
+                } else if (e.getValue() >= 30) {
+                    logLabelWarnValue(label, "Risk " + riskVal);
+                } else {
+                    logLabelOkValue(label, "Risk " + riskVal);
+                }
+            });
 }
 
 // ============================================================
@@ -11422,24 +12105,35 @@ appRisk.entrySet()
 // ============================================================
 if (!details.isEmpty()) {
 
-logInfo("Permission Details (flagged apps):");  
+    logLine();
+    logInfo("Permission details (flagged apps)");
 
-for (String d : details) {  
-    logWarn(d);  
-}
+    for (String d : details) {
+        logLabelWarnValue("Finding", d.trim());
+    }
 
 } else {
 
-logOk("No high-risk permission patterns detected.");
-
+    logLabelOkValue(
+            "Permission patterns",
+            "No high-risk permission combinations detected"
+    );
 }
 
 // ============================================================
 // PRIVACY CONTEXT NOTE (SERVICE REPORT SAFE)
 // ============================================================
-logInfo("Privacy analysis note:");
-logOk("Granted permissions do not imply malicious behavior.");
-logOk("This result does not indicate hardware or system failure.");
+logLine();
+logInfo("Privacy analysis note");
+
+logLabelOkValue(
+        "Clarification",
+        "Granted permissions do not imply malicious behavior"
+);
+logLabelOkValue(
+        "Scope",
+        "This result does NOT indicate hardware or system failure"
+);
 
 appendHtml("<br>");
 logOk("Lab 27 finished.");
@@ -11534,178 +12228,201 @@ private void lab28HardwareStability() {
     // ============================================================
     // STAGE A — SYMPTOM SCORE (ORIGINAL LOGIC — UNTOUCHED)
     // ============================================================
-    int symptomScore = 0;
+    logInfo("Observed symptom signals");
 
-    boolean randomReboots = detectRecentReboots();
-    boolean signalDrops   = detectSignalInstability();
-    boolean sensorFlaps   = detectSensorInstability();
-    boolean thermalSpikes = detectThermalSpikes();
-    boolean powerGlitches = detectPowerInstability();
+if (randomReboots) {
+    logLabelWarnValue("Reboots", "Random reboots or sudden resets detected");
+    symptomScore += 25;
+} else {
+    logLabelOkValue("Reboots", "No abnormal reboot pattern");
+}
 
-    logInfo("Observed symptom signals:");
+if (signalDrops) {
+    logLabelWarnValue("Radio", "Network or signal instability detected");
+    symptomScore += 20;
+} else {
+    logLabelOkValue("Radio", "Signals appear stable");
+}
 
-    if (randomReboots) {
-        logWarn("Random reboots or sudden resets detected.");
-        symptomScore += 25;
-    } else logOk("No abnormal reboot pattern detected.");
+if (sensorFlaps) {
+    logLabelWarnValue("Sensors", "Intermittent sensor readings detected");
+    symptomScore += 15;
+} else {
+    logLabelOkValue("Sensors", "Sensors stable");
+}
 
-    if (signalDrops) {
-        logWarn("Network or radio instability detected.");
-        symptomScore += 20;
-    } else logOk("Radio signals appear stable.");
+if (thermalSpikes) {
+    logLabelWarnValue("Thermal", "Abnormal thermal spikes detected");
+    symptomScore += 20;
+} else {
+    logLabelOkValue("Thermal", "Thermal behaviour normal");
+}
 
-    if (sensorFlaps) {
-        logWarn("Sensor instability (intermittent readings).");
-        symptomScore += 15;
-    } else logOk("Sensors appear stable.");
+if (powerGlitches) {
+    logLabelWarnValue("Power", "Power or charging instability detected");
+    symptomScore += 20;
+} else {
+    logLabelOkValue("Power", "Power behaviour stable");
+}
 
-    if (thermalSpikes) {
-        logWarn("Abnormal thermal spikes detected.");
-        symptomScore += 20;
-    } else logOk("Thermal behavior within normal range.");
-
-    if (powerGlitches) {
-        logWarn("Power or charging instability signals detected.");
-        symptomScore += 20;
-    } else logOk("Power behavior appears stable.");
-
-    if (symptomScore > 100) symptomScore = 100;
+if (symptomScore > 100) symptomScore = 100;
 
     // ------------------------------------------------------------
     // SYMPTOM INTERPRETATION
     // ------------------------------------------------------------
     logLine();
-    logInfo("Symptom Consistency Score:");
+logInfo("Symptom consistency score");
 
-    String symptomLevel;
-    if (symptomScore <= 20) symptomLevel = "LOW";
-    else if (symptomScore <= 45) symptomLevel = "MODERATE";
-    else if (symptomScore <= 70) symptomLevel = "HIGH";
-    else symptomLevel = "VERY HIGH";
+String symptomLevel =
+        (symptomScore <= 20) ? "LOW" :
+        (symptomScore <= 45) ? "MODERATE" :
+        (symptomScore <= 70) ? "HIGH" : "VERY HIGH";
 
-    if (symptomScore >= 40)
-        logWarn(symptomScore + "/100 (" + symptomLevel + ")");
-    else
-        logOk(symptomScore + "/100 (" + symptomLevel + ")");
+if (symptomScore >= 40)
+    logLabelWarnValue("Score", symptomScore + "/100 (" + symptomLevel + ")");
+else
+    logLabelOkValue("Score", symptomScore + "/100 (" + symptomLevel + ")");
 
     // ============================================================
     // STAGE B — EVIDENCE SCORE (FROM GELServiceLog)
     // ============================================================
     int evidenceScore = 0;
+Lab28Evidence ev = Lab28EvidenceReader.readFromGELServiceLog();
 
-    Lab28Evidence ev = Lab28EvidenceReader.readFromGELServiceLog();
+if (ev != null) {
 
-    if (ev != null) {
+    logLine();
+    logInfo("Cross-lab evidence signals");
 
-        logLine();
-        logInfo("Cross-lab evidence signals:");
-
-        if (ev.thermalSpikes) {
-            logWarn("Evidence: thermal instability (Lab 16).");
-            evidenceScore += 20;
-        } else logOk("Evidence: no abnormal thermal pattern.");
-
-        if (ev.chargingGlitch) {
-            logWarn("Evidence: charging or power glitches (Lab 15).");
-            evidenceScore += 20;
-        } else logOk("Evidence: charging behavior stable.");
-
-        if (ev.radioInstability) {
-            logWarn("Evidence: radio or network instability (Labs 10-13).");
-            evidenceScore += 20;
-        } else logOk("Evidence: radio signals stable.");
-
-        if (ev.sensorFlaps) {
-            logWarn("Evidence: sensor instability (Labs 7-9).");
-            evidenceScore += 15;
-        } else logOk("Evidence: sensors stable.");
-
-        if (ev.rebootPattern) {
-            logWarn("Evidence: abnormal reboot pattern (Lab 20).");
-            evidenceScore += 15;
-        } else logOk("Evidence: reboot behavior normal.");
-
-        if (evidenceScore > 100) evidenceScore = 100;
+    if (ev.thermalSpikes) {
+        logLabelWarnValue("Thermal evidence", "Instability detected (Lab 16)");
+        evidenceScore += 20;
+    } else {
+        logLabelOkValue("Thermal evidence", "No abnormal pattern");
     }
+
+    if (ev.chargingGlitch) {
+        logLabelWarnValue("Charging evidence", "Power glitches detected (Lab 15)");
+        evidenceScore += 20;
+    } else {
+        logLabelOkValue("Charging evidence", "Charging stable");
+    }
+
+    if (ev.radioInstability) {
+        logLabelWarnValue("Radio evidence", "Instability detected (Labs 10–13)");
+        evidenceScore += 20;
+    } else {
+        logLabelOkValue("Radio evidence", "Signals stable");
+    }
+
+    if (ev.sensorFlaps) {
+        logLabelWarnValue("Sensor evidence", "Instability detected (Labs 7–9)");
+        evidenceScore += 15;
+    } else {
+        logLabelOkValue("Sensor evidence", "Sensors stable");
+    }
+
+    if (ev.rebootPattern) {
+        logLabelWarnValue("Reboot evidence", "Abnormal reboot pattern (Lab 20)");
+        evidenceScore += 15;
+    } else {
+        logLabelOkValue("Reboot evidence", "Reboot behaviour normal");
+    }
+
+    if (evidenceScore > 100) evidenceScore = 100;
+}
 
     // ============================================================
     // STAGE C — EXCLUSION RULES (ANTI-FALSE-POSITIVE)
     // ============================================================
     boolean softwareLikely = false;
 
-    if (ev != null) {
+if (ev != null) {
 
-        if ("SOFTWARE".equals(ev.crashPattern)) {
-            logWarn("Exclusion: crash history indicates SOFTWARE origin.");
-            softwareLikely = true;
-        }
-
-        if (ev.appsHeavyImpact) {
-            logWarn("Exclusion: installed apps impact suggests SOFTWARE stress.");
-            softwareLikely = true;
-        }
-
-        if (ev.thermalOnlyDuringCharging) {
-            logWarn("Exclusion: thermal spikes linked to charging conditions.");
-            softwareLikely = true;
-        }
+    if ("SOFTWARE".equals(ev.crashPattern)) {
+        logLabelWarnValue("Exclusion", "Crash history suggests SOFTWARE origin");
+        softwareLikely = true;
     }
 
-    if (softwareLikely) {
-        evidenceScore -= 30;
-        if (evidenceScore < 0) evidenceScore = 0;
-        logWarn("Evidence score adjusted due to software indicators.");
+    if (ev.appsHeavyImpact) {
+        logLabelWarnValue("Exclusion", "Installed apps impact suggests SOFTWARE stress");
+        softwareLikely = true;
     }
+
+    if (ev.thermalOnlyDuringCharging) {
+        logLabelWarnValue("Exclusion", "Thermal spikes linked to charging");
+        softwareLikely = true;
+    }
+}
+
+if (softwareLikely) {
+    evidenceScore = Math.max(0, evidenceScore - 30);
+    logLabelWarnValue("Adjustment", "Evidence score reduced due to software indicators");
+}
 
     // ============================================================
     // STAGE D — FINAL CONFIDENCE
     // ============================================================
     int finalScore = (int) (0.6f * symptomScore + 0.4f * evidenceScore);
-    if (finalScore > 100) finalScore = 100;
+if (finalScore > 100) finalScore = 100;
 
-    logLine();
-    logInfo("Final Stability Confidence Score:");
+logLine();
+logInfo("Final stability confidence");
 
-    String finalLevel;
-    if (finalScore <= 20) finalLevel = "LOW";
-    else if (finalScore <= 45) finalLevel = "MODERATE";
-    else if (finalScore <= 70) finalLevel = "HIGH";
-    else finalLevel = "VERY HIGH";
+String finalLevel =
+        (finalScore <= 20) ? "LOW" :
+        (finalScore <= 45) ? "MODERATE" :
+        (finalScore <= 70) ? "HIGH" : "VERY HIGH";
 
-    if (finalScore >= 40)
-        logWarn(finalScore + "/100 (" + finalLevel + ")");
-    else
-        logOk(finalScore + "/100 (" + finalLevel + ")");
+if (finalScore >= 40)
+    logLabelWarnValue("Confidence", finalScore + "/100 (" + finalLevel + ")");
+else
+    logLabelOkValue("Confidence", finalScore + "/100 (" + finalLevel + ")");
 
     // ============================================================
     // FINAL WORDING — TRIAGE, NOT DIAGNOSIS
     // ============================================================
     logLine();
-    logInfo("Technician note:");
+logInfo("Technician note");
 
-    if (finalScore >= 60) {
-        logWarn("Multi-source instability pattern detected.");
-        logWarn("Symptoms may be consistent with intermittent contact issues.");
-        logWarn("Possible loose connectors or unstable interconnect paths.");
-        logInfo("Important:");
-        logWarn("This is NOT a hardware diagnosis.");
-        logWarn("This does NOT confirm soldering defects.");
-        logInfo("Action:");
-        logOk("Professional physical inspection and bench testing recommended.");
-    }
-    else if (finalScore >= 30) {
-        logWarn("Some instability patterns detected.");
-        logInfo("Evidence suggests mixed origin (hardware and software possible).");
-        logOk("Hardware intervention is NOT indicated at this stage.");
-    }
-    else {
-        logOk("No significant instability patterns detected.");
-        logOk("No indication of interconnect or solder-related issues.");
-    }
+if (finalScore >= 60) {
 
-    appendHtml("<br>");
-    logOk("Lab 28 finished.");
-    logLine();
+    logLabelWarnValue("Finding", "Multi-source instability pattern detected");
+    logLabelWarnValue("Interpretation", "Consistent with intermittent contact issues");
+    logLabelWarnValue("Possibility", "Loose connectors or unstable interconnect paths");
+
+    logLabelOkValue("Important", "This is NOT a hardware diagnosis");
+    logLabelOkValue("Important", "This does NOT confirm solder defects");
+
+    logLabelOkValue(
+            "Recommended action",
+            "Professional physical inspection and bench testing"
+    );
+
+} else if (finalScore >= 30) {
+
+    logLabelWarnValue("Finding", "Some instability patterns detected");
+    logLabelOkValue(
+            "Interpretation",
+            "Mixed origin possible (hardware or software)"
+    );
+    logLabelOkValue(
+            "Action",
+            "Hardware intervention NOT indicated at this stage"
+    );
+
+} else {
+
+    logLabelOkValue("Finding", "No significant instability patterns detected");
+    logLabelOkValue(
+            "Conclusion",
+            "No indication of interconnect or solder-related issues"
+    );
+}
+
+appendHtml("<br>");
+logOk("Lab 28 finished.");
+logLine();
 }
 
 // ============================================================
@@ -11893,83 +12610,162 @@ int deviceHealthScore = Math.round(
 // PRINT DETAILS
 // ------------------------------------------------------------
 
-logInfo("AUTO Breakdown:");
+logInfo("AUTO Breakdown");
 
-// Thermals  
-logInfo("Thermals: " + thermalFlag + " " + thermalScore + "%");  
-if (zones == null || zones.isEmpty()) {  
-    logWarn("• No thermal zones readable. Using Battery temp only: " +  
-            String.format(Locale.US, "°C", battTemp));  
-} else {  
-    logInfo("• Zones=" + zones.size() +
-        " | max=" + fmt1(maxThermal) + "°C" +
-        " | avg=" + fmt1(avgThermal) + "°C");
-if (cpu != null)  logInfo("• CPU="  + fmt1(cpu)  + "°C");
-if (gpu != null)  logInfo("• GPU="  + fmt1(gpu)  + "°C");
-if (pmic != null) logInfo("• PMIC=" + fmt1(pmic) + "°C");
-if (skin != null) logInfo("• Skin=" + fmt1(skin) + "°C");
-logInfo("• Battery=" + fmt1(battTemp) + "°C");
+// ================= THERMALS =================
+logInfo("Thermals");
+logLabelOkValue("Status", thermalFlag + " " + thermalScore + "%");
+
+if (zones == null || zones.isEmpty()) {
+    logLabelWarnValue(
+            "Zones",
+            "No thermal zones readable — Battery temp only (" + fmt1(battTemp) + "°C)"
+    );
+} else {
+    logLabelOkValue("Zones", String.valueOf(zones.size()));
+    logLabelOkValue("Max", fmt1(maxThermal) + "°C");
+    logLabelOkValue("Average", fmt1(avgThermal) + "°C");
+
+    if (cpu  != null) logLabelOkValue("CPU",  fmt1(cpu)  + "°C");
+    if (gpu  != null) logLabelOkValue("GPU",  fmt1(gpu)  + "°C");
+    if (pmic != null) logLabelOkValue("PMIC", fmt1(pmic) + "°C");
+    if (skin != null) logLabelOkValue("Skin", fmt1(skin) + "°C");
+
+    logLabelOkValue("Battery", fmt1(battTemp) + "°C");
+}
 }
 
-// Battery
-logInfo("Battery: " + batteryFlag + " " + batteryScore + "%");
-logInfo("• Level=" + (battPct >= 0 ? fmt1(battPct) + "%" : "Unknown") +
-" | Temp=" + fmt1(battTemp) + "Ã‚°C | Charging=" + charging);
+logInfo("Battery");
+logLabelOkValue("Status", batteryFlag + " " + batteryScore + "%");
 
-// Storage
-logInfo("Storage: " + storageFlag + " " + storageScore + "%");
-logInfo("• Free=" + st.pctFree + "% | Used=" + humanBytes(st.usedBytes) +
-" / " + humanBytes(st.totalBytes));
+logLabelOkValue(
+        "State",
+        "Level=" + (battPct >= 0 ? fmt1(battPct) + "%" : "Unknown") +
+        " | Temp=" + fmt1(battTemp) + "°C" +
+        " | Charging=" + charging
+);
 
-// Apps
-logInfo("Apps Footprint: " + appsFlag + " " + appsScore + "%");
-logInfo("• User apps=" + ap.userApps + " | System apps=" + ap.systemApps +
-" | Total=" + ap.totalApps);
+logInfo("Storage");
+logLabelOkValue("Status", storageFlag + " " + storageScore + "%");
 
-// RAM
-logInfo("RAM: " + ramFlag + " " + ramScore + "%");
-logInfo("• Free=" + rm.pctFree + "% (" + humanBytes(rm.freeBytes) + " / " +
-humanBytes(rm.totalBytes) + ")");
+logLabelOkValue(
+        "Usage",
+        "Free=" + st.pctFree + "% | Used=" +
+        humanBytes(st.usedBytes) + " / " + humanBytes(st.totalBytes)
+);
 
-// Stability
-logInfo("Stability/Uptime: " + stabilityFlag + " " + stabilityScore + "%");
-logInfo("• Uptime=" + formatUptime(upMs));
-if (upMs < 2 * 60 * 60 * 1000L)
-logWarn("• Recent reboot detected (<2h) — possible instability masking.");
-else if (upMs > 7L * 24L * 60L * 60L * 1000L)
-logWarn("• Long uptime (>7d) — recommend reboot before deep servicing.");
+logInfo("Apps footprint");
+logLabelOkValue("Status", appsFlag + " " + appsScore + "%");
 
-// Security
-logInfo("Security: " + securityFlag + " " + securityScore + "%");
-logInfo("• Lock secure=" + sec.lockSecure);
-logInfo("• Patch level=" + (sec.securityPatch == null ? "Unknown" : sec.securityPatch));
-logInfo("• ADB USB=" + sec.adbUsbOn + " | ADB Wi-Fi=" + sec.adbWifiOn +
-" | DevOptions=" + sec.devOptionsOn);
-if (sec.rootSuspected) logWarn("• Root suspicion flags detected.");
-if (sec.testKeys) logWarn("• Build signed with test-keys (custom ROM risk).");
+logLabelOkValue(
+        "Counts",
+        "User=" + ap.userApps +
+        " | System=" + ap.systemApps +
+        " | Total=" + ap.totalApps
+);
 
-// Privacy
-logInfo("Privacy: " + privacyFlag + " " + privacyScore + "%");
-logInfo("• Dangerous perms on user apps: " +
-"Location=" + pr.userAppsWithLocation +
-", Mic=" + pr.userAppsWithMic +
-", Camera=" + pr.userAppsWithCamera +
-", SMS=" + pr.userAppsWithSms);
+logInfo("RAM");
+logLabelOkValue("Status", ramFlag + " " + ramScore + "%");
+
+logLabelOkValue(
+        "Free",
+        rm.pctFree + "% (" +
+        humanBytes(rm.freeBytes) + " / " + humanBytes(rm.totalBytes) + ")"
+);
+
+logInfo("Stability / Uptime");
+logLabelOkValue("Status", stabilityFlag + " " + stabilityScore + "%");
+
+logLabelOkValue("Uptime", formatUptime(upMs));
+
+if (upMs < 2 * 60 * 60 * 1000L) {
+    logLabelWarnValue(
+            "Note",
+            "Recent reboot (<2h) — instability may be masked"
+    );
+} else if (upMs > 7L * 24L * 60L * 60L * 1000L) {
+    logLabelWarnValue(
+            "Note",
+            "Long uptime (>7 days) — reboot recommended before deep servicing"
+    );
+}
+
+logInfo("Security");
+logLabelOkValue("Status", securityFlag + " " + securityScore + "%");
+
+logLabelOkValue("Secure lock", String.valueOf(sec.lockSecure));
+logLabelOkValue(
+        "Patch level",
+        sec.securityPatch == null ? "Unknown" : sec.securityPatch
+);
+
+logLabelOkValue(
+        "ADB / Dev",
+        "USB=" + sec.adbUsbOn +
+        " | Wi-Fi=" + sec.adbWifiOn +
+        " | DevOptions=" + sec.devOptionsOn
+);
+
+if (sec.rootSuspected)
+    logLabelWarnValue("Root", "Suspicion flags detected");
+
+if (sec.testKeys)
+    logLabelWarnValue("Build", "Signed with test-keys (custom ROM risk)");
+
+logInfo("Privacy");
+logLabelOkValue("Status", privacyFlag + " " + privacyScore + "%");
+
+logLabelOkValue(
+        "Dangerous permissions",
+        "Location=" + pr.userAppsWithLocation +
+        " | Mic=" + pr.userAppsWithMic +
+        " | Camera=" + pr.userAppsWithCamera +
+        " | SMS=" + pr.userAppsWithSms
+);
 
 // ------------------------------------------------------------
 // FINAL VERDICT
 // ------------------------------------------------------------
 logLine();
-logInfo("FINAL Scores:");
-logInfo("Device Health Score: " + deviceHealthScore + "% " + colorFlagFromScore(deviceHealthScore));
-logInfo("Performance Score:   " + performanceScore + "% " + colorFlagFromScore(performanceScore));
-logInfo("Security Score:      " + securityScore + "% " + securityFlag);
-logInfo("Privacy Score:       " + privacyScore + "% " + privacyFlag);
+logInfo("FINAL Scores");
 
-String verdict = finalVerdict(deviceHealthScore, securityScore, privacyScore, performanceScore);
-if (verdict.startsWith("")) logOk(verdict);
-else if (verdict.startsWith("")) logWarn(verdict);
-else logError(verdict);
+logLabelOkValue(
+        "Device health",
+        deviceHealthScore + "% " + colorFlagFromScore(deviceHealthScore)
+);
+
+logLabelOkValue(
+        "Performance",
+        performanceScore + "% " + colorFlagFromScore(performanceScore)
+);
+
+logLabelOkValue(
+        "Security",
+        securityScore + "% " + securityFlag
+);
+
+logLabelOkValue(
+        "Privacy",
+        privacyScore + "% " + privacyFlag
+);
+
+String verdict =
+        finalVerdict(
+                deviceHealthScore,
+                securityScore,
+                privacyScore,
+                performanceScore
+        );
+
+logLine();
+logInfo("Final verdict");
+
+if (verdict.startsWith("🟢"))
+    logLabelOkValue("Result", verdict);
+else if (verdict.startsWith("🟡"))
+    logLabelWarnValue("Result", verdict);
+else
+    logLabelErrorValue("Result", verdict);
 
 appendHtml("<br>");
 logOk("Lab 29 finished.");
@@ -12331,50 +13127,50 @@ return "";
 
 private String finalVerdict(int health, int sec, int priv, int perf) {
 
-    // ============================================================
-    // LEVEL 1 — HEALTHY / NORMAL
-    // ============================================================
-    if (health >= 80) {
+// ============================================================
+// LEVEL 1 — HEALTHY / NORMAL
+// ============================================================
+if (health >= 80) {
 
-        if (sec < 55 || priv < 55) {
-            return
-                " Device condition is healthy.\n" +
-                " Privacy or security risks detected.\n" +
-                "User review recommended.";
-        }
-
+    if (sec < 55 || priv < 55) {
         return
-            " Device condition is healthy.\n" +
-            "No servicing required.";
+            "Device condition: HEALTHY.\n" +
+            "Attention: privacy or security risks detected.\n" +
+            "User review is recommended.";
     }
 
-    // ============================================================
-    // LEVEL 2 — OBSERVATION (UNCERTAIN CAUSE)
-    // ============================================================
-    if (health >= 55) {
+    return
+        "Device condition: HEALTHY.\n" +
+        "No servicing required.";
+}
 
-        if (sec < 55 || priv < 55) {
-            return
-                " Device condition shows moderate degradation.\n" +
-                " Privacy or security risks detected.\n" +
-                "User review recommended.";
-        }
+// ============================================================
+// LEVEL 2 — OBSERVATION (UNCERTAIN CAUSE)
+// ============================================================
+if (health >= 55) {
 
+    if (sec < 55 || priv < 55) {
         return
-            " Device condition shows moderate degradation.\n" +
-            "Further monitoring recommended.";
+            "Device condition: MODERATE DEGRADATION.\n" +
+            "Attention: privacy or security risks detected.\n" +
+            "User review is recommended.";
     }
+
+    return
+        "Device condition: MODERATE DEGRADATION.\n" +
+        "Further monitoring is recommended.";
+}
 
 // ============================================================
 // LEVEL 3 — UNATTRIBUTED INSTABILITY
-// (NO hardware claim — evidence-based wording)
+// (Evidence-based — no hardware accusation)
 // ============================================================
 return
-    " Device condition shows instability.\n" +
-    " Degradation detected without a clear software cause.\n" +
-    "Cause not confirmed.\n" +
+    "Device condition: INSTABILITY DETECTED.\n" +
+    "System degradation observed without a confirmed software cause.\n" +
+    "Cause is not confirmed.\n" +
     "Classification: Unattributed system instability.\n" +
-    "Further diagnostics recommended.";
+    "Further diagnostics are recommended.";
 
 }
 
@@ -12421,27 +13217,49 @@ for (String l : lines) {
     }  
 }  
 
-// ------------------------------------------------------------  
-// 3) PRINT SUMMARY TO UI (ONLY)  
-// ------------------------------------------------------------  
-  
-if (warnings.length() == 0) {  
-    logOk("No warnings or errors detected.");  
-} else {  
-    logWarn("Warnings / Errors detected:");  
-    for (String w : warnings.toString().split("\n")) {  
-        if (!w.trim().isEmpty()) {  
-            logWarn(w.trim());  
-        }  
-    }  
-}  
+// ------------------------------------------------------------
+// 3) PRINT SUMMARY TO UI (ONLY)
+// ------------------------------------------------------------
 
-appendHtml("<br>");  
-logOk("Lab 30 finished.");  
-logLine();  
+logLine();
+logInfo("Summary");
 
-appendHtml("<br>");  
-logInfo("To export the official PDF report, use the button below.");  
+if (warnings.length() == 0) {
+
+    logLabelOkValue(
+            "Status",
+            "No warnings or errors detected"
+    );
+
+} else {
+
+    logLabelWarnValue(
+            "Status",
+            "Warnings / errors detected"
+    );
+
+    for (String w : warnings.toString().split("\n")) {
+        if (w != null && !w.trim().isEmpty()) {
+            logLabelWarnValue(
+                    "Issue",
+                    w.trim()
+            );
+        }
+    }
+}
+
+appendHtml("<br>");
+logLabelOkValue(
+        "LAB 30",
+        "Finished"
+);
+logLine();
+
+appendHtml("<br>");
+logLabelOkValue(
+        "Export",
+        "Use the button below to generate the official PDF report"
+);
 
 // Enable existing export button (do NOT create new)  
 enableSingleExportButton();
@@ -12536,45 +13354,58 @@ short[] buffer = new short[samples];
 protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
     super.onActivityResult(requestCode, resultCode, data);
 
-    // ============================================================
-    // LAB 6 — TOUCH GRID
-    // ============================================================
-    if (requestCode == REQ_LAB6_TOUCH) {
+// ============================================================
+// LAB 6 — TOUCH GRID
+// ============================================================
+if (requestCode == REQ_LAB6_TOUCH) {
 
-        int total = TouchGridTestActivity.getTotalZones();
-        int remaining = TouchGridTestActivity.getRemainingZones();
+    int total = TouchGridTestActivity.getTotalZones();
+    int remaining = TouchGridTestActivity.getRemainingZones();
 
-        appendHtml("<br>");
-        logLine();
-        logSection("LAB 6 — Display / Touch");
-        logLine();
+    appendHtml("<br>");
+    logLine();
+    logSection("LAB 6 — Display / Touch");
+    logLine();
 
-        if (resultCode == RESULT_OK) {
-            logOk("Touch grid test completed.");
-            logOk("All screen zones responded to touch input.");
-            logOk("No dead touch zones detected.");
-        } else {
-            logWarn("Touch grid test incomplete.");
-            logWarn(
-                    remaining + " screen zones did not respond to touch input (" +
-                    remaining + " / " + total + ")."
-            );
-            logInfo("This may indicate:");
-            logError("Localized digitizer dead zones");
-            logWarn("Manual re-test is recommended to confirm behavior.");
-        }
+    if (resultCode == RESULT_OK) {
 
-        appendHtml("<br>");
-        logInfo("Proceeding to LAB 6 PRO — Display Color & Uniformity");
-        logLine();
+        logLabelOkValue("Touch grid test", "Completed");
+        logLabelOkValue("Screen zones", "All zones responded");
+        logLabelOkValue("Dead zones", "Not detected");
 
-        // AUTO-START LAB 6 PRO
-        startActivityForResult(
-                new Intent(this, DisplayProTestActivity.class),
-                REQ_LAB6_COLOR
+    } else {
+
+        logLabelWarnValue("Touch grid test", "Incomplete");
+        logLabelErrorValue(
+                "Unresponsive zones",
+                remaining + " / " + total
         );
-        return;
+
+        logInfo("Interpretation:");
+        logLabelWarnValue(
+                "Possible cause",
+                "Localized digitizer dead zones"
+        );
+        logLabelOkValue(
+                "Recommendation",
+                "Manual re-test to confirm behavior"
+        );
     }
+
+    appendHtml("<br>");
+    logLabelOkValue(
+            "Next step",
+            "LAB 6 PRO — Display Color & Uniformity"
+    );
+    logLine();
+
+    // AUTO-START LAB 6 PRO
+    startActivityForResult(
+            new Intent(this, DisplayProTestActivity.class),
+            REQ_LAB6_COLOR
+    );
+    return;
+}
 
 // ============================================================
 // LAB 6 PRO — DISPLAY COLOR / UNIFORMITY / ARTIFACTS
@@ -12583,8 +13414,14 @@ if (requestCode == REQ_LAB6_COLOR) {
 
     if (resultCode == RESULT_CANCELED) {
 
-        logWarn("LAB 6 PRO — Display Color & Uniformity — CANCELED by user");
-        logInfo("Visual inspection was not performed.");
+        logLabelWarnValue(
+                "LAB 6 PRO",
+                "Canceled by user"
+        );
+        logLabelWarnValue(
+                "Visual inspection",
+                "Not performed"
+        );
 
         appendHtml("<br>");
         logLine();
@@ -12597,81 +13434,125 @@ if (requestCode == REQ_LAB6_COLOR) {
             data != null && data.getBooleanExtra("display_issues", false);
 
     if (!issues) {
-        logOk("Visual inspection result", "No visible artifacts reported");
-        logOk("Display uniformity", "OK");
-        logOk("Burn-in / banding", "Not observed");
+
+        logLabelOkValue(
+                "Visual inspection",
+                "No visible artifacts reported"
+        );
+        logLabelOkValue(
+                "Display uniformity",
+                "OK"
+        );
+        logLabelOkValue(
+                "Burn-in / banding",
+                "Not observed"
+        );
+
     } else {
-        logWarn("Visual inspection result", "User reported visual anomalies");
-        logWarn("Possible findings:");
-        logWarn("• Burn-in / image retention");
-        logWarn("• Color banding / gradient steps");
-        logWarn("• Screen stains / mura / tint shift");
+
+        logLabelWarnValue(
+                "Visual inspection",
+                "User reported visual anomalies"
+        );
+
+        logInfo("Possible findings:");
+        logLabelWarnValue("• Issue", "Burn-in / image retention");
+        logLabelWarnValue("• Issue", "Color banding / gradient steps");
+        logLabelWarnValue("• Issue", "Screen stains / mura / tint shift");
     }
 
     appendHtml("<br>");
     logSection("LAB 6 — Final Result");
     logLine();
 
-    logOk("Display touch integrity and visual inspection completed.");
+    logLabelOkValue(
+            "Display test",
+            "Touch integrity and visual inspection completed"
+    );
 
     appendHtml("<br>");
-    logOk("LAB 6 finished.");
+    logLabelOkValue(
+            "LAB 6",
+            "Finished"
+    );
     logLine();
 
     enableSingleExportButton();
     return;
 }
 
-    // ============================================================
-    // LAB 7 — Rotation + Proximity Sensors
-    // ============================================================
-    if (requestCode == 7007) {
+// ============================================================
+// LAB 7 — Rotation + Proximity Sensors
+// ============================================================
+if (requestCode == 7007) {
+
+    appendHtml("<br>");
+    logLine();
+    logSection("LAB 7 — Rotation & Proximity Sensors");
+    logLine();
+
+    if (resultCode == RESULT_OK) {
+
+        logLabelOkValue("Rotation detection", "Detected via accelerometer");
+        logLabelOkValue("Orientation change", "Confirmed");
+        logLabelOkValue("Motion sensors", "Responding normally");
+
+        logLabelOkValue(
+                "Next step",
+                "Proximity sensor test"
+        );
+
+        // AUTO-START PROXIMITY TEST
+        startActivityForResult(
+                new Intent(this, ProximityCheckActivity.class),
+                8008
+        );
+        return;
+
+    } else {
+
+        logLabelErrorValue("Rotation detection", "Not detected");
+        logLabelWarnValue(
+                "Possible cause",
+                "Auto-rotate disabled or sensor malfunction"
+        );
 
         appendHtml("<br>");
+        logLabelOkValue("LAB 7", "Finished (rotation incomplete)");
         logLine();
-        logSection("LAB 7 — Rotation & Proximity Sensors");
-        logLine();
 
-        if (resultCode == RESULT_OK) {
-            logOk("Rotation detected via accelerometer.");
-            logOk("Orientation change confirmed.");
-            logOk("Motion sensors responding normally.");
-
-            //  NEXT: Proximity
-            startActivityForResult(
-                    new Intent(this, ProximityCheckActivity.class),
-                    8008
-            );
-            return;
-
-        } else {
-            logError("Rotation was not detected.");
-            logWarn("Auto-rotate may be disabled or sensor malfunctioning.");
-
-            logLine();
-            logOk("Lab 7 finished.");
-            enableSingleExportButton();
-            return;
-        }
-    }
-
-    if (requestCode == 8008) {
-
-        if (resultCode == RESULT_OK) {
-            logOk("Proximity sensor responded correctly.");
-            logOk("Near/Far response confirmed.");
-            logOk("Screen turned off when sensor was covered.");
-        } else {
-            logError("Proximity sensor did not respond.");
-            logWarn("Possible sensor obstruction or hardware fault.");
-        }
-
-        appendHtml("<br>");
-        logOk("Lab 7 finished.");
-        logLine();
         enableSingleExportButton();
         return;
     }
+}
+
+// ============================================================
+// LAB 7 — PROXIMITY SENSOR
+// ============================================================
+if (requestCode == 8008) {
+
+    if (resultCode == RESULT_OK) {
+
+        logLabelOkValue("Proximity sensor", "Responded correctly");
+        logLabelOkValue("Near / Far detection", "Confirmed");
+        logLabelOkValue("Screen behavior", "Turned off when sensor was covered");
+
+    } else {
+
+        logLabelErrorValue("Proximity sensor", "No response detected");
+        logLabelWarnValue(
+                "Possible cause",
+                "Sensor obstruction or hardware fault"
+        );
+    }
+
+    appendHtml("<br>");
+    logLabelOkValue("LAB 7", "Finished");
+    logLine();
+
+    enableSingleExportButton();
+    return;
+}
 }
 
 // ============================================================

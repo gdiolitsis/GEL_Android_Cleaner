@@ -9304,8 +9304,8 @@ logLine();
 
 }); // <-- END ui.post
 
-} catch (Throwable ignore) {
-    // silent
+} catch (Throwable t) {
+    logLabelErrorValue("LAB 17", "Fatal error: " + t.getMessage());
 }
 
 }).start();

@@ -9302,10 +9302,15 @@ appendHtml("<br>");
 logOk("LAB 17 finished.");
 logLine();
 
-}); // <-- END ui.post
+}); // END ui.post
+
+} catch (Throwable ignore) {
+    // silent
+}
 
 }).start();
-}
+
+} // ===== END lab17RunAuto()
 
 // ============================================================
 // LAB 17 — POPUP (GEL DARK + GOLD)

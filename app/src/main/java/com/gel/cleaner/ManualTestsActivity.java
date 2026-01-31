@@ -8715,10 +8715,12 @@ lab15Dialog = null;
 // ============================================================
 private void lab16ThermalSnapshot() {
 
-appendHtml("<br>");  
-logLine();  
-logInfo("LAB 16 — Thermal Snapshot");  
-logLine();  
+SharedPreferences p = getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
+
+appendHtml("<br>");
+logLine();
+logInfo("LAB 16 — Thermal Snapshot");
+logLine();
 
 List<ThermalEntry> internal     = buildThermalInternal();  
 List<ThermalEntry> peripherals = buildThermalPeripheralsCritical();  
@@ -8863,8 +8865,6 @@ logLine();
 // INTELLIGENCE EDITION • STRICT FRESHNESS (â‰¤ 2 HOURS)
 // ============================================================
 private void lab17RunAuto() {
-    
-try {
 
 final String PREF = "GEL_DIAG";  
 
@@ -9303,10 +9303,6 @@ logOk("LAB 17 finished.");
 logLine();
 
 }); // <-- END ui.post
-
-} catch (Throwable t) {
-    logLabelErrorValue("LAB 17", "Fatal error: " + t.getMessage());
-}
 
 }).start();
 }

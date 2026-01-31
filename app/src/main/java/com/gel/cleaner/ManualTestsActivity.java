@@ -7920,8 +7920,6 @@ new Handler(Looper.getMainLooper()).postDelayed(() -> {
 // EXIT BUTTON (LAB 15 — GEL STYLE)
 // ============================================================
 
-final boolean gr = AppLang.isGreek(this);
-
 Button exitBtn = new Button(this);
 exitBtn.setText(
         gr

@@ -29,6 +29,7 @@ import android.graphics.drawable.RippleDrawable;
 import android.content.res.ColorStateList;
 import android.Manifest;
 import android.app.ActivityManager;
+import android.app.KeyguardManager;
 import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -593,6 +594,7 @@ protected void onCreate(@Nullable Bundle savedInstanceState) {
     body3.addView(makeTestButton("11. Mobile Network Diagnostic", this::lab11MobileDataDiagnostic));  
     body3.addView(makeTestButton("12. Call Function Interpretation", this::lab12CallFunctionInterpretation));  
     body3.addView(makeTestButton("13. Bluetooth Connectivity Check",this::lab13BluetoothConnectivityCheck));
+    
     // ============================================================  
     // SECTION 4: BATTERY & THERMAL — LABS 14 - 17  
     // ============================================================  
@@ -2794,6 +2796,39 @@ private LinearLayout buildGELPopupRoot(Context ctx) {
     root.setBackground(bg);
 
     return root;
+}
+
+// ============================================================
+// LAB 22 — Security Patch Check (MANUAL) — STUB
+// ============================================================
+private void lab22SecurityPatchManual() {
+appendHtml("<br>");
+logLine();
+logInfo("LAB 22 — Security Patch Check");
+logWarn("Not implemented in this build.");
+logLine();
+}
+
+// ============================================================
+// LAB 23 — Developer Options Risk — STUB
+// ============================================================
+private void lab23DevOptions() {
+appendHtml("<br>");
+logLine();
+logInfo("LAB 23 — Developer Options Risk");
+logWarn("Not implemented in this build.");
+logLine();
+}
+
+// ============================================================
+// TTS — speakOnce helper (safe)
+// ============================================================
+private void speakOnce(String text) {
+try {
+if (text == null) return;
+if (AppTTS.isMuted(this)) return;
+AppTTS.ensureSpeak(this, text);
+} catch (Throwable ignore) {}
 }
 
 // ============================================================
@@ -12229,6 +12264,11 @@ return (i >= 0 && i < p.length() - 1) ? p.substring(i + 1) : p;
 // !! Does NOT confirm soldering defects.
 // ============================================================
 private void lab28HardwareStability() {
+    
+boolean randomReboots = false;
+boolean signalDrops = false;
+boolean sensorFlaps = false;
+boolean thermalSpikes = false;
 
     appendHtml("<br>");
     logLine();
@@ -12278,7 +12318,7 @@ if (thermalSpikes) {
     logLabelOkValue("Thermal", "Thermal behaviour normal");
 }
 
-if (powerGlitches) {
+if (powerGlitches > 0) {
     logLabelWarnValue("Power", "Power or charging instability detected");
     symptomScore += 20;
 } else {

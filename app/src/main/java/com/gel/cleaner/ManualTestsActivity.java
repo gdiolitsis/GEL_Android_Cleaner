@@ -9622,6 +9622,10 @@ appendHtml("<br>");
 logOk("Lab 18 finished.");
 logLine();
 
+} catch (Throwable ignore) {
+    // silent
+}
+
 }
 
 // ============================================================

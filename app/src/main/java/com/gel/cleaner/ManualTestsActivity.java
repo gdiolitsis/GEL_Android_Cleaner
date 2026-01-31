@@ -5551,10 +5551,6 @@ private void lab9SensorsCheck() {
 
     logLine();
 
-} catch (Throwable t) {
-    logError("Sensor inspection failed.");
-}
-
         // ------------------------------------------------------------
         // RAW SENSOR LIST
         // ------------------------------------------------------------

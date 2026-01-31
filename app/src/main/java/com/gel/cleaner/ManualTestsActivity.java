@@ -7975,25 +7975,6 @@ if (lab15Dialog.getWindow() != null) {
 lab15Dialog.show();
 
 // ============================================================
-// TTS — INTRO (ONCE / GLOBAL / AFTER SHOW)
-// ============================================================
-
-final String ttsText =
-        gr
-                ? "Σύνδεσε τον φορτιστή στη θύρα φόρτισης. "
-                  + "Το σύστημα θα παρακολουθεί τη φόρτιση για τρία λεπτά. "
-                  + "Κράτησε τη συσκευή συνδεδεμένη κατά τη διάρκεια του τεστ."
-                : "Connect the charger to the charging port. "
-                  + "The system will monitor charging behavior for three minutes. "
-                  + "Please keep the device connected during the test.";
-
-new Handler(Looper.getMainLooper()).postDelayed(() -> {
-    if (!AppTTS.isMuted(this)) {
-        AppTTS.ensureSpeak(this, ttsText);
-    }
-}, 120);
-
-// ============================================================
 // LOGS
 // ============================================================
 appendHtml("<br>");

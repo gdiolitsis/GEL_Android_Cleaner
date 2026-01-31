@@ -10371,6 +10371,16 @@ try { if (br != null) br.close(); } catch (Throwable ignore) {}
 }
 }
 
+/* ============================================================
+LAB 22 — Security Patch + Play Protect (Realtime)
+============================================================ */
+private void lab22SecurityPatchAndPlayProtect() {
+
+    appendHtml("<br>");
+    logLine();
+    logInfo("LAB 22 — Security Patch + Play Protect (Realtime)");
+    logLine();
+
 // ------------------------------------------------------------
 // 1) Security Patch Level (raw)
 // ------------------------------------------------------------

@@ -12644,7 +12644,6 @@ if (zones == null || zones.isEmpty()) {
 
     logLabelOkValue("Battery", fmt1(battTemp) + "°C");
 }
-}
 
 logInfo("Battery");
 logLabelOkValue("Status", batteryFlag + " " + batteryScore + "%");

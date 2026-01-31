@@ -8863,6 +8863,8 @@ logLine();
 // INTELLIGENCE EDITION • STRICT FRESHNESS (â‰¤ 2 HOURS)
 // ============================================================
 private void lab17RunAuto() {
+    
+try {
 
 final String PREF = "GEL_DIAG";  
 
@@ -9303,7 +9305,7 @@ logLine();
 }); // <-- END ui.post
 
 } catch (Throwable ignore) {
-// silent
+    // silent
 }
 
 }).start();

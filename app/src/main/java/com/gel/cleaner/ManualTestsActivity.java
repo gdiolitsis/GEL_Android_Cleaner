@@ -3439,207 +3439,204 @@ if ("LOW".equalsIgnoreCase(r.confidence)) {
 }
 
 /* ============================================================
-LAB 3 — Earpiece Audio Path Check (MANUAL)
-FINAL — dialog â†’ tones â†’ confirmation
-============================================================ */
+   LAB 3 — Earpiece Audio Path Check (MANUAL)
+   FINAL — dialog → tones → confirmation
+   ============================================================ */
 private void lab3EarpieceManual() {
 
-appendHtml("<br>");  
-logLine();  
-logSection("LAB 3 — Earpiece Audio Path Check");  
-logLine();  
+    appendHtml("<br>");
+    logLine();
+    logSection("LAB 3 — Earpiece Audio Path Check");
+    logLine();
 
-AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);  
-if (am == null) {  
-    logError("AudioManager unavailable.");  
-    return;  
-}  
-
-// SAVE STATE  
-lab3OldMode = am.getMode();  
-lab3OldSpeaker = am.isSpeakerphoneOn();  
-
-logInfo("Saving audio state.");  
-logInfo("Routing audio to earpiece.");  
-
-try {  
-    am.stopBluetoothSco();  
-    am.setBluetoothScoOn(false);  
-    am.setSpeakerphoneOn(false);  
-    am.setMicrophoneMute(true);  
-    am.setMode(AudioManager.MODE_IN_COMMUNICATION);  
-} catch (Throwable t) {  
-    logError("Audio routing failed.");  
-    restoreLab3Audio();  
-    return;  
-}  
-
-SystemClock.sleep(300);  
-
-runOnUiThread(() -> {  
-
-    // ============================================================
-// EARPIECE TEST — PROMPT (BILINGUAL + TTS)
-// ============================================================
-
-final boolean gr = AppLang.isGreek(this);
-
-String msgText = gr
-        ? "Τοποθέτησε το ακουστικό του τηλεφώνου στο αυτί σου.\n\n"
-        + "Πάτησε OK για να ξεκινήσει ο ηχητικός έλεγχος."
-        : "Put the phone earpiece to your ear.\n\n"
-        + "Press OK to start the audio test.";
-
-String ttsText = gr
-        ? "Τοποθέτησε το ακουστικό του τηλεφώνου στο αυτί σου. "
-        + "Πάτησε ΟΚ για να ξεκινήσει ο έλεγχος ήχου."
-        : "Put the phone earpiece to your ear. "
-        + "Press OK to start the audio test.";
-
-AlertDialog.Builder b =
-        new AlertDialog.Builder(
-                this,
-                android.R.style.Theme_Material_Dialog_NoActionBar
-        );
-
-b.setCancelable(false);
-
-// ==========================
-// ROOT
-// ==========================
-LinearLayout root = new LinearLayout(this);
-root.setOrientation(LinearLayout.VERTICAL);
-root.setPadding(dp(24), dp(22), dp(24), dp(20));
-
-GradientDrawable bg = new GradientDrawable();
-bg.setColor(0xFF101010);
-bg.setCornerRadius(dp(18));
-bg.setStroke(dp(3), 0xFFFFD700);
-root.setBackground(bg);
-
-// ==========================
-// MESSAGE
-// ==========================
-TextView msg = new TextView(this);
-msg.setText(msgText);
-msg.setTextColor(0xFFFFFFFF);
-msg.setTextSize(15f);
-msg.setGravity(Gravity.CENTER);
-msg.setLineSpacing(1.1f, 1.1f);
-msg.setPadding(0, 0, 0, dp(18));
-root.addView(msg);
-
-// ==========================
-// MUTE TOGGLE (GLOBAL)
-// ==========================
-CheckBox muteBox = new CheckBox(this);
-muteBox.setChecked(isTtsMuted());
-muteBox.setText(gr ? "Σίγαση φωνητικών οδηγιών" : "Mute voice instructions");
-muteBox.setTextColor(0xFFDDDDDD);
-muteBox.setGravity(Gravity.CENTER);
-muteBox.setPadding(0, 0, 0, dp(12));
-root.addView(muteBox);
-
-// ==========================
-// OK BUTTON
-// ==========================
-Button ok = new Button(this);
-ok.setText("OK");
-ok.setAllCaps(false);
-ok.setTextSize(15f);
-ok.setTextColor(0xFFFFFFFF);
-
-GradientDrawable okBg = new GradientDrawable();
-okBg.setColor(0xFF0B5F3B);          // GEL dark green
-okBg.setCornerRadius(dp(14));
-okBg.setStroke(dp(3), 0xFFFFD700);
-ok.setBackground(okBg);
-
-LinearLayout.LayoutParams lp =
-        new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-        );
-lp.gravity = Gravity.CENTER_HORIZONTAL;
-ok.setLayoutParams(lp);
-
-root.addView(ok);
-
-// ==========================
-// BUILD DIALOG
-// ==========================
-b.setView(root);
-AlertDialog d = b.create();
-
-if (d.getWindow() != null) {
-    d.getWindow().setBackgroundDrawable(
-            new ColorDrawable(Color.TRANSPARENT)
-    );
-}
-
-// ==========================
-// MUTE LOGIC (GLOBAL)
-// ==========================
-muteBox.setOnCheckedChangeListener((v, checked) -> {
-
-    setTtsMuted(checked);
-
-    if (checked && tts != null && tts[0] != null) {
-        tts[0].stop();   // μόνο stop
+    AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+    if (am == null) {
+        logError("AudioManager unavailable.");
+        return;
     }
-});
 
-// ==========================
-// TTS — INTRO
-// ==========================
-if (tts != null && tts[0] != null && ttsReady[0] && !isTtsMuted()) {
+    // ------------------------------------------------------------
+    // SAVE AUDIO STATE
+    // ------------------------------------------------------------
+    lab3OldMode = am.getMode();
+    lab3OldSpeaker = am.isSpeakerphoneOn();
 
-    tts[0].stop();
-
-    tts[0].speak(
-            ttsText,
-            TextToSpeech.QUEUE_FLUSH,
-            null,
-            "EARPIECE_PROMPT"
-    );
-}
-
-// ==========================
-// OK ACTION
-// ==========================
-ok.setOnClickListener(v -> {
+    logInfo("Saving audio state.");
+    logInfo("Routing audio to earpiece.");
 
     try {
-        if (tts != null && tts[0] != null) {
-            tts[0].stop();
+        am.stopBluetoothSco();
+        am.setBluetoothScoOn(false);
+        am.setSpeakerphoneOn(false);
+        am.setMicrophoneMute(true);
+        am.setMode(AudioManager.MODE_IN_COMMUNICATION);
+    } catch (Throwable t) {
+        logError("Audio routing failed.");
+        restoreLab3Audio();
+        return;
+    }
+
+    SystemClock.sleep(300);
+
+    runOnUiThread(() -> {
+
+        // ============================================================
+        // EARPIECE TEST — PROMPT (BILINGUAL + TTS)
+        // ============================================================
+
+        final boolean gr = AppLang.isGreek(this);
+
+        String msgText = gr
+                ? "Τοποθέτησε το ακουστικό του τηλεφώνου στο αυτί σου.\n\n"
+                  + "Πάτησε OK για να ξεκινήσει ο ηχητικός έλεγχος."
+                : "Put the phone earpiece to your ear.\n\n"
+                  + "Press OK to start the audio test.";
+
+        String ttsText = gr
+                ? "Τοποθέτησε το ακουστικό του τηλεφώνου στο αυτί σου. "
+                  + "Πάτησε ΟΚ για να ξεκινήσει ο έλεγχος ήχου."
+                : "Put the phone earpiece to your ear. "
+                  + "Press OK to start the audio test.";
+
+        AlertDialog.Builder b =
+                new AlertDialog.Builder(
+                        this,
+                        android.R.style.Theme_Material_Dialog_NoActionBar
+                );
+
+        b.setCancelable(false);
+
+        // ==========================
+        // ROOT
+        // ==========================
+        LinearLayout root = new LinearLayout(this);
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.setPadding(dp(24), dp(22), dp(24), dp(20));
+
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(0xFF101010);
+        bg.setCornerRadius(dp(18));
+        bg.setStroke(dp(3), 0xFFFFD700);
+        root.setBackground(bg);
+
+        // ==========================
+        // MESSAGE
+        // ==========================
+        TextView msg = new TextView(this);
+        msg.setText(msgText);
+        msg.setTextColor(0xFFFFFFFF);
+        msg.setTextSize(15f);
+        msg.setGravity(Gravity.CENTER);
+        msg.setLineSpacing(1.1f, 1.1f);
+        msg.setPadding(0, 0, 0, dp(18));
+        root.addView(msg);
+
+        // ==========================
+        // MUTE TOGGLE (GLOBAL)
+        // ==========================
+        CheckBox muteBox = new CheckBox(this);
+        muteBox.setChecked(isTtsMuted());
+        muteBox.setText(gr ? "Σίγαση φωνητικών οδηγιών" : "Mute voice instructions");
+        muteBox.setTextColor(0xFFDDDDDD);
+        muteBox.setGravity(Gravity.CENTER);
+        muteBox.setPadding(0, 0, 0, dp(12));
+        root.addView(muteBox);
+
+        // ==========================
+        // OK BUTTON
+        // ==========================
+        Button ok = new Button(this);
+        ok.setText("OK");
+        ok.setAllCaps(false);
+        ok.setTextSize(15f);
+        ok.setTextColor(0xFFFFFFFF);
+
+        GradientDrawable okBg = new GradientDrawable();
+        okBg.setColor(0xFF0B5F3B);          // GEL dark green
+        okBg.setCornerRadius(dp(14));
+        okBg.setStroke(dp(3), 0xFFFFD700);
+        ok.setBackground(okBg);
+
+        LinearLayout.LayoutParams lp =
+                new LinearLayout.LayoutParams(
+                        ViewGroup.LayoutParams.WRAP_CONTENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT
+                );
+        lp.gravity = Gravity.CENTER_HORIZONTAL;
+        ok.setLayoutParams(lp);
+
+        root.addView(ok);
+
+        // ==========================
+        // BUILD DIALOG
+        // ==========================
+        b.setView(root);
+        AlertDialog d = b.create();
+
+        if (d.getWindow() != null) {
+            d.getWindow().setBackgroundDrawable(
+                    new ColorDrawable(Color.TRANSPARENT)
+            );
         }
-    } catch (Throwable ignore) {}
 
-    d.dismiss();
-
-    new Thread(() -> {
-        try {
-            logInfo("Playing earpiece test tones.");
-
-            for (int i = 1; i <= 3; i++) {
-                logInfo("Tone " + i + " / 3");
-                playEarpieceBeep();
-                SystemClock.sleep(600);
+        // ==========================
+        // MUTE LOGIC (GLOBAL)
+        // ==========================
+        muteBox.setOnCheckedChangeListener((v, checked) -> {
+            setTtsMuted(checked);
+            if (checked && tts != null && tts[0] != null) {
+                tts[0].stop();
             }
+        });
 
-            logOk("Tone playback completed.");
-
-        } catch (Throwable t) {
-            logError("Tone playback failed.");
-        } finally {
-            askUserEarpieceConfirmation();
+        // ==========================
+        // TTS — INTRO
+        // ==========================
+        if (tts != null && tts[0] != null && ttsReady[0] && !isTtsMuted()) {
+            tts[0].stop();
+            tts[0].speak(
+                    ttsText,
+                    TextToSpeech.QUEUE_FLUSH,
+                    null,
+                    "EARPIECE_PROMPT"
+            );
         }
-    }).start();
-});
 
-d.show();
-});
+        // ==========================
+        // OK ACTION
+        // ==========================
+        ok.setOnClickListener(v -> {
 
+            try {
+                if (tts != null && tts[0] != null) {
+                    tts[0].stop();
+                }
+            } catch (Throwable ignore) {}
+
+            d.dismiss();
+
+            new Thread(() -> {
+                try {
+                    logInfo("Playing earpiece test tones.");
+
+                    for (int i = 1; i <= 3; i++) {
+                        logInfo("Tone " + i + " / 3");
+                        playEarpieceBeep();
+                        SystemClock.sleep(600);
+                    }
+
+                    logOk("Tone playback completed.");
+
+                } catch (Throwable t) {
+                    logError("Tone playback failed.");
+                } finally {
+                    askUserEarpieceConfirmation();
+                }
+            }).start();
+        });
+
+        d.show();
+    });
 }
 
 /* ============================================================

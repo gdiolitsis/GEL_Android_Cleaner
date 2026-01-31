@@ -12235,6 +12235,9 @@ private void lab28HardwareStability() {
     logInfo("LAB 28 — Hardware Stability & Interconnect Integrity");
     logWarn("Technician mode — symptom-based analysis ONLY.");
     logLine();
+    
+int symptomScore = 0;
+int powerGlitches = 0;
 
     // ------------------------------------------------------------
     // POPUP — TECHNICIAN WARNING (with TTS + Language + Mute)

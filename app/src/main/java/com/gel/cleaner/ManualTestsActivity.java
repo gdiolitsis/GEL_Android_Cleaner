@@ -3723,10 +3723,21 @@ private void lab3EarpieceManual() {
    PRO: Prompt (text + TTS) → wait up to 3s for speech → switch prompt → repeat
    Retry rule: if no speech in 3s → repeat once (another 3s)
    ============================================================ */
-/* ============================================================
-   LAB 4 — Microphone Hardware Check (BASE)
-   SIGNAL ONLY — NO SPEECH REQUIRED
-   ============================================================ */
+
+private void lab4MicManual() {
+
+    // 1️⃣ Πρώτα το BASE (hardware check)
+    lab4MicBase();
+
+    // 2️⃣ Μικρή καθυστέρηση για καθαρό separation στο log
+    new Handler(Looper.getMainLooper()).postDelayed(() -> {
+
+        // 3️⃣ Μετά το PRO (voice analysis)
+        lab4MicPro();
+
+    }, 600);
+}
+
 private void lab4MicBase() {
 
     appendHtml("<br>");

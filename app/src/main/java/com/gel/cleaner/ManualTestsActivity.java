@@ -4220,46 +4220,44 @@ if (bottom.speechDetected && top.speechDetected) {
     );
 }
 
-// ----------------------------------------------------
-// QUALITY LABELS (PRO — HONEST, NON-ALARMIST)
-// ----------------------------------------------------
 logLine();
 
-String bottomQ = lab4_qualityLabel(bottom);
-String topQ    = lab4_qualityLabel(top);
+            String bottomQ = lab4_qualityLabel(bottom);
+            String topQ    = lab4_qualityLabel(top);
 
-// Bottom mic quality
-if (bottomQ.startsWith("GOOD") || bottomQ.startsWith("MODERATE")) {
-    logLabelOkValue(
-            gr ? "Ποιότητα ομιλίας (Κάτω)" : "Speech quality (Bottom)",
-            bottomQ
-    );
-} else {
-    logLabelWarnValue(
-            gr ? "Ποιότητα ομιλίας (Κάτω)" : "Speech quality (Bottom)",
-            bottomQ
-    );
+            if (bottomQ.startsWith("GOOD") || bottomQ.startsWith("MODERATE")) {
+                logLabelOkValue(gr ? "Ποιότητα ομιλίας (Κάτω)" : "Speech quality (Bottom)", bottomQ);
+            } else {
+                logLabelWarnValue(gr ? "Ποιότητα ομιλίας (Κάτω)" : "Speech quality (Bottom)", bottomQ);
+            }
+
+            if (topQ.startsWith("GOOD") || topQ.startsWith("MODERATE")) {
+                logLabelOkValue(gr ? "Ποιότητα ομιλίας (Άνω)" : "Speech quality (Top)", topQ);
+            } else {
+                logLabelWarnValue(gr ? "Ποιότητα ομιλίας (Άνω)" : "Speech quality (Top)", topQ);
+            }
+
+        } catch (Throwable t) {
+
+            logLabelErrorValue(
+                    gr ? "Σφάλμα" : "Error",
+                    gr ? "Αποτυχία PRO ανάλυσης" : "PRO analysis failed"
+            );
+
+        } finally {
+
+            try { AppTTS.stop(); } catch (Throwable ignore) {}
+            try { if (dialogRef.get() != null) dialogRef.get().dismiss(); } catch (Throwable ignore) {}
+
+            appendHtml("<br>");
+            logOk("Lab 4 PRO finished.");
+            logLine();
+
+            runOnUiThread(this::enableSingleExportButton);
+        }
+
+    }).start();
 }
-
-// Top mic quality
-if (topQ.startsWith("GOOD") || topQ.startsWith("MODERATE")) {
-    logLabelOkValue(
-            gr ? "Ποιότητα ομιλίας (Άνω)" : "Speech quality (Top)",
-            topQ
-    );
-} else {
-    logLabelWarnValue(
-            gr ? "Ποιότητα ομιλίας (Άνω)" : "Speech quality (Top)",
-            topQ
-    );
-}
-
-} catch (Throwable t) {
-
-    logLabelErrorValue(
-            gr ? "Σφάλμα" : "Error",
-            gr ? "Αποτυχία PRO ανάλυσης" : "PRO analysis failed"
-    );
 
 /* ============================================================
    LAB 4 PRO — Failure handler

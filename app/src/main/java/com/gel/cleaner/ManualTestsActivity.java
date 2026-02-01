@@ -3344,15 +3344,12 @@ logLabelOkValue(
         String.valueOf((int) r.peak)
 );
 
-// Confidence (informational)
-if ("HIGH".equalsIgnoreCase(r.confidence)) {
+String conf = (r.confidence == null)
+        ? ""
+        : r.confidence.trim().toUpperCase(Locale.US);
 
-    logLabelOkValue(
-            "Confidence",
-            r.confidence
-    );
-
-} else if ("MEDIUM".equalsIgnoreCase(r.confidence)) {
+if (conf.contains("LOW") || conf.contains("WEAK")
+        || conf.contains("FAIL") || conf.contains("NONE") || conf.contains("NO")) {
 
     logLabelWarnValue(
             "Confidence",
@@ -3361,7 +3358,7 @@ if ("HIGH".equalsIgnoreCase(r.confidence)) {
 
 } else {
 
-    logLabelErrorValue(
+    logLabelOkValue(
             "Confidence",
             r.confidence
     );
@@ -3472,7 +3469,7 @@ if (conf.contains("LOW")) {
 // LAB 2 — Speaker Frequency Sweep (ADAPTIVE)
 // • Runs independently
 // • Detects real speaker output via mic
-// • If silence is detected  instructs user to run LAB 1
+// • FAIL only if absolute silence (RMS == 0 && Peak == 0)
 // ============================================================
 private void lab2SpeakerSweep() {
 
@@ -3504,112 +3501,101 @@ private void lab2SpeakerSweep() {
                 SystemClock.sleep(550);
             }
 
-// ----------------------------------------------------
-// MIC FEEDBACK ANALYSIS
-// ----------------------------------------------------
-MicDiagnosticEngine.Result r =
-        MicDiagnosticEngine.run(this);
+            // ----------------------------------------------------
+            // MIC FEEDBACK ANALYSIS
+            // ----------------------------------------------------
+            MicDiagnosticEngine.Result r =
+                    MicDiagnosticEngine.run(this);
 
-logLabelOkValue(
-        "Mic RMS",
-        String.valueOf((int) r.rms)
-);
+            int rms  = (int) r.rms;
+            int peak = (int) r.peak;
 
-logLabelOkValue(
-        "Mic Peak",
-        String.valueOf((int) r.peak)
-);
+            logLabelOkValue("Mic RMS",  String.valueOf(rms));
+            logLabelOkValue("Mic Peak", String.valueOf(peak));
 
-String c =
-        (r.confidence == null)
-                ? ""
-                : r.confidence.trim().toUpperCase(Locale.US);
+            String conf = (r.confidence == null)
+                    ? ""
+                    : r.confidence.trim().toUpperCase(Locale.US);
 
-if (c.contains("FAIL") || c.contains("NONE") || c.contains("NO")) {
+            // ----------------------------------------------------
+            // CONFIDENCE (QUALITY, NOT EXISTENCE)
+            // ----------------------------------------------------
+            if (conf.contains("LOW") || conf.contains("WEAK")) {
+                logLabelWarnValue("Confidence", r.confidence);
+            } else if (conf.contains("FAIL") || conf.contains("NONE")) {
+                logLabelWarnValue("Confidence", r.confidence);
+            } else {
+                logLabelOkValue("Confidence", r.confidence);
+            }
 
-    logLabelErrorValue(
-            "Confidence",
-            r.confidence
-    );
+            // ----------------------------------------------------
+            // HARD GATE — ABSOLUTE SILENCE ONLY
+            // ----------------------------------------------------
+            if (rms == 0 && peak == 0) {
 
-} else if (c.contains("LOW") || c.contains("WEAK")) {
+                logLabelErrorValue(
+                        "Speaker output",
+                        "No acoustic output detected"
+                );
 
-    logLabelWarnValue(
-            "Confidence",
-            r.confidence
-    );
+                logLabelWarnValue(
+                        "Possible cause",
+                        "Speaker hardware failure, muted output path, or extreme isolation"
+                );
 
-} else {
+                logLabelOkValue(
+                        "Recommended",
+                        "Re-run LAB 1 to verify speaker operation and routing"
+                );
 
-    logLabelOkValue(
-            "Confidence",
-            r.confidence
-    );
-}
+                appendHtml("<br>");
+                logLine();
+                return;
+            }
 
-// ------------------------------------------------------------
-// ADAPTIVE GATE — SPEAKER OUTPUT (UNIFIED)
-// ------------------------------------------------------------
-SpeakerOutputState state = evaluateSpeakerOutput(r);
+            // ----------------------------------------------------
+            // OUTPUT CONFIRMED (EVEN WITH LOW CONFIDENCE)
+            // ----------------------------------------------------
+            if (conf.contains("LOW") || conf.contains("WEAK")) {
 
-if (state == SpeakerOutputState.NO_OUTPUT) {
+                logLabelWarnValue(
+                        "Speaker output",
+                        "Acoustic signal detected (LOW confidence)"
+                );
 
-    logLabelErrorValue(
-            "Speaker output",
-            "No acoustic output detected"
-    );
+                logLabelValue(
+                        "Note",
+                        "Low confidence may be caused by DSP filtering, noise cancellation, " +
+                        "speaker frequency limits, or microphone placement."
+                );
 
-    logLabelWarnValue(
-            "Possible cause",
-            "Speaker hardware failure, severe acoustic isolation, or muted output path"
-    );
+            } else {
 
-    logLabelOkValue(
-            "Recommended",
-            "Re-run LAB 1 to verify speaker operation and audio routing"
-    );
+                logLabelOkValue(
+                        "Speaker output",
+                        "Acoustic signal detected"
+                );
 
-    appendHtml("<br>");
-    logLine();
-    return;
-}
+                logLabelValue(
+                        "Note",
+                        "Frequency sweep detected successfully across multiple tones."
+                );
+            }
 
-// ----------------------------------------------------
-// SPEAKER OUTPUT CONFIRMED — CONTINUE LAB 2
-// ----------------------------------------------------
-logOk("Speaker output detected during frequency sweep.");
+        } catch (Throwable t) {
 
-if ("LOW".equalsIgnoreCase(r.confidence)) {
+            logError("Speaker frequency sweep failed");
 
-    logLabelValue(
-            "Note",
-            "Frequency sweep detected with low confidence. " +
-            "This may be caused by DSP filtering, noise cancellation, " +
-            "limited speaker frequency response, or microphone placement."
-    );
+        } finally {
 
-} else {
+            if (tg != null) tg.release();
 
-    logLabelValue(
-            "Note",
-            "Frequency sweep detected successfully across multiple tones."
-    );
-}
+            appendHtml("<br>");
+            logOk("Lab 2 finished.");
+            logLine();
+        }
 
-} catch (Throwable t) {
-
-    logError("Speaker frequency sweep failed");
-
-} finally {
-
-    if (tg != null) tg.release();
-
-    appendHtml("<br>");
-    logOk("Lab 2 finished.");
-    logLine();
-}
-
-}).start();
+    }).start();
 }
 
 /* ============================================================
@@ -3890,7 +3876,7 @@ private void lab4MicBase() {
             logLabelOkValue("Bottom RMS",  String.valueOf(bottomRms));
             logLabelOkValue("Bottom Peak", String.valueOf(bottomPeak));
 
-            bottomOk = bottomRms > 30 || bottomPeak > 150;
+            bottomOk = bottomRms > 0 || bottomPeak > 0;
 
             if (bottomOk) {
                 logLabelOkValue(
@@ -3924,7 +3910,7 @@ private void lab4MicBase() {
             logLabelOkValue("Top RMS",  String.valueOf(topRms));
             logLabelOkValue("Top Peak", String.valueOf(topPeak));
 
-            topOk = topRms > 30 || topPeak > 150;
+            topOk = topRms > 0 || topPeak > 0;
 
             if (topOk) {
                 logLabelOkValue(
@@ -4240,6 +4226,38 @@ private void lab4MicPro() {
         }
 
     }).start();
+}
+
+// ----------------------------------------------------
+// QUALITY LABELS (PRO — HONEST, NON-ALARMIST)
+// ----------------------------------------------------
+String bottomQ = lab4_qualityLabel(bottom);
+String topQ    = lab4_qualityLabel(top);
+
+// Bottom mic quality
+if (bottomQ.startsWith("GOOD") || bottomQ.startsWith("MODERATE")) {
+    logLabelOkValue(
+            gr ? "Ποιότητα ομιλίας (Κάτω)" : "Speech quality (Bottom)",
+            bottomQ
+    );
+} else {
+    logLabelWarnValue(
+            gr ? "Ποιότητα ομιλίας (Κάτω)" : "Speech quality (Bottom)",
+            bottomQ
+    );
+}
+
+// Top mic quality
+if (topQ.startsWith("GOOD") || topQ.startsWith("MODERATE")) {
+    logLabelOkValue(
+            gr ? "Ποιότητα ομιλίας (Άνω)" : "Speech quality (Top)",
+            topQ
+    );
+} else {
+    logLabelWarnValue(
+            gr ? "Ποιότητα ομιλίας (Άνω)" : "Speech quality (Top)",
+            topQ
+    );
 }
 
 /* ============================================================

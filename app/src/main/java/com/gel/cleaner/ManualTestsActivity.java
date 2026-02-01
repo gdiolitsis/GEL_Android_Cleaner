@@ -387,63 +387,53 @@ private VoiceMetrics lab4WaitSpeechStrict(
                     noiseFloor * NOISE_MULTIPLIER
             );
 
-            // ----------------------------
-            // 3️⃣ SPEECH DETECTION
-            // ----------------------------
-            while (!cancelled.get()
-                    && SystemClock.uptimeMillis() - start < windowMs) {
+// ----------------------------
+// 3️⃣ SPEECH DETECTION
+// ----------------------------
+while (!cancelled.get()
+        && SystemClock.uptimeMillis() - start < windowMs) {
 
-                int n = rec.read(data, 0, data.length);
-                if (n <= 0) continue;
+    int n = rec.read(data, 0, data.length);
+    if (n <= 0) continue;
 
-                float sum = 0f;
-                int peak = 0;
+    float sum = 0f;
+    int peak = 0;
 
-                for (int i = 0; i < n; i++) {
-                    int v = Math.abs(data[i]);
-                    peak = Math.max(peak, v);
-                    sum += (float) v * (float) v;
-                }
-
-                float rms = (float) Math.sqrt(sum / Math.max(1, n));
-
-                out.rms = rms;
-                out.peak = peak;
-
-                // ⛔ Μην αποφασίζεις πριν περάσει ελάχιστος χρόνος
-                if (SystemClock.uptimeMillis() - start < MIN_LISTEN_MS) {
-                    continue;
-                }
-
-                // 🗣️ Ομιλία = αρκετά πάνω από θόρυβο ΚΑΙ peak επιβεβαίωση
-                if (rms >= dynamicThr && peak >= Math.max(800, dynamicThr * 3f)) {
-                    speechFrames++;
-                    if (speechFrames >= REQUIRED_FRAMES) {
-                        out.speechDetected = true;
-                        break;
-                    }
-                } else {
-                    speechFrames = 0;
-                }
-            }
-
-        } catch (Throwable ignore) {
-
-        } finally {
-            try {
-                if (rec != null) {
-                    rec.stop();
-                    rec.release();
-                }
-            } catch (Throwable ignore) {}
-        }
-
-        if (out.speechDetected) break;
+    for (int i = 0; i < n; i++) {
+        int v = Math.abs(data[i]);
+        peak = Math.max(peak, v);
+        sum += (float) v * (float) v;
     }
 
-    // 🔒 Αν έφτασε εδώ, το capture θεωρείται έγκυρο
-    out.ok = true;
-    return out;
+    float rms = (float) Math.sqrt(sum / Math.max(1, n));
+
+    out.rms = rms;
+    out.peak = peak;
+
+    // ⛔ Μην αποφασίζεις πριν περάσει ελάχιστος χρόνος
+    if (SystemClock.uptimeMillis() - start < MIN_LISTEN_MS) {
+        continue;
+    }
+
+    boolean speechHit;
+
+    if (audioSource == MediaRecorder.AudioSource.VOICE_COMMUNICATION) {
+        // TOP mic: peak-driven (AGC-safe)
+        speechHit = (peak >= Math.max(1200, dynamicThr * 2.2f));
+    } else {
+        // BOTTOM mic: rms + peak
+        speechHit = (rms >= dynamicThr && peak >= Math.max(800, dynamicThr * 3f));
+    }
+
+    if (speechHit) {
+        speechFrames++;
+        if (speechFrames >= REQUIRED_FRAMES) {
+            out.speechDetected = true;
+            break;
+        }
+    } else {
+        speechFrames = 0;
+    }
 }
 
 /* ============================================================
@@ -3914,6 +3904,8 @@ private void lab4MicBase() {
             // ====================================================
             // BOTTOM MICROPHONE — SIGNAL CHECK
             // ====================================================
+
+appendHtml("<br>");
             logInfo(gr
                     ? "Έλεγχος κάτω μικροφώνου (σήμα):"
                     : "Bottom microphone signal check:");
@@ -3949,6 +3941,7 @@ private void lab4MicBase() {
             // TOP MICROPHONE — SIGNAL CHECK
             // ====================================================
             
+appendHtml("<br>");
             logInfo(gr
                     ? "Έλεγχος άνω μικροφώνου (σήμα):"
                     : "Top microphone signal check:");
@@ -4185,17 +4178,43 @@ speakOnce(gr
         : "Speak normally near the bottom microphone."
 );
 
+// 1️⃣ Πρώτη προσπάθεια
 bottom = lab4WaitSpeechStrict(
         cancelled,
         MediaRecorder.AudioSource.VOICE_RECOGNITION,
-        2,
+        1,
         3000
 );
+
+// 2️⃣ Αν απέτυχε, retry με μήνυμα
+if (!bottom.speechDetected && !cancelled.get()) {
+
+    lab4UpdateMsg(dialogRef.get(), gr,
+            gr
+                    ? "Δεν ανιχνεύθηκε ομιλία.\n\nΠροσπάθησε ΞΑΝΑ κοντά στο κάτω μικρόφωνο."
+                    : "No speech detected.\n\nPlease try AGAIN near the bottom microphone."
+    );
+
+    speakOnce(gr
+            ? "Προσπάθησε ξανά κοντά στο κάτω μικρόφωνο."
+            : "Please try again near the bottom microphone."
+    );
+
+    SystemClock.sleep(400);
+
+    // 3️⃣ Δεύτερη προσπάθεια
+    bottom = lab4WaitSpeechStrict(
+            cancelled,
+            MediaRecorder.AudioSource.VOICE_RECOGNITION,
+            1,
+            3000
+    );
+}
 
 boolean bottomOk = bottom.speechDetected && !cancelled.get();
 
 // ====================================================
-// STATE 2 — TOP MICROPHONE (ΠΑΝΤΑ)
+// STATE 2 — TOP MICROPHONE
 // ====================================================
 lab4UpdateMsg(dialogRef.get(), gr,
         gr
@@ -4208,19 +4227,48 @@ speakOnce(gr
         : "Now speak near the top microphone."
 );
 
+// 1️⃣ Πρώτη προσπάθεια
 top = lab4WaitSpeechStrict(
         cancelled,
         MediaRecorder.AudioSource.VOICE_COMMUNICATION,
-        2,
+        1,
         3000
 );
+
+// 2️⃣ Αν απέτυχε, retry με νέο μήνυμα
+if (!top.speechDetected && !cancelled.get()) {
+
+    lab4UpdateMsg(dialogRef.get(), gr,
+            gr
+                    ? "Δεν ανιχνεύθηκε ομιλία.\n\nΠροσπάθησε ΞΑΝΑ κοντά στο άνω μικρόφωνο."
+                    : "No speech detected.\n\nPlease try AGAIN near the top microphone."
+    );
+
+    speakOnce(gr
+            ? "Προσπάθησε ξανά κοντά στο άνω μικρόφωνο."
+            : "Please try again near the top microphone."
+    );
+
+    SystemClock.sleep(400);
+
+    // 3️⃣ Δεύτερη προσπάθεια
+    top = lab4WaitSpeechStrict(
+            cancelled,
+            MediaRecorder.AudioSource.VOICE_COMMUNICATION,
+            1,
+            3000
+    );
+}
 
 // ====================================================
 // FAIL ΜΟΝΟ ΑΝ ΑΠΕΤΥΧΑΝ ΚΑΙ ΤΑ ΔΥΟ
 // ====================================================
 if (!bottomOk && !top.speechDetected && !cancelled.get()) {
     lab4Fail(dialogRef.get(), gr);
-    return;
+
+// ΠΕΦΤΕΙ ΣΤΑ LOGS, ΟΧΙ RETURN
+bottom.speechDetected = false;
+top.speechDetected = false;
 }
 
             // ====================================================

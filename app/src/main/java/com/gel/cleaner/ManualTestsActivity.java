@@ -4346,30 +4346,30 @@ logLine();
                 logLabelWarnValue(gr ? "Ποιότητα ομιλίας (Άνω)" : "Speech quality (Top)", topQ);
             }
 
-        } catch (Throwable t) {
+} catch (Throwable t) {
 
             logLabelErrorValue(
                     gr ? "Σφάλμα" : "Error",
                     gr ? "Αποτυχία PRO ανάλυσης" : "PRO analysis failed"
             );
 
-} finally {
+        } finally {
 
-    try { AppTTS.stop(); } catch (Throwable ignore) {}
-    try { if (dialogRef.get() != null) dialogRef.get().dismiss(); } catch (Throwable ignore) {}
+            try { AppTTS.stop(); } catch (Throwable ignore) {}
+            try { if (dialogRef.get() != null) dialogRef.get().dismiss(); } catch (Throwable ignore) {}
 
-    // ===============================
-    // LAB 4 PRO+++ — Save device tuning
-    // ===============================
-    lab4_storeSpeechRef("bottom_speech_ref", bottom);
-    lab4_storeSpeechRef("top_speech_ref", top);
+            // ===============================
+            // LAB 4 PRO+++ — Save device tuning
+            // ===============================
+            lab4_storeSpeechRef("bottom_speech_ref", bottom);
+            lab4_storeSpeechRef("top_speech_ref", top);
 
-    appendHtml("<br>");
-    logOk("Lab 4 PRO finished.");
-    logLine();
+            appendHtml("<br>");
+            logOk("Lab 4 PRO finished.");
+            logLine();
 
-    runOnUiThread(this::enableSingleExportButton);
-}
+            runOnUiThread(this::enableSingleExportButton);
+        }
 
     }).start();
 }

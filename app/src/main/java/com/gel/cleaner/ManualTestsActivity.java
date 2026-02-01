@@ -291,7 +291,7 @@ private int lab3OldMode = AudioManager.MODE_NORMAL;
 private boolean lab3OldSpeaker = false;
 
 /* ============================================================
-   LAB 4 PRO — STRICT SPEECH DETECTOR
+   LAB 4 PRO — STRICT SPEECH DETECTOR (PATCHED)
    Blocks until REAL speech or timeout
    ============================================================ */
 private VoiceMetrics lab4WaitSpeechStrict(
@@ -302,6 +302,7 @@ private VoiceMetrics lab4WaitSpeechStrict(
 ) {
 
     VoiceMetrics out = new VoiceMetrics();
+    out.ok = false;
     out.speechDetected = false;
 
     for (int a = 0; a < attempts && !cancelled.get(); a++) {
@@ -328,8 +329,15 @@ private VoiceMetrics lab4WaitSpeechStrict(
                     buf * 2
             );
 
+            if (rec.getState() != AudioRecord.STATE_INITIALIZED) continue;
+
             short[] data = new short[buf];
             rec.startRecording();
+
+            float speechThr =
+                    (audioSource == MediaRecorder.AudioSource.VOICE_COMMUNICATION)
+                            ? 160f   // TOP mic
+                            : 120f;  // BOTTOM mic
 
             while (!cancelled.get()
                     && SystemClock.uptimeMillis() - start < windowMs) {
@@ -337,7 +345,7 @@ private VoiceMetrics lab4WaitSpeechStrict(
                 int n = rec.read(data, 0, data.length);
                 if (n <= 0) continue;
 
-                float rms = 0;
+                float rms = 0f;
                 int peak = 0;
 
                 for (int i = 0; i < n; i++) {
@@ -351,7 +359,7 @@ private VoiceMetrics lab4WaitSpeechStrict(
                 out.rms = rms;
                 out.peak = peak;
 
-                if (rms > 120) { // speech threshold
+                if (rms >= speechThr) {
                     if (speechStart < 0)
                         speechStart = SystemClock.uptimeMillis();
 
@@ -379,6 +387,9 @@ private VoiceMetrics lab4WaitSpeechStrict(
 
         if (out.speechDetected) break;
     }
+
+    // 🔴 CRITICAL FIX — χωρίς αυτό βγαίνει UNKNOWN
+    out.ok = true;
 
     return out;
 }
@@ -3854,6 +3865,7 @@ private void lab4MicBase() {
             logInfo(gr
                     ? "Έλεγχος κάτω μικροφώνου (σήμα):"
                     : "Bottom microphone signal check:");
+logLine();
 
             MicDiagnosticEngine.Result bottom =
                     MicDiagnosticEngine.run(
@@ -3884,10 +3896,11 @@ private void lab4MicBase() {
             // ====================================================
             // TOP MICROPHONE — SIGNAL CHECK
             // ====================================================
-            logLine();
+            
             logInfo(gr
                     ? "Έλεγχος άνω μικροφώνου (σήμα):"
                     : "Top microphone signal check:");
+logLine();
 
             MicDiagnosticEngine.Result top =
                     MicDiagnosticEngine.run(
@@ -3918,10 +3931,11 @@ private void lab4MicBase() {
             // ====================================================
             // FINAL HARDWARE CONCLUSION
             // ====================================================
-            logLine();
+            
             logInfo(gr
                     ? "Συμπεράσματα υλικού:"
                     : "Hardware conclusions:");
+logLine();
 
             if (bottomOk && topOk) {
 
@@ -4107,52 +4121,57 @@ private void lab4MicPro() {
             }
             if (cancelled.get()) return;
 
-            // ====================================================
-            // STATE 1 — BOTTOM MICROPHONE
-            // ====================================================
-            lab4UpdateMsg(dialogRef.get(), gr,
-                    gr
-                            ? "Μίλησε κανονικά κοντά στο ΚΑΤΩ μικρόφωνο.\n\nΠεριμένω ομιλία..."
-                            : "Speak normally near the BOTTOM microphone.\n\nListening for speech..."
-            );
+// ====================================================
+// STATE 1 — BOTTOM MICROPHONE
+// ====================================================
+lab4UpdateMsg(dialogRef.get(), gr,
+        gr
+                ? "Μίλησε κανονικά κοντά στο ΚΑΤΩ μικρόφωνο.\n\nΠεριμένω ομιλία..."
+                : "Speak normally near the BOTTOM microphone.\n\nListening for speech..."
+);
 
-            speakOnce(gr
-                    ? "Μίλησε κανονικά κοντά στο κάτω μικρόφωνο."
-                    : "Speak normally near the bottom microphone."
-            );
+speakOnce(gr
+        ? "Μίλησε κανονικά κοντά στο κάτω μικρόφωνο."
+        : "Speak normally near the bottom microphone."
+);
 
-            bottom = lab4WaitSpeechStrict(
-                    cancelled,
-                    android.media.MediaRecorder.AudioSource.VOICE_RECOGNITION,
-                    2,
-                    3000
-            );
+bottom = lab4WaitSpeechStrict(
+        cancelled,
+        MediaRecorder.AudioSource.VOICE_RECOGNITION,
+        2,
+        3000
+);
 
-            if (!bottom.speechDetected || cancelled.get()) {
-                lab4Fail(dialogRef.get(), gr);
-                return;
-            }
+boolean bottomOk = bottom.speechDetected && !cancelled.get();
 
-            // ====================================================
-            // STATE 2 — TOP MICROPHONE
-            // ====================================================
-            lab4UpdateMsg(dialogRef.get(), gr,
-                    gr
-                            ? "Τώρα μίλησε κοντά στο ΑΝΩ μικρόφωνο (ακουστικό).\n\nΠεριμένω ομιλία..."
-                            : "Now speak near the TOP microphone (earpiece).\n\nListening for speech..."
-            );
+// ====================================================
+// STATE 2 — TOP MICROPHONE (ΠΑΝΤΑ)
+// ====================================================
+lab4UpdateMsg(dialogRef.get(), gr,
+        gr
+                ? "Τώρα μίλησε κοντά στο ΑΝΩ μικρόφωνο (ακουστικό).\n\nΠεριμένω ομιλία..."
+                : "Now speak near the TOP microphone (earpiece).\n\nListening for speech..."
+);
 
-            speakOnce(gr
-                    ? "Τώρα μίλησε κοντά στο άνω μικρόφωνο."
-                    : "Now speak near the top microphone."
-            );
+speakOnce(gr
+        ? "Τώρα μίλησε κοντά στο άνω μικρόφωνο."
+        : "Now speak near the top microphone."
+);
 
-            top = lab4WaitSpeechStrict(
-                    cancelled,
-                    android.media.MediaRecorder.AudioSource.VOICE_COMMUNICATION,
-                    2,
-                    3000
-            );
+top = lab4WaitSpeechStrict(
+        cancelled,
+        MediaRecorder.AudioSource.VOICE_COMMUNICATION,
+        2,
+        3000
+);
+
+// ====================================================
+// FAIL ΜΟΝΟ ΑΝ ΑΠΕΤΥΧΑΝ ΚΑΙ ΤΑ ΔΥΟ
+// ====================================================
+if (!bottomOk && !top.speechDetected && !cancelled.get()) {
+    lab4Fail(dialogRef.get(), gr);
+    return;
+}
 
             // ====================================================
             // CLOSE DIALOG

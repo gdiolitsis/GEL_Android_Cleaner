@@ -3414,11 +3414,6 @@ logLabelOkValue(
         "Acoustic signal detected"
 );
 
-String conf =
-        (r.confidence == null)
-                ? ""
-                : r.confidence.trim().toUpperCase(Locale.US);
-
 if (conf.contains("LOW")) {
 
     logLabelWarnValue(

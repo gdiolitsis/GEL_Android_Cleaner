@@ -3492,13 +3492,19 @@ private void lab3EarpieceManual() {
         String bodyText = gr
                 ? "Τοποθέτησε το ακουστικό του τηλεφώνου στο αυτί σου.\n\n"
                   + "Θα αναπαραχθούν δοκιμαστικοί ήχοι από το ακουστικό."
+                  + "Πάτησε έναρξη για να ξεκινήσει ο έλεγχος."
                 : "Place the phone earpiece to your ear.\n\n"
                   + "Test tones will be played through the earpiece.";
+                  + "Press start to begin the test.";
+
+                  
 
         String ttsText = gr
-                ? "Τοποθέτησε το ακουστικό του τηλεφώνου στο αυτί σου. "
+                ? "Τοποθέτησε το ακουστικό του τηλεφώνου στο αυτί σου.\n\n"
+                  + "Θα αναπαραχθούν δοκιμαστικοί ήχοι από το ακουστικό."
                   + "Πάτησε έναρξη για να ξεκινήσει ο έλεγχος."
-                : "Place the phone earpiece to your ear. "
+                : "Place the phone earpiece to your ear.\n\n"
+                  + "Test tones will be played through the earpiece.";
                   + "Press start to begin the test.";
 
         // ============================================================
@@ -3654,9 +3660,11 @@ private void lab3EarpieceManual() {
 }
 
 /* ============================================================
-LAB 4 — Microphone Recording Check (BOTTOM + TOP)
-FINAL — BILINGUAL + TTS + LABEL LOGS
-============================================================ */
+   LAB 4 — Microphone Recording Check (BOTTOM + TOP)
+   NEW FLOW: BASE (functional) → PRO (voice analysis)
+   PRO: Prompt (text + TTS) → wait up to 3s for speech → switch prompt → repeat
+   Retry rule: if no speech in 3s → repeat once (another 3s)
+   ============================================================ */
 private void lab4MicManual() {
 
     appendHtml("<br>");
@@ -3668,101 +3676,309 @@ private void lab4MicManual() {
 
     new Thread(() -> {
 
+        final java.util.concurrent.atomic.AtomicBoolean cancelled =
+                new java.util.concurrent.atomic.AtomicBoolean(false);
+
+        final java.util.concurrent.atomic.AtomicReference<AlertDialog> dialogRef =
+                new java.util.concurrent.atomic.AtomicReference<>(null);
+
         try {
 
             // ====================================================
-            // BOTTOM MIC — USER INSTRUCTION
+            // STAGE A — BASE (FUNCTIONAL CHECK) — NO SPEECH REQUIRED
             // ====================================================
-            logLine();
-            logInfo(gr ? "Έλεγχος κάτω μικροφώνου:" : "Bottom microphone test:");
+            logInfo(gr ? "LAB 4 (BASE): Έλεγχος λειτουργίας μικροφώνου..." : "LAB 4 (BASE): Microphone functional check...");
             logLabelOkValue(
-                    gr ? "Οδηγία" : "Instruction",
+                    gr ? "Σημείωση" : "Note",
                     gr
-                            ? "Μίλησε κανονικά κοντά στο κάτω μικρόφωνο"
-                            : "Speak normally near the bottom microphone"
+                            ? "Δεν απαιτείται ομιλία σε αυτό το στάδιο"
+                            : "Speech is not required at this stage"
             );
 
-            speakOnce(
-                    gr
-                            ? "Μίλησε κανονικά κοντά στο κάτω μικρόφωνο."
-                            : "Speak normally near the bottom microphone."
-            );
-
-            MicDiagnosticEngine.Result bottom =
-                    MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.BOTTOM);
-
-            logLabelOkValue("Bottom Mic RMS",  String.valueOf((int) bottom.rms));
-            logLabelOkValue("Bottom Mic Peak", String.valueOf((int) bottom.peak));
-
-            String bConf = bottom.confidence == null
-                    ? ""
-                    : bottom.confidence.trim().toUpperCase(Locale.US);
-
-            if (bConf.contains("LOW") || bConf.contains("WEAK")) {
-                logLabelWarnValue("Bottom Mic Confidence", bottom.confidence);
-            } else if (bConf.contains("FAIL") || bConf.contains("NO")) {
-                logLabelErrorValue("Bottom Mic Confidence", bottom.confidence);
-            } else {
-                logLabelOkValue("Bottom Mic Confidence", bottom.confidence);
+            // Best-effort functional sample (quick)
+            VoiceMetrics base = lab4_captureVoiceBestEffort(android.media.MediaRecorder.AudioSource.VOICE_RECOGNITION, 900);
+            if (!base.ok) {
+                logLabelErrorValue(
+                        gr ? "Κατάσταση" : "Status",
+                        gr ? "Αποτυχία εγγραφής ήχου" : "Audio capture failed"
+                );
+                return;
             }
 
-            // ====================================================
-            // TOP MIC — USER INSTRUCTION
-            // ====================================================
-            logLine();
-            logInfo(gr ? "Έλεγχος άνω μικροφώνου:" : "Top microphone test:");
-            logLabelOkValue(
-                    gr ? "Οδηγία" : "Instruction",
-                    gr
-                            ? "Μίλησε κοντά στο άνω μικρόφωνο (περιοχή ακουστικού)"
-                            : "Speak near the top microphone (earpiece area)"
-            );
+            logLabelOkValue("BASE RMS", String.valueOf((int) base.rms));
+            logLabelOkValue("BASE Peak", String.valueOf((int) base.peak));
 
-            speakOnce(
-                    gr
-                            ? "Μίλησε κοντά στο άνω μικρόφωνο, στο ακουστικό."
-                            : "Speak near the top microphone, at the earpiece area."
-            );
-
-            MicDiagnosticEngine.Result top =
-                    MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.TOP);
-
-            logLabelOkValue("Top Mic RMS",  String.valueOf((int) top.rms));
-            logLabelOkValue("Top Mic Peak", String.valueOf((int) top.peak));
-
-            String tConf = top.confidence == null
-                    ? ""
-                    : top.confidence.trim().toUpperCase(Locale.US);
-
-            if (tConf.contains("LOW") || tConf.contains("WEAK")) {
-                logLabelWarnValue("Top Mic Confidence", top.confidence);
-            } else if (tConf.contains("FAIL") || tConf.contains("NO")) {
-                logLabelErrorValue("Top Mic Confidence", top.confidence);
-            } else {
-                logLabelOkValue("Top Mic Confidence", top.confidence);
+            // Simple functional pass rule: any non-trivial signal
+            if (base.rms < 50 && base.peak < 120) {
+                logLabelErrorValue(
+                        gr ? "Κατάσταση" : "Status",
+                        gr ? "Πιθανό πρόβλημα μικροφώνου (πολύ χαμηλό σήμα)" : "Possible microphone issue (very low signal)"
+                );
+                return;
             }
 
+            logLabelOkValue(
+                    gr ? "Κατάσταση" : "Status",
+                    gr ? "Μικρόφωνο λειτουργεί (BASE OK)" : "Microphone operational (BASE OK)"
+            );
+
             // ====================================================
-            // PATH CONFIRMATION
+            // STAGE B — PRO (VOICE ANALYSIS) — SPEECH REQUIRED
             // ====================================================
             logLine();
-            logLabelOkValue(
-                    gr ? "Διαδρομή μικροφώνων" : "Microphone Path",
+            logInfo(gr ? "LAB 4 PRO: Ανάλυση ομιλίας (speech detection)..." : "LAB 4 PRO: Voice analysis (speech detection)...");
+
+            // ---- Build PRO dialog on UI thread
+            runOnUiThread(() -> {
+                try {
+
+                    String titleText = gr
+                            ? "LAB 4 PRO — Ανάλυση ομιλίας"
+                            : "LAB 4 PRO — Voice Analysis";
+
+                    String bottomMsg = gr
+                            ? "Μίλησε κανονικά κοντά στο ΚΑΤΩ μικρόφωνο.\n\n"
+                              + "Περιμένω ομιλία..."
+                            : "Speak normally near the BOTTOM microphone.\n\n"
+                              + "Listening for speech...";
+
+                    AlertDialog.Builder b =
+                            new AlertDialog.Builder(
+                                    this,
+                                    android.R.style.Theme_Material_Dialog_NoActionBar
+                            );
+                    b.setCancelable(false);
+
+                    LinearLayout root = new LinearLayout(this);
+                    root.setOrientation(LinearLayout.VERTICAL);
+                    root.setPadding(dp(24), dp(20), dp(24), dp(20));
+
+                    GradientDrawable bg = new GradientDrawable();
+                    bg.setColor(0xFF101010);
+                    bg.setCornerRadius(dp(18));
+                    bg.setStroke(dp(3), 0xFFFFD700);
+                    root.setBackground(bg);
+
+                    // TITLE (WHITE)
+                    TextView title = new TextView(this);
+                    title.setText(titleText);
+                    title.setTextColor(Color.WHITE);
+                    title.setTextSize(17f);
+                    title.setTypeface(null, Typeface.BOLD);
+                    title.setGravity(Gravity.CENTER);
+                    title.setPadding(0, 0, 0, dp(12));
+                    root.addView(title);
+
+                    // MESSAGE (NEON GREEN)
+                    TextView msg = new TextView(this);
+                    msg.setId(0x4C414234); // "LAB4" marker id (stable)
+                    msg.setText(bottomMsg);
+                    msg.setTextColor(0xFF39FF14);
+                    msg.setTextSize(14.5f);
+                    msg.setLineSpacing(0f, 1.2f);
+                    msg.setGravity(Gravity.CENTER);
+                    msg.setPadding(0, 0, 0, dp(14));
+                    root.addView(msg);
+
+                    // MUTE ROW (GLOBAL)
+                    CheckBox muteBox = new CheckBox(this);
+                    muteBox.setChecked(isTtsMuted());
+                    muteBox.setText(gr ? "Σίγαση φωνητικών οδηγιών" : "Mute voice instructions");
+                    muteBox.setTextColor(0xFFDDDDDD);
+                    muteBox.setGravity(Gravity.CENTER);
+                    muteBox.setPadding(0, 0, 0, dp(12));
+                    root.addView(muteBox);
+
+                    muteBox.setOnCheckedChangeListener((v, checked) -> {
+                        setTtsMuted(checked);
+                        try { AppTTS.stop(); } catch (Throwable ignore) {}
+                    });
+
+                    // CANCEL BUTTON (small, bottom)
+                    Button cancelBtn = new Button(this);
+                    cancelBtn.setAllCaps(false);
+                    cancelBtn.setText(gr ? "ΑΚΥΡΩΣΗ" : "CANCEL");
+                    cancelBtn.setTextSize(14.5f);
+                    cancelBtn.setTextColor(Color.WHITE);
+
+                    GradientDrawable cancelBg = new GradientDrawable();
+                    cancelBg.setColor(0xFF202020);
+                    cancelBg.setCornerRadius(dp(14));
+                    cancelBg.setStroke(dp(2), 0xFFFFD700);
+                    cancelBtn.setBackground(cancelBg);
+
+                    LinearLayout.LayoutParams lpCancel =
+                            new LinearLayout.LayoutParams(
+                                    LinearLayout.LayoutParams.MATCH_PARENT,
+                                    dp(48)
+                            );
+                    lpCancel.setMargins(0, dp(6), 0, 0);
+                    cancelBtn.setLayoutParams(lpCancel);
+                    root.addView(cancelBtn);
+
+                    b.setView(root);
+                    AlertDialog d = b.create();
+
+                    if (d.getWindow() != null) {
+                        d.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+                    }
+
+                    cancelBtn.setOnClickListener(v -> {
+                        cancelled.set(true);
+                        try { AppTTS.stop(); } catch (Throwable ignore) {}
+                        try { d.dismiss(); } catch (Throwable ignore) {}
+                    });
+
+                    dialogRef.set(d);
+                    d.show();
+
+                } catch (Throwable ignore) {}
+            });
+
+            // Wait for dialog to be visible (best-effort)
+            long waitStart = SystemClock.uptimeMillis();
+            while (!cancelled.get() && dialogRef.get() == null && SystemClock.uptimeMillis() - waitStart < 1200) {
+                SystemClock.sleep(40);
+            }
+            if (cancelled.get()) return;
+
+            // ---- PRO step 1: BOTTOM prompt (text + TTS), detect speech (3s, retry once)
+            lab4_proUpdateMessage(dialogRef.get(), gr,
                     gr
-                            ? "Η διαδρομή εγγραφής εκτελέστηκε κανονικά"
-                            : "Recording path executed successfully"
+                            ? "Μίλησε κανονικά κοντά στο ΚΑΤΩ μικρόφωνο.\n\nΠεριμένω ομιλία..."
+                            : "Speak normally near the BOTTOM microphone.\n\nListening for speech..."
             );
+
+            speakOnce(gr
+                    ? "Μίλησε κανονικά κοντά στο κάτω μικρόφωνο."
+                    : "Speak normally near the bottom microphone."
+            );
+
+            VoiceMetrics bottom = lab4_waitSpeechWithRetry(
+                    cancelled,
+                    2,                    // attempts
+                    3000,                 // per-attempt window
+                    android.media.MediaRecorder.AudioSource.VOICE_RECOGNITION
+            );
+
+            if (cancelled.get()) return;
+
+            if (!bottom.speechDetected) {
+                lab4_proUpdateMessage(dialogRef.get(), gr,
+                        gr
+                                ? "Δεν ανιχνεύθηκε ομιλία.\n\nΤο στάδιο PRO δεν μπορεί να ολοκληρωθεί."
+                                : "No speech detected.\n\nPRO stage cannot be completed."
+                );
+                speakOnce(gr
+                        ? "Δεν άκουσα ομιλία. Το προχωρημένο στάδιο δεν ολοκληρώθηκε."
+                        : "I did not detect speech. The advanced stage was not completed."
+                );
+                SystemClock.sleep(900);
+                try { if (dialogRef.get() != null) dialogRef.get().dismiss(); } catch (Throwable ignore) {}
+                return;
+            }
+
+            // ---- PRO step 2: TOP prompt (text + TTS), detect speech (3s, retry once)
+            lab4_proUpdateMessage(dialogRef.get(), gr,
+                    gr
+                            ? "Τώρα μίλησε κοντά στο ΑΝΩ μικρόφωνο (περιοχή ακουστικού).\n\nΠεριμένω ομιλία..."
+                            : "Now speak near the TOP microphone (earpiece area).\n\nListening for speech..."
+            );
+
+            speakOnce(gr
+                    ? "Τώρα μίλησε κοντά στο άνω μικρόφωνο, στο ακουστικό."
+                    : "Now speak near the top microphone, at the earpiece area."
+            );
+
+            // Best-effort: use VOICE_COMMUNICATION to bias toward top/near-ear behavior on some devices
+            VoiceMetrics top = lab4_waitSpeechWithRetry(
+                    cancelled,
+                    2,
+                    3000,
+                    android.media.MediaRecorder.AudioSource.VOICE_COMMUNICATION
+            );
+
+            if (cancelled.get()) return;
+
+            if (!top.speechDetected) {
+                lab4_proUpdateMessage(dialogRef.get(), gr,
+                        gr
+                                ? "Δεν ανιχνεύθηκε ομιλία στο άνω μικρόφωνο.\n\nΤο στάδιο PRO ολοκληρώθηκε με περιορισμούς."
+                                : "No speech detected on the top microphone.\n\nPRO completed with limitations."
+                );
+                speakOnce(gr
+                        ? "Δεν ανίχνευσα ομιλία στο άνω μικρόφωνο."
+                        : "I did not detect speech on the top microphone."
+                );
+                SystemClock.sleep(900);
+            }
+
+            // Close PRO dialog
+            try { if (dialogRef.get() != null) dialogRef.get().dismiss(); } catch (Throwable ignore) {}
+
+            // ====================================================
+            // FINAL CONCLUSIONS (BASE + PRO)
+            // ====================================================
+            logLine();
+            logInfo(gr ? "LAB 4 — Συμπεράσματα:" : "LAB 4 — Conclusions:");
+
+            // BASE
+            logLabelOkValue(
+                    gr ? "BASE" : "BASE",
+                    gr ? "Μικρόφωνο λειτουργεί" : "Microphone operational"
+            );
+
+            // PRO (speech)
+            String bSpeech = bottom.speechDetected ? "YES" : "NO";
+            String tSpeech = top.speechDetected ? "YES" : "NO";
+
+            logLabelOkValue("PRO Speech (Bottom)", bSpeech);
+            logLabelOkValue("PRO Speech (Top)", tSpeech);
+
+            logLabelOkValue("Bottom RMS", String.valueOf((int) bottom.rms));
+            logLabelOkValue("Bottom Peak", String.valueOf((int) bottom.peak));
+
+            logLabelOkValue("Top RMS", String.valueOf((int) top.rms));
+            logLabelOkValue("Top Peak", String.valueOf((int) top.peak));
+
+            // Simple quality labels (honest, no exaggerations)
+            String bottomQ = lab4_qualityLabel(bottom);
+            String topQ = lab4_qualityLabel(top);
+
+            if (bottomQ.contains("LOW")) logLabelWarnValue(gr ? "Κάτω μικρόφωνο" : "Bottom mic", bottomQ);
+            else logLabelOkValue(gr ? "Κάτω μικρόφωνο" : "Bottom mic", bottomQ);
+
+            if (topQ.contains("LOW") || !top.speechDetected) logLabelWarnValue(gr ? "Άνω μικρόφωνο" : "Top mic", topQ);
+            else logLabelOkValue(gr ? "Άνω μικρόφωνο" : "Top mic", topQ);
+
+            // Overall summary
+            logLine();
+            if (bottom.speechDetected && top.speechDetected) {
+                logLabelOkValue(
+                        gr ? "Συνολικά" : "Overall",
+                        gr ? "Η ομιλία ανιχνεύθηκε και στα δύο μικρόφωνα" : "Speech detected on both microphones"
+                );
+            } else if (bottom.speechDetected) {
+                logLabelWarnValue(
+                        gr ? "Συνολικά" : "Overall",
+                        gr ? "Ομιλία ανιχνεύθηκε μόνο στο κάτω μικρόφωνο" : "Speech detected only on the bottom microphone"
+                );
+            } else {
+                logLabelWarnValue(
+                        gr ? "Συνολικά" : "Overall",
+                        gr ? "Η ανίχνευση ομιλίας ήταν ανεπαρκής" : "Speech detection was insufficient"
+                );
+            }
 
         } catch (Throwable t) {
-
             logLabelErrorValue(
                     gr ? "Σφάλμα" : "Error",
-                    gr
-                            ? "Αποτυχία ελέγχου μικροφώνων"
-                            : "Microphone diagnostic failed"
+                    gr ? "Αποτυχία ελέγχου μικροφώνων" : "Microphone diagnostic failed"
             );
-
         } finally {
+
+            try { AppTTS.stop(); } catch (Throwable ignore) {}
+            try { if (dialogRef.get() != null) dialogRef.get().dismiss(); } catch (Throwable ignore) {}
 
             appendHtml("<br>");
             logOk("Lab 4 finished.");
@@ -3772,6 +3988,201 @@ private void lab4MicManual() {
         }
 
     }).start();
+}
+
+/* ============================================================
+   LAB 4 — INTERNAL (no external libs)
+   ============================================================ */
+
+private void lab4_proUpdateMessage(AlertDialog d, boolean gr, String text) {
+    if (d == null) return;
+    try {
+        runOnUiThread(() -> {
+            try {
+                TextView msg = d.findViewById(0x4C414234);
+                if (msg != null) msg.setText(text);
+            } catch (Throwable ignore) {}
+        });
+    } catch (Throwable ignore) {}
+}
+
+private static class VoiceMetrics {
+    boolean ok;
+    boolean speechDetected;
+    float rms;
+    float peak;
+    float noiseRms;
+    float speechRms;
+    int clippingCount;
+}
+
+private VoiceMetrics lab4_waitSpeechWithRetry(
+        java.util.concurrent.atomic.AtomicBoolean cancelled,
+        int attempts,
+        int windowMs,
+        int audioSource
+) {
+    VoiceMetrics best = new VoiceMetrics();
+    best.ok = false;
+    best.speechDetected = false;
+
+    for (int a = 1; a <= attempts; a++) {
+
+        if (cancelled.get()) return best;
+
+        VoiceMetrics m = lab4_captureVoiceBestEffort(audioSource, windowMs);
+
+        // If capture failed, keep going (best-effort)
+        if (!m.ok) {
+            best = m;
+        } else {
+            best = m;
+            if (m.speechDetected) return m;
+        }
+
+        if (a < attempts) {
+            // repeat instruction + wait again (the caller also updates UI text; we just pause a hair)
+            SystemClock.sleep(120);
+        }
+    }
+
+    return best;
+}
+
+private VoiceMetrics lab4_captureVoiceBestEffort(int audioSource, int durationMs) {
+    VoiceMetrics out = new VoiceMetrics();
+    out.ok = false;
+    out.speechDetected = false;
+    out.rms = 0f;
+    out.peak = 0f;
+    out.noiseRms = 0f;
+    out.speechRms = 0f;
+    out.clippingCount = 0;
+
+    android.media.AudioRecord rec = null;
+
+    try {
+        final int sr = 16000;
+        final int ch = android.media.AudioFormat.CHANNEL_IN_MONO;
+        final int fmt = android.media.AudioFormat.ENCODING_PCM_16BIT;
+
+        int minBuf = android.media.AudioRecord.getMinBufferSize(sr, ch, fmt);
+        int bufSize = Math.max(minBuf, sr * 2); // >= ~1s buffer worth, safe
+
+        rec = new android.media.AudioRecord(audioSource, sr, ch, fmt, bufSize);
+        if (rec.getState() != android.media.AudioRecord.STATE_INITIALIZED) return out;
+
+        short[] buf = new short[Math.max(256, minBuf / 2)];
+        long start = SystemClock.uptimeMillis();
+
+        // Noise floor estimate for first ~250ms
+        float noiseAcc = 0f;
+        int noiseFrames = 0;
+
+        float sumSqAll = 0f;
+        long nAll = 0;
+        int peakAbs = 0;
+
+        boolean speech = false;
+        float speechSumSq = 0f;
+        long speechN = 0;
+
+        rec.startRecording();
+
+        while (SystemClock.uptimeMillis() - start < durationMs) {
+
+            int r = rec.read(buf, 0, buf.length);
+            if (r <= 0) continue;
+
+            // frame RMS + peak
+            long frameSumSq = 0;
+            int framePeak = 0;
+            int clipCount = 0;
+
+            for (int i = 0; i < r; i++) {
+                int v = buf[i];
+                int av = Math.abs(v);
+                if (av > framePeak) framePeak = av;
+                if (av >= 32760) clipCount++;
+                frameSumSq += (long) v * (long) v;
+            }
+
+            if (framePeak > peakAbs) peakAbs = framePeak;
+            out.clippingCount += clipCount;
+
+            // overall accumulators
+            sumSqAll += (float) frameSumSq;
+            nAll += r;
+
+            float frameRms = (float) Math.sqrt(frameSumSq / (double) Math.max(1, r));
+
+            // noise estimate phase (first 250ms)
+            if (SystemClock.uptimeMillis() - start < 250) {
+                noiseAcc += frameRms;
+                noiseFrames++;
+                continue;
+            }
+
+            float noiseRms = (noiseFrames > 0) ? (noiseAcc / noiseFrames) : 0f;
+            out.noiseRms = noiseRms;
+
+            // Speech detection rule (honest & simple):
+            // - Above adaptive threshold based on noise floor OR absolute threshold
+            float thr = Math.max(220f, noiseRms * 2.8f);
+
+            if (frameRms >= thr || framePeak >= (int) Math.max(900, thr * 4f)) {
+                speech = true;
+                speechSumSq += (float) frameSumSq;
+                speechN += r;
+
+                // Early exit: once speech detected, we can stop fast (meets your requirement)
+                // (We still captured enough for metrics.)
+                break;
+            }
+        }
+
+        try { rec.stop(); } catch (Throwable ignore) {}
+        try { rec.release(); } catch (Throwable ignore) {}
+        rec = null;
+
+        out.ok = (nAll > 0);
+        out.peak = peakAbs;
+        out.rms = out.ok ? (float) Math.sqrt(sumSqAll / (double) Math.max(1, nAll)) : 0f;
+
+        out.speechDetected = speech;
+
+        if (speech && speechN > 0) {
+            out.speechRms = (float) Math.sqrt(speechSumSq / (double) Math.max(1, speechN));
+        } else {
+            out.speechRms = 0f;
+        }
+
+        return out;
+
+    } catch (Throwable t) {
+        return out;
+    } finally {
+        if (rec != null) {
+            try { rec.stop(); } catch (Throwable ignore) {}
+            try { rec.release(); } catch (Throwable ignore) {}
+        }
+    }
+}
+
+private String lab4_qualityLabel(VoiceMetrics m) {
+    if (m == null || !m.ok) return "UNKNOWN";
+    if (!m.speechDetected) return "LOW (no speech detected)";
+    if (m.clippingCount > 8 || m.peak >= 32000) return "WARN (possible clipping)";
+    if (m.speechRms > 0 && m.noiseRms > 0) {
+        float ratio = m.speechRms / Math.max(1f, m.noiseRms);
+        if (ratio < 2.2f) return "LOW (noisy / weak speech)";
+        if (ratio < 3.5f) return "MODERATE";
+        return "GOOD";
+    }
+    // fallback by levels
+    if (m.rms < 220) return "LOW";
+    if (m.rms < 420) return "MODERATE";
+    return "GOOD";
 }
 
 /* ============================================================

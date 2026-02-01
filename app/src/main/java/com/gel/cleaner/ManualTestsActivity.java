@@ -4001,11 +4001,6 @@ logLine();
    ============================================================ */
 private void lab4MicPro() {
 
-    appendHtml("<br>");
-    logLine();
-    logSection("LAB 4 PRO — Voice Analysis");
-    logLine();
-
     final boolean gr = AppLang.isGreek(this);
 
     new Thread(() -> {
@@ -4181,8 +4176,9 @@ if (!bottomOk && !top.speechDetected && !cancelled.get()) {
 // ====================================================
 // FINAL LOGS
 // ====================================================
-logLine();
+
 logInfo(gr ? "LAB 4 PRO — Συμπεράσματα:" : "LAB 4 PRO — Conclusions:");
+logLine();
 
 logLabelOkValue(
         gr ? "Ομιλία (Κάτω)" : "PRO Speech (Bottom)",

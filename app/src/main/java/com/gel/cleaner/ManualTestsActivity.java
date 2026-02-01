@@ -149,6 +149,8 @@ import java.nio.ByteBuffer;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 // ============================================================
 // JAVA — UTIL
@@ -286,6 +288,99 @@ private SharedPreferences prefs;
 private volatile boolean lab3WaitingUser = false;
 private int lab3OldMode = AudioManager.MODE_NORMAL;
 private boolean lab3OldSpeaker = false;
+
+/* ============================================================
+   LAB 4 PRO — STRICT SPEECH DETECTOR
+   Blocks until REAL speech or timeout
+   ============================================================ */
+private VoiceMetrics lab4WaitSpeechStrict(
+        AtomicBoolean cancelled,
+        int audioSource,
+        int attempts,
+        int windowMs
+) {
+
+    VoiceMetrics out = new VoiceMetrics();
+    out.speechDetected = false;
+
+    for (int a = 0; a < attempts && !cancelled.get(); a++) {
+
+        long start = SystemClock.uptimeMillis();
+        long speechStart = -1;
+
+        AudioRecord rec = null;
+
+        try {
+
+            int rate = 16000;
+            int buf = AudioRecord.getMinBufferSize(
+                    rate,
+                    AudioFormat.CHANNEL_IN_MONO,
+                    AudioFormat.ENCODING_PCM_16BIT
+            );
+
+            rec = new AudioRecord(
+                    audioSource,
+                    rate,
+                    AudioFormat.CHANNEL_IN_MONO,
+                    AudioFormat.ENCODING_PCM_16BIT,
+                    buf * 2
+            );
+
+            short[] data = new short[buf];
+            rec.startRecording();
+
+            while (!cancelled.get()
+                    && SystemClock.uptimeMillis() - start < windowMs) {
+
+                int n = rec.read(data, 0, data.length);
+                if (n <= 0) continue;
+
+                float rms = 0;
+                int peak = 0;
+
+                for (int i = 0; i < n; i++) {
+                    int v = Math.abs(data[i]);
+                    peak = Math.max(peak, v);
+                    rms += v * v;
+                }
+
+                rms = (float) Math.sqrt(rms / n);
+
+                out.rms = rms;
+                out.peak = peak;
+
+                if (rms > 120) { // speech threshold
+                    if (speechStart < 0)
+                        speechStart = SystemClock.uptimeMillis();
+
+                    if (SystemClock.uptimeMillis() - speechStart > 400) {
+                        out.speechDetected = true;
+                        break;
+                    }
+                } else {
+                    speechStart = -1;
+                }
+
+                SystemClock.sleep(40);
+            }
+
+        } catch (Throwable ignore) {
+
+        } finally {
+            try {
+                if (rec != null) {
+                    rec.stop();
+                    rec.release();
+                }
+            } catch (Throwable ignore) {}
+        }
+
+        if (out.speechDetected) break;
+    }
+
+    return out;
+}
 
 // ============================================================  
 // SERVICE LOG SESSION FLAG (CRITICAL)  

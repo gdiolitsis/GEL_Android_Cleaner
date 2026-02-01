@@ -291,8 +291,9 @@ private int lab3OldMode = AudioManager.MODE_NORMAL;
 private boolean lab3OldSpeaker = false;
 
 /* ============================================================
-   LAB 4 PRO — STRICT SPEECH DETECTOR (PATCHED)
-   Blocks until REAL speech or timeout
+   LAB 4 PRO++ — STRICT SPEECH DETECTOR
+   Dynamic threshold based on noise floor
+   Human-paced, AGC-safe, service-grade
    ============================================================ */
 private VoiceMetrics lab4WaitSpeechStrict(
         AtomicBoolean cancelled,
@@ -305,73 +306,125 @@ private VoiceMetrics lab4WaitSpeechStrict(
     out.ok = false;
     out.speechDetected = false;
 
+    // ⏱️ Ελάχιστος χρόνος ακρόασης πριν κρίνουμε
+    final int MIN_LISTEN_MS = 900;
+
+    // 🎙️ Πόσα συνεχόμενα frames = επιβεβαιωμένη ομιλία
+    final int REQUIRED_FRAMES = 8;
+
+    // 🔊 Απόλυτο κατώφλι (ασφάλεια σε απόλυτη ησυχία)
+    final float ABS_MIN_THR =
+            (audioSource == MediaRecorder.AudioSource.VOICE_COMMUNICATION)
+                    ? 200f   // TOP
+                    : 180f;  // BOTTOM
+
+    // 📈 Πόσο πάνω από τον θόρυβο πρέπει να είναι η ομιλία
+    final float NOISE_MULTIPLIER = 2.6f;
+
     for (int a = 0; a < attempts && !cancelled.get(); a++) {
 
         long start = SystemClock.uptimeMillis();
-        long speechStart = -1;
+        int speechFrames = 0;
 
         AudioRecord rec = null;
 
         try {
 
             int rate = 16000;
-            int buf = AudioRecord.getMinBufferSize(
+            int minBuf = AudioRecord.getMinBufferSize(
                     rate,
                     AudioFormat.CHANNEL_IN_MONO,
                     AudioFormat.ENCODING_PCM_16BIT
             );
+
+            int bufSize = Math.max(minBuf, rate / 4); // ~250ms
+            short[] data = new short[bufSize];
 
             rec = new AudioRecord(
                     audioSource,
                     rate,
                     AudioFormat.CHANNEL_IN_MONO,
                     AudioFormat.ENCODING_PCM_16BIT,
-                    buf * 2
+                    bufSize * 2
             );
 
             if (rec.getState() != AudioRecord.STATE_INITIALIZED) continue;
 
-            short[] data = new short[buf];
             rec.startRecording();
 
-            float speechThr =
-                    (audioSource == MediaRecorder.AudioSource.VOICE_COMMUNICATION)
-                            ? 160f   // TOP mic
-                            : 120f;  // BOTTOM mic
+            // ----------------------------
+            // 1️⃣ NOISE FLOOR CALIBRATION
+            // ----------------------------
+            float noiseAcc = 0f;
+            int noiseFrames = 0;
+            long noiseUntil = start + 350; // ~350ms
 
+            while (!cancelled.get()
+                    && SystemClock.uptimeMillis() < noiseUntil) {
+
+                int n = rec.read(data, 0, data.length);
+                if (n <= 0) continue;
+
+                float sum = 0f;
+                for (int i = 0; i < n; i++) {
+                    int v = data[i];
+                    sum += (float) v * (float) v;
+                }
+
+                float rms = (float) Math.sqrt(sum / Math.max(1, n));
+                noiseAcc += rms;
+                noiseFrames++;
+            }
+
+            float noiseFloor =
+                    (noiseFrames > 0) ? (noiseAcc / noiseFrames) : 0f;
+
+            // ----------------------------
+            // 2️⃣ DYNAMIC THRESHOLD
+            // ----------------------------
+            float dynamicThr = Math.max(
+                    ABS_MIN_THR,
+                    noiseFloor * NOISE_MULTIPLIER
+            );
+
+            // ----------------------------
+            // 3️⃣ SPEECH DETECTION
+            // ----------------------------
             while (!cancelled.get()
                     && SystemClock.uptimeMillis() - start < windowMs) {
 
                 int n = rec.read(data, 0, data.length);
                 if (n <= 0) continue;
 
-                float rms = 0f;
+                float sum = 0f;
                 int peak = 0;
 
                 for (int i = 0; i < n; i++) {
                     int v = Math.abs(data[i]);
                     peak = Math.max(peak, v);
-                    rms += v * v;
+                    sum += (float) v * (float) v;
                 }
 
-                rms = (float) Math.sqrt(rms / n);
+                float rms = (float) Math.sqrt(sum / Math.max(1, n));
 
                 out.rms = rms;
                 out.peak = peak;
 
-                if (rms >= speechThr) {
-                    if (speechStart < 0)
-                        speechStart = SystemClock.uptimeMillis();
+                // ⛔ Μην αποφασίζεις πριν περάσει ελάχιστος χρόνος
+                if (SystemClock.uptimeMillis() - start < MIN_LISTEN_MS) {
+                    continue;
+                }
 
-                    if (SystemClock.uptimeMillis() - speechStart > 400) {
+                // 🗣️ Ομιλία = αρκετά πάνω από θόρυβο ΚΑΙ peak επιβεβαίωση
+                if (rms >= dynamicThr && peak >= Math.max(800, dynamicThr * 3f)) {
+                    speechFrames++;
+                    if (speechFrames >= REQUIRED_FRAMES) {
                         out.speechDetected = true;
                         break;
                     }
                 } else {
-                    speechStart = -1;
+                    speechFrames = 0;
                 }
-
-                SystemClock.sleep(40);
             }
 
         } catch (Throwable ignore) {
@@ -388,9 +441,8 @@ private VoiceMetrics lab4WaitSpeechStrict(
         if (out.speechDetected) break;
     }
 
-    // 🔴 CRITICAL FIX — χωρίς αυτό βγαίνει UNKNOWN
+    // 🔒 Αν έφτασε εδώ, το capture θεωρείται έγκυρο
     out.ok = true;
-
     return out;
 }
 
@@ -3865,7 +3917,7 @@ private void lab4MicBase() {
             logInfo(gr
                     ? "Έλεγχος κάτω μικροφώνου (σήμα):"
                     : "Bottom microphone signal check:");
-logLine();
+            logLine();
 
             MicDiagnosticEngine.Result bottom =
                     MicDiagnosticEngine.run(
@@ -3873,7 +3925,7 @@ logLine();
                             MicDiagnosticEngine.MicType.BOTTOM
                     );
 
-            bottomRms = (int) bottom.rms;
+            bottomRms  = (int) bottom.rms;
             bottomPeak = (int) bottom.peak;
 
             logLabelOkValue("Bottom RMS",  String.valueOf(bottomRms));
@@ -3900,7 +3952,7 @@ logLine();
             logInfo(gr
                     ? "Έλεγχος άνω μικροφώνου (σήμα):"
                     : "Top microphone signal check:");
-logLine();
+            logLine();
 
             MicDiagnosticEngine.Result top =
                     MicDiagnosticEngine.run(
@@ -3908,7 +3960,7 @@ logLine();
                             MicDiagnosticEngine.MicType.TOP
                     );
 
-            topRms = (int) top.rms;
+            topRms  = (int) top.rms;
             topPeak = (int) top.peak;
 
             logLabelOkValue("Top RMS",  String.valueOf(topRms));
@@ -3929,13 +3981,13 @@ logLine();
             }
 
             // ====================================================
-            // FINAL HARDWARE CONCLUSION
+            // FINAL HARDWARE CONCLUSIONS (ΠΡΙΝ ΤΟ FINISHED)
             // ====================================================
-            
+            logLine();
             logInfo(gr
                     ? "Συμπεράσματα υλικού:"
                     : "Hardware conclusions:");
-logLine();
+            logLine();
 
             if (bottomOk && topOk) {
 
@@ -3985,6 +4037,9 @@ logLine();
 
         } finally {
 
+            // ====================================================
+            // BASE FINISHED — ΚΛΕΙΝΕΙ ΟΡΙΣΤΙΚΑ ΤΟ BASE
+            // ====================================================
             appendHtml("<br>");
             logOk("Lab 4 (BASE) finished.");
             logLine();
@@ -4250,17 +4305,23 @@ logLine();
                     gr ? "Αποτυχία PRO ανάλυσης" : "PRO analysis failed"
             );
 
-        } finally {
+} finally {
 
-            try { AppTTS.stop(); } catch (Throwable ignore) {}
-            try { if (dialogRef.get() != null) dialogRef.get().dismiss(); } catch (Throwable ignore) {}
+    try { AppTTS.stop(); } catch (Throwable ignore) {}
+    try { if (dialogRef.get() != null) dialogRef.get().dismiss(); } catch (Throwable ignore) {}
 
-            appendHtml("<br>");
-            logOk("Lab 4 PRO finished.");
-            logLine();
+    // ===============================
+    // LAB 4 PRO+++ — Save device tuning
+    // ===============================
+    lab4_storeSpeechRef("bottom_speech_ref", bottom);
+    lab4_storeSpeechRef("top_speech_ref", top);
 
-            runOnUiThread(this::enableSingleExportButton);
-        }
+    appendHtml("<br>");
+    logOk("Lab 4 PRO finished.");
+    logLine();
+
+    runOnUiThread(this::enableSingleExportButton);
+}
 
     }).start();
 }
@@ -4288,6 +4349,20 @@ private void lab4Fail(AlertDialog d, boolean gr) {
 
     try {
         if (d != null) d.dismiss();
+    } catch (Throwable ignore) {}
+}
+
+// ===============================
+// LAB 4 PRO+++ — Store device speech reference
+// ===============================
+private void lab4_storeSpeechRef(String key, VoiceMetrics m) {
+    if (m == null || !m.speechDetected || m.speechRms <= 0f) return;
+
+    try {
+        SharedPreferences p = getSharedPreferences("lab4_mic", MODE_PRIVATE);
+        p.edit()
+         .putFloat(key, m.speechRms)
+         .apply();
     } catch (Throwable ignore) {}
 }
 

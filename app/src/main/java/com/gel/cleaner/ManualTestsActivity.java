@@ -4168,69 +4168,63 @@ private void lab4MicPro() {
             // ====================================================
             try { dialogRef.get().dismiss(); } catch (Throwable ignore) {}
 
-            // ====================================================
-            // FINAL LOGS
-            // ====================================================
-            logLine();
-            logInfo(gr ? "LAB 4 PRO — Συμπεράσματα:" : "LAB 4 PRO — Conclusions:");
+// ====================================================
+// FINAL LOGS
+// ====================================================
+logLine();
+logInfo(gr ? "LAB 4 PRO — Συμπεράσματα:" : "LAB 4 PRO — Conclusions:");
 
-            logLabelOkValue("PRO Speech (Bottom)", bottom.speechDetected ? "YES" : "NO");
-            logLabelOkValue("Bottom RMS", String.valueOf((int) bottom.rms));
-            logLabelOkValue("Bottom Peak", String.valueOf((int) bottom.peak));
+logLabelOkValue(
+        gr ? "Ομιλία (Κάτω)" : "PRO Speech (Bottom)",
+        bottom.speechDetected ? "YES" : "NO"
+);
+logLabelOkValue("Bottom RMS", String.valueOf((int) bottom.rms));
+logLabelOkValue("Bottom Peak", String.valueOf((int) bottom.peak));
 
-            logLabelOkValue("PRO Speech (Top)", top.speechDetected ? "YES" : "NO");
-            logLabelOkValue("Top RMS", String.valueOf((int) top.rms));
-            logLabelOkValue("Top Peak", String.valueOf((int) top.peak));
+logLabelOkValue(
+        gr ? "Ομιλία (Άνω)" : "PRO Speech (Top)",
+        top.speechDetected ? "YES" : "NO"
+);
+logLabelOkValue("Top RMS", String.valueOf((int) top.rms));
+logLabelOkValue("Top Peak", String.valueOf((int) top.peak));
 
-            logLine();
-            if (bottom.speechDetected && top.speechDetected) {
-                logLabelOkValue(
-                        gr ? "Συνολικά" : "Overall",
-                        gr
-                                ? "Η ομιλία ανιχνεύθηκε και στα δύο μικρόφωνα"
-                                : "Speech detected on both microphones"
-                );
-            } else if (bottom.speechDetected) {
-                logLabelWarnValue(
-                        gr ? "Συνολικά" : "Overall",
-                        gr
-                                ? "Ομιλία ανιχνεύθηκε μόνο στο κάτω μικρόφωνο"
-                                : "Speech detected only on the bottom microphone"
-                );
-            } else {
-                logLabelErrorValue(
-                        gr ? "Συνολικά" : "Overall",
-                        gr
-                                ? "Ανεπαρκής ανίχνευση ομιλίας"
-                                : "Speech detection insufficient"
-                );
-            }
+// ----------------------------------------------------
+// OVERALL SPEECH RESULT
+// ----------------------------------------------------
+logLine();
+if (bottom.speechDetected && top.speechDetected) {
 
-        } catch (Throwable t) {
+    logLabelOkValue(
+            gr ? "Συνολικά" : "Overall",
+            gr
+                    ? "Η ομιλία ανιχνεύθηκε και στα δύο μικρόφωνα"
+                    : "Speech detected on both microphones"
+    );
 
-            logLabelErrorValue(
-                    gr ? "Σφάλμα" : "Error",
-                    gr ? "Αποτυχία PRO ανάλυσης" : "PRO analysis failed"
-            );
+} else if (bottom.speechDetected) {
 
-        } finally {
+    logLabelWarnValue(
+            gr ? "Συνολικά" : "Overall",
+            gr
+                    ? "Ομιλία ανιχνεύθηκε μόνο στο κάτω μικρόφωνο"
+                    : "Speech detected only on the bottom microphone"
+    );
 
-            try { AppTTS.stop(); } catch (Throwable ignore) {}
-            try { if (dialogRef.get() != null) dialogRef.get().dismiss(); } catch (Throwable ignore) {}
+} else {
 
-            appendHtml("<br>");
-            logOk("Lab 4 PRO finished.");
-            logLine();
-
-            runOnUiThread(this::enableSingleExportButton);
-        }
-
-    }).start();
+    logLabelWarnValue(
+            gr ? "Συνολικά" : "Overall",
+            gr
+                    ? "Ανεπαρκής ανίχνευση ομιλίας"
+                    : "Speech detection insufficient"
+    );
 }
 
 // ----------------------------------------------------
 // QUALITY LABELS (PRO — HONEST, NON-ALARMIST)
 // ----------------------------------------------------
+logLine();
+
 String bottomQ = lab4_qualityLabel(bottom);
 String topQ    = lab4_qualityLabel(top);
 
@@ -4259,6 +4253,13 @@ if (topQ.startsWith("GOOD") || topQ.startsWith("MODERATE")) {
             topQ
     );
 }
+
+} catch (Throwable t) {
+
+    logLabelErrorValue(
+            gr ? "Σφάλμα" : "Error",
+            gr ? "Αποτυχία PRO ανάλυσης" : "PRO analysis failed"
+    );
 
 /* ============================================================
    LAB 4 PRO — Failure handler

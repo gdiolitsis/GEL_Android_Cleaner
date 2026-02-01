@@ -3331,42 +3331,30 @@ private void lab1SpeakerTone() {
             // ------------------------------------------------------------
             // MIC ANALYSIS
             // ------------------------------------------------------------
-            MicDiagnosticEngine.Result r =
-                    MicDiagnosticEngine.run(this);
 
-            String conf = (r.confidence == null)
-                    ? ""
-                    : r.confidence.trim().toUpperCase(Locale.US);
+MicDiagnosticEngine.Result r =
+        MicDiagnosticEngine.run(this);
 
-            logLabelOkValue(
-                    "Mic RMS",
-                    String.valueOf((int) r.rms)
-            );
+int rms  = (int) r.rms;
+int peak = (int) r.peak;
 
-            logLabelOkValue(
-                    "Mic Peak",
-                    String.valueOf((int) r.peak)
-            );
+logLabelOkValue("Mic RMS",  String.valueOf(rms));
+logLabelOkValue("Mic Peak", String.valueOf(peak));
 
-            // Confidence = quality only (never red)
-            if (conf.contains("LOW")
-                    || conf.contains("WEAK")
-                    || conf.contains("FAIL")
-                    || conf.contains("NONE")
-                    || conf.contains("NO")) {
+String conf = (r.confidence == null)
+        ? ""
+        : r.confidence.trim().toUpperCase(Locale.US);
 
-                logLabelWarnValue(
-                        "Confidence",
-                        r.confidence
-                );
+// CONFIDENCE = QUALITY ONLY (NEVER RED)
+if (conf.contains("LOW") || conf.contains("WEAK")
+        || conf.contains("FAIL") || conf.contains("NONE") || conf.contains("NO")) {
 
-            } else {
+    logLabelWarnValue("Confidence", r.confidence);
 
-                logLabelOkValue(
-                        "Confidence",
-                        r.confidence
-                );
-            }
+} else {
+
+    logLabelOkValue("Confidence", r.confidence);
+}
 
             // ------------------------------------------------------------
             // SPEAKER OUTPUT EVALUATION (UNIFIED)
@@ -3502,26 +3490,34 @@ private void lab2SpeakerSweep() {
                 SystemClock.sleep(550);
             }
 
-            // ----------------------------------------------------
-            // MIC FEEDBACK ANALYSIS
-            // ----------------------------------------------------
-            
-            int rms  = (int) r.rms;
-            int peak = (int) r.peak;
+// ----------------------------------------------------
+// MIC FEEDBACK ANALYSIS
+// ----------------------------------------------------
+MicDiagnosticEngine.Result r =
+        MicDiagnosticEngine.run(this);
 
-            logLabelOkValue("Mic RMS",  String.valueOf(rms));
-            logLabelOkValue("Mic Peak", String.valueOf(peak));
+int rms  = (int) r.rms;
+int peak = (int) r.peak;
 
-            // ----------------------------------------------------
-            // CONFIDENCE (QUALITY, NOT EXISTENCE)
-            // ----------------------------------------------------
-            if (conf.contains("LOW") || conf.contains("WEAK")) {
-                logLabelWarnValue("Confidence", r.confidence);
-            } else if (conf.contains("FAIL") || conf.contains("NONE")) {
-                logLabelWarnValue("Confidence", r.confidence);
-            } else {
-                logLabelOkValue("Confidence", r.confidence);
-            }
+logLabelOkValue("Mic RMS",  String.valueOf(rms));
+logLabelOkValue("Mic Peak", String.valueOf(peak));
+
+String conf = (r.confidence == null)
+        ? ""
+        : r.confidence.trim().toUpperCase(Locale.US);
+
+// ----------------------------------------------------
+// CONFIDENCE (QUALITY, NOT EXISTENCE)
+// ----------------------------------------------------
+if (conf.contains("LOW") || conf.contains("WEAK")
+        || conf.contains("FAIL") || conf.contains("NONE")) {
+
+    logLabelWarnValue("Confidence", r.confidence);
+
+} else {
+
+    logLabelOkValue("Confidence", r.confidence);
+}
 
             // ----------------------------------------------------
             // HARD GATE — ABSOLUTE SILENCE ONLY

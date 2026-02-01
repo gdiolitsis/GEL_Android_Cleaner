@@ -3513,10 +3513,6 @@ private void lab2SpeakerSweep() {
             logLabelOkValue("Mic RMS",  String.valueOf(rms));
             logLabelOkValue("Mic Peak", String.valueOf(peak));
 
-            String conf = (r.confidence == null)
-                    ? ""
-                    : r.confidence.trim().toUpperCase(Locale.US);
-
             // ----------------------------------------------------
             // CONFIDENCE (QUALITY, NOT EXISTENCE)
             // ----------------------------------------------------

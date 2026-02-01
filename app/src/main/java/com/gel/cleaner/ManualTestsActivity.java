@@ -929,128 +929,190 @@ return (ip & 0xFF) + "." +
 
 // ============================================================
 // LAB 3 — User Confirmation Dialog (Earpiece)
+// FINAL — GEL Dark/Gold + Neon Green + TTS + Mute
 // ============================================================
 private void askUserEarpieceConfirmation() {
 
-runOnUiThread(() -> {  
+    runOnUiThread(() -> {
 
-    if (lab3WaitingUser) return;  
-    lab3WaitingUser = true;  
+        if (lab3WaitingUser) return;
+        lab3WaitingUser = true;
 
-    AlertDialog.Builder b =  
-            new AlertDialog.Builder(  
-                    ManualTestsActivity.this,  
-                    android.R.style.Theme_Material_Dialog_NoActionBar  
-            );  
-    b.setCancelable(false);  
+        final boolean gr = AppLang.isGreek(this);
 
-    // ---------- UI ROOT ----------  
-    LinearLayout root = new LinearLayout(this);  
-    root.setOrientation(LinearLayout.VERTICAL);  
-    root.setPadding(dp(28), dp(24), dp(28), dp(24));  
-    root.setMinimumWidth(dp(300)); 
+        AlertDialog.Builder b =
+                new AlertDialog.Builder(
+                        ManualTestsActivity.this,
+                        android.R.style.Theme_Material_Dialog_NoActionBar
+                );
+        b.setCancelable(false);
 
-    GradientDrawable bg = new GradientDrawable();  
-    bg.setColor(0xFF101010);  
-    bg.setCornerRadius(dp(18));  
-    bg.setStroke(dp(4), 0xFFFFD700);  
-    root.setBackground(bg);  
+        // ==========================
+        // ROOT
+        // ==========================
+        LinearLayout root = new LinearLayout(this);
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.setPadding(dp(28), dp(24), dp(28), dp(22));
+        root.setMinimumWidth(dp(300));
 
-    // ---------- MESSAGE ----------  
-    TextView msg = new TextView(this);  
-    msg.setText("Did you hear the sound?");  
-    msg.setTextColor(0xFFFFFFFF);  
-    msg.setTextSize(16f);  
-    msg.setGravity(Gravity.CENTER);  
-    msg.setPadding(0, 0, 0, dp(18));  
-    root.addView(msg);  
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(0xFF101010);
+        bg.setCornerRadius(dp(18));
+        bg.setStroke(dp(4), 0xFFFFD700);
+        root.setBackground(bg);
 
-    // ---------- BUTTON ROW ----------  
-    LinearLayout btnRow = new LinearLayout(this);  
-    btnRow.setOrientation(LinearLayout.HORIZONTAL);  
-    btnRow.setGravity(Gravity.CENTER);  
-    btnRow.setPadding(0, dp(8), 0, 0);  
+        // ==========================
+        // TITLE (WHITE)
+        // ==========================
+        TextView title = new TextView(this);
+        title.setText(gr ? "LAB 3 — Επιβεβαίωση" : "LAB 3 — Confirmation");
+        title.setTextColor(Color.WHITE);
+        title.setTextSize(17f);
+        title.setTypeface(null, Typeface.BOLD);
+        title.setGravity(Gravity.CENTER);
+        title.setPadding(0, 0, 0, dp(14));
+        root.addView(title);
 
-    LinearLayout.LayoutParams btnLp =  
-            new LinearLayout.LayoutParams(0, dp(52), 1f);  
-    btnLp.setMargins(dp(8), 0, dp(8), 0); 
+        // ==========================
+        // MESSAGE (NEON GREEN)
+        // ==========================
+        TextView msg = new TextView(this);
+        msg.setText(
+                gr
+                        ? "Άκουσες καθαρά τους ήχους\nαπό το ακουστικό;"
+                        : "Did you hear the tones\nclearly from the earpiece?"
+        );
+        msg.setTextColor(0xFF39FF14); // GEL neon green
+        msg.setTextSize(15f);
+        msg.setGravity(Gravity.CENTER);
+        msg.setLineSpacing(0f, 1.2f);
+        msg.setPadding(0, 0, 0, dp(18));
+        root.addView(msg);
 
-    // ---------- NO BUTTON ----------  
-    Button noBtn = new Button(this);  
-    noBtn.setText("NO");  
-    noBtn.setAllCaps(false);  
-    noBtn.setTextColor(0xFFFFFFFF);  
+        // ==========================
+        // MUTE CHECKBOX (GLOBAL TTS)
+        // ==========================
+        CheckBox muteBox = new CheckBox(this);
+        muteBox.setChecked(AppTTS.isMuted(this));
+        muteBox.setText(gr ? "Σίγαση φωνητικών οδηγιών" : "Mute voice instructions");
+        muteBox.setTextColor(0xFFDDDDDD);
+        muteBox.setGravity(Gravity.CENTER);
+        muteBox.setPadding(0, 0, 0, dp(14));
+        root.addView(muteBox);
 
-    GradientDrawable noBg = new GradientDrawable();  
-    noBg.setColor(0xFF8B0000);  
-    noBg.setCornerRadius(dp(14));  
-    noBg.setStroke(dp(3), 0xFFFFD700);  
-    noBtn.setBackground(noBg);  
-    noBtn.setLayoutParams(btnLp);  
+        muteBox.setOnCheckedChangeListener((v, checked) -> {
+            AppTTS.setMuted(this, checked);
+            try { AppTTS.stop(); } catch (Throwable ignore) {}
+        });
 
-    // ---------- YES BUTTON ----------  
-    Button yesBtn = new Button(this);  
-    yesBtn.setText("YES");  
-    yesBtn.setAllCaps(false);  
-    yesBtn.setTextColor(0xFFFFFFFF);  
+        // ==========================
+        // BUTTON ROW
+        // ==========================
+        LinearLayout btnRow = new LinearLayout(this);
+        btnRow.setOrientation(LinearLayout.HORIZONTAL);
+        btnRow.setGravity(Gravity.CENTER);
+        btnRow.setPadding(0, dp(6), 0, 0);
 
-    GradientDrawable yesBg = new GradientDrawable();  
-    yesBg.setColor(0xFF0B5F3B);  
-    yesBg.setCornerRadius(dp(14));  
-    yesBg.setStroke(dp(3), 0xFFFFD700);  
-    yesBtn.setBackground(yesBg);  
-    yesBtn.setLayoutParams(btnLp);  
+        LinearLayout.LayoutParams btnLp =
+                new LinearLayout.LayoutParams(0, dp(52), 1f);
+        btnLp.setMargins(dp(8), 0, dp(8), 0);
 
-    // ADD BUTTONS  
-    btnRow.addView(noBtn);  
-    btnRow.addView(yesBtn);  
-    root.addView(btnRow);  
+        // ---------- NO ----------
+        Button noBtn = new Button(this);
+        noBtn.setText(gr ? "ΟΧΙ" : "NO");
+        noBtn.setAllCaps(false);
+        noBtn.setTextColor(Color.WHITE);
 
-    b.setView(root);  
+        GradientDrawable noBg = new GradientDrawable();
+        noBg.setColor(0xFF8B0000);
+        noBg.setCornerRadius(dp(14));
+        noBg.setStroke(dp(3), 0xFFFFD700);
+        noBtn.setBackground(noBg);
+        noBtn.setLayoutParams(btnLp);
 
-    final AlertDialog d = b.create();  
-    if (d.getWindow() != null) {  
-        d.getWindow().setBackgroundDrawable(  
-                new ColorDrawable(Color.TRANSPARENT)  
-        );  
-    }  
+        // ---------- YES ----------
+        Button yesBtn = new Button(this);
+        yesBtn.setText(gr ? "ΝΑΙ" : "YES");
+        yesBtn.setAllCaps(false);
+        yesBtn.setTextColor(Color.WHITE);
 
-    // ---------- YES ACTION ----------  
-    yesBtn.setOnClickListener(v -> {  
-        lab3WaitingUser = false;  
+        GradientDrawable yesBg = new GradientDrawable();
+        yesBg.setColor(0xFF0B5F3B);
+        yesBg.setCornerRadius(dp(14));
+        yesBg.setStroke(dp(3), 0xFFFFD700);
+        yesBtn.setBackground(yesBg);
+        yesBtn.setLayoutParams(btnLp);
 
-        logOk("LAB 3 — Earpiece audio path OK.");  
-        logOk("User confirmed sound was heard from earpiece.");  
+        btnRow.addView(noBtn);
+        btnRow.addView(yesBtn);
+        root.addView(btnRow);
 
-        appendHtml("<br>");  
-        logOk("Lab 3 finished.");  
-        logLine();  
+        b.setView(root);
 
-        restoreLab3Audio();  
-        d.dismiss();  
-    });  
+        final AlertDialog d = b.create();
+        if (d.getWindow() != null) {
+            d.getWindow().setBackgroundDrawable(
+                    new ColorDrawable(Color.TRANSPARENT)
+            );
+        }
 
-    // ---------- NO ACTION ----------  
-    noBtn.setOnClickListener(v -> {  
-        lab3WaitingUser = false;  
+        // ==========================
+        // TTS PROMPT (ONCE)
+        // ==========================
+        if (!AppTTS.isMuted(this)) {
+            AppTTS.ensureSpeak(
+                    this,
+                    gr
+                            ? "Άκουσες καθαρά τους ήχους από το ακουστικό;"
+                            : "Did you hear the tones clearly from the earpiece?"
+            );
+        }
 
-        logError("LAB 3 — Earpiece audio path FAILED.");  
-        logWarn("User did NOT hear sound from earpiece.");  
-        logWarn("Possible earpiece failure or audio routing issue.");  
+        // ==========================
+        // YES ACTION (PASS)
+        // ==========================
+        yesBtn.setOnClickListener(v -> {
+            lab3WaitingUser = false;
 
-        appendHtml("<br>");  
-        logOk("Lab 3 finished.");  
-        logLine();  
+            logLabelOkValue(
+                    "LAB 3 — Earpiece",
+                    "User confirmed audio playback"
+            );
 
-        restoreLab3Audio();  
-        d.dismiss();  
-    });  
+            appendHtml("<br>");
+            logOk("Lab 3 finished.");
+            logLine();
 
-    d.show();  
-});
+            restoreLab3Audio();
+            d.dismiss();
+        });
 
+        // ==========================
+        // NO ACTION (FAIL)
+        // ==========================
+        noBtn.setOnClickListener(v -> {
+            lab3WaitingUser = false;
+
+            logLabelErrorValue(
+                    "LAB 3 — Earpiece",
+                    "User did NOT hear tones"
+            );
+            logLabelWarnValue(
+                    "Possible issue",
+                    "Earpiece failure or audio routing problem"
+            );
+
+            appendHtml("<br>");
+            logOk("Lab 3 finished.");
+            logLine();
+
+            restoreLab3Audio();
+            d.dismiss();
+        });
+
+        d.show();
+    });
 }
-
 // ============================================================
 // LAB 3 — STATE / HELPERS
 // ============================================================

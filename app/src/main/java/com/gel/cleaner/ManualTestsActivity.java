@@ -3276,50 +3276,50 @@ private void lab1SpeakerTone() {
                         am.isWiredHeadsetOn();
             } catch (Throwable ignore) {}
 
-// ------------------------------------------------------------
-// BLOCKED AUDIO PATH — STOP & ASK RE-RUN
-// ------------------------------------------------------------
-if (volumeMuted || bluetoothRouted || wiredRouted) {
+            // ------------------------------------------------------------
+            // BLOCKED AUDIO PATH — STOP & ASK RE-RUN
+            // ------------------------------------------------------------
+            if (volumeMuted || bluetoothRouted || wiredRouted) {
 
-    logLine();
-    logInfo("Audio output path check");
+                logLine();
+                logInfo("Audio output path check");
 
-    logLabelWarnValue("Status", "Not clear (blocked)");
+                logLabelWarnValue("Status", "Not clear (blocked)");
 
-    if (volumeMuted) {
-        logLabelWarnValue(
-                "Detected",
-                "Media volume is muted (volume = 0)"
-        );
-    }
+                if (volumeMuted) {
+                    logLabelWarnValue(
+                            "Detected",
+                            "Media volume is muted (volume = 0)"
+                    );
+                }
 
-    if (bluetoothRouted) {
-        logLabelWarnValue(
-                "Detected",
-                "Audio routed to Bluetooth device"
-        );
-    }
+                if (bluetoothRouted) {
+                    logLabelWarnValue(
+                            "Detected",
+                            "Audio routed to Bluetooth device"
+                    );
+                }
 
-    if (wiredRouted) {
-        logLabelWarnValue(
-                "Detected",
-                "Audio routed to wired or USB device"
-        );
-    }
+                if (wiredRouted) {
+                    logLabelWarnValue(
+                            "Detected",
+                            "Audio routed to wired or USB device"
+                    );
+                }
 
-    logLabelOkValue(
-            "Action required",
-            "Fix the condition(s) above and re-run LAB 1"
-    );
+                logLabelOkValue(
+                        "Action required",
+                        "Fix the condition(s) above and re-run LAB 1"
+                );
 
-    appendHtml("<br>");
-    logLabelWarnValue(
-            "LAB 1 result",
-            "Inconclusive (audio path blocked)"
-    );
-    logLine();
-    return;
-}
+                appendHtml("<br>");
+                logLabelWarnValue(
+                        "LAB 1 result",
+                        "Inconclusive (audio path blocked)"
+                );
+                logLine();
+                return;
+            }
 
             // ------------------------------------------------------------
             // PLAY TEST TONE
@@ -3328,139 +3328,142 @@ if (volumeMuted || bluetoothRouted || wiredRouted) {
             tg.startTone(ToneGenerator.TONE_DTMF_1, 1200);
             SystemClock.sleep(1400);
 
-// ------------------------------------------------------------
-// MIC ANALYSIS
-// ------------------------------------------------------------
-MicDiagnosticEngine.Result r =
-        MicDiagnosticEngine.run(this);
-String conf = (r.confidence == null)
-        ? ""
-        : r.confidence.trim().toUpperCase(Locale.US);
+            // ------------------------------------------------------------
+            // MIC ANALYSIS
+            // ------------------------------------------------------------
+            MicDiagnosticEngine.Result r =
+                    MicDiagnosticEngine.run(this);
 
-logLabelOkValue(
-        "Mic RMS",
-        String.valueOf((int) r.rms)
-);
+            String conf = (r.confidence == null)
+                    ? ""
+                    : r.confidence.trim().toUpperCase(Locale.US);
 
-logLabelOkValue(
-        "Mic Peak",
-        String.valueOf((int) r.peak)
-);
+            logLabelOkValue(
+                    "Mic RMS",
+                    String.valueOf((int) r.rms)
+            );
 
-String conf = (r.confidence == null)
-        ? ""
-        : r.confidence.trim().toUpperCase(Locale.US);
+            logLabelOkValue(
+                    "Mic Peak",
+                    String.valueOf((int) r.peak)
+            );
 
-if (conf.contains("LOW") || conf.contains("WEAK")
-        || conf.contains("FAIL") || conf.contains("NONE") || conf.contains("NO")) {
+            // Confidence = quality only (never red)
+            if (conf.contains("LOW")
+                    || conf.contains("WEAK")
+                    || conf.contains("FAIL")
+                    || conf.contains("NONE")
+                    || conf.contains("NO")) {
 
-    logLabelWarnValue(
-            "Confidence",
-            r.confidence
-    );
+                logLabelWarnValue(
+                        "Confidence",
+                        r.confidence
+                );
 
-} else {
+            } else {
 
-    logLabelOkValue(
-            "Confidence",
-            r.confidence
-    );
-}
+                logLabelOkValue(
+                        "Confidence",
+                        r.confidence
+                );
+            }
 
-// ------------------------------------------------------------
-// SPEAKER OUTPUT EVALUATION (UNIFIED)
-// ------------------------------------------------------------
-SpeakerOutputState state = evaluateSpeakerOutput(r);
+            // ------------------------------------------------------------
+            // SPEAKER OUTPUT EVALUATION (UNIFIED)
+            // ------------------------------------------------------------
+            SpeakerOutputState state = evaluateSpeakerOutput(r);
 
-if (state == SpeakerOutputState.NO_OUTPUT) {
+            if (state == SpeakerOutputState.NO_OUTPUT) {
 
-    logLine();
-    logInfo("Speaker output evaluation");
+                logLine();
+                logInfo("Speaker output evaluation");
 
-    logLabelErrorValue(
-            "Speaker output",
-            "No acoustic output detected"
-    );
+                logLabelErrorValue(
+                        "Speaker output",
+                        "No acoustic output detected"
+                );
 
-    logLabelWarnValue(
-            "Diagnosis",
-            "Audio path is clear, but no sound was captured by the microphone"
-    );
+                logLabelWarnValue(
+                        "Diagnosis",
+                        "Audio path is clear, but no sound was captured by the microphone"
+                );
 
-    logLabelWarnValue(
-            "Possible cause",
-            "Speaker hardware failure or severe acoustic isolation"
-    );
+                logLabelWarnValue(
+                        "Possible cause",
+                        "Speaker hardware failure or severe acoustic isolation"
+                );
 
-    logLabelOkValue(
-            "Recommended action",
-            "Re-run the test once more. If silence persists, hardware inspection is advised"
-    );
+                logLabelOkValue(
+                        "Recommended action",
+                        "Re-run the test once more. If silence persists, hardware inspection is advised"
+                );
 
-    appendHtml("<br>");
-    logLabelWarnValue(
-            "LAB 1 result",
-            "Inconclusive (no speaker output)"
-    );
-    logLine();
-    return;
-}
+                appendHtml("<br>");
+                logLabelWarnValue(
+                        "LAB 1 result",
+                        "Inconclusive (no speaker output)"
+                );
+                logLine();
+                return;
+            }
 
-// ------------------------------------------------------------
-// OUTPUT DETECTED — CONFIDENCE IS INFORMATIONAL ONLY
-// ------------------------------------------------------------
-logLine();
-logInfo("Speaker output evaluation");
+            // ------------------------------------------------------------
+            // OUTPUT DETECTED — CONFIDENCE IS INFORMATIONAL ONLY
+            // ------------------------------------------------------------
+            logLine();
+            logInfo("Speaker output evaluation");
 
-logLabelOkValue(
-        "Speaker output",
-        "Acoustic signal detected"
-);
+            logLabelOkValue(
+                    "Speaker output",
+                    "Acoustic signal detected"
+            );
 
-if (conf.contains("LOW")) {
+            if (conf.contains("LOW")) {
 
-    logLabelWarnValue(
-            "Note",
-            "Low confidence may be caused by DSP noise cancellation, "
-          + "microphone placement, or acoustic design"
-    );
+                logLabelWarnValue(
+                        "Note",
+                        "Low confidence may be caused by DSP noise cancellation, " +
+                        "microphone placement, or acoustic design"
+                );
 
-} else {
+            } else {
 
-    logLabelOkValue(
-            "Note",
-            "Speaker signal detected successfully"
-    );
-}
+                logLabelOkValue(
+                        "Note",
+                        "Speaker signal detected successfully"
+                );
+            }
 
-} catch (Throwable t) {
+        } catch (Throwable t) {
 
-    logLine();
-    logInfo("Speaker tone test");
-    logLabelErrorValue(
-            "Status",
-            "Failed"
-    );
-    logLabelWarnValue(
-            "Reason",
-            "Speaker tone test execution error"
-    );
+            logLine();
+            logInfo("Speaker tone test");
 
-} finally {
+            logLabelErrorValue(
+                    "Status",
+                    "Failed"
+            );
 
-    if (tg != null) {
-        tg.release();
-    }
+            logLabelWarnValue(
+                    "Reason",
+                    "Speaker tone test execution error"
+            );
 
-    appendHtml("<br>");
-    logLabelOkValue(
-            "LAB 1",
-            "Finished"
-    );
-    logLine();
-}
+        } finally {
 
-}).start();
+            if (tg != null) {
+                tg.release();
+            }
+
+            appendHtml("<br>");
+            logLabelOkValue(
+                    "LAB 1",
+                    "Finished"
+            );
+            logLine();
+        }
+
+    }).start();
 }
 
 // ============================================================
@@ -3502,9 +3505,7 @@ private void lab2SpeakerSweep() {
             // ----------------------------------------------------
             // MIC FEEDBACK ANALYSIS
             // ----------------------------------------------------
-            MicDiagnosticEngine.Result r =
-                    MicDiagnosticEngine.run(this);
-
+            
             int rms  = (int) r.rms;
             int peak = (int) r.peak;
 

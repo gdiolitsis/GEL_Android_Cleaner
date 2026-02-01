@@ -1114,6 +1114,92 @@ lab3Tone.release();
 lab3Tone = null;
 }
 
+private void askUserEarpieceConfirmation() {
+
+    final boolean gr = AppLang.isGreek(this);
+
+    runOnUiThread(() -> {
+
+        AlertDialog.Builder b =
+                new AlertDialog.Builder(
+                        this,
+                        android.R.style.Theme_Material_Dialog_NoActionBar
+                );
+        b.setCancelable(false);
+
+        LinearLayout root = new LinearLayout(this);
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.setPadding(dp(24), dp(22), dp(24), dp(20));
+
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(0xFF101010);
+        bg.setCornerRadius(dp(18));
+        bg.setStroke(dp(3), 0xFFFFD700);
+        root.setBackground(bg);
+
+        // TITLE
+        TextView title = new TextView(this);
+        title.setText(gr ? "LAB 3 — Επιβεβαίωση" : "LAB 3 — Confirmation");
+        title.setTextColor(Color.WHITE);
+        title.setTextSize(17f);
+        title.setTypeface(null, Typeface.BOLD);
+        title.setGravity(Gravity.CENTER);
+        title.setPadding(0, 0, 0, dp(12));
+        root.addView(title);
+
+        // MESSAGE (NEON GREEN)
+        TextView msg = new TextView(this);
+        msg.setText(
+                gr
+                        ? "Άκουσες καθαρά τους ήχους από το ακουστικό;"
+                        : "Did you hear the tones clearly from the earpiece?"
+        );
+        msg.setTextColor(0xFF39FF14);
+        msg.setTextSize(14.5f);
+        msg.setGravity(Gravity.CENTER);
+        msg.setPadding(0, 0, 0, dp(18));
+        root.addView(msg);
+
+        // YES BUTTON
+        Button yes = gelButton(
+                this,
+                gr ? "ΝΑΙ" : "YES",
+                0xFF39FF14
+        );
+
+        // NO BUTTON
+        Button no = gelButton(
+                this,
+                gr ? "ΟΧΙ" : "NO",
+                0xFFFF4444
+        );
+
+        root.addView(yes);
+        root.addView(no);
+
+        b.setView(root);
+        AlertDialog d = b.create();
+
+        if (d.getWindow() != null) {
+            d.getWindow().setBackgroundDrawable(
+                    new ColorDrawable(Color.TRANSPARENT)
+            );
+        }
+
+        yes.setOnClickListener(v -> {
+            logLabelOkValue("Earpiece", "User confirmed audio playback");
+            d.dismiss();
+        });
+
+        no.setOnClickListener(v -> {
+            logLabelErrorValue("Earpiece", "User did NOT hear tones");
+            d.dismiss();
+        });
+
+        d.show();
+    });
+}
+
 // ============================================================
 // LAB 8.1 — HUMAN SUMMARY HELPERS
 // ============================================================
@@ -3490,22 +3576,18 @@ private void lab3EarpieceManual() {
                 : "LAB 3 — Earpiece Audio Test";
 
         String bodyText = gr
-                ? "Τοποθέτησε το ακουστικό του τηλεφώνου στο αυτί σου.\n\n"
-                  + "Θα αναπαραχθούν δοκιμαστικοί ήχοι από το ακουστικό."
-                  + "Πάτησε έναρξη για να ξεκινήσει ο έλεγχος."
-                : "Place the phone earpiece to your ear.\n\n"
-                  + "Test tones will be played through the earpiece.";
-                  + "Press start to begin the test.";
-
+                ?
+        "Τοποθέτησε το ακουστικό του τηλεφώνου στο αυτί σου. "
+          + "Πάτησε έναρξη για να ξεκινήσει ο έλεγχος."
+        : "Put the phone earpiece to your ear. "
+          + "Press start to begin the test.";
                   
 
         String ttsText = gr
-                ? "Τοποθέτησε το ακουστικό του τηλεφώνου στο αυτί σου.\n\n"
-                  + "Θα αναπαραχθούν δοκιμαστικοί ήχοι από το ακουστικό."
-                  + "Πάτησε έναρξη για να ξεκινήσει ο έλεγχος."
-                : "Place the phone earpiece to your ear.\n\n"
-                  + "Test tones will be played through the earpiece.";
-                  + "Press start to begin the test.";
+        ? "Τοποθέτησε το ακουστικό του τηλεφώνου στο αυτί σου. "
+          + "Πάτησε έναρξη για να ξεκινήσει ο έλεγχος."
+        : "Put the phone earpiece to your ear. "
+          + "Press start to begin the test.";
 
         // ============================================================
         // DIALOG
@@ -3688,13 +3770,7 @@ private void lab4MicManual() {
             // STAGE A — BASE (FUNCTIONAL CHECK) — NO SPEECH REQUIRED
             // ====================================================
             logInfo(gr ? "LAB 4 (BASE): Έλεγχος λειτουργίας μικροφώνου..." : "LAB 4 (BASE): Microphone functional check...");
-            logLabelOkValue(
-                    gr ? "Σημείωση" : "Note",
-                    gr
-                            ? "Δεν απαιτείται ομιλία σε αυτό το στάδιο"
-                            : "Speech is not required at this stage"
-            );
-
+            
             // Best-effort functional sample (quick)
             VoiceMetrics base = lab4_captureVoiceBestEffort(android.media.MediaRecorder.AudioSource.VOICE_RECOGNITION, 900);
             if (!base.ok) {
@@ -3881,13 +3957,13 @@ private void lab4MicManual() {
             // ---- PRO step 2: TOP prompt (text + TTS), detect speech (3s, retry once)
             lab4_proUpdateMessage(dialogRef.get(), gr,
                     gr
-                            ? "Τώρα μίλησε κοντά στο ΑΝΩ μικρόφωνο (περιοχή ακουστικού).\n\nΠεριμένω ομιλία..."
-                            : "Now speak near the TOP microphone (earpiece area).\n\nListening for speech..."
+                            ? "Τώρα μίλησε κοντά στο ΑΝΩ μικρόφωνο,στο ακουστικο.\n\nΠεριμένω ομιλία..."
+                            : "Now speak near the TOP microphone, at the earpiece area.\n\nListening for speech..."
             );
 
             speakOnce(gr
-                    ? "Τώρα μίλησε κοντά στο άνω μικρόφωνο, στο ακουστικό."
-                    : "Now speak near the top microphone, at the earpiece area."
+                    ? "Τώρα μίλησε κοντά στο ΑΝΩ μικρόφωνο,στο ακουστικο.\n\nΠεριμένω ομιλία..."
+                            : "Now speak near the TOP microphone, at the earpiece area.\n\nListening for speech..."
             );
 
             // Best-effort: use VOICE_COMMUNICATION to bias toward top/near-ear behavior on some devices

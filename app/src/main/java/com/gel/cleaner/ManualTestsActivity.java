@@ -65,6 +65,7 @@ import android.media.AudioAttributes;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioTrack;
+import android.media.AudioRecord;
 import android.media.Image;
 import android.media.ImageReader;
 import android.media.MediaRecorder;
@@ -380,6 +381,22 @@ private VoiceMetrics lab4WaitSpeechStrict(
     }
 
     return out;
+}
+
+/* ============================================================
+   LAB 4 PRO — Update dialog message (thread-safe)
+   ============================================================ */
+private void lab4UpdateMsg(AlertDialog d, boolean gr, String text) {
+    if (d == null) return;
+
+    runOnUiThread(() -> {
+        try {
+            TextView tv = d.findViewById(0x4C414234); // same ID we set
+            if (tv != null) {
+                tv.setText(text);
+            }
+        } catch (Throwable ignore) {}
+    });
 }
 
 // ============================================================  
@@ -4223,6 +4240,32 @@ private void lab4MicPro() {
         }
 
     }).start();
+}
+
+/* ============================================================
+   LAB 4 PRO — Failure handler
+   ============================================================ */
+private void lab4Fail(AlertDialog d, boolean gr) {
+
+    lab4UpdateMsg(
+            d,
+            gr,
+            gr
+                    ? "Δεν ανιχνεύθηκε ομιλία.\n\nΤο στάδιο PRO δεν μπορεί να ολοκληρωθεί."
+                    : "No speech detected.\n\nThe PRO stage cannot be completed."
+    );
+
+    speakOnce(
+            gr
+                    ? "Δεν ανιχνεύθηκε ομιλία. Το προχωρημένο στάδιο δεν ολοκληρώθηκε."
+                    : "No speech was detected. The advanced stage was not completed."
+    );
+
+    SystemClock.sleep(900);
+
+    try {
+        if (d != null) d.dismiss();
+    } catch (Throwable ignore) {}
 }
 
 /* ============================================================

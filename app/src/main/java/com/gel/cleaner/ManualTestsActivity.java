@@ -3333,6 +3333,9 @@ if (volumeMuted || bluetoothRouted || wiredRouted) {
 // ------------------------------------------------------------
 MicDiagnosticEngine.Result r =
         MicDiagnosticEngine.run(this);
+String conf = (r.confidence == null)
+        ? ""
+        : r.confidence.trim().toUpperCase(Locale.US);
 
 logLabelOkValue(
         "Mic RMS",

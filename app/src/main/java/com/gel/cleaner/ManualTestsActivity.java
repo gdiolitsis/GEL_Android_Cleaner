@@ -312,7 +312,7 @@ private static final float MULT_MAX = 3.4f;
 private static final float DEFAULT_MULT = 2.6f;
 
 // Speech confirmation (keeps it honest)
-private static final int REQUIRED_FRAMES = 8;   // consecutive hits
+private static final int REQUIRED_FRAMES = 5;   // consecutive hits
 private static final int MIN_LISTEN_MS   = 900; // don't judge too early
 
 // Conservative floors (avoid false positives in silence)
@@ -378,7 +378,7 @@ private VoiceMetrics lab4WaitSpeechStrict(
     final int NOISE_CAL_MS     = 320;     // noise floor calibration window
     final int MIN_LISTEN_MS    = 900;     // do not judge too early
     final int FRAME_SLEEP_MS   = 35;      // pacing
-    final int REQUIRED_FRAMES  = 7;       // consecutive frames to confirm speech
+    final int REQUIRED_FRAMES  = 5;       // consecutive frames to confirm speech
 
     // Absolute minima (silence-safe)
     final float ABS_MIN_TOP    = 210f;
@@ -403,13 +403,10 @@ private VoiceMetrics lab4WaitSpeechStrict(
     // BOTTOM preferred: VOICE_RECOGNITION -> MIC
     final int[] sources = isTopPreferred
             ? new int[] {
-                    MediaRecorder.AudioSource.VOICE_COMMUNICATION,
-                    MediaRecorder.AudioSource.MIC,
-                    MediaRecorder.AudioSource.VOICE_RECOGNITION
+MediaRecorder.AudioSource.MIC
             }
             : new int[] {
-                    MediaRecorder.AudioSource.VOICE_RECOGNITION,
-                    MediaRecorder.AudioSource.MIC
+MediaRecorder.AudioSource.MIC
             };
 
     VoiceMetrics last = null;
@@ -881,7 +878,7 @@ private VoiceMetrics lab4_captureSpeechWindow(
 
             if (isTop) {
                 // TOP mic: MUST be sustained AND must pass BOTH gates (anti spike/AGC)
-                float rmsGate = Math.max(dynamicThr * 0.70f, noiseFloor * 2.0f);
+                float rmsGate = Math.max(dynamicThr * 0.55f, noiseFloor * 1.6f);
                 int peakGate = Math.max(topPeakFloor, (int) (dynamicThr * 2.6f));
                 speechHit = (peak >= peakGate && rms >= rmsGate);
             } else {
@@ -4695,11 +4692,11 @@ private void lab4MicPro() {
             );
             speakOnce(gr ? "Μίλησε τώρα." : "Speak now.");
 
-            // 1st try (3s)
+            // 1st try (5s)
             bottom = lab4WaitSpeechStrict(
                     cancelled,
-                    MediaRecorder.AudioSource.VOICE_RECOGNITION,
-                    3000
+          MediaRecorder.AudioSource.MIC,
+                    5000
             );
 
             // Retry ( +5s ) if no speech
@@ -4716,7 +4713,7 @@ private void lab4MicPro() {
 
                 bottom = lab4WaitSpeechStrict(
                         cancelled,
-                        MediaRecorder.AudioSource.VOICE_RECOGNITION,
+            MediaRecorder.AudioSource.MIC,
                         5000
                 );
             }
@@ -4776,6 +4773,8 @@ private void lab4MicPro() {
             } catch (Throwable ignore) {}
 
             // ================= FINAL LOGS (ALWAYS) =================
+            
+appendHtml("<br>");
             logInfo(gr ? "LAB 4 PRO — Συμπεράσματα:" : "LAB 4 PRO — Conclusions:");
             logLine();
 

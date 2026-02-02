@@ -306,26 +306,20 @@ private VoiceMetrics lab4WaitSpeechStrict(
     out.ok = false;
     out.speechDetected = false;
 
-    // ⏱️ Ελάχιστος χρόνος ακρόασης πριν κρίνουμε
     final int MIN_LISTEN_MS = 900;
-
-    // 🎙️ Πόσα συνεχόμενα frames = επιβεβαιωμένη ομιλία
     final int REQUIRED_FRAMES = 8;
 
-    // 🔊 Απόλυτο κατώφλι (ασφάλεια σε απόλυτη ησυχία)
     final float ABS_MIN_THR =
             (audioSource == MediaRecorder.AudioSource.VOICE_COMMUNICATION)
                     ? 200f   // TOP
                     : 180f;  // BOTTOM
 
-    // 📈 Πόσο πάνω από τον θόρυβο πρέπει να είναι η ομιλία
     final float NOISE_MULTIPLIER = 2.6f;
 
     for (int a = 0; a < attempts && !cancelled.get(); a++) {
 
         long start = SystemClock.uptimeMillis();
         int speechFrames = 0;
-
         AudioRecord rec = null;
 
         try {
@@ -337,7 +331,7 @@ private VoiceMetrics lab4WaitSpeechStrict(
                     AudioFormat.ENCODING_PCM_16BIT
             );
 
-            int bufSize = Math.max(minBuf, rate / 4); // ~250ms
+            int bufSize = Math.max(minBuf, rate / 4);
             short[] data = new short[bufSize];
 
             rec = new AudioRecord(
@@ -348,7 +342,9 @@ private VoiceMetrics lab4WaitSpeechStrict(
                     bufSize * 2
             );
 
-            if (rec.getState() != AudioRecord.STATE_INITIALIZED) continue;
+            if (rec.getState() != AudioRecord.STATE_INITIALIZED) {
+                continue;
+            }
 
             rec.startRecording();
 
@@ -357,10 +353,9 @@ private VoiceMetrics lab4WaitSpeechStrict(
             // ----------------------------
             float noiseAcc = 0f;
             int noiseFrames = 0;
-            long noiseUntil = start + 350; // ~350ms
+            long noiseUntil = start + 350;
 
-            while (!cancelled.get()
-                    && SystemClock.uptimeMillis() < noiseUntil) {
+            while (!cancelled.get() && SystemClock.uptimeMillis() < noiseUntil) {
 
                 int n = rec.read(data, 0, data.length);
                 if (n <= 0) continue;
@@ -387,53 +382,71 @@ private VoiceMetrics lab4WaitSpeechStrict(
                     noiseFloor * NOISE_MULTIPLIER
             );
 
-// ----------------------------
-// 3️⃣ SPEECH DETECTION
-// ----------------------------
-while (!cancelled.get()
-        && SystemClock.uptimeMillis() - start < windowMs) {
+            // ----------------------------
+            // 3️⃣ SPEECH DETECTION
+            // ----------------------------
+            while (!cancelled.get()
+                    && SystemClock.uptimeMillis() - start < windowMs) {
 
-    int n = rec.read(data, 0, data.length);
-    if (n <= 0) continue;
+                int n = rec.read(data, 0, data.length);
+                if (n <= 0) continue;
 
-    float sum = 0f;
-    int peak = 0;
+                float sum = 0f;
+                int peak = 0;
 
-    for (int i = 0; i < n; i++) {
-        int v = Math.abs(data[i]);
-        peak = Math.max(peak, v);
-        sum += (float) v * (float) v;
-    }
+                for (int i = 0; i < n; i++) {
+                    int v = Math.abs(data[i]);
+                    peak = Math.max(peak, v);
+                    sum += (float) v * (float) v;
+                }
 
-    float rms = (float) Math.sqrt(sum / Math.max(1, n));
+                float rms = (float) Math.sqrt(sum / Math.max(1, n));
 
-    out.rms = rms;
-    out.peak = peak;
+                out.rms = rms;
+                out.peak = peak;
 
-    // ⛔ Μην αποφασίζεις πριν περάσει ελάχιστος χρόνος
-    if (SystemClock.uptimeMillis() - start < MIN_LISTEN_MS) {
-        continue;
-    }
+                if (SystemClock.uptimeMillis() - start < MIN_LISTEN_MS) {
+                    continue;
+                }
 
-    boolean speechHit;
+                boolean speechHit;
 
-    if (audioSource == MediaRecorder.AudioSource.VOICE_COMMUNICATION) {
-        // TOP mic: peak-driven (AGC-safe)
-        speechHit = (peak >= Math.max(1200, dynamicThr * 2.2f));
-    } else {
-        // BOTTOM mic: rms + peak
-        speechHit = (rms >= dynamicThr && peak >= Math.max(800, dynamicThr * 3f));
-    }
+                if (audioSource == MediaRecorder.AudioSource.VOICE_COMMUNICATION) {
+                    speechHit = (peak >= Math.max(1200, dynamicThr * 2.2f));
+                } else {
+                    speechHit = (rms >= dynamicThr
+                            && peak >= Math.max(800, dynamicThr * 3f));
+                }
 
-    if (speechHit) {
-        speechFrames++;
-        if (speechFrames >= REQUIRED_FRAMES) {
-            out.speechDetected = true;
+                if (speechHit) {
+                    speechFrames++;
+                    if (speechFrames >= REQUIRED_FRAMES) {
+                        out.speechDetected = true;
+                        break;
+                    }
+                } else {
+                    speechFrames = 0;
+                }
+            }
+
+        } catch (Throwable ignore) {
+
+        } finally {
+            try {
+                if (rec != null) {
+                    rec.stop();
+                    rec.release();
+                }
+            } catch (Throwable ignore) {}
+        }
+
+        if (out.speechDetected) {
             break;
         }
-    } else {
-        speechFrames = 0;
     }
+
+    out.ok = true;
+    return out;
 }
 
 /* ============================================================

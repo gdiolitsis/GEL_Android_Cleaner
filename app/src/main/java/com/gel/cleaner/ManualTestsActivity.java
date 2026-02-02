@@ -5916,10 +5916,6 @@ if (cameraSubsystemOk) {
     final Lab8Cam cam = cams.get(idx[0]);
     idx[0]++;
 
-    appendHtml("<br>");
-    logSection("LAB 8 — Camera ID " + cam.id + " (" + cam.facing + ")");
-    logLine();
-
     if (cam.hasFlash) {
         lab8TryTorchToggle(cam.id, cam, overall);
     } else {

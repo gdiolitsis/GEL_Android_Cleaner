@@ -438,7 +438,7 @@ private VoiceMetrics lab4WaitSpeechStrict(
                         usedSource = s;
                         break;
                     } else {
-                        tmp.release();
+                        try { tmp.release(); } catch (Throwable ignore) {}
                     }
                 } catch (Throwable ignore) {}
             }
@@ -485,7 +485,7 @@ private VoiceMetrics lab4WaitSpeechStrict(
                 float rms = (float) Math.sqrt(sum / Math.max(1, n));
 
                 // 🔑 IGNORE EARLY SPEECH BURSTS
-                
+                if (rms > 600f) continue;
 
                 noiseAcc += rms;
                 noiseFrames++;
@@ -525,10 +525,9 @@ private VoiceMetrics lab4WaitSpeechStrict(
             // ----------------------------
             // 3) STRICT SPEECH DETECTION
             // ----------------------------
-        } else if (speechFrames > 0) {
-    // decay αντί για βίαιο reset (AGC-friendly)
-    speechFrames--;
-}
+            int speechFrames = 0;
+            float speechAcc = 0f;
+            int speechAccFrames = 0;
 
             while (!cancelled.get() &&
                     (SystemClock.uptimeMillis() - start) < remaining) {
@@ -564,7 +563,7 @@ private VoiceMetrics lab4WaitSpeechStrict(
                             (peak >= Math.max(TOP_PEAK_FLOOR, dynamicThr * 2.2f));
                 } else {
                     int peakGate =
-                            Math.max(BOT_PEAK_FLOOR, (int)(dynamicThr * 2.0f));
+                            Math.max(BOT_PEAK_FLOOR, (int) (dynamicThr * 2.0f));
                     speechHit = (rms >= dynamicThr && peak >= peakGate);
                 }
 
@@ -574,22 +573,26 @@ private VoiceMetrics lab4WaitSpeechStrict(
                     speechAccFrames++;
 
                     if (speechFrames >= REQUIRED_FRAMES) {
-    out.ok = true;
-    out.speechDetected = true;
-    out.rms = rms;
-    out.peak = peak;
-    out.speechRms =
-            (speechAccFrames > 0)
-                    ? (speechAcc / speechAccFrames)
-                    : rms;
-    return out;
-}
-} else if (speechFrames > 0) {
-    // decay αντί για reset
-    speechFrames--;
-}
+                        out.ok = true;
+                        out.speechDetected = true;
+                        out.rms = rms;
+                        out.peak = peak;
+                        out.speechRms =
+                                (speechAccFrames > 0)
+                                        ? (speechAcc / speechAccFrames)
+                                        : rms;
+                        return out;
+                    }
+                } else {
+                    // decay αντί για βίαιο reset (AGC-friendly)
+                    if (speechFrames > 0) speechFrames--;
+                    if (speechFrames == 0) {
+                        speechAcc = 0f;
+                        speechAccFrames = 0;
+                    }
+                }
 
-SystemClock.sleep(FRAME_SLEEP_MS);
+                SystemClock.sleep(FRAME_SLEEP_MS);
             }
 
             VoiceMetrics honest = new VoiceMetrics();
@@ -607,8 +610,8 @@ SystemClock.sleep(FRAME_SLEEP_MS);
         } finally {
             try {
                 if (rec != null) {
-                    rec.stop();
-                    rec.release();
+                    try { rec.stop(); } catch (Throwable ignore) {}
+                    try { rec.release(); } catch (Throwable ignore) {}
                 }
             } catch (Throwable ignore) {}
         }
@@ -634,7 +637,7 @@ private VoiceMetrics lab4WaitSpeechStrict(
     return lab4WaitSpeechStrict(
             cancelled,
             audioSource,
-            1,        // attempts = 1 (retry handled by PRO)
+            1,
             windowMs
     );
 }
@@ -670,7 +673,6 @@ private String lab4_deviceKey() {
         if (m == null) m = "unk";
         if (d == null) d = "unk";
         String s = (m + "_" + d).toLowerCase(java.util.Locale.US);
-        // compact / safe
         s = s.replaceAll("[^a-z0-9]+", "_");
         if (s.length() > 64) s = s.substring(0, 64);
         return s;
@@ -680,8 +682,6 @@ private String lab4_deviceKey() {
 }
 
 private String lab4_roomKey(float noiseRms) {
-    // Conservative buckets that work across phones:
-    // quiet: <= 140, normal: <= 320, noisy: > 320
     if (noiseRms <= 140f) return "quiet";
     if (noiseRms <= 320f) return "normal";
     return "noisy";
@@ -727,13 +727,11 @@ private VoiceMetrics lab4_captureSpeechWindow(
         final int fmt = AudioFormat.ENCODING_PCM_16BIT;
 
         int minBuf = AudioRecord.getMinBufferSize(rate, ch, fmt);
-        int bufSize = Math.max(minBuf, rate / 4);   // ~250ms
+        int bufSize = Math.max(minBuf, rate / 4);
         short[] data = new short[bufSize];
 
         rec = new AudioRecord(audioSource, rate, ch, fmt, bufSize * 2);
         if (rec.getState() != AudioRecord.STATE_INITIALIZED) {
-
-            // IMPORTANT: do not “finish instantly” -> block until time budget ends
             while (!cancelled.get() && SystemClock.uptimeMillis() < deadline) {
                 SystemClock.sleep(50);
             }
@@ -742,18 +740,12 @@ private VoiceMetrics lab4_captureSpeechWindow(
 
         rec.startRecording();
 
-        // ----------------------------
-        // 0) SETTLE IGNORE (POP/route)
-        // ----------------------------
         long settleUntil = SystemClock.uptimeMillis() + Math.max(0, settleIgnoreMs);
         while (!cancelled.get() && SystemClock.uptimeMillis() < settleUntil) {
             int n = rec.read(data, 0, data.length);
             if (n <= 0) SystemClock.sleep(humanSleepMs);
         }
 
-        // ----------------------------
-        // 1) NOISE FLOOR CALIBRATION
-        // ----------------------------
         float noiseAcc = 0f;
         int noiseFrames = 0;
         long noiseUntil = SystemClock.uptimeMillis() + Math.max(0, noiseCalMs);
@@ -765,7 +757,7 @@ private VoiceMetrics lab4_captureSpeechWindow(
             double sumSq = 0.0;
             for (int i = 0; i < n; i++) {
                 int v = data[i];
-                int av = (v == Short.MIN_VALUE) ? 32767 : Math.abs(v); // safe abs
+                int av = (v == Short.MIN_VALUE) ? 32767 : Math.abs(v);
                 sumSq += (double) av * (double) av;
             }
 
@@ -777,19 +769,11 @@ private VoiceMetrics lab4_captureSpeechWindow(
         float noiseFloor = (noiseFrames > 0) ? (noiseAcc / noiseFrames) : 0f;
         out.noiseRms = noiseFloor;
 
-        // ----------------------------
-        // 2) DYNAMIC THRESHOLD (PRO++)
-        // ----------------------------
         float dynamicThr = Math.max(absMinThr, noiseFloor * Math.max(1.0f, effectiveMult));
-
-        // PRO+++ stored speech reference influence (device memory)
         if (storedSpeechRef > 0f) {
             dynamicThr = Math.max(dynamicThr, storedSpeechRef * 0.45f);
         }
 
-        // ----------------------------
-        // 3) STRICT SPEECH DETECTION
-        // ----------------------------
         int hitFrames = 0;
         float speechAcc = 0f;
         int speechAccFrames = 0;
@@ -808,7 +792,7 @@ private VoiceMetrics lab4_captureSpeechWindow(
 
             for (int i = 0; i < n; i++) {
                 int v = data[i];
-                int av = (v == Short.MIN_VALUE) ? 32767 : Math.abs(v); // safe abs
+                int av = (v == Short.MIN_VALUE) ? 32767 : Math.abs(v);
                 if (av > peak) peak = av;
                 if (av >= 32760) clip++;
                 sumSq += (double) av * (double) av;
@@ -816,28 +800,23 @@ private VoiceMetrics lab4_captureSpeechWindow(
 
             float rms = (float) Math.sqrt(sumSq / Math.max(1, n));
 
-            // keep last measured, BUT do not treat as “speech” unless confirmed
             out.rms = rms;
             out.peak = peak;
             out.clippingCount += clip;
 
-            // do not judge too early (human-paced)
             if (SystemClock.uptimeMillis() - start < minListenMs) {
                 SystemClock.sleep(humanSleepMs);
                 continue;
             }
 
             boolean speechHit;
-
             if (isTop) {
-                // TOP mic: MUST be sustained AND must pass BOTH gates (anti spike/AGC)
                 float rmsGate = Math.max(dynamicThr * 0.55f, noiseFloor * 1.6f);
-speechHit = (peak >= Math.max(TOP_PEAK_FLOOR, dynamicThr * 2.2f) && rms >= rmsGate);
+                int peakGate = Math.max(topPeakFloor, (int) (dynamicThr * 2.6f));
+                speechHit = (peak >= peakGate && rms >= rmsGate);
             } else {
-                // BOTTOM mic: rms + peak
-                // ΝΕΟ (σωστό, production-grade)
-int peakGate = Math.max(botPeakFloor, (int) (dynamicThr * 1.6f));
-speechHit = (rms >= dynamicThr && peak >= peakGate);
+                int peakGate = Math.max(botPeakFloor, (int) (dynamicThr * 1.6f));
+                speechHit = (rms >= dynamicThr && peak >= peakGate);
             }
 
             if (speechHit) {
@@ -853,7 +832,7 @@ speechHit = (rms >= dynamicThr && peak >= peakGate);
                             ? (speechAcc / speechAccFrames)
                             : rms;
 
-                    return out; // 🚀 EARLY EXIT on real speech
+                    return out;
                 }
             } else {
                 hitFrames = 0;
@@ -864,14 +843,12 @@ speechHit = (rms >= dynamicThr && peak >= peakGate);
             SystemClock.sleep(humanSleepMs);
         }
 
-        // NO speech -> HONEST output (force zeros later by caller)
         out.speechDetected = false;
         out.speechRms = 0f;
         return out;
 
     } catch (Throwable ignore) {
 
-        // Don’t “finish instantly” on exception: block to respect window
         while (!cancelled.get() && SystemClock.uptimeMillis() < deadline) {
             SystemClock.sleep(60);
         }

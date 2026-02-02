@@ -342,12 +342,6 @@ private void lab4_putFloatPref(String key, float v) {
     } catch (Throwable ignore) {}
 }
 
-private float lab4_clamp(float v, float lo, float hi) {
-    if (v < lo) return lo;
-    if (v > hi) return hi;
-    return v;
-}
-
 /* ============================================================
    LAB 4 PRO+++ — STRICT SPEECH DETECTOR (FINAL, GLOBAL)
    - BLOCKS until real speech OR timeout

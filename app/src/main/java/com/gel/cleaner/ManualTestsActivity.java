@@ -525,9 +525,10 @@ private VoiceMetrics lab4WaitSpeechStrict(
             // ----------------------------
             // 3) STRICT SPEECH DETECTION
             // ----------------------------
-            int speechFrames = 0;
-            float speechAcc = 0f;
-            int speechAccFrames = 0;
+        } else if (speechFrames > 0) {
+    // decay αντί για βίαιο reset (AGC-friendly)
+    speechFrames--;
+}
 
             while (!cancelled.get() &&
                     (SystemClock.uptimeMillis() - start) < remaining) {
@@ -4608,7 +4609,7 @@ private void lab4MicPro() {
                     Button cancel = new Button(this);
 // CANCEL — dark red background with gold border
 GradientDrawable cancelBg = new GradientDrawable();
-cancelBg.setColor(0xFF4A0F0F);          // σκούρο κόκκινο
+cancelBg.setColor(0xFF7A2020);          // σκούρο κόκκινο
 cancelBg.setCornerRadius(dp(14));
 cancelBg.setStroke(dp(2), 0xFFFFD700); // χρυσό περίβλημα
 cancel.setBackground(cancelBg);
@@ -4656,6 +4657,10 @@ cancel.setPadding(dp(18), dp(10), dp(18), dp(10));
             speakOnce(gr ? "Μίλησε κοντά στο ΚΑΤΩ μικρόφωνο." : "Speak near the BOTTOM microphone.");
 
             // 1st try (5s)
+// --- HARD STOP TTS before recording ---
+try { AppTTS.stop(); } catch (Throwable ignore) {}
+SystemClock.sleep(450); // αφήνουμε routing + speaker να σβήσει
+
             bottom = lab4WaitSpeechStrict(
                     cancelled,
           MediaRecorder.AudioSource.MIC,
@@ -4694,6 +4699,10 @@ cancel.setPadding(dp(18), dp(10), dp(18), dp(10));
             speakOnce(gr ? "Τώρα, μίλησε κοντά στο ΑΝΩ μικρόφωνo." : "Now, speak near the TOP microphone.");
 
             // 1st try (3s)
+            // --- HARD STOP TTS before recording ---
+try { AppTTS.stop(); } catch (Throwable ignore) {}
+SystemClock.sleep(450); // αφήνουμε routing + speaker να σβήσει
+
             top = lab4WaitSpeechStrict(
                     cancelled,
                     MediaRecorder.AudioSource.VOICE_COMMUNICATION,

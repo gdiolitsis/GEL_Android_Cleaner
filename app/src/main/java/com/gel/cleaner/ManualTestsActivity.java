@@ -5450,6 +5450,7 @@ root.addView(msg);
 private void lab8CameraHardwareCheck() {
 
     appendHtml("<br>");
+    logLine();
     logSection("LAB 8 — Camera Hardware & Path Integrity");
     logLine();
 
@@ -5610,7 +5611,10 @@ logLabelOkValue("Total camera IDs", String.valueOf(ids.length));
 
     // Log summary (labels white, values colored via existing log methods you already use)
     logLine();
-logInfo("Camera capabilities summary:");
+appendHtml("<br>");
+    logInfo("Camera capabilities summary:");
+logLine();
+appendHtml("<br>");
 
 for (Lab8Cam c : cams) {
 
@@ -5882,6 +5886,10 @@ if (cameraSubsystemOk) {
             "(resolution, formats, FPS, RAW support, slow-motion, etc)."
     );
 
+            appendHtml("<br>");
+            logOk("Lab 8 finished.");
+            logLine();
+
     // LAB 8.1
     runOnUiThread(this::showLab8_1Prompt);
     return;
@@ -5892,9 +5900,10 @@ if (cameraSubsystemOk) {
     logLabelErrorValue("Camera subsystem", "NOT reliable");
     logError("One or more cameras failed basic operation checks.");
 
-    appendHtml("<br>");
-    logLabelOkValue("Lab 8", "Finished");
-    logLine();
+            appendHtml("<br>");
+            logOk("Lab 8 finished.");
+            logLine();
+
     enableSingleExportButton();
             return;
         }

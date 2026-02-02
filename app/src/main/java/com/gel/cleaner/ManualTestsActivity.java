@@ -883,8 +883,9 @@ private VoiceMetrics lab4_captureSpeechWindow(
                 speechHit = (peak >= peakGate && rms >= rmsGate);
             } else {
                 // BOTTOM mic: rms + peak
-                int peakGate = Math.max(botPeakFloor, (int) (dynamicThr * 3.0f));
-                speechHit = (rms >= dynamicThr && peak >= peakGate);
+                // ΝΕΟ (σωστό, production-grade)
+int peakGate = Math.max(botPeakFloor, (int) (dynamicThr * 1.6f));
+speechHit = (rms >= dynamicThr && peak >= peakGate);
             }
 
             if (speechHit) {

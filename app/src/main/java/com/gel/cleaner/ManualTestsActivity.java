@@ -4582,6 +4582,10 @@ appendHtml("<br>");
 /* ============================================================
    LAB 4 PRO — Voice Analysis (FINAL, LOCKED)
    HUMAN-BLOCKING • REAL TIME • NO FALSE POSITIVES
+   - 1st try: 3s
+   - If no speech: show retry msg + 2nd try: +5s
+   - Logs ALWAYS printed (even if both fail)
+   - PRO+++ stores speech refs only on REAL speech
    ============================================================ */
 private void lab4MicPro() {
 
@@ -4597,79 +4601,101 @@ private void lab4MicPro() {
 
         try {
 
-            // ================= DIALOG =================
+            // ================= DIALOG (ONCE) =================
             runOnUiThread(() -> {
-                AlertDialog.Builder b = new AlertDialog.Builder(
-                        this,
-                        android.R.style.Theme_Material_Dialog_NoActionBar
-                );
-                b.setCancelable(false);
+                try {
+                    AlertDialog.Builder b = new AlertDialog.Builder(
+                            this,
+                            android.R.style.Theme_Material_Dialog_NoActionBar
+                    );
+                    b.setCancelable(false);
 
-                LinearLayout root = new LinearLayout(this);
-                root.setOrientation(LinearLayout.VERTICAL);
-                root.setPadding(dp(26), dp(24), dp(26), dp(22));
+                    LinearLayout root = new LinearLayout(this);
+                    root.setOrientation(LinearLayout.VERTICAL);
+                    root.setPadding(dp(26), dp(24), dp(26), dp(22));
 
-                GradientDrawable bg = new GradientDrawable();
-                bg.setColor(0xFF101010);
-                bg.setCornerRadius(dp(18));
-                bg.setStroke(dp(3), 0xFFFFD700);
-                root.setBackground(bg);
+                    GradientDrawable bg = new GradientDrawable();
+                    bg.setColor(0xFF101010);
+                    bg.setCornerRadius(dp(18));
+                    bg.setStroke(dp(3), 0xFFFFD700);
+                    root.setBackground(bg);
 
-                TextView title = new TextView(this);
-                title.setText(gr ? "LAB 4 PRO — Ανάλυση ομιλίας" : "LAB 4 PRO — Voice Analysis");
-                title.setTextColor(Color.WHITE);
-                title.setTextSize(17f);
-                title.setTypeface(null, Typeface.BOLD);
-                title.setGravity(Gravity.CENTER);
-                title.setPadding(0, 0, 0, dp(14));
-                root.addView(title);
+                    TextView title = new TextView(this);
+                    title.setText(gr ? "LAB 4 PRO — Ανάλυση ομιλίας" : "LAB 4 PRO — Voice Analysis");
+                    title.setTextColor(Color.WHITE);
+                    title.setTextSize(17f);
+                    title.setTypeface(null, Typeface.BOLD);
+                    title.setGravity(Gravity.CENTER);
+                    title.setPadding(0, 0, 0, dp(14));
+                    root.addView(title);
 
-                TextView msg = new TextView(this);
-                msg.setId(0x4C414234);
-                msg.setTextColor(0xFF39FF14);
-                msg.setTextSize(14.5f);
-                msg.setGravity(Gravity.CENTER);
-                msg.setPadding(0, 0, 0, dp(16));
-                root.addView(msg);
+                    TextView msg = new TextView(this);
+                    msg.setId(0x4C414234);
+                    msg.setTextColor(0xFF39FF14);
+                    msg.setTextSize(14.5f);
+                    msg.setGravity(Gravity.CENTER);
+                    msg.setPadding(0, 0, 0, dp(16));
+                    root.addView(msg);
 
-                Button cancel = new Button(this);
-                cancel.setText(gr ? "ΑΚΥΡΩΣΗ" : "CANCEL");
-                cancel.setOnClickListener(v -> {
-                    cancelled.set(true);
-                    try { AppTTS.stop(); } catch (Throwable ignore) {}
-                });
-                root.addView(cancel);
+                    // CANCEL
+                    Button cancel = new Button(this);
+                    cancel.setAllCaps(false);
+                    cancel.setText(gr ? "ΑΚΥΡΩΣΗ" : "CANCEL");
+                    cancel.setOnClickListener(v -> {
+                        cancelled.set(true);
+                        try { AppTTS.stop(); } catch (Throwable ignore) {}
+                        try {
+                            AlertDialog d = dialogRef.get();
+                            if (d != null) d.dismiss();
+                        } catch (Throwable ignore) {}
+                    });
+                    root.addView(cancel);
 
-                b.setView(root);
-                AlertDialog d = b.create();
-                dialogRef.set(d);
-                d.show();
+                    b.setView(root);
+                    AlertDialog d = b.create();
+
+                    if (d.getWindow() != null) {
+                        d.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+                    }
+
+                    dialogRef.set(d);
+                    d.show();
+
+                } catch (Throwable ignore) {}
             });
 
-            while (dialogRef.get() == null && !cancelled.get()) {
+            // Wait dialog
+            while (!cancelled.get() && dialogRef.get() == null) {
                 SystemClock.sleep(20);
             }
             if (cancelled.get()) return;
 
-            // ================= BOTTOM MIC =================
+            // ================= STATE 1 — BOTTOM MIC =================
             lab4UpdateMsg(dialogRef.get(), gr,
-                    gr ? "Μίλησε κοντά στο ΚΑΤΩ μικρόφωνο.\n\nΠεριμένω ομιλία..."
-                       : "Speak near the BOTTOM microphone.\n\nWaiting for speech..."
+                    gr
+                            ? "Μίλησε κοντά στο ΚΑΤΩ μικρόφωνο.\n\nΠεριμένω ομιλία..."
+                            : "Speak near the BOTTOM microphone.\n\nWaiting for speech..."
             );
             speakOnce(gr ? "Μίλησε τώρα." : "Speak now.");
 
+            // 1st try (3s)
             bottom = lab4WaitSpeechStrict(
                     cancelled,
                     MediaRecorder.AudioSource.VOICE_RECOGNITION,
                     3000
             );
 
-            if (!bottom.speechDetected && !cancelled.get()) {
+            // Retry ( +5s ) if no speech
+            if (!cancelled.get() && (bottom == null || !bottom.speechDetected)) {
+
                 lab4UpdateMsg(dialogRef.get(), gr,
-                        gr ? "Δεν ανιχνεύθηκε ομιλία.\nΠροσπάθησε ξανά."
-                           : "No speech detected.\nPlease try again."
+                        gr
+                                ? "Δεν ανιχνεύθηκε ομιλία.\n\nΠροσπάθησε ΞΑΝΑ τώρα κοντά στο κάτω μικρόφωνο."
+                                : "No speech detected.\n\nPlease try AGAIN now near the bottom microphone."
                 );
-                speakOnce(gr ? "Ξανά." : "Try again.");
+                speakOnce(gr ? "Προσπάθησε ξανά." : "Please try again.");
+
+                SystemClock.sleep(250);
 
                 bottom = lab4WaitSpeechStrict(
                         cancelled,
@@ -4678,25 +4704,36 @@ private void lab4MicPro() {
                 );
             }
 
-            // ================= TOP MIC =================
+            if (cancelled.get()) return;
+
+            boolean bottomOk = (bottom != null && bottom.speechDetected);
+
+            // ================= STATE 2 — TOP MIC =================
             lab4UpdateMsg(dialogRef.get(), gr,
-                    gr ? "Μίλησε κοντά στο ΑΝΩ μικρόφωνο.\n\nΠεριμένω ομιλία..."
-                       : "Speak near the TOP microphone.\n\nWaiting for speech..."
+                    gr
+                            ? "Τώρα μίλησε κοντά στο ΑΝΩ μικρόφωνο (ακουστικό).\n\nΠεριμένω ομιλία..."
+                            : "Now speak near the TOP microphone (earpiece).\n\nWaiting for speech..."
             );
             speakOnce(gr ? "Μίλησε τώρα." : "Speak now.");
 
+            // 1st try (3s)
             top = lab4WaitSpeechStrict(
                     cancelled,
                     MediaRecorder.AudioSource.VOICE_COMMUNICATION,
                     3000
             );
 
-            if (!top.speechDetected && !cancelled.get()) {
+            // Retry (+5s) if no speech
+            if (!cancelled.get() && (top == null || !top.speechDetected)) {
+
                 lab4UpdateMsg(dialogRef.get(), gr,
-                        gr ? "Δεν ανιχνεύθηκε ομιλία.\nΠροσπάθησε ξανά."
-                           : "No speech detected.\nPlease try again."
+                        gr
+                                ? "Δεν ανιχνεύθηκε ομιλία.\n\nΠροσπάθησε ΞΑΝΑ τώρα κοντά στο άνω μικρόφωνο."
+                                : "No speech detected.\n\nPlease try AGAIN now near the top microphone."
                 );
-                speakOnce(gr ? "Ξανά." : "Try again.");
+                speakOnce(gr ? "Προσπάθησε ξανά." : "Please try again.");
+
+                SystemClock.sleep(250);
 
                 top = lab4WaitSpeechStrict(
                         cancelled,
@@ -4705,86 +4742,73 @@ private void lab4MicPro() {
                 );
             }
 
-        } finally {
-            try { if (dialogRef.get() != null) dialogRef.get().dismiss(); } catch (Throwable ignore) {}
-        }
+            if (cancelled.get()) return;
 
-    }).start();
-}
+            boolean topOk = (top != null && top.speechDetected);
 
-// ====================================================
-// FAIL ΜΟΝΟ ΑΝ ΑΠΕΤΥΧΑΝ ΚΑΙ ΤΑ ΔΥΟ
-// ====================================================
-if (!bottomOk && !top.speechDetected && !cancelled.get()) {
-    lab4Fail(dialogRef.get(), gr);
+            // ================= FAIL ONLY IF BOTH FAILED =================
+            if (!bottomOk && !topOk && !cancelled.get()) {
+                lab4Fail(dialogRef.get(), gr);
+                // DO NOT return — we still print logs (per your rule)
+            }
 
-// ΠΕΦΤΕΙ ΣΤΑ LOGS, ΟΧΙ RETURN
-bottom.speechDetected = false;
-top.speechDetected = false;
-}
+            // ================= CLOSE DIALOG =================
+            try {
+                AlertDialog d = dialogRef.get();
+                if (d != null) d.dismiss();
+            } catch (Throwable ignore) {}
 
-            // ====================================================
-            // CLOSE DIALOG
-            // ====================================================
-            try { dialogRef.get().dismiss(); } catch (Throwable ignore) {}
+            // ================= FINAL LOGS (ALWAYS) =================
+            logInfo(gr ? "LAB 4 PRO — Συμπεράσματα:" : "LAB 4 PRO — Conclusions:");
+            logLine();
 
-// ====================================================
-// FINAL LOGS
-// ====================================================
+            logLabelOkValue(
+                    gr ? "Ομιλία (Κάτω)" : "PRO Speech (Bottom)",
+                    (bottom != null && bottom.speechDetected) ? "YES" : "NO"
+            );
+            logLabelOkValue("Bottom RMS", String.valueOf((bottom != null) ? (int) bottom.rms : 0));
+            logLabelOkValue("Bottom Peak", String.valueOf((bottom != null) ? (int) bottom.peak : 0));
 
-logInfo(gr ? "LAB 4 PRO — Συμπεράσματα:" : "LAB 4 PRO — Conclusions:");
-logLine();
+            logLabelOkValue(
+                    gr ? "Ομιλία (Άνω)" : "PRO Speech (Top)",
+                    (top != null && top.speechDetected) ? "YES" : "NO"
+            );
+            logLabelOkValue("Top RMS", String.valueOf((top != null) ? (int) top.rms : 0));
+            logLabelOkValue("Top Peak", String.valueOf((top != null) ? (int) top.peak : 0));
 
-logLabelOkValue(
-        gr ? "Ομιλία (Κάτω)" : "PRO Speech (Bottom)",
-        bottom.speechDetected ? "YES" : "NO"
-);
-logLabelOkValue("Bottom RMS", String.valueOf((int) bottom.rms));
-logLabelOkValue("Bottom Peak", String.valueOf((int) bottom.peak));
+            // OVERALL
+            logLine();
 
-logLabelOkValue(
-        gr ? "Ομιλία (Άνω)" : "PRO Speech (Top)",
-        top.speechDetected ? "YES" : "NO"
-);
-logLabelOkValue("Top RMS", String.valueOf((int) top.rms));
-logLabelOkValue("Top Peak", String.valueOf((int) top.peak));
+            if (bottomOk && topOk) {
+                logLabelOkValue(
+                        gr ? "Συνολικά" : "Overall",
+                        gr ? "Η ομιλία ανιχνεύθηκε και στα δύο μικρόφωνα"
+                           : "Speech detected on both microphones"
+                );
+            } else if (bottomOk) {
+                logLabelWarnValue(
+                        gr ? "Συνολικά" : "Overall",
+                        gr ? "Ομιλία ανιχνεύθηκε μόνο στο κάτω μικρόφωνο"
+                           : "Speech detected only on the bottom microphone"
+                );
+            } else if (topOk) {
+                logLabelWarnValue(
+                        gr ? "Συνολικά" : "Overall",
+                        gr ? "Ομιλία ανιχνεύθηκε μόνο στο άνω μικρόφωνο"
+                           : "Speech detected only on the top microphone"
+                );
+            } else {
+                logLabelWarnValue(
+                        gr ? "Συνολικά" : "Overall",
+                        gr ? "Ανεπαρκής ανίχνευση ομιλίας"
+                           : "Speech detection insufficient"
+                );
+            }
 
-// ----------------------------------------------------
-// OVERALL SPEECH RESULT
-// ----------------------------------------------------
-logLine();
-if (bottom.speechDetected && top.speechDetected) {
-
-    logLabelOkValue(
-            gr ? "Συνολικά" : "Overall",
-            gr
-                    ? "Η ομιλία ανιχνεύθηκε και στα δύο μικρόφωνα"
-                    : "Speech detected on both microphones"
-    );
-
-} else if (bottom.speechDetected) {
-
-    logLabelWarnValue(
-            gr ? "Συνολικά" : "Overall",
-            gr
-                    ? "Ομιλία ανιχνεύθηκε μόνο στο κάτω μικρόφωνο"
-                    : "Speech detected only on the bottom microphone"
-    );
-
-} else {
-
-    logLabelWarnValue(
-            gr ? "Συνολικά" : "Overall",
-            gr
-                    ? "Ανεπαρκής ανίχνευση ομιλίας"
-                    : "Speech detection insufficient"
-    );
-}
-
-logLine();
+            logLine();
 
             String bottomQ = lab4_qualityLabel(bottom);
-            String topQ    = lab4_qualityLabel(top);
+            String topQ = lab4_qualityLabel(top);
 
             if (bottomQ.startsWith("GOOD") || bottomQ.startsWith("MODERATE")) {
                 logLabelOkValue(gr ? "Ποιότητα ομιλίας (Κάτω)" : "Speech quality (Bottom)", bottomQ);
@@ -4808,13 +4832,16 @@ logLine();
         } finally {
 
             try { AppTTS.stop(); } catch (Throwable ignore) {}
-            try { if (dialogRef.get() != null) dialogRef.get().dismiss(); } catch (Throwable ignore) {}
+            try {
+                AlertDialog d = dialogRef.get();
+                if (d != null) d.dismiss();
+            } catch (Throwable ignore) {}
 
             // ===============================
-            // LAB 4 PRO+++ — Save device tuning
+            // LAB 4 PRO+++ — Save device tuning (ONLY on real speech)
             // ===============================
-            lab4_storeSpeechRef("bottom_speech_ref", bottom);
-            lab4_storeSpeechRef("top_speech_ref", top);
+            try { lab4_storeSpeechRef("bottom_speech_ref", bottom); } catch (Throwable ignore) {}
+            try { lab4_storeSpeechRef("top_speech_ref", top); } catch (Throwable ignore) {}
 
             appendHtml("<br>");
             logOk("Lab 4 PRO finished.");
@@ -4845,24 +4872,23 @@ private void lab4Fail(AlertDialog d, boolean gr) {
                     : "No speech was detected. The advanced stage was not completed."
     );
 
-    SystemClock.sleep(900);
+    SystemClock.sleep(650);
 
     try {
         if (d != null) d.dismiss();
     } catch (Throwable ignore) {}
 }
 
-// ===============================
-// LAB 4 PRO+++ — Store device speech reference
-// ===============================
+/* ============================================================
+   LAB 4 PRO+++ — Store device speech reference
+   (stores ONLY if speechDetected + speechRms > 0)
+   ============================================================ */
 private void lab4_storeSpeechRef(String key, VoiceMetrics m) {
     if (m == null || !m.speechDetected || m.speechRms <= 0f) return;
 
     try {
         SharedPreferences p = getSharedPreferences("lab4_mic", MODE_PRIVATE);
-        p.edit()
-         .putFloat(key, m.speechRms)
-         .apply();
+        p.edit().putFloat(key, m.speechRms).apply();
     } catch (Throwable ignore) {}
 }
 

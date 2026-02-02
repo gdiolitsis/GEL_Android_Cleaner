@@ -574,23 +574,22 @@ private VoiceMetrics lab4WaitSpeechStrict(
                     speechAccFrames++;
 
                     if (speechFrames >= REQUIRED_FRAMES) {
-                        out.ok = true;
-                        out.speechDetected = true;
-                        out.rms = rms;
-                        out.peak = peak;
-                        out.speechRms =
-                                (speechAccFrames > 0)
-                                        ? (speechAcc / speechAccFrames)
-                                        : rms;
-                        return out;
-                    }
-                } else {
-                    speechFrames = 0;
-                    speechAcc = 0f;
-                    speechAccFrames = 0;
-                }
+    out.ok = true;
+    out.speechDetected = true;
+    out.rms = rms;
+    out.peak = peak;
+    out.speechRms =
+            (speechAccFrames > 0)
+                    ? (speechAcc / speechAccFrames)
+                    : rms;
+    return out;
+}
+} else if (speechFrames > 0) {
+    // decay αντί για reset
+    speechFrames--;
+}
 
-                SystemClock.sleep(FRAME_SLEEP_MS);
+SystemClock.sleep(FRAME_SLEEP_MS);
             }
 
             VoiceMetrics honest = new VoiceMetrics();

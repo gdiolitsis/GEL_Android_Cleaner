@@ -349,10 +349,13 @@ private float lab4_clamp(float v, float lo, float hi) {
 }
 
 /* ============================================================
-   LAB 4 PRO+++ — STRICT SPEECH DETECTOR (FINAL)
-   - BLOCKS until speech OR timeout
-   - EARLY exit on speech
-   - attempts is a “max restarts” count (keep 1 in caller)
+   LAB 4 PRO+++ — STRICT SPEECH DETECTOR (FINAL, GLOBAL)
+   - BLOCKS until real speech OR timeout
+   - EARLY exit on real speech
+   - Dynamic threshold based on noise floor (PRO++)
+   - Per-device tuning (PRO+++): stores speechRef + auto-mult (bounded)
+   - TOP fallback source if VOICE_COMMUNICATION misbehaves
+   - NO LIES: if no speech => rms/peak/speechRms = 0
    ============================================================ */
 private VoiceMetrics lab4WaitSpeechStrict(
         java.util.concurrent.atomic.AtomicBoolean cancelled,
@@ -361,7 +364,7 @@ private VoiceMetrics lab4WaitSpeechStrict(
         int windowMs
 ) {
     VoiceMetrics out = new VoiceMetrics();
-    out.ok = false;
+    out.ok = true;
     out.speechDetected = false;
     out.rms = 0f;
     out.peak = 0f;
@@ -369,64 +372,138 @@ private VoiceMetrics lab4WaitSpeechStrict(
     out.speechRms = 0f;
     out.clippingCount = 0;
 
-    final boolean isTop = (audioSource == MediaRecorder.AudioSource.VOICE_COMMUNICATION);
+    final boolean isTopPrimary = (audioSource == MediaRecorder.AudioSource.VOICE_COMMUNICATION);
 
-    // Per-mic stored tuning
-    final String keySpeechRef = isTop ? KEY_TOP_SPEECH_REF : KEY_BOTTOM_SPEECH_REF;
-    final String keyMult      = isTop ? KEY_TOP_MULT      : KEY_BOTTOM_MULT;
+    // PRO+++ storage keys (same prefs family you already use)
+    final String PREFS = "lab4_mic";
+    final String KEY_TOP_SPEECH_REF = "top_speech_ref";
+    final String KEY_BOTTOM_SPEECH_REF = "bottom_speech_ref";
+    final String KEY_TOP_MULT = "top_mult";
+    final String KEY_BOTTOM_MULT = "bottom_mult";
 
-    float storedSpeechRef = lab4_getFloatPref(keySpeechRef, 0f);
-    float storedMult = lab4_getFloatPref(keyMult, 0f);
-    float effectiveMult = (storedMult >= MULT_MIN && storedMult <= MULT_MAX) ? storedMult : DEFAULT_MULT;
+    // Bounds for auto-mult
+    final float MULT_MIN = 1.8f;
+    final float MULT_MAX = 4.2f;
+    final float DEFAULT_MULT = 2.8f;
 
-    // Absolute minimum threshold per mic
-    final float absMinThr = isTop ? ABS_MIN_TOP : ABS_MIN_BOTTOM;
+    // Absolute minima (silence-safe)
+    final float ABS_MIN_TOP = 210f;
+    final float ABS_MIN_BOTTOM = 190f;
 
-    // One more fallback source for “bad TOP mic on some ROMs”
-    // We only use this if TOP fails completely in this call window.
-    final int fallbackTopSource = MediaRecorder.AudioSource.VOICE_RECOGNITION;
+    // Human pacing / stability
+    final int SETTLE_IGNORE_MS = 260;      // ignore initial POP/route switching
+    final int NOISE_CAL_MS = 320;          // noise floor calibration
+    final int MIN_LISTEN_MS = 900;         // do not judge too early
+    final int HUMAN_SLEEP_MS = 35;         // loop pacing
+    final int REQUIRED_FRAMES = 7;         // consecutive frames required (anti-spike)
+
+    // TOP spike guards
+    final int TOP_PEAK_FLOOR = 2200;       // absolute peak guard
+    final int BOT_PEAK_FLOOR = 1100;
+
+    // Read stored tuning
+    float storedTopRef = lab4_getFloatPref(PREFS, KEY_TOP_SPEECH_REF, 0f);
+    float storedBotRef = lab4_getFloatPref(PREFS, KEY_BOTTOM_SPEECH_REF, 0f);
+    float storedTopMult = lab4_getFloatPref(PREFS, KEY_TOP_MULT, 0f);
+    float storedBotMult = lab4_getFloatPref(PREFS, KEY_BOTTOM_MULT, 0f);
+
+    // Fallback for TOP on some ROMs
+    final int FALLBACK_TOP_SOURCE = MediaRecorder.AudioSource.VOICE_RECOGNITION;
 
     long overallStart = SystemClock.uptimeMillis();
+    int maxRestarts = Math.max(1, attempts);
 
-    // run at most "attempts" restarts, but never exceed windowMs
-    for (int a = 0; a < Math.max(1, attempts) && !cancelled.get(); a++) {
+    VoiceMetrics lastSample = null;
 
-        // Remaining time budget
+    for (int a = 0; a < maxRestarts && !cancelled.get(); a++) {
+
         int remaining = (int) (windowMs - (SystemClock.uptimeMillis() - overallStart));
         if (remaining <= 0) break;
 
-        // For top mic, we first try VOICE_COMMUNICATION; if it fails, we can fallback once.
-        int srcToUse = audioSource;
+        // 1) Primary capture
+        VoiceMetrics r1 = lab4_captureSpeechWindow(
+                cancelled,
+                audioSource,
+                remaining,
+                /*isTop*/ isTopPrimary,
+                /*absMinThr*/ isTopPrimary ? ABS_MIN_TOP : ABS_MIN_BOTTOM,
+                /*effectiveMult*/ isTopPrimary
+                        ? ((storedTopMult >= MULT_MIN && storedTopMult <= MULT_MAX) ? storedTopMult : DEFAULT_MULT)
+                        : ((storedBotMult >= MULT_MIN && storedBotMult <= MULT_MAX) ? storedBotMult : DEFAULT_MULT),
+                /*storedSpeechRef*/ isTopPrimary ? storedTopRef : storedBotRef,
+                SETTLE_IGNORE_MS,
+                NOISE_CAL_MS,
+                MIN_LISTEN_MS,
+                HUMAN_SLEEP_MS,
+                REQUIRED_FRAMES,
+                TOP_PEAK_FLOOR,
+                BOT_PEAK_FLOOR
+        );
 
-        VoiceMetrics r1 = lab4_captureSpeechWindow(cancelled, srcToUse, remaining, isTop, absMinThr, effectiveMult, storedSpeechRef);
-        if (r1.ok && r1.speechDetected) return r1;
+        lastSample = r1;
 
-        // If TOP failed, try fallback within remaining time (once)
-        if (isTop && !cancelled.get()) {
-            int remaining2 = (int) (windowMs - (SystemClock.uptimeMillis() - overallStart));
-            if (remaining2 > 0) {
-                VoiceMetrics r2 = lab4_captureSpeechWindow(cancelled, fallbackTopSource, remaining2, true, absMinThr, effectiveMult, storedSpeechRef);
-                if (r2.ok && r2.speechDetected) return r2;
-
-                // if neither detected, return last sample (for logs)
-                out = (r2.ok ? r2 : r1);
-            } else {
-                out = r1;
-            }
-        } else {
-            out = r1;
+        if (r1 != null && r1.ok && r1.speechDetected) {
+            // ✅ store PRO+++ tuning only on REAL speech
+            lab4_storeTuning(PREFS, isTopPrimary, r1, MULT_MIN, MULT_MAX);
+            return r1;
         }
 
-        // human pacing
+        // 2) TOP fallback (within remaining time) if needed
+        if (isTopPrimary && !cancelled.get()) {
+
+            int remaining2 = (int) (windowMs - (SystemClock.uptimeMillis() - overallStart));
+            if (remaining2 > 0) {
+
+                VoiceMetrics r2 = lab4_captureSpeechWindow(
+                        cancelled,
+                        FALLBACK_TOP_SOURCE,
+                        remaining2,
+                        /*isTop*/ true,
+                        ABS_MIN_TOP,
+                        ((storedTopMult >= MULT_MIN && storedTopMult <= MULT_MAX) ? storedTopMult : DEFAULT_MULT),
+                        storedTopRef,
+                        SETTLE_IGNORE_MS,
+                        NOISE_CAL_MS,
+                        MIN_LISTEN_MS,
+                        HUMAN_SLEEP_MS,
+                        REQUIRED_FRAMES,
+                        TOP_PEAK_FLOOR,
+                        BOT_PEAK_FLOOR
+                );
+
+                lastSample = (r2 != null && r2.ok) ? r2 : lastSample;
+
+                if (r2 != null && r2.ok && r2.speechDetected) {
+                    // ✅ store PRO+++ tuning only on REAL speech
+                    lab4_storeTuning(PREFS, true, r2, MULT_MIN, MULT_MAX);
+                    return r2;
+                }
+            }
+        }
+
+        // human pacing between restarts
         SystemClock.sleep(70);
     }
 
-    out.ok = true;
+    // Return last sample for logs BUT NEVER LIE:
+    if (lastSample != null && lastSample.ok) {
+        out.noiseRms = lastSample.noiseRms;
+        out.clippingCount = lastSample.clippingCount;
+        // if no speech -> force zeros
+        out.speechDetected = false;
+        out.rms = 0f;
+        out.peak = 0f;
+        out.speechRms = 0f;
+        return out;
+    }
+
+    // total failure -> honest zeros
     return out;
 }
 
 /* ============================================================
-   INTERNAL: capture one speech window with calibration + detection
+   INTERNAL: capture one window (calibration + strict detection)
+   - TOP: requires BOTH peak + rms gate (anti-AGC spike)
    ============================================================ */
 private VoiceMetrics lab4_captureSpeechWindow(
         java.util.concurrent.atomic.AtomicBoolean cancelled,
@@ -435,10 +512,17 @@ private VoiceMetrics lab4_captureSpeechWindow(
         boolean isTop,
         float absMinThr,
         float effectiveMult,
-        float storedSpeechRef
+        float storedSpeechRef,
+        int settleIgnoreMs,
+        int noiseCalMs,
+        int minListenMs,
+        int humanSleepMs,
+        int requiredFrames,
+        int topPeakFloor,
+        int botPeakFloor
 ) {
     VoiceMetrics out = new VoiceMetrics();
-    out.ok = false;
+    out.ok = true;
     out.speechDetected = false;
     out.rms = 0f;
     out.peak = 0f;
@@ -448,41 +532,58 @@ private VoiceMetrics lab4_captureSpeechWindow(
 
     AudioRecord rec = null;
 
+    final long start = SystemClock.uptimeMillis();
+    final long deadline = start + Math.max(1, windowMs);
+
     try {
         final int rate = 16000;
         final int ch = AudioFormat.CHANNEL_IN_MONO;
         final int fmt = AudioFormat.ENCODING_PCM_16BIT;
 
         int minBuf = AudioRecord.getMinBufferSize(rate, ch, fmt);
-        int bufSize = Math.max(minBuf, rate / 4); // ~250ms
+        int bufSize = Math.max(minBuf, rate / 4);   // ~250ms
         short[] data = new short[bufSize];
 
         rec = new AudioRecord(audioSource, rate, ch, fmt, bufSize * 2);
         if (rec.getState() != AudioRecord.STATE_INITIALIZED) {
-            out.ok = true;
+
+            // IMPORTANT: do not “finish instantly” -> block until time budget ends
+            while (!cancelled.get() && SystemClock.uptimeMillis() < deadline) {
+                SystemClock.sleep(50);
+            }
             return out;
         }
 
         rec.startRecording();
-        long start = SystemClock.uptimeMillis();
 
         // ----------------------------
-        // 1) Noise floor calibration (~350ms)
+        // 0) SETTLE IGNORE (POP/route)
+        // ----------------------------
+        long settleUntil = SystemClock.uptimeMillis() + Math.max(0, settleIgnoreMs);
+        while (!cancelled.get() && SystemClock.uptimeMillis() < settleUntil) {
+            int n = rec.read(data, 0, data.length);
+            if (n <= 0) SystemClock.sleep(humanSleepMs);
+        }
+
+        // ----------------------------
+        // 1) NOISE FLOOR CALIBRATION
         // ----------------------------
         float noiseAcc = 0f;
         int noiseFrames = 0;
-        long noiseUntil = SystemClock.uptimeMillis() + 350;
+        long noiseUntil = SystemClock.uptimeMillis() + Math.max(0, noiseCalMs);
 
         while (!cancelled.get() && SystemClock.uptimeMillis() < noiseUntil) {
             int n = rec.read(data, 0, data.length);
             if (n <= 0) continue;
 
-            float sum = 0f;
+            double sumSq = 0.0;
             for (int i = 0; i < n; i++) {
                 int v = data[i];
-                sum += (float) v * (float) v;
+                int av = (v == Short.MIN_VALUE) ? 32767 : Math.abs(v); // safe abs
+                sumSq += (double) av * (double) av;
             }
-            float rms = (float) Math.sqrt(sum / Math.max(1, n));
+
+            float rms = (float) Math.sqrt(sumSq / Math.max(1, n));
             noiseAcc += rms;
             noiseFrames++;
         }
@@ -491,107 +592,108 @@ private VoiceMetrics lab4_captureSpeechWindow(
         out.noiseRms = noiseFloor;
 
         // ----------------------------
-        // 2) Dynamic threshold
+        // 2) DYNAMIC THRESHOLD (PRO++)
         // ----------------------------
-        float dynamicThr = Math.max(absMinThr, noiseFloor * effectiveMult);
+        float dynamicThr = Math.max(absMinThr, noiseFloor * Math.max(1.0f, effectiveMult));
 
-        // PRO+++ speech reference influence (device memory)
+        // PRO+++ stored speech reference influence (device memory)
         if (storedSpeechRef > 0f) {
             dynamicThr = Math.max(dynamicThr, storedSpeechRef * 0.45f);
         }
 
         // ----------------------------
-        // 3) Speech detection loop
+        // 3) STRICT SPEECH DETECTION
         // ----------------------------
-        int speechFrames = 0;
+        int hitFrames = 0;
         float speechAcc = 0f;
         int speechAccFrames = 0;
 
-        while (!cancelled.get() && SystemClock.uptimeMillis() - start < windowMs) {
+        while (!cancelled.get() && SystemClock.uptimeMillis() < deadline) {
 
             int n = rec.read(data, 0, data.length);
             if (n <= 0) {
-                SystemClock.sleep(HUMAN_PACE_SLEEP_MS);
+                SystemClock.sleep(humanSleepMs);
                 continue;
             }
 
-            float sum = 0f;
+            double sumSq = 0.0;
             int peak = 0;
             int clip = 0;
 
             for (int i = 0; i < n; i++) {
                 int v = data[i];
-                int av = Math.abs(v);
+                int av = (v == Short.MIN_VALUE) ? 32767 : Math.abs(v); // safe abs
                 if (av > peak) peak = av;
                 if (av >= 32760) clip++;
-                sum += (float) av * (float) av;
+                sumSq += (double) av * (double) av;
             }
 
-            float rms = (float) Math.sqrt(sum / Math.max(1, n));
+            float rms = (float) Math.sqrt(sumSq / Math.max(1, n));
 
+            // keep last measured, BUT do not treat as “speech” unless confirmed
             out.rms = rms;
             out.peak = peak;
             out.clippingCount += clip;
 
-            // do not judge too early
-            if (SystemClock.uptimeMillis() - start < MIN_LISTEN_MS) {
-                SystemClock.sleep(HUMAN_PACE_SLEEP_MS);
+            // do not judge too early (human-paced)
+            if (SystemClock.uptimeMillis() - start < minListenMs) {
+                SystemClock.sleep(humanSleepMs);
                 continue;
             }
 
             boolean speechHit;
+
             if (isTop) {
-                // TOP mic: peak dominant (AGC safe)
-                speechHit = (peak >= Math.max(TOP_PEAK_FLOOR, dynamicThr * 2.2f));
+                // TOP mic: MUST be sustained AND must pass BOTH gates (anti spike/AGC)
+                float rmsGate = Math.max(dynamicThr * 0.70f, noiseFloor * 2.0f);
+                int peakGate = Math.max(topPeakFloor, (int) (dynamicThr * 2.6f));
+                speechHit = (peak >= peakGate && rms >= rmsGate);
             } else {
                 // BOTTOM mic: rms + peak
-                speechHit = (rms >= dynamicThr && peak >= Math.max(BOT_PEAK_FLOOR, dynamicThr * 3f));
+                int peakGate = Math.max(botPeakFloor, (int) (dynamicThr * 3.0f));
+                speechHit = (rms >= dynamicThr && peak >= peakGate);
             }
 
             if (speechHit) {
-                speechFrames++;
-
-                // accumulate speech rms for tuning
+                hitFrames++;
                 speechAcc += rms;
                 speechAccFrames++;
 
-                if (speechFrames >= REQUIRED_FRAMES) {
+                if (hitFrames >= requiredFrames) {
                     out.speechDetected = true;
                     out.ok = true;
 
-                    // speech rms estimate
-                    out.speechRms = (speechAccFrames > 0) ? (speechAcc / speechAccFrames) : rms;
+                    out.speechRms = (speechAccFrames > 0)
+                            ? (speechAcc / speechAccFrames)
+                            : rms;
 
-                    // Store speech reference
-                    if (out.speechRms > 0f) {
-                        lab4_putFloatPref(isTop ? KEY_TOP_SPEECH_REF : KEY_BOTTOM_SPEECH_REF, out.speechRms);
-                    }
-
-                    // Auto-adjust multiplier per device (bounded)
-                    // newMult ≈ (speech/noise)*0.85 with safe bounds
-                    if (out.noiseRms > 1f && out.speechRms > 0f) {
-                        float ratio = out.speechRms / Math.max(1f, out.noiseRms);
-                        float newMult = lab4_clamp(ratio * 0.85f, MULT_MIN, MULT_MAX);
-                        lab4_putFloatPref(isTop ? KEY_TOP_MULT : KEY_BOTTOM_MULT, newMult);
-                    }
-
-                    return out; // 🚀 EARLY EXIT
+                    return out; // 🚀 EARLY EXIT on real speech
                 }
-
             } else {
-                speechFrames = 0;
+                hitFrames = 0;
                 speechAcc = 0f;
                 speechAccFrames = 0;
             }
 
-            SystemClock.sleep(HUMAN_PACE_SLEEP_MS);
+            SystemClock.sleep(humanSleepMs);
         }
 
-        out.ok = true;
+        // NO speech -> HONEST output (force zeros later by caller)
+        out.speechDetected = false;
+        out.speechRms = 0f;
         return out;
 
     } catch (Throwable ignore) {
+
+        // Don’t “finish instantly” on exception: block to respect window
+        while (!cancelled.get() && SystemClock.uptimeMillis() < deadline) {
+            SystemClock.sleep(60);
+        }
         out.ok = true;
+        out.speechDetected = false;
+        out.rms = 0f;
+        out.peak = 0f;
+        out.speechRms = 0f;
         return out;
 
     } finally {
@@ -605,19 +707,65 @@ private VoiceMetrics lab4_captureSpeechWindow(
 }
 
 /* ============================================================
+   PRO+++ store tuning ONLY on REAL speech
+   ============================================================ */
+private void lab4_storeTuning(String prefsName, boolean isTop, VoiceMetrics m, float multMin, float multMax) {
+    if (m == null || !m.speechDetected || m.speechRms <= 0f) return;
+
+    final String KEY_TOP_SPEECH_REF = "top_speech_ref";
+    final String KEY_BOTTOM_SPEECH_REF = "bottom_speech_ref";
+    final String KEY_TOP_MULT = "top_mult";
+    final String KEY_BOTTOM_MULT = "bottom_mult";
+
+    // store speech reference
+    lab4_putFloatPref(prefsName, isTop ? KEY_TOP_SPEECH_REF : KEY_BOTTOM_SPEECH_REF, m.speechRms);
+
+    // auto-adjust multiplier (bounded) based on speech/noise ratio
+    if (m.noiseRms > 1f) {
+        float ratio = m.speechRms / Math.max(1f, m.noiseRms);
+        float newMult = lab4_clamp(ratio * 0.85f, multMin, multMax);
+        lab4_putFloatPref(prefsName, isTop ? KEY_TOP_MULT : KEY_BOTTOM_MULT, newMult);
+    }
+}
+
+/* ============================================================
+   PREF helpers (standalone, no external dependencies)
+   ============================================================ */
+private float lab4_getFloatPref(String prefsName, String key, float def) {
+    try {
+        SharedPreferences p = getSharedPreferences(prefsName, MODE_PRIVATE);
+        return p.getFloat(key, def);
+    } catch (Throwable ignore) {
+        return def;
+    }
+}
+
+private void lab4_putFloatPref(String prefsName, String key, float val) {
+    try {
+        SharedPreferences p = getSharedPreferences(prefsName, MODE_PRIVATE);
+        p.edit().putFloat(key, val).apply();
+    } catch (Throwable ignore) {}
+}
+
+private float lab4_clamp(float v, float lo, float hi) {
+    if (v < lo) return lo;
+    if (v > hi) return hi;
+    return v;
+}
+
+/* ============================================================
    LAB 4 PRO — Update dialog message (thread-safe)
    ============================================================ */
 private void lab4UpdateMsg(AlertDialog d, boolean gr, String text) {
     if (d == null) return;
-
-    runOnUiThread(() -> {
-        try {
-            TextView tv = d.findViewById(0x4C414234); // same ID we set
-            if (tv != null) {
-                tv.setText(text);
-            }
-        } catch (Throwable ignore) {}
-    });
+    try {
+        runOnUiThread(() -> {
+            try {
+                TextView tv = d.findViewById(0x4C414234);
+                if (tv != null) tv.setText(text);
+            } catch (Throwable ignore) {}
+        });
+    } catch (Throwable ignore) {}
 }
 
 // ============================================================  
@@ -4376,7 +4524,7 @@ if (!bottom.speechDetected && !cancelled.get()) {
             cancelled,
             MediaRecorder.AudioSource.VOICE_RECOGNITION,
             1,
-            3000
+            5000
     );
 }
 
@@ -4425,7 +4573,7 @@ if (!top.speechDetected && !cancelled.get()) {
             cancelled,
             MediaRecorder.AudioSource.VOICE_COMMUNICATION,
             1,
-            3000
+            5000
     );
 }
 
@@ -4763,18 +4911,40 @@ private VoiceMetrics lab4_captureVoiceBestEffort(int audioSource, int durationMs
 }
 
 private String lab4_qualityLabel(VoiceMetrics m) {
-    if (m == null || !m.ok) return "UNKNOWN";
-    if (!m.speechDetected) return "LOW (no speech detected)";
-    if (m.clippingCount > 8 || m.peak >= 32000) return "WARN (possible clipping)";
-    if (m.speechRms > 0 && m.noiseRms > 0) {
+
+    if (m == null || !m.ok)
+        return "UNKNOWN";
+
+    // 🔒 ΧΩΡΙΣ ομιλία = ΤΕΛΟΣ. Καμία ποιότητα.
+    if (!m.speechDetected)
+        return "LOW (no speech detected)";
+
+    // 🔴 Clipping πάντα πάνω απ’ όλα
+    if (m.clippingCount > 8 || m.peak >= 32000)
+        return "WARN (possible clipping)";
+
+    // ✅ Κύρια αξιολόγηση: speech vs noise
+    if (m.speechRms > 0f && m.noiseRms > 0f) {
+
         float ratio = m.speechRms / Math.max(1f, m.noiseRms);
-        if (ratio < 2.2f) return "LOW (noisy / weak speech)";
-        if (ratio < 3.5f) return "MODERATE";
+
+        if (ratio < 2.2f)
+            return "LOW (noisy / weak speech)";
+
+        if (ratio < 3.5f)
+            return "MODERATE";
+
         return "GOOD";
     }
-    // fallback by levels
-    if (m.rms < 220) return "LOW";
-    if (m.rms < 420) return "MODERATE";
+
+    // 🟡 Fallback ΜΟΝΟ αν speechDetected == true
+    // (π.χ. σε παλιά devices χωρίς αξιόπιστο noise)
+    if (m.rms < 260f)
+        return "LOW";
+
+    if (m.rms < 480f)
+        return "MODERATE";
+
     return "GOOD";
 }
 

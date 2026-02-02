@@ -452,7 +452,8 @@ private VoiceMetrics lab4WaitSpeechStrict(
 
             if (rec == null || rec.getState() != AudioRecord.STATE_INITIALIZED) {
                 // Could not open recorder on this device/ROM right now
-                out.ok = false;
+                out.ok = true;
+out.speechDetected = false;
                 return out;
             }
 
@@ -670,6 +671,22 @@ private VoiceMetrics lab4WaitSpeechStrict(
     out.speechRms = 0f;
     out.clippingCount = 0;
     return out;
+}
+
+// ============================================================
+// OVERLOAD helper (3 args) — ΜΟΝΟ wrapper
+// ============================================================
+private VoiceMetrics lab4WaitSpeechStrict(
+        AtomicBoolean cancelled,
+        int audioSource,
+        int windowMs
+) {
+    return lab4WaitSpeechStrict(
+            cancelled,
+            audioSource,
+            1,        // attempts = 1 (retry handled by PRO)
+            windowMs
+    );
 }
 
 /* ============================================================

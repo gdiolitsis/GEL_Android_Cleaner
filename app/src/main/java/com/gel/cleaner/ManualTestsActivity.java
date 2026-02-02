@@ -486,6 +486,7 @@ private VoiceMetrics lab4WaitSpeechStrict(
 
                 // 🔑 IGNORE EARLY SPEECH BURSTS
                 
+
                 noiseAcc += rms;
                 noiseFrames++;
             }
@@ -558,8 +559,8 @@ private VoiceMetrics lab4WaitSpeechStrict(
 
                 boolean speechHit;
                 if (isTop) {
-                    float rmsGate = Math.max(dynamicThr * 0.55f, noiseFloor * 1.6f);
-speechHit = (peak >= Math.max(TOP_PEAK_FLOOR, dynamicThr * 2.2f) && rms >= rmsGate);
+                    speechHit =
+                            (peak >= Math.max(TOP_PEAK_FLOOR, dynamicThr * 2.2f));
                 } else {
                     int peakGate =
                             Math.max(BOT_PEAK_FLOOR, (int)(dynamicThr * 2.0f));
@@ -831,8 +832,7 @@ private VoiceMetrics lab4_captureSpeechWindow(
             if (isTop) {
                 // TOP mic: MUST be sustained AND must pass BOTH gates (anti spike/AGC)
                 float rmsGate = Math.max(dynamicThr * 0.55f, noiseFloor * 1.6f);
-                int peakGate = Math.max(topPeakFloor, (int) (dynamicThr * 2.6f));
-                speechHit = (peak >= peakGate && rms >= rmsGate);
+speechHit = (peak >= Math.max(TOP_PEAK_FLOOR, dynamicThr * 2.2f) && rms >= rmsGate);
             } else {
                 // BOTTOM mic: rms + peak
                 // ΝΕΟ (σωστό, production-grade)
@@ -4606,6 +4606,16 @@ private void lab4MicPro() {
 
                     // CANCEL
                     Button cancel = new Button(this);
+// CANCEL — dark red background with gold border
+GradientDrawable cancelBg = new GradientDrawable();
+cancelBg.setColor(0xFF4A0F0F);          // σκούρο κόκκινο
+cancelBg.setCornerRadius(dp(14));
+cancelBg.setStroke(dp(2), 0xFFFFD700); // χρυσό περίβλημα
+cancel.setBackground(cancelBg);
+
+cancel.setTextColor(Color.WHITE);
+cancel.setPadding(dp(18), dp(10), dp(18), dp(10));
+
                     cancel.setAllCaps(false);
                     cancel.setText(gr ? "ΑΚΥΡΩΣΗ" : "CANCEL");
                     cancel.setOnClickListener(v -> {
@@ -4643,7 +4653,7 @@ private void lab4MicPro() {
                             ? "Μίλησε κοντά στο ΚΑΤΩ μικρόφωνο.\n\nΠεριμένω ομιλία..."
                             : "Speak near the BOTTOM microphone.\n\nWaiting for speech..."
             );
-            speakOnce(gr ? "Μίλησε τώρα." : "Speak now.");
+            speakOnce(gr ? "Μίλησε κοντά στο ΚΑΤΩ μικρόφωνο." : "Speak near the BOTTOM microphone.");
 
             // 1st try (5s)
             bottom = lab4WaitSpeechStrict(
@@ -4657,10 +4667,10 @@ private void lab4MicPro() {
 
                 lab4UpdateMsg(dialogRef.get(), gr,
                         gr
-                                ? "Δεν ανιχνεύθηκε ομιλία.\n\nΠροσπάθησε ΞΑΝΑ τώρα κοντά στο κάτω μικρόφωνο."
-                                : "No speech detected.\n\nPlease try AGAIN now near the bottom microphone."
+                                ? "Δεν ανιχνεύθηκε ομιλία.\n\nΠαρακαλώ, προσπάθησε ΞΑΝΑ τώρα, κοντά στο κάτω μικρόφωνο."
+                                : "No speech detected.\n\nPlease, try AGAIN now, near the bottom microphone."
                 );
-                speakOnce(gr ? "Προσπάθησε ξανά." : "Please try again.");
+                speakOnce(gr ? "Δεν ανιχνεύθηκε ομιλία.\n\nΠαρακαλώ, προσπάθησε ΞΑΝΑ." : "No speech detected.\n\nPlease try AGAIN.");
 
                 SystemClock.sleep(250);
 
@@ -4678,10 +4688,10 @@ private void lab4MicPro() {
             // ================= STATE 2 — TOP MIC =================
             lab4UpdateMsg(dialogRef.get(), gr,
                     gr
-                            ? "Τώρα μίλησε κοντά στο ΑΝΩ μικρόφωνο (ακουστικό).\n\nΠεριμένω ομιλία..."
-                            : "Now speak near the TOP microphone (earpiece).\n\nWaiting for speech..."
+                            ? "Τώρα, μίλησε κοντά στο ΑΝΩ μικρόφωνο (ακουστικό).\n\nΠεριμένω ομιλία..."
+                            : "Now, speak near the TOP microphone (earpiece).\n\nWaiting for speech..."
             );
-            speakOnce(gr ? "Μίλησε τώρα." : "Speak now.");
+            speakOnce(gr ? "Τώρα, μίλησε κοντά στο ΑΝΩ μικρόφωνo." : "Now, speak near the TOP microphone.");
 
             // 1st try (3s)
             top = lab4WaitSpeechStrict(
@@ -4695,10 +4705,10 @@ private void lab4MicPro() {
 
                 lab4UpdateMsg(dialogRef.get(), gr,
                         gr
-                                ? "Δεν ανιχνεύθηκε ομιλία.\n\nΠροσπάθησε ΞΑΝΑ τώρα κοντά στο άνω μικρόφωνο."
-                                : "No speech detected.\n\nPlease try AGAIN now near the top microphone."
+                                ? "Δεν ανιχνεύθηκε ομιλία.\n\n Παρακαλώ, προσπάθησε ΞΑΝΑ τώρα, κοντά στο άνω μικρόφωνο."
+                                : "No speech detected.\n\nPlease, try AGAIN now, near the top microphone."
                 );
-                speakOnce(gr ? "Προσπάθησε ξανά." : "Please try again.");
+                speakOnce(gr ? "Δεν ανιχνεύθηκε ομιλία.\n\n Παρακαλώ, προσπάθησε ΞΑΝΑ." : "No speech detected.\n\nPlease, try AGAIN.");
 
                 SystemClock.sleep(250);
 

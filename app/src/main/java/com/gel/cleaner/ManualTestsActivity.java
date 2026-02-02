@@ -4346,7 +4346,7 @@ logLine();
                 logLabelWarnValue(gr ? "Ποιότητα ομιλίας (Άνω)" : "Speech quality (Top)", topQ);
             }
 
-} catch (Throwable t) {
+        } catch (Throwable t) {
 
             logLabelErrorValue(
                     gr ? "Σφάλμα" : "Error",

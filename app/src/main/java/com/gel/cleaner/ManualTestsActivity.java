@@ -312,7 +312,7 @@ private static final float MULT_MAX = 3.4f;
 private static final float DEFAULT_MULT = 2.6f;
 
 // Speech confirmation (keeps it honest)
-private static final int REQUIRED_FRAMES = 5;   // consecutive hits
+private static final int REQUIRED_FRAMES = 3;   // consecutive hits
 private static final int MIN_LISTEN_MS   = 900; // don't judge too early
 
 // Conservative floors (avoid false positives in silence)
@@ -378,7 +378,7 @@ private VoiceMetrics lab4WaitSpeechStrict(
     final int NOISE_CAL_MS     = 320;
     final int MIN_LISTEN_MS    = 900;
     final int FRAME_SLEEP_MS   = 35;
-    final int REQUIRED_FRAMES  = 5;
+    final int REQUIRED_FRAMES  = 3;
 
     final float ABS_MIN_TOP    = 210f;
     final float ABS_MIN_BOTTOM = 190f;
@@ -485,8 +485,7 @@ private VoiceMetrics lab4WaitSpeechStrict(
                 float rms = (float) Math.sqrt(sum / Math.max(1, n));
 
                 // 🔑 IGNORE EARLY SPEECH BURSTS
-                if (rms > 600f) continue;
-
+                
                 noiseAcc += rms;
                 noiseFrames++;
             }
@@ -559,8 +558,8 @@ private VoiceMetrics lab4WaitSpeechStrict(
 
                 boolean speechHit;
                 if (isTop) {
-                    speechHit =
-                            (peak >= Math.max(TOP_PEAK_FLOOR, dynamicThr * 2.2f));
+                    float rmsGate = Math.max(dynamicThr * 0.55f, noiseFloor * 1.6f);
+speechHit = (peak >= Math.max(TOP_PEAK_FLOOR, dynamicThr * 2.2f) && rms >= rmsGate);
                 } else {
                     int peakGate =
                             Math.max(BOT_PEAK_FLOOR, (int)(dynamicThr * 2.0f));

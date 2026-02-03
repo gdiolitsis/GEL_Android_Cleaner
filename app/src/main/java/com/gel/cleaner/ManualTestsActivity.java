@@ -4214,32 +4214,23 @@ private void lab3EarpieceManual() {
 
     runOnUiThread(() -> {
 
-        // ============================================================
-        // LANGUAGE
-        // ============================================================
         final boolean gr = AppLang.isGreek(this);
 
-        String titleText = gr
+        final String titleText = gr
                 ? "LAB 3 — Έλεγχος ακουστικού"
                 : "LAB 3 — Earpiece Audio Test";
 
-        String bodyText = gr
-                ?
-        "Τοποθέτησε το ακουστικό του τηλεφώνου στο αυτί σου. "
-          + "Πάτησε έναρξη για να ξεκινήσει ο έλεγχος."
-        : "Put the phone earpiece to your ear. "
-          + "Press start to begin the test.";
-                  
+        final String bodyText = gr
+                ? "Τοποθέτησε το ακουστικό του τηλεφώνου στο αυτί σου.\n"
+                  + "Πάτησε έναρξη για να ξεκινήσει ο έλεγχος."
+                : "Put the phone earpiece to your ear.\n"
+                  + "Press start to begin the test.";
 
-        String ttsText = gr
-        ? "Τοποθέτησε το ακουστικό του τηλεφώνου στο αυτί σου. "
-          + "Πάτησε έναρξη για να ξεκινήσει ο έλεγχος."
-        : "Put the phone earpiece to your ear. "
-          + "Press start to begin the test.";
+        final String ttsText = bodyText; // ΜΙΑ πηγή αλήθειας
 
-        // ============================================================
+        // ------------------------------------------------------------
         // DIALOG
-        // ============================================================
+        // ------------------------------------------------------------
         AlertDialog.Builder b =
                 new AlertDialog.Builder(
                         this,
@@ -4257,9 +4248,7 @@ private void lab3EarpieceManual() {
         bg.setStroke(dp(3), 0xFFFFD700);
         root.setBackground(bg);
 
-        // ------------------------------------------------------------
         // TITLE
-        // ------------------------------------------------------------
         TextView title = new TextView(this);
         title.setText(titleText);
         title.setTextColor(Color.WHITE);
@@ -4269,21 +4258,17 @@ private void lab3EarpieceManual() {
         title.setPadding(0, 0, 0, dp(14));
         root.addView(title);
 
-        // ------------------------------------------------------------
-        // MESSAGE (NEON GREEN)
-        // ------------------------------------------------------------
+        // MESSAGE
         TextView msg = new TextView(this);
         msg.setText(bodyText);
-        msg.setTextColor(0xFF39FF14); // GEL neon green
+        msg.setTextColor(0xFF39FF14);
         msg.setTextSize(14.5f);
         msg.setGravity(Gravity.CENTER);
         msg.setLineSpacing(1.1f, 1.15f);
         msg.setPadding(0, 0, 0, dp(18));
         root.addView(msg);
 
-        // ------------------------------------------------------------
-        // MUTE CHECKBOX
-        // ------------------------------------------------------------
+        // MUTE
         CheckBox muteBox = new CheckBox(this);
         muteBox.setChecked(isTtsMuted());
         muteBox.setText(gr ? "Σίγαση φωνητικών οδηγιών" : "Mute voice instructions");
@@ -4292,9 +4277,7 @@ private void lab3EarpieceManual() {
         muteBox.setPadding(0, 0, 0, dp(16));
         root.addView(muteBox);
 
-        // ------------------------------------------------------------
         // START BUTTON
-        // ------------------------------------------------------------
         Button start = new Button(this);
         start.setText(gr ? "ΕΝΑΡΞΗ ΕΛΕΓΧΟΥ" : "START TEST");
         start.setAllCaps(false);
@@ -4302,7 +4285,7 @@ private void lab3EarpieceManual() {
         start.setTextColor(Color.BLACK);
 
         GradientDrawable startBg = new GradientDrawable();
-        startBg.setColor(0xFF39FF14); // neon green
+        startBg.setColor(0xFF39FF14);
         startBg.setCornerRadius(dp(16));
         startBg.setStroke(dp(3), 0xFFFFD700);
         start.setBackground(startBg);
@@ -4367,20 +4350,17 @@ private void lab3EarpieceManual() {
                 } finally {
                     askUserEarpieceConfirmation();
                 }
-}).start();
+            }).start();
         });
-        
-// ------------------------------------------------------------
-// TTS INTRO — GLOBAL MUTE RESPECTED
-// ------------------------------------------------------------
-if (!isTtsMuted()) {
-    AppTTS.ensureSpeak(
-            this,
-            ttsText
-    );
-}
 
         d.show();
+
+        // ------------------------------------------------------------
+        // TTS INTRO — ONE TIME, AFTER SHOW, GLOBAL MUTE SAFE
+        // ------------------------------------------------------------
+        if (!isTtsMuted()) {
+            AppTTS.ensureSpeak(this, ttsText);
+        }
     });
 }
         

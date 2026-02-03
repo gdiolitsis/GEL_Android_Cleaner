@@ -4345,7 +4345,7 @@ private void lab3EarpieceManual() {
 
                     logOk("Earpiece tone playback completed.");
 
-                } catch (Throwable t) {
+} catch (Throwable t) {
                     logError("Earpiece tone playback failed.");
                 } finally {
                     askUserEarpieceConfirmation();
@@ -4354,14 +4354,8 @@ private void lab3EarpieceManual() {
         });
 
         d.show();
-
-        // ------------------------------------------------------------
-        // TTS INTRO — ONE TIME, AFTER SHOW, GLOBAL MUTE SAFE
-        // ------------------------------------------------------------
-        if (!isTtsMuted()) {
-            AppTTS.ensureSpeak(this, bodyText);
-        }
     });
+}
 }
         
 /* ============================================================
@@ -6629,13 +6623,6 @@ root.addView(msg);
             d.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         d.show();
         
-// ---------------------------
-        // TTS (ONLY IF NOT MUTED)
-        // ---------------------------
-        if (!isTtsMuted()) {
-    AppTTS.ensureSpeak(this, bodyText);
-}
-
         yes.setOnClickListener(v -> {
     AppTTS.stop();
     d.dismiss();
@@ -9585,12 +9572,6 @@ final String ttsText =
                   + "Το τεστ φόρτισης διαρκεί τρία λεπτά."
                 : "Connect the charger and keep the device connected. "
                   + "The charging test will run for three minutes.";
-
-new Handler(Looper.getMainLooper()).postDelayed(() -> {
-    if (!AppTTS.isMuted(this)) {
-        AppTTS.ensureSpeak(this, bodyText);
-    }
-}, 120);
 
 // ============================================================
 // EXIT BUTTON (LAB 15 — GEL STYLE)

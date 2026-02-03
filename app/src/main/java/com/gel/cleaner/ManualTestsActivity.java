@@ -202,6 +202,7 @@ private boolean lab6ProCanceled = false;
 // ============================================================
 private ArrayList<Lab8Cam> lab8CamsFor81 = null;
 private CameraManager lab8CmFor81 = null;
+private final Map<String, Integer> lab8CameraLogAnchors = new HashMap<>();
 
 // ============================================================
 // LAB 13 — BLUETOOTH RECEIVER (FINAL / AUTHORITATIVE)
@@ -5615,10 +5616,10 @@ appendHtml("<br>");
     logInfo("Camera capabilities summary:");
 logLine();
 appendHtml("<br>");
-
-for (Lab8Cam c : cams) {
-
-    logLabelValue("Camera ID", c.id);
+    
+logLine();
+logSection("LAB 8 — Camera ID " + c.id + " (" + c.facing + ")");
+logLine();
 
     // Facing
     if ("BACK".equals(c.facing))
@@ -5664,42 +5665,7 @@ for (Lab8Cam c : cams) {
                 "Preview size",
                 c.preview.getWidth() + " x " + c.preview.getHeight()
         );
-    }
-
-// ------------------------------------------------------------
-// Runtime results will be appended here (after test execution)
-// ------------------------------------------------------------
-if (c.runtimeSession != null) {
-
-    Lab8Session s = c.runtimeSession;
-
-    // Flash
-    if (c.hasFlash)
-        logLabelOkValue("Flash", "Torch toggled successfully");
-    else
-        logLabelWarnValue("Flash", "Not available");
-
-    logLabelValue("Stream sampling", "5s");
-    logLabelValue("Frames", String.valueOf(s.frames));
-    logLabelValue(
-            "FPS (estimated)",
-            String.format(Locale.US, "%.1f", (s.frames * 1000f) / Math.max(1, SystemClock.elapsedRealtime() - s.sampleStartMs))
-    );
-
-    logLabelValue("Frame drops / timeouts", String.valueOf(s.droppedFrames));
-    logLabelValue("Black frames (suspected)", String.valueOf(s.blackFrames));
-    logLabelValue("Luma range (min / max)", s.minLuma + " / " + s.maxLuma);
-
-    if (s.latencyCount > 0)
-        logLabelValue(
-                "Pipeline latency (avg ms)",
-                String.valueOf(s.latencySumMs / s.latencyCount)
-        );
-
-    if (c.hasRaw)
-        logLabelOkValue("RAW support", "YES");
-
-    logLine();
+logLine();
 }
 }
 
@@ -5949,6 +5915,47 @@ if (cameraSubsystemOk) {
     // ====================================================
     final Lab8Cam cam = cams.get(idx[0]);
     idx[0]++;
+    
+// ------------------------------------------------------------
+// LAB 8 — Static camera info (printed ONCE per camera)
+// ------------------------------------------------------------
+logLine();
+logSection("LAB 8 — Camera ID " + cam.id + " (" + cam.facing + ")");
+logLine();
+
+if (cam.hasFlash)
+    logLabelOkValue("Flash", "YES");
+else
+    logLabelWarnValue("Flash", "NO");
+
+if (cam.hasRaw)
+    logLabelOkValue("RAW", "YES");
+else
+    logLabelWarnValue("RAW", "NO");
+
+if (cam.hasManual)
+    logLabelOkValue("Manual sensor", "YES");
+else
+    logLabelWarnValue("Manual sensor", "NO");
+
+if (cam.hasDepth)
+    logLabelOkValue("Depth output", "YES");
+else
+    logLabelWarnValue("Depth output", "NO");
+
+if (cam.focal != null)
+    logLabelValue(
+            "Focal length",
+            String.format(Locale.US, "%.2f mm", cam.focal)
+    );
+
+if (cam.preview != null)
+    logLabelValue(
+            "Preview size",
+            cam.preview.getWidth() + " x " + cam.preview.getHeight()
+    );
+
+logLine();
 
     if (cam.hasFlash) {
         lab8TryTorchToggle(cam.id, cam, overall);
@@ -6161,17 +6168,16 @@ cam.runtimeSession = s;
     };
 
     yes.setOnClickListener(v -> {
-    AppTTS.stop(); // ⛔ ΚΟΒΕΙ ΑΜΕΣΑ ΤΗ ΦΩΝΗ
+    AppTTS.stop();
     overall.previewOkCount++;
-    logLabelOkValue("User confirmation", "Live preview visible");
+    s.userConfirmedPreview = Boolean.TRUE;
     finishAndNext.run();
 });
 
 no.setOnClickListener(v -> {
-    AppTTS.stop(); // ⛔ ΚΟΒΕΙ ΑΜΕΣΑ ΤΗ ΦΩΝΗ
+    AppTTS.stop();
     overall.previewFailCount++;
-    logLabelErrorValue("User confirmation", "NO live preview");
-    logWarn("Possible camera module, driver, permission, or routing issue.");
+    s.userConfirmedPreview = Boolean.FALSE;
     finishAndNext.run();
 });
 
@@ -6396,9 +6402,91 @@ private void lab8StartCamera2Session(
 // ============================================================
 private void lab8StopAndReportSample(Lab8Session s, Lab8Overall overall) {
 
-    long durMs = Math.max(1, SystemClock.elapsedRealtime() - s.sampleStartMs);
+    // ------------------------------------------------------------
+    // Camera runtime results (AFTER sampling)
+    // ------------------------------------------------------------
+    
+   long durMs = Math.max(1, SystemClock.elapsedRealtime() - s.sampleStartMs);
     float fps = (s.frames * 1000f) / durMs;
 
+    // Flash
+    if (s.cam.hasFlash)
+        logLabelOkValue("Flash", "Torch toggled successfully");
+    else
+        logLabelWarnValue("Flash", "Not available");
+
+    // Stream sampling
+    logLabelValue("Stream sampling", "5s");
+
+    if (s.frames > 0)
+        logLabelOkValue("Frames", String.valueOf(s.frames));
+    else
+        logLabelErrorValue("Frames", "0");
+
+    if (fps >= 20f)
+        logLabelOkValue("FPS (estimated)", String.format(Locale.US, "%.1f", fps));
+    else
+        logLabelWarnValue("FPS (estimated)", String.format(Locale.US, "%.1f", fps));
+
+    if (s.droppedFrames == 0)
+        logLabelOkValue("Frame drops / timeouts", "0");
+    else
+        logLabelWarnValue("Frame drops / timeouts", String.valueOf(s.droppedFrames));
+
+    if (s.blackFrames == 0)
+        logLabelOkValue("Black frames (suspected)", "0");
+    else {
+        logLabelWarnValue("Black frames (suspected)", String.valueOf(s.blackFrames));
+        overall.streamIssueCount++;
+    }
+
+    logLabelValue(
+            "Luma range (min / max)",
+            s.minLuma + " / " + s.maxLuma
+    );
+
+    if (s.latencyCount > 0) {
+        long avg = s.latencySumMs / Math.max(1, s.latencyCount);
+        if (avg <= 250)
+            logLabelOkValue("Pipeline latency (avg ms)", String.valueOf(avg));
+        else
+            logLabelWarnValue("Pipeline latency (avg ms)", String.valueOf(avg));
+    } else {
+        logLabelWarnValue("Pipeline latency (avg ms)", "Not available");
+    }
+
+    if (s.cam.hasRaw)
+        logLabelOkValue("RAW support", "YES");
+    else
+        logLabelWarnValue("RAW support", "NO");
+        
+// User confirmation
+if (s.userConfirmedPreview != null) {
+    if (s.userConfirmedPreview)
+        logLabelOkValue("User confirmation", "Live preview visible");
+    else
+        logLabelErrorValue("User confirmation", "Preview NOT visible");
+}
+
+// ------------------------------------------------------------
+// Final verdict (per camera)
+// ------------------------------------------------------------
+boolean ok =
+        (s.frames > 0) &&
+        (s.blackFrames == 0) &&
+        (s.droppedFrames == 0) &&
+        (s.latencyCount == 0 || (s.latencySumMs / Math.max(1, s.latencyCount)) <= 250) &&
+        (s.userConfirmedPreview != null && s.userConfirmedPreview);
+
+s.verdictOk = ok;
+
+if (ok) {
+    logLabelOkValue("Verdict", "OK — Camera path operational");
+} else {
+    logLabelWarnValue("Verdict", "Issues detected — review above");
+}
+
+    logLine();
 }
 
 // ============================================================
@@ -6462,6 +6550,9 @@ private static class Lab8Session {
     int latencyCount;
 
     long lastFrameTsNs;
+
+    // User confirmation (YES / NO)
+    Boolean userConfirmedPreview = null;
 }
 
 // ============================================================
@@ -6658,6 +6749,11 @@ private void lab8_1DumpOneCameraCapabilities(CameraManager cm, Lab8Cam cam) {
         logLine();
         return;
     }
+    
+// ------------------------------------------------------------
+// HUMAN SUMMARY (FINAL VERDICT)
+// ------------------------------------------------------------
+CameraHumanSummary human = buildHumanSummary(cc);
 
     StreamConfigurationMap map =
             cc.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
@@ -6733,6 +6829,24 @@ private void lab8_1DumpOneCameraCapabilities(CameraManager cm, Lab8Cam cam) {
         logLabelOkValue("Flash", "Available");
     else
         logLabelWarnValue("Flash", "Not available");
+        
+// ------------------------------------------------------------
+// HUMAN FINAL VERDICT
+// ------------------------------------------------------------
+logLine();
+logInfo("FINAL HUMAN VERDICT");
+
+logLabelValue("Photo quality", human.photoQuality);
+logLabelValue("Video quality", human.videoQuality);
+logLabelValue("Video smoothness", human.videoSmoothness);
+logLabelValue("Slow motion", human.slowMotion);
+logLabelValue("Stabilization", human.stabilization);
+logLabelValue("Manual mode", human.manualMode);
+logLabelValue("RAW support", human.rawSupport);
+logLabelValue("Real life use", human.realLifeUse);
+
+logLine();
+logLabelOkValue("Verdict", human.verdict);
 
     logLine();
 }

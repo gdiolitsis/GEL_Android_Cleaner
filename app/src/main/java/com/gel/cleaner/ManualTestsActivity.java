@@ -5666,6 +5666,39 @@ for (Lab8Cam c : cams) {
         );
     }
 
+// ------------------------------------------------------------
+// Runtime results will be appended here (after test execution)
+// ------------------------------------------------------------
+if (c.runtimeSession != null) {
+
+    Lab8Session s = c.runtimeSession;
+
+    // Flash
+    if (c.hasFlash)
+        logLabelOkValue("Flash", "Torch toggled successfully");
+    else
+        logLabelWarnValue("Flash", "Not available");
+
+    logLabelValue("Stream sampling", "5s");
+    logLabelValue("Frames", String.valueOf(s.frames));
+    logLabelValue(
+            "FPS (estimated)",
+            String.format(Locale.US, "%.1f", (s.frames * 1000f) / Math.max(1, SystemClock.elapsedRealtime() - s.sampleStartMs))
+    );
+
+    logLabelValue("Frame drops / timeouts", String.valueOf(s.droppedFrames));
+    logLabelValue("Black frames (suspected)", String.valueOf(s.blackFrames));
+    logLabelValue("Luma range (min / max)", s.minLuma + " / " + s.maxLuma);
+
+    if (s.latencyCount > 0)
+        logLabelValue(
+                "Pipeline latency (avg ms)",
+                String.valueOf(s.latencySumMs / s.latencyCount)
+        );
+
+    if (c.hasRaw)
+        logLabelOkValue("RAW support", "YES");
+
     logLine();
 }
 
@@ -6107,6 +6140,8 @@ new Handler(Looper.getMainLooper()).postDelayed(() -> {
     s.cm = cm;
     s.textureView = tv;
     s.cam = cam;
+    
+cam.runtimeSession = s;
 
     final AtomicBoolean finished = new AtomicBoolean(false);
 
@@ -6363,56 +6398,6 @@ private void lab8StopAndReportSample(Lab8Session s, Lab8Overall overall) {
     long durMs = Math.max(1, SystemClock.elapsedRealtime() - s.sampleStartMs);
     float fps = (s.frames * 1000f) / durMs;
 
-    logLine();
-    logLabelValue("Stream sampling", "5s");
-
-    if (s.frames > 0)
-        logLabelOkValue("Frames", String.valueOf(s.frames));
-    else
-        logLabelErrorValue("Frames", "0");
-
-    if (fps >= 20f)
-        logLabelOkValue("FPS (estimated)", String.format(Locale.US, "%.1f", fps));
-    else
-        logLabelWarnValue("FPS (estimated)", String.format(Locale.US, "%.1f", fps));
-
-    if (s.droppedFrames == 0)
-        logLabelOkValue("Frame drops / timeouts", "0");
-    else
-        logLabelWarnValue("Frame drops / timeouts", String.valueOf(s.droppedFrames));
-
-    if (s.blackFrames == 0)
-        logLabelOkValue("Black frames (suspected)", "0");
-    else {
-        logLabelWarnValue("Black frames (suspected)", String.valueOf(s.blackFrames));
-        overall.streamIssueCount++;
-    }
-
-    if (s.frames > 0 && s.sumLuma > 0) {
-        if (s.minLuma >= 0 && s.maxLuma >= 0)
-            logLabelOkValue("Luma range (min / max)", s.minLuma + " / " + s.maxLuma);
-        else
-            logLabelWarnValue("Luma range (min / max)", "N/A");
-    }
-
-    if (s.latencyCount > 0) {
-        long avg = s.latencySumMs / Math.max(1, s.latencyCount);
-        if (avg <= 250)
-            logLabelOkValue("Pipeline latency (avg ms)", String.valueOf(avg));
-        else
-            logLabelWarnValue("Pipeline latency (avg ms)", String.valueOf(avg));
-    } else {
-        logLabelWarnValue("Pipeline latency (avg ms)", "Not available (no sensor timestamps)");
-    }
-
-    if (s.cam != null) {
-        if (s.cam.hasRaw)
-            logLabelOkValue("RAW support", "YES");
-        else
-            logLabelWarnValue("RAW support", "NO");
-    }
-
-    logLine();
 }
 
 // ============================================================
@@ -6439,6 +6424,8 @@ private static class Lab8Cam {
     boolean hasDepth;
     Float focal;
     Size preview;
+    
+Lab8Session runtimeSession;
 }
 
 private static class Lab8Overall {

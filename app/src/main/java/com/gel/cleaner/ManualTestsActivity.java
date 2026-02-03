@@ -5616,72 +5616,20 @@ appendHtml("<br>");
     logInfo("Camera capabilities summary:");
 logLine();
 appendHtml("<br>");
-    
-logLine();
-logSection("LAB 8 — Camera ID " + c.id + " (" + c.facing + ")");
-logLine();
 
-    // Facing
-    if ("BACK".equals(c.facing))
-        logLabelOkValue("Facing", c.facing);
-    else
-        logLabelOkValue("Facing", c.facing);
+// ------------------------------------------------------------
+// Run test sequence (one camera at a time)
+// ------------------------------------------------------------
+final int[] idx = {0};
 
-    // Flash
-    if (c.hasFlash)
-        logLabelOkValue("Flash", "YES");
-    else
-        logLabelWarnValue("Flash", "NO");
+final Lab8Overall overall = new Lab8Overall();
+overall.total = cams.size();
 
-    // RAW
-    if (c.hasRaw)
-        logLabelOkValue("RAW", "YES");
-    else
-        logLabelWarnValue("RAW", "NO");
-
-    // Manual sensor
-    if (c.hasManual)
-        logLabelOkValue("Manual sensor", "YES");
-    else
-        logLabelWarnValue("Manual sensor", "NO");
-
-    // Depth
-    if (c.hasDepth)
-        logLabelOkValue("Depth output", "YES");
-    else
-        logLabelWarnValue("Depth output", "NO");
-
-    // Focal length
-    if (c.focal != null) {
-        logLabelValue(
-                "Focal length",
-                String.format(Locale.US, "%.2f mm", c.focal)
-        );
-    }
-
-    // Preview size
-    if (c.preview != null) {
-        logLabelValue(
-                "Preview size",
-                c.preview.getWidth() + " x " + c.preview.getHeight()
-        );
-logLine();
-}
-}
-
-    // ------------------------------------------------------------
-    // Run test sequence (one camera at a time)
-    // ------------------------------------------------------------
-    final int[] idx = {0};
-
-    final Lab8Overall overall = new Lab8Overall();
-    overall.total = cams.size();
-    
-    //  Save state for LAB 8.1
+// Save state for LAB 8.1
 lab8CamsFor81 = cams;
 lab8CmFor81 = cm;
 
-    runOnUiThread(() -> showLab8IntroAndStart(cams, idx, cm, overall));
+runOnUiThread(() -> showLab8IntroAndStart(cams, idx, cm, overall));
 }
 
 // ============================================================

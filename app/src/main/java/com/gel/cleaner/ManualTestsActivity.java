@@ -5701,6 +5701,7 @@ if (c.runtimeSession != null) {
 
     logLine();
 }
+}
 
     // ------------------------------------------------------------
     // Run test sequence (one camera at a time)

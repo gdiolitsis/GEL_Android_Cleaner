@@ -1826,13 +1826,14 @@ lab3Tone = null;
 // ============================================================
 
 private static class CameraHumanSummary {
-    String photoQuality;
-    String rawSupport;
-    String videoQuality;
+    String photoQuality;          // "9 MP photos (very good)"
+    String professionalPhotos;    // "RAW uncompressed photos supported"
+    String videoQuality;          // "4K (very high)" / "Full HD (high)"
     String videoSmoothness;
     String slowMotion;
     String stabilization;
     String manualMode;
+    String flash;
     String realLifeUse;
     String verdict;
 }
@@ -1841,60 +1842,86 @@ private CameraHumanSummary buildHumanSummary(CameraCharacteristics cc) {
 
     CameraHumanSummary h = new CameraHumanSummary();
 
-    // ----------------------------
-    // RAW
-    // ----------------------------
+    // ------------------------------------------------------------
+    // CAPS
+    // ------------------------------------------------------------
     boolean hasRaw = false;
+    boolean manual = false;
+
     int[] caps = cc.get(CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES);
     if (caps != null) {
         for (int c : caps) {
-            if (c == CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES_RAW) {
+            if (c == CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES_RAW)
                 hasRaw = true;
-                break;
-            }
-        }
-    }
-    h.rawSupport = hasRaw ? "Supported" : "Not supported";
-
-    // ----------------------------
-    // MANUAL SENSOR
-    // ----------------------------
-    boolean manual = false;
-    if (caps != null) {
-        for (int c : caps) {
-            if (c == CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES_MANUAL_SENSOR) {
+            if (c == CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES_MANUAL_SENSOR)
                 manual = true;
-                break;
-            }
         }
     }
+
     h.manualMode = manual ? "Supported" : "Not supported";
 
-    // ----------------------------
-    // VIDEO STABILIZATION
-    // ----------------------------
-    boolean stab = false;
-    int[] stabModes = cc.get(CameraCharacteristics.CONTROL_AVAILABLE_VIDEO_STABILIZATION_MODES);
-    if (stabModes != null) {
-        for (int m : stabModes) {
-            if (m == CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE_ON) {
-                stab = true;
-                break;
+    // ------------------------------------------------------------
+    // PHOTO QUALITY (MP)
+    // ------------------------------------------------------------
+    StreamConfigurationMap map =
+            cc.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
+
+    Size maxPhoto = null;
+    if (map != null) {
+        Size[] photos = map.getOutputSizes(ImageFormat.JPEG);
+        if (photos != null && photos.length > 0) {
+            maxPhoto = photos[0];
+            for (Size s : photos) {
+                long a = (long) s.getWidth() * s.getHeight();
+                long b = (long) maxPhoto.getWidth() * maxPhoto.getHeight();
+                if (a > b) maxPhoto = s;
             }
         }
     }
-    h.stabilization = stab ? "Supported" : "Not supported";
 
-    // ----------------------------
-    // FPS ANALYSIS
-    // ----------------------------
+    if (maxPhoto != null) {
+        int mp = (maxPhoto.getWidth() * maxPhoto.getHeight()) / 1_000_000;
+        h.photoQuality = mp + " MP photos (very good)";
+    } else {
+        h.photoQuality = "Standard photos";
+    }
+
+    // ------------------------------------------------------------
+    // PROFESSIONAL PHOTOS (RAW)
+    // ------------------------------------------------------------
+    h.professionalPhotos = hasRaw
+            ? "RAW uncompressed photos supported"
+            : "RAW uncompressed photos not supported (JPEG only)";
+
+    // ------------------------------------------------------------
+    // VIDEO QUALITY
+    // ------------------------------------------------------------
+    int maxWidth = 0;
+    if (map != null) {
+        Size[] vids = map.getOutputSizes(MediaRecorder.class);
+        if (vids != null) {
+            for (Size s : vids)
+                maxWidth = Math.max(maxWidth, s.getWidth());
+        }
+    }
+
+    if (maxWidth >= 3840)
+        h.videoQuality = "4K (very high)";
+    else if (maxWidth >= 1920)
+        h.videoQuality = "Full HD (high)";
+    else
+        h.videoQuality = "HD (basic)";
+
+    // ------------------------------------------------------------
+    // FPS / SMOOTHNESS / SLOW MOTION
+    // ------------------------------------------------------------
     int maxFps = 0;
     Range<Integer>[] fpsRanges =
             cc.get(CameraCharacteristics.CONTROL_AE_AVAILABLE_TARGET_FPS_RANGES);
 
     if (fpsRanges != null) {
         for (Range<Integer> r : fpsRanges) {
-            if (r.getUpper() != null)
+            if (r != null && r.getUpper() != null)
                 maxFps = Math.max(maxFps, r.getUpper());
         }
     }
@@ -1906,41 +1933,40 @@ private CameraHumanSummary buildHumanSummary(CameraCharacteristics cc) {
         h.videoSmoothness = "Very smooth";
         h.slowMotion = "Limited";
     } else if (maxFps >= 30) {
-        h.videoSmoothness = "Smooth";
+        h.videoSmoothness = "Normal smooth video";
         h.slowMotion = "Not supported";
     } else {
         h.videoSmoothness = "Basic";
         h.slowMotion = "Not supported";
     }
 
-    // ----------------------------
-    // VIDEO RESOLUTION
-    // ----------------------------
-    StreamConfigurationMap map =
-            cc.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
+    // ------------------------------------------------------------
+    // STABILIZATION
+    // ------------------------------------------------------------
+    boolean stab = false;
+    int[] stabModes =
+            cc.get(CameraCharacteristics.CONTROL_AVAILABLE_VIDEO_STABILIZATION_MODES);
 
-    int maxWidth = 0;
-    if (map != null) {
-        Size[] vids = map.getOutputSizes(MediaRecorder.class);
-        if (vids != null) {
-            for (Size s : vids) {
-                maxWidth = Math.max(maxWidth, s.getWidth());
+    if (stabModes != null) {
+        for (int m : stabModes) {
+            if (m == CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE_ON) {
+                stab = true;
+                break;
             }
         }
     }
 
-    if (maxWidth >= 3840) h.videoQuality = "Very high (4K)";
-    else if (maxWidth >= 1920) h.videoQuality = "High (Full HD)";
-    else h.videoQuality = "Standard (HD)";
+    h.stabilization = stab ? "Supported" : "Not supported";
 
-    // ----------------------------
-    // PHOTO QUALITY (simple heuristic)
-    // ----------------------------
-    h.photoQuality = hasRaw ? "Very good" : "Good";
+    // ------------------------------------------------------------
+    // FLASH
+    // ------------------------------------------------------------
+    Boolean flashAvail = cc.get(CameraCharacteristics.FLASH_INFO_AVAILABLE);
+    h.flash = Boolean.TRUE.equals(flashAvail) ? "Available" : "Not available";
 
-    // ----------------------------
+    // ------------------------------------------------------------
     // REAL LIFE USE
-    // ----------------------------
+    // ------------------------------------------------------------
     if (maxFps >= 60 && stab)
         h.realLifeUse = "Good for everyday use and action scenes";
     else if (maxFps >= 30)
@@ -1948,13 +1974,15 @@ private CameraHumanSummary buildHumanSummary(CameraCharacteristics cc) {
     else
         h.realLifeUse = "Basic usage only";
 
-    // ----------------------------
+    // ------------------------------------------------------------
     // FINAL VERDICT
-    // ----------------------------
+    // ------------------------------------------------------------
     if (hasRaw && maxFps >= 60)
-        h.verdict = "Good camera for daily use. Not designed for professional video.";
+        h.verdict =
+                "Good camera for daily use and professional photos. Not designed for professional video.";
     else
-        h.verdict = "Decent camera for basic daily usage.";
+        h.verdict =
+                "Decent camera for basic daily usage.";
 
     return h;
 }
@@ -5873,11 +5901,6 @@ if (cameraSubsystemOk) {
 logSection("LAB 8 — Camera ID " + cam.id + " (" + cam.facing + ")");
 logLine();
 
-if (cam.hasRaw)
-    logLabelOkValue("RAW", "YES");
-else
-    logLabelWarnValue("RAW", "NO");
-
 if (cam.hasManual)
     logLabelOkValue("Manual sensor", "YES");
 else
@@ -6395,9 +6418,9 @@ private void lab8StopAndReportSample(Lab8Session s, Lab8Overall overall) {
     }
 
     if (s.cam.hasRaw)
-        logLabelOkValue("RAW support", "YES");
-    else
-        logLabelWarnValue("RAW support", "NO");
+    logLabelOkValue("RAW support", "YES — professional uncompressed photos");
+else
+    logLabelWarnValue("RAW support", "NO — professional uncompressed photos not supported (JPEG only)");
         
 // User confirmation
 if (s.userConfirmedPreview != null) {
@@ -6693,103 +6716,26 @@ private void lab8_1DumpOneCameraCapabilities(CameraManager cm, Lab8Cam cam) {
     }
     
 // ------------------------------------------------------------
-// HUMAN SUMMARY (FINAL VERDICT)
-// ------------------------------------------------------------
-CameraHumanSummary human = buildHumanSummary(cc);
-
-    StreamConfigurationMap map =
-            cc.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
-    if (map == null) {
-        logLabelWarnValue("Camera streams", "Unavailable");
-        logLine();
-        return;
-    }
-
-    Size maxPhoto = lab8_1MaxSize(map.getOutputSizes(ImageFormat.JPEG));
-    Size maxVideo = lab8_1MaxSize(map.getOutputSizes(MediaRecorder.class));
-
-    Range<Integer>[] fpsRanges =
-            cc.get(CameraCharacteristics.CONTROL_AE_AVAILABLE_TARGET_FPS_RANGES);
-
-    boolean hasRaw = false;
-    int[] caps = cc.get(CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES);
-    if (caps != null) {
-        for (int c : caps) {
-            if (c == CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES_RAW) {
-                hasRaw = true;
-                break;
-            }
-        }
-    }
-
-    Boolean flash = cc.get(CameraCharacteristics.FLASH_INFO_AVAILABLE);
-
-    logInfo("WHAT THIS MEANS FOR YOU");
-
-    // PHOTO
-    if (maxPhoto != null) {
-        int mp = (maxPhoto.getWidth() * maxPhoto.getHeight()) / 1_000_000;
-        logLabelOkValue("Photo quality", mp + " MP photos");
-    } else {
-        logLabelWarnValue("Photo quality", "Standard photos");
-    }
-
-    if (hasRaw)
-        logLabelOkValue("Professional photos", "RAW supported");
-    else
-        logLabelWarnValue("Professional photos", "RAW not supported");
-
-    // VIDEO
-    if (maxVideo != null) {
-        int w = maxVideo.getWidth();
-        if (w >= 3840)
-            logLabelOkValue("Video recording", "4K video");
-        else if (w >= 1920)
-            logLabelOkValue("Video recording", "Full HD video");
-        else
-            logLabelWarnValue("Video recording", "HD video");
-    }
-
-    // FPS  ONE RESULT, NOT RANGES
-    int maxFps = 0;
-    if (fpsRanges != null) {
-        for (Range<Integer> r : fpsRanges) {
-            if (r != null && r.getUpper() > maxFps)
-                maxFps = r.getUpper();
-        }
-    }
-
-    if (maxFps >= 60)
-        logLabelOkValue("Video smoothness", "Very smooth (up to " + maxFps + " fps)");
-    else if (maxFps >= 30)
-        logLabelOkValue("Video smoothness", "Normal smooth video");
-    else
-        logLabelWarnValue("Video smoothness", "Limited smoothness");
-
-    // FLASH
-    if (Boolean.TRUE.equals(flash))
-        logLabelOkValue("Flash", "Available");
-    else
-        logLabelWarnValue("Flash", "Not available");
-        
-// ------------------------------------------------------------
 // HUMAN FINAL VERDICT
 // ------------------------------------------------------------
-logLine();
-logInfo("FINAL HUMAN VERDICT");
 
-logLabelValue("Photo quality", human.photoQuality);
-logLabelValue("Video quality", human.videoQuality);
-logLabelValue("Video smoothness", human.videoSmoothness);
-logLabelValue("Slow motion", human.slowMotion);
-logLabelValue("Stabilization", human.stabilization);
-logLabelValue("Manual mode", human.manualMode);
-logLabelValue("RAW support", human.rawSupport);
-logLabelValue("Real life use", human.realLifeUse);
+    CameraHumanSummary h = buildHumanSummary(cc);
 
-logLine();
-logLabelOkValue("Verdict", human.verdict);
+    logInfo("FINAL HUMAN VERDICT");
+    logLine();
 
+    logLabelValue("Photo quality", h.photoQuality);
+    logLabelValue("Professional photos", h.professionalPhotos);
+    logLabelValue("Video quality", h.videoQuality);
+    logLabelValue("Video smoothness", h.videoSmoothness);
+    logLabelValue("Slow motion", h.slowMotion);
+    logLabelValue("Stabilization", h.stabilization);
+    logLabelValue("Manual mode", h.manualMode);
+    logLabelValue("Flash", h.flash);
+    logLabelValue("Real life use", h.realLifeUse);
+
+    logLine();
+    logLabelOkValue("Verdict", h.verdict);
     logLine();
 }
 

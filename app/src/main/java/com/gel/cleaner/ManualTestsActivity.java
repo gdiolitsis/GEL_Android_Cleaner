@@ -1354,22 +1354,28 @@ serviceLogInit = true;
 @Override
 protected void onPause() {
 
-    // ==========================
-    // LAB 3 LOGIC
-    // ==========================
-    lab3WaitingUser = false;
-    stopLab3Tone();
-    SystemClock.sleep(120);
-    restoreLab3Audio();
+    // ============================================================
+    // LAB 3 — FORCE STOP IF USER LEFT ACTIVITY
+    // ============================================================
+    try {
+        lab3WaitingUser = false;
+        stopLab3Tone();
+        SystemClock.sleep(120);
+        restoreLab3Audio();
+    } catch (Throwable ignore) {
+        // never crash on pause
+    }
 
-// ==========================
-    // TTS STOP
-    // ==========================
+    // ============================================================
+    // TTS STOP — lifecycle safe (no speech leaks)
+    // ============================================================
     try {
         if (tts != null && tts[0] != null) {
             tts[0].stop();
         }
-    } catch (Throwable ignore) {}
+    } catch (Throwable ignore) {
+        // never crash on pause
+    }
 
     super.onPause();
 }
@@ -1377,19 +1383,32 @@ protected void onPause() {
 @Override
 protected void onDestroy() {
 
+    // ============================================================
     // LAB 13 — receiver cleanup (SAFE)
+    // ============================================================
     try {
         unregisterReceiver(lab13BtReceiver);
-    } catch (Throwable ignore) {}
+    } catch (Throwable ignore) {
+        // receiver may already be unregistered
+    }
 
-    // TTS cleanup
-    if (tts != null && tts[0] != null) {
-        try {
+    // ============================================================
+    // TTS FULL CLEANUP — final lifecycle teardown
+    // ============================================================
+    try {
+        if (tts != null && tts[0] != null) {
             tts[0].stop();
             tts[0].shutdown();
-        } catch (Throwable ignore) {}
-        tts[0] = null;
-        ttsReady[0] = false;
+        }
+    } catch (Throwable ignore) {
+        // never crash on destroy
+    } finally {
+        if (tts != null) {
+            tts[0] = null;
+        }
+        if (ttsReady != null) {
+            ttsReady[0] = false;
+        }
     }
 
     super.onDestroy();
@@ -4320,20 +4339,27 @@ private void lab3EarpieceManual() {
             } catch (Throwable ignore) {}
         });
 
-        // ------------------------------------------------------------
-        // TTS INTRO
-        // ------------------------------------------------------------
-        if (tts != null && tts[0] != null && ttsReady[0] && !isTtsMuted()) {
-            try {
-                tts[0].stop();
-                tts[0].speak(
-                        ttsText,
-                        TextToSpeech.QUEUE_FLUSH,
-                        null,
-                        "LAB3_EARPIECE_INTRO"
-                );
-            } catch (Throwable ignore) {}
-        }
+// ------------------------------------------------------------
+// TTS INTRO (STRICT MUTE SAFE)
+// ------------------------------------------------------------
+new Handler(Looper.getMainLooper()).postDelayed(() -> {
+    if (!isFinishing()
+            && tts != null
+            && tts[0] != null
+            && ttsReady[0]
+            && !isTtsMuted()) {
+
+        try {
+            tts[0].stop();
+            tts[0].speak(
+                    ttsText,
+                    TextToSpeech.QUEUE_FLUSH,
+                    null,
+                    "LAB3_EARPIECE_INTRO"
+            );
+        } catch (Throwable ignore) {}
+    }
+}, 120);
 
         // ------------------------------------------------------------
         // START ACTION
@@ -4367,11 +4393,7 @@ private void lab3EarpieceManual() {
                 }
             }).start();
         });
-
-        d.show();
-    });
-}
-
+        
 /* ============================================================
    LAB 4 — Microphone Recording Check (BOTTOM + TOP)
    NEW FLOW: BASE (functional) → PRO (voice analysis)
@@ -6690,7 +6712,7 @@ private void startLab8_1CameraCapabilities() {
     }
 
     appendHtml("<br>");
-    logLabelOkValue("Lab 8.1", "Finished");
+    logOk("Lab 8.1 Finished");
     logLine();
     enableSingleExportButton();
 }

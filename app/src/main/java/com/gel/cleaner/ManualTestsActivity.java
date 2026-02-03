@@ -3730,20 +3730,18 @@ private SpeakerOutputState evaluateSpeakerOutput(
     if (r == null)
         return SpeakerOutputState.NO_OUTPUT;
 
-    // HARD NO OUTPUT
+    // Absolute silence only
     if (r.silenceDetected)
         return SpeakerOutputState.NO_OUTPUT;
 
-    // Defensive: zero signal
-    if (r.rms <= 0 || r.peak <= 0)
+    if (r.rms <= 0 && r.peak <= 0)
         return SpeakerOutputState.NO_OUTPUT;
 
-    // LOW CONFIDENCE PATH
+    // Low quality signal (still valid output)
     if ("LOW".equalsIgnoreCase(r.confidence)
             || "WEAK".equalsIgnoreCase(r.confidence))
         return SpeakerOutputState.LOW_SIGNAL;
 
-    // DEFAULT OK
     return SpeakerOutputState.OK;
 }
 
@@ -4339,28 +4337,6 @@ private void lab3EarpieceManual() {
             } catch (Throwable ignore) {}
         });
 
-// ------------------------------------------------------------
-// TTS INTRO (STRICT MUTE SAFE)
-// ------------------------------------------------------------
-new Handler(Looper.getMainLooper()).postDelayed(() -> {
-    if (!isFinishing()
-            && tts != null
-            && tts[0] != null
-            && ttsReady[0]
-            && !isTtsMuted()) {
-
-        try {
-            tts[0].stop();
-            tts[0].speak(
-                    ttsText,
-                    TextToSpeech.QUEUE_FLUSH,
-                    null,
-                    "LAB3_EARPIECE_INTRO"
-            );
-        } catch (Throwable ignore) {}
-    }
-}, 120);
-
         // ------------------------------------------------------------
         // START ACTION
         // ------------------------------------------------------------
@@ -4393,10 +4369,20 @@ new Handler(Looper.getMainLooper()).postDelayed(() -> {
                 }
 }).start();
         });
+        
+// ------------------------------------------------------------
+// TTS INTRO — GLOBAL MUTE RESPECTED
+// ------------------------------------------------------------
+if (!isTtsMuted()) {
+    AppTTS.ensureSpeak(
+            this,
+            ttsText
+    );
+}
 
         d.show();
     });
-}   // END OF lab3EarpieceManual()
+}
         
 /* ============================================================
    LAB 4 — Microphone Recording Check (BOTTOM + TOP)
@@ -6666,11 +6652,9 @@ root.addView(msg);
 // ---------------------------
         // TTS (ONLY IF NOT MUTED)
         // ---------------------------
-        new Handler(Looper.getMainLooper()).postDelayed(() -> {
-            if (d.isShowing() && !AppTTS.isMuted(this)) {
-                AppTTS.ensureSpeak(this, messageText);
-            }
-        }, 120);
+        if (!isTtsMuted()) {
+    AppTTS.ensureSpeak(this, ttsText);
+}
 
         yes.setOnClickListener(v -> {
     AppTTS.stop();

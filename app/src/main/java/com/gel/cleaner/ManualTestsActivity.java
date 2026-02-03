@@ -6499,8 +6499,9 @@ private static class Lab8Session {
 
     long lastFrameTsNs;
 
-    // User confirmation (YES / NO)
     Boolean userConfirmedPreview = null;
+
+    boolean verdictOk = false;
 }
 
 // ============================================================

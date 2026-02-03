@@ -5610,12 +5610,9 @@ logLabelOkValue("Total camera IDs", String.valueOf(ids.length));
         return;
     }
 
-    // Log summary (labels white, values colored via existing log methods you already use)
-    logLine();
-appendHtml("<br>");
+    // Log summary (labels white, values colored via existing log methods you already use
     logInfo("Camera capabilities summary:");
 logLine();
-appendHtml("<br>");
 
 // ------------------------------------------------------------
 // Run test sequence (one camera at a time)
@@ -5867,7 +5864,7 @@ if (cameraSubsystemOk) {
 // ------------------------------------------------------------
 // LAB 8 — Static camera info (printed ONCE per camera)
 // ------------------------------------------------------------
-logLine();
+
 logSection("LAB 8 — Camera ID " + cam.id + " (" + cam.facing + ")");
 logLine();
 

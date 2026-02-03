@@ -5873,11 +5873,6 @@ if (cameraSubsystemOk) {
 logSection("LAB 8 — Camera ID " + cam.id + " (" + cam.facing + ")");
 logLine();
 
-if (cam.hasFlash)
-    logLabelOkValue("Flash", "YES");
-else
-    logLabelWarnValue("Flash", "NO");
-
 if (cam.hasRaw)
     logLabelOkValue("RAW", "YES");
 else
@@ -6359,12 +6354,6 @@ private void lab8StopAndReportSample(Lab8Session s, Lab8Overall overall) {
    long durMs = Math.max(1, SystemClock.elapsedRealtime() - s.sampleStartMs);
     float fps = (s.frames * 1000f) / durMs;
 
-    // Flash
-    if (s.cam.hasFlash)
-        logLabelOkValue("Flash", "Torch toggled successfully");
-    else
-        logLabelWarnValue("Flash", "Not available");
-
     // Stream sampling
     logLabelValue("Stream sampling", "5s");
 
@@ -6645,7 +6634,7 @@ no.setOnClickListener(v -> {
     d.dismiss();
     logWarn("LAB 8.1 skipped by user.");
     logLine();
-    logLabelOkValue("Lab 8", "Finished");
+    logOk("Lab 8.1 Finished");
     logLine();
     enableSingleExportButton();
 });

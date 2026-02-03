@@ -4359,7 +4359,7 @@ private void lab3EarpieceManual() {
         // TTS INTRO — ONE TIME, AFTER SHOW, GLOBAL MUTE SAFE
         // ------------------------------------------------------------
         if (!isTtsMuted()) {
-            AppTTS.ensureSpeak(this, ttsText);
+            AppTTS.ensureSpeak(this, bodyText);
         }
     });
 }
@@ -6633,7 +6633,7 @@ root.addView(msg);
         // TTS (ONLY IF NOT MUTED)
         // ---------------------------
         if (!isTtsMuted()) {
-    AppTTS.ensureSpeak(this, ttsText);
+    AppTTS.ensureSpeak(this, bodyText);
 }
 
         yes.setOnClickListener(v -> {
@@ -9588,7 +9588,7 @@ final String ttsText =
 
 new Handler(Looper.getMainLooper()).postDelayed(() -> {
     if (!AppTTS.isMuted(this)) {
-        AppTTS.ensureSpeak(this, ttsText);
+        AppTTS.ensureSpeak(this, bodyText);
     }
 }, 120);
 

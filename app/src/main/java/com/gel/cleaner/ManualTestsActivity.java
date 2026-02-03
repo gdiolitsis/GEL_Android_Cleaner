@@ -5618,6 +5618,7 @@ logLabelOkValue("Total camera IDs", String.valueOf(ids.length));
     // Log summary (labels white, values colored via existing log methods you already use
     logInfo("Camera capabilities summary:");
 logLine();
+appendHtml("<br>");
 
 // ------------------------------------------------------------
 // Run test sequence (one camera at a time)
@@ -5773,7 +5774,6 @@ private void lab8RunNextCamera(
     // ====================================================
     if (idx[0] >= cams.size()) {
 
-        appendHtml("<br>");
         logLine();
         logInfo("LAB 8 summary:");
         logLine();
@@ -6437,6 +6437,8 @@ if (ok) {
 }
 
     logLine();
+appendHtml("<br>");
+    
 }
 
 // ============================================================

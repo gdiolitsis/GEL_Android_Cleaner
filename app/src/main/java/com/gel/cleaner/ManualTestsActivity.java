@@ -4391,8 +4391,12 @@ new Handler(Looper.getMainLooper()).postDelayed(() -> {
                 } finally {
                     askUserEarpieceConfirmation();
                 }
-            }).start();
+}).start();
         });
+
+        d.show();
+    });
+}   // END OF lab3EarpieceManual()
         
 /* ============================================================
    LAB 4 — Microphone Recording Check (BOTTOM + TOP)

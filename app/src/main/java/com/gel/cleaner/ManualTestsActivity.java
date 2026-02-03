@@ -7850,15 +7850,6 @@ buttons.addView(cont);
     gate.show();
 
     // ---------------------------
-    // TTS (ONLY IF NOT MUTED)
-    // ---------------------------
-    new Handler(Looper.getMainLooper()).postDelayed(() -> {
-        if (gate.isShowing() && !AppTTS.isMuted(this)) {
-            AppTTS.ensureSpeak(this, messageText);
-        }
-    }, 120);
-
-    // ---------------------------
     // ACTIONS
     // ---------------------------
     skip.setOnClickListener(v -> {

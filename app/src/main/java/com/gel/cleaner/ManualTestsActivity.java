@@ -3932,28 +3932,33 @@ if (conf.contains("LOW") || conf.contains("WEAK")
             // OUTPUT DETECTED — CONFIDENCE IS INFORMATIONAL ONLY
             // ------------------------------------------------------------
             logLine();
-            logInfo("Speaker output evaluation");
+logInfo("Speaker output evaluation");
 
-            logLabelOkValue(
-                    "Speaker output",
-                    "Acoustic signal detected"
-            );
+if (conf.contains("LOW")) {
 
-            if (conf.contains("LOW")) {
+    logLabelOkValue(
+            "Speaker output",
+            "Acoustic signal detected with LOW confidence"
+    );
 
-                logLabelWarnValue(
-                        "Note",
-                        "Low confidence may be caused by DSP noise cancellation, " +
-                        "microphone placement, or acoustic design"
-                );
+    logLabelWarnValue(
+            "Note",
+            "Low confidence may be caused by DSP filtering, noise cancellation, " +
+            "microphone placement, or acoustic design"
+    );
 
-            } else {
+} else {
 
-                logLabelOkValue(
-                        "Note",
-                        "Speaker signal detected successfully"
-                );
-            }
+    logLabelOkValue(
+            "Speaker output",
+            "Acoustic signal detected"
+    );
+
+    logLabelOkValue(
+            "Note",
+            "Speaker signal detected successfully"
+    );
+}
 
         } catch (Throwable t) {
 
@@ -4082,12 +4087,12 @@ if (conf.contains("LOW") || conf.contains("WEAK")
             // ----------------------------------------------------
             if (conf.contains("LOW") || conf.contains("WEAK")) {
 
-                logLabelWarnValue(
+                logLabelOkValue(
                         "Speaker output",
-                        "Acoustic signal detected (LOW confidence)"
+                        "Acoustic signal detected with LOW confidence"
                 );
 
-                logLabelValue(
+                logLabelWarnValue(
                         "Note",
                         "Low confidence may be caused by DSP filtering, noise cancellation, " +
                         "speaker frequency limits, or microphone placement."
@@ -4100,7 +4105,7 @@ if (conf.contains("LOW") || conf.contains("WEAK")
                         "Acoustic signal detected"
                 );
 
-                logLabelValue(
+                logLabelOkValue(
                         "Note",
                         "Frequency sweep detected successfully across multiple tones."
                 );

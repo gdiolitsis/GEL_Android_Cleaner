@@ -4350,6 +4350,13 @@ private void lab3EarpieceManual() {
         });
 
         d.show();
+        
+// ------------------------------------------------------------
+// TTS INTRO — ONE TIME, GLOBAL MUTE SAFE
+// ------------------------------------------------------------
+if (!isTtsMuted()) {
+    speakOnce(ttsText);
+}
 
     }); // end runOnUiThread
 }       // end lab3EarpieceManual

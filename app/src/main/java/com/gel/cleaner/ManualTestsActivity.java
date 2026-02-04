@@ -4318,6 +4318,17 @@ root.addView(buildMuteRow());
 
         b.setView(root);
         AlertDialog d = b.create();
+        
+d.setOnKeyListener((dialog, keyCode, event) -> {
+    if (keyCode == KeyEvent.KEYCODE_BACK
+            && event.getAction() == KeyEvent.ACTION_UP) {
+
+        try { AppTTS.stop(); } catch (Throwable ignore) {}
+        dialog.dismiss();
+        return true;
+    }
+    return false;
+});
 
         if (d.getWindow() != null) {
             d.getWindow().setBackgroundDrawable(
@@ -4330,33 +4341,29 @@ root.addView(buildMuteRow());
         // ------------------------------------------------------------
         start.setOnClickListener(v -> {
 
-            try {
-                if (tts != null && tts[0] != null) {
-                    tts[0].stop();
-                }
-            } catch (Throwable ignore) {}
+    try { AppTTS.stop(); } catch (Throwable ignore) {}
 
-            d.dismiss();
+    d.dismiss();
 
-            new Thread(() -> {
-                try {
-                    logInfo("Playing earpiece test tones.");
+    new Thread(() -> {
+        try {
+            logInfo("Playing earpiece test tones.");
 
-                    for (int i = 1; i <= 3; i++) {
-                        logInfo("Tone " + i + " / 3");
-                        playEarpieceBeep();
-                        SystemClock.sleep(650);
-                    }
+            for (int i = 1; i <= 3; i++) {
+                logInfo("Tone " + i + " / 3");
+                playEarpieceBeep();
+                SystemClock.sleep(650);
+            }
 
-                    logOk("Earpiece tone playback completed.");
+            logOk("Earpiece tone playback completed.");
 
-} catch (Throwable t) {
-                    logError("Earpiece tone playback failed.");
-                } finally {
-                    askUserEarpieceConfirmation();
-                }
-            }).start();
-        });
+        } catch (Throwable t) {
+            logError("Earpiece tone playback failed.");
+        } finally {
+            askUserEarpieceConfirmation();
+        }
+    }).start();
+});
 
         d.show();
 

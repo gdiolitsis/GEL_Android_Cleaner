@@ -4301,18 +4301,6 @@ root.addView(buildMuteRow());
         }
 
         // ------------------------------------------------------------
-        // MUTE LOGIC
-        // ------------------------------------------------------------
-        muteBox.setOnCheckedChangeListener((v, checked) -> {
-            setTtsMuted(checked);
-            try {
-                if (checked && tts != null && tts[0] != null) {
-                    tts[0].stop();
-                }
-            } catch (Throwable ignore) {}
-        });
-
-        // ------------------------------------------------------------
         // START ACTION
         // ------------------------------------------------------------
         start.setOnClickListener(v -> {

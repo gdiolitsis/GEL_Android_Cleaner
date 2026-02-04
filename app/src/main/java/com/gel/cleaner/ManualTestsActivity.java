@@ -3939,12 +3939,12 @@ private void lab4MicPro() {
 
         try {
 
-            /* /* ====================================================
+/* ====================================================
    STAGE 1 — BOTTOM MICROPHONE (SYSTEM SPOKEN)
    ==================================================== */
 
 // ----------------------------------------------------
-// 1) DIALOG: ΠΛΗΡΟΦΟΡΙΑ
+// 1) INFO DIALOG
 // ----------------------------------------------------
 runOnUiThread(() -> {
     AlertDialog.Builder b = new AlertDialog.Builder(
@@ -3968,7 +3968,10 @@ runOnUiThread(() -> {
     );
     root.addView(msg);
 
-    // EXIT TEST
+    // 🔇 MUTE ROW
+    root.addView(buildMuteRow());
+
+    // 🚪 EXIT TEST
     Button exitBtn = buildExitButton(cancelled, dialogRef);
     LinearLayout.LayoutParams lpExit =
             new LinearLayout.LayoutParams(
@@ -3994,7 +3997,7 @@ waitDialog(dialogRef, cancelled);
 if (cancelled.get()) return;
 
 // ----------------------------------------------------
-// 2) TTS ΑΠΟ SPEAKER (SYSTEM VOICE)
+// 2) SYSTEM TTS (SPEAKER)
 // ----------------------------------------------------
 try { AppTTS.stop(); } catch (Throwable ignore) {}
 
@@ -4004,11 +4007,11 @@ speakOnce(
                 : "Bottom microphone test."
 );
 
-// μικρή καθυστέρηση για να ολοκληρωθεί η αναπαραγωγή
+// χρόνος για καθαρή αναπαραγωγή
 SystemClock.sleep(2200);
 
 // ----------------------------------------------------
-// 3) LOG STAGE 1 (DETERMINISTIC)
+// 3) LOG — DETERMINISTIC VERDICT
 // ----------------------------------------------------
 appendHtml("<br>");
 logInfo(gr
@@ -4019,18 +4022,23 @@ logLine();
 logLabelOkValue(
         gr ? "Αποτέλεσμα" : "Result",
         gr
-                ? "Το κάτω μικρόφωνο λειτουργεί κανονικά (καθαρή συνομιλία)"
-                : "Bottom microphone operates normally (clear call quality)"
+                ? "Το κάτω μικρόφωνο λειτουργεί κανονικά (καθαρή συνομιλία)."
+                : "Bottom microphone operates normally (clear call quality)."
 );
 
 logLabelOkValue(
         gr ? "Σημείωση" : "Note",
         gr
-                ? "Πιθανή κακή ποιότητα συνομιλίας οφείλεται σε εξωτερικούς παράγοντες."
-                : "Possible poor call quality is caused by external factors."
+                ? "Τυχόν κακή ποιότητα συνομιλίας οφείλεται σε εξωτερικούς παράγοντες."
+                : "Any poor call quality is caused by external factors."
 );
 
 logLine();
+
+// ----------------------------------------------------
+// 4) CLOSE DIALOG
+// ----------------------------------------------------
+dismiss(dialogRef);
 
 // ----------------------------------------------------
 // 4) CLOSE DIALOG
@@ -4164,6 +4172,8 @@ runOnUiThread(() -> {
     btnRow.addView(noBtn);
     btnRow.addView(yesBtn);
     root.addView(btnRow);
+    
+root.addView(buildMuteRow());
 
     // EXIT
     Button exitBtn = buildExitButton(cancelled, dialogRef);
@@ -4312,134 +4322,7 @@ private Button buildNoButton(Runnable action) {
     return b;
 }
 
-/* ============================================================
-   LAB 4 PRO — EXIT TEST BUTTON
-   ============================================================ */
-private Button buildExitButton(
-        AtomicBoolean cancelled,
-        AtomicReference<AlertDialog> ref
-) {
-    Button b = new Button(this);
-    b.setText("EXIT TEST");
-    b.setAllCaps(false);
-    b.setTextColor(Color.WHITE);
-
-    GradientDrawable bg = new GradientDrawable();
-    bg.setColor(0xFF202020);          // σκούρο γκρι / μαύρο
-    bg.setCornerRadius(dp(14));
-    bg.setStroke(dp(3), 0xFFFFD700); // χρυσό περίγραμμα
-    b.setBackground(bg);
-
-    b.setOnClickListener(v -> {
-        cancelled.set(true);
-        try { AppTTS.stop(); } catch (Throwable ignore) {}
-        dismiss(ref);
-
-        appendHtml("<br>");
-        logWarn("Lab 4 PRO cancelled by user.");
-        logLine();
-    });
-
-    return b;
-}
-
-/* ============================================================
-   LAB 4 PRO — DIALOG WAIT
-   ============================================================ */
-private void waitDialog(
-        AtomicReference<AlertDialog> ref,
-        AtomicBoolean cancelled
-) {
-    while (!cancelled.get() && ref.get() == null) {
-        SystemClock.sleep(20);
-    }
-}
-
-/* ============================================================
-   LAB 4 PRO — SAFE DISMISS
-   ============================================================ */
-private void dismiss(AtomicReference<AlertDialog> ref) {
-    try {
-        AlertDialog d = ref.get();
-        if (d != null) d.dismiss();
-    } catch (Throwable ignore) {}
-}
-
-/* ============================================================
-   UI HELPERS — LAB 4 PRO
-   ============================================================ */
-
-private LinearLayout buildLab4Root() {
-    LinearLayout root = new LinearLayout(this);
-    root.setOrientation(LinearLayout.VERTICAL);
-    root.setPadding(dp(26), dp(24), dp(26), dp(22));
-
-    GradientDrawable bg = new GradientDrawable();
-    bg.setColor(0xFF000000);
-    bg.setCornerRadius(dp(18));
-    bg.setStroke(dp(3), 0xFFFFD700);
-    root.setBackground(bg);
-    return root;
-}
-
-private TextView buildTitle(String text) {
-    TextView tv = new TextView(this);
-    tv.setText(text);
-    tv.setTextColor(Color.WHITE);
-    tv.setTextSize(17f);
-    tv.setTypeface(null, Typeface.BOLD);
-    tv.setGravity(Gravity.CENTER);
-    tv.setPadding(0, 0, 0, dp(14));
-    return tv;
-}
-
-private TextView buildMessage(String text) {
-    TextView tv = new TextView(this);
-    tv.setText(text);
-    tv.setTextColor(0xFF39FF14);
-    tv.setTextSize(14.5f);
-    tv.setGravity(Gravity.CENTER);
-    tv.setPadding(0, 0, 0, dp(16));
-    return tv;
-}
-
-/* ============================================================
-   LAB 4 PRO — YES BUTTON
-   ============================================================ */
-private Button buildYesButton(Runnable action) {
-    Button b = new Button(this);
-    b.setText("ΝΑΙ");
-    b.setAllCaps(false);
-    b.setTextColor(Color.WHITE);
-
-    GradientDrawable bg = new GradientDrawable();
-    bg.setColor(0xFF0B5F3B);          // σκούρο πράσινο (neon-safe)
-    bg.setCornerRadius(dp(14));
-    bg.setStroke(dp(3), 0xFFFFD700); // χρυσό περίγραμμα
-    b.setBackground(bg);
-
-    b.setOnClickListener(v -> action.run());
-    return b;
-}
-
-/* ============================================================
-   LAB 4 PRO — NO BUTTON
-   ============================================================ */
-private Button buildNoButton(Runnable action) {
-    Button b = new Button(this);
-    b.setText("ΟΧΙ");
-    b.setAllCaps(false);
-    b.setTextColor(Color.WHITE);
-
-    GradientDrawable bg = new GradientDrawable();
-    bg.setColor(0xFF8B0000);          // σκούρο κόκκινο
-    bg.setCornerRadius(dp(14));
-    bg.setStroke(dp(3), 0xFFFFD700); // χρυσό περίγραμμα
-    b.setBackground(bg);
-
-    b.setOnClickListener(v -> action.run());
-    return b;
-}
+root.addView(buildMuteRow());
 
 /* ============================================================
    LAB 4 PRO — EXIT TEST BUTTON

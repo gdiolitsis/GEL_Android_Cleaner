@@ -4396,13 +4396,6 @@ private void waitDialog(
     }
 }
 
-private void dismiss(AtomicReference<AlertDialog> ref) {
-    try {
-        AlertDialog d = ref.get();
-        if (d != null) d.dismiss();
-    } catch (Throwable ignore) {}
-}
-
 /* ============================================================
 LAB 5 — Vibration Motor Test (AUTO)
 ============================================================ */

@@ -3186,6 +3186,187 @@ private AudioOutputContext getAudioOutputContext() {
     return c;
 }
 
+/* ============================================================
+   LAB BUTTONS STANDARD (LOCKED)
+   Applies to ALL LABS
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   CORE BUTTON FACTORY (NO LAYOUT HERE)
+   ------------------------------------------------------------ */
+private Button gelButton(
+        String text,
+        int bgColor,
+        Runnable action
+) {
+    Button b = new Button(this);
+    b.setText(text);
+    b.setAllCaps(false);
+    b.setTextColor(Color.WHITE);
+
+    GradientDrawable bg = new GradientDrawable();
+    bg.setColor(bgColor);
+    bg.setCornerRadius(dp(14));
+    bg.setStroke(dp(3), 0xFFFFD700);
+    b.setBackground(bg);
+
+    b.setOnClickListener(v -> action.run());
+    return b;
+}
+
+/* ------------------------------------------------------------
+   SEMANTIC BUTTONS (BILINGUAL)
+   ------------------------------------------------------------ */
+
+private Button btnYes(boolean gr, Runnable action) {
+    return gelButton(
+            gr ? "ΝΑΙ" : "YES",
+            0xFF0B5F3B,
+            action
+    );
+}
+
+private Button btnNo(boolean gr, Runnable action) {
+    return gelButton(
+            gr ? "ΟΧΙ" : "NO",
+            0xFF8B0000,
+            action
+    );
+}
+
+private Button btnContinue(boolean gr, Runnable action) {
+    return gelButton(
+            gr ? "ΣΥΝΕΧΕΙΑ" : "CONTINUE",
+            0xFF1F1F1F,
+            action
+    );
+}
+
+private Button btnCancel(boolean gr, Runnable action) {
+    return gelButton(
+            gr ? "ΑΚΥΡΩΣΗ" : "CANCEL",
+            0xFF5A1A1A,
+            action
+    );
+}
+
+private Button btnExitTest(
+        boolean gr,
+        AtomicBoolean cancelled,
+        AtomicReference<AlertDialog> ref
+) {
+    return gelButton(
+            gr ? "ΕΞΟΔΟΣ ΤΕΣΤ" : "EXIT TEST",
+            0xFF202020,
+            () -> {
+                cancelled.set(true);
+                try { AppTTS.stop(); } catch (Throwable ignore) {}
+                dismiss(ref);
+
+                appendHtml("<br>");
+                logWarn("Test cancelled by user.");
+                logLine();
+            }
+    );
+}
+
+/* ------------------------------------------------------------
+   FOOTERS (STANDARDIZED)
+   ------------------------------------------------------------ */
+
+/* Footer: MUTE + EXIT */
+private LinearLayout footerMuteExit(
+        boolean gr,
+        AtomicBoolean cancelled,
+        AtomicReference<AlertDialog> ref
+) {
+    LinearLayout box = new LinearLayout(this);
+    box.setOrientation(LinearLayout.VERTICAL);
+    box.setPadding(0, dp(12), 0, 0);
+
+    box.addView(buildMuteRow());
+
+    Button exit = btnExitTest(gr, cancelled, ref);
+    LinearLayout.LayoutParams lpExit =
+            new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    dp(52)
+            );
+    lpExit.setMargins(0, dp(10), 0, 0);
+    exit.setLayoutParams(lpExit);
+
+    box.addView(exit);
+    return box;
+}
+
+/* Footer: YES / NO + MUTE + EXIT */
+private LinearLayout footerYesNo(
+        boolean gr,
+        AtomicBoolean cancelled,
+        AtomicReference<AlertDialog> ref,
+        Runnable yesAction,
+        Runnable noAction
+) {
+    LinearLayout box = new LinearLayout(this);
+    box.setOrientation(LinearLayout.VERTICAL);
+    box.setPadding(0, dp(12), 0, 0);
+
+    // YES / NO row
+    LinearLayout row = new LinearLayout(this);
+    row.setOrientation(LinearLayout.HORIZONTAL);
+    row.setGravity(Gravity.CENTER);
+
+    LinearLayout.LayoutParams lpBtn =
+            new LinearLayout.LayoutParams(0, dp(52), 1f);
+    lpBtn.setMargins(dp(8), 0, dp(8), 0);
+
+    Button no = btnNo(gr, noAction);
+    Button yes = btnYes(gr, yesAction);
+    no.setLayoutParams(lpBtn);
+    yes.setLayoutParams(lpBtn);
+
+    row.addView(no);
+    row.addView(yes);
+
+    box.addView(row);
+
+    // 🔇 GLOBAL MUTE (LOCKED)
+    box.addView(buildMuteRow());
+
+    // 🚪 EXIT
+    Button exit = btnExitTest(gr, cancelled, ref);
+    LinearLayout.LayoutParams lpExit =
+            new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    dp(52)
+            );
+    lpExit.setMargins(0, dp(10), 0, 0);
+    exit.setLayoutParams(lpExit);
+
+    box.addView(exit);
+    return box;
+}
+
+/* ------------------------------------------------------------
+   SAFE DIALOG HELPERS
+   ------------------------------------------------------------ */
+
+private void waitDialog(
+        AtomicReference<AlertDialog> ref,
+        AtomicBoolean cancelled
+) {
+    while (!cancelled.get() && ref.get() == null) {
+        SystemClock.sleep(20);
+    }
+}
+
+private void dismiss(AtomicReference<AlertDialog> ref) {
+    try {
+        AlertDialog d = ref.get();
+        if (d != null) d.dismiss();
+    } catch (Throwable ignore) {}
+}
+
 // ============================================================
 // LABS 1-5: AUDIO & VIBRATION
 // ============================================================
@@ -3924,7 +4105,7 @@ appendHtml("<br>");
 }
 
 /* ============================================================
-   LAB 4 PRO — Call Quality Verification (FINAL)
+   LAB 4 PRO — Call Quality Verification (FINAL • LOCKED)
    HUMAN VERIFIED • DETERMINISTIC • NO METRICS
    ============================================================ */
 
@@ -3939,302 +4120,229 @@ private void lab4MicPro() {
 
         try {
 
-/* ====================================================
-   STAGE 1 — BOTTOM MICROPHONE (SYSTEM SPOKEN)
-   ==================================================== */
+            /* ====================================================
+               STAGE 1 — BOTTOM MICROPHONE (SYSTEM SPOKEN)
+               ==================================================== */
 
-// ----------------------------------------------------
-// 1) INFO DIALOG
-// ----------------------------------------------------
-runOnUiThread(() -> {
-    AlertDialog.Builder b = new AlertDialog.Builder(
-            this,
-            android.R.style.Theme_Material_Dialog_NoActionBar
-    );
-    b.setCancelable(false);
+            // ---------- INFO DIALOG ----------
+            runOnUiThread(() -> {
+                AlertDialog.Builder b =
+                        new AlertDialog.Builder(
+                                this,
+                                android.R.style.Theme_Material_Dialog_NoActionBar
+                        );
+                b.setCancelable(false);
 
-    LinearLayout root = buildLab4Root();
+                LinearLayout root = buildLab4Root();
 
-    TextView title = buildTitle(
-            gr ? "LAB 4 PRO — Έλεγχος Κάτω Μικροφώνου"
-               : "LAB 4 PRO — Bottom Microphone Test"
-    );
-    root.addView(title);
+                root.addView(buildTitle(
+                        gr ? "LAB 4 PRO — Έλεγχος" : "LAB 4 PRO — Test"
+                ));
 
-    TextView msg = buildMessage(
-            gr
-                    ? "Έλεγχος κάτω μικροφώνου…"
-                    : "Testing bottom microphone…"
-    );
-    root.addView(msg);
+                root.addView(buildMessage(
+                        gr ? "Παρακαλώ περίμενε…" : "Please wait…"
+                ));
 
-    // 🔇 MUTE ROW
-    root.addView(buildMuteRow());
+                root.addView(
+                        footerMuteExit(gr, cancelled, dialogRef)
+                );
 
-    // 🚪 EXIT TEST
-    Button exitBtn = buildExitButton(cancelled, dialogRef);
-    LinearLayout.LayoutParams lpExit =
-            new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    dp(52)
+                b.setView(root);
+                AlertDialog d = b.create();
+                if (d.getWindow() != null) {
+                    d.getWindow().setBackgroundDrawable(
+                            new ColorDrawable(Color.TRANSPARENT)
+                    );
+                }
+                dialogRef.set(d);
+                d.show();
+            });
+
+            waitDialog(dialogRef, cancelled);
+            if (cancelled.get()) return;
+
+            // ---------- SPEAKER TTS ----------
+            try { AppTTS.stop(); } catch (Throwable ignore) {}
+            speakOnce(gr
+                    ? "Έλεγχος κάτω μικροφώνου."
+                    : "Bottom microphone test."
             );
-    lpExit.setMargins(0, dp(14), 0, 0);
-    exitBtn.setLayoutParams(lpExit);
-    root.addView(exitBtn);
+            SystemClock.sleep(2200);
 
-    b.setView(root);
-    AlertDialog d = b.create();
-    if (d.getWindow() != null) {
-        d.getWindow().setBackgroundDrawable(
-                new ColorDrawable(Color.TRANSPARENT)
-        );
-    }
-    dialogRef.set(d);
-    d.show();
-});
+            // ---------- LOG STAGE 1 ----------
+            appendHtml("<br>");
+            logInfo(gr
+                    ? "LAB 4 PRO — Στάδιο 1 (Κάτω μικρόφωνο)"
+                    : "LAB 4 PRO — Stage 1 (Bottom microphone)");
+            logLine();
 
-waitDialog(dialogRef, cancelled);
-if (cancelled.get()) return;
+            logLabelOkValue(
+                    gr ? "Αποτέλεσμα" : "Result",
+                    gr
+                            ? "Το κάτω μικρόφωνο λειτουργεί κανονικά (καθαρή συνομιλία)."
+                            : "Bottom microphone operates normally (clear call quality)."
+            );
 
-// ----------------------------------------------------
-// 2) SYSTEM TTS (SPEAKER)
-// ----------------------------------------------------
-try { AppTTS.stop(); } catch (Throwable ignore) {}
+            logLabelOkValue(
+                    gr ? "Σημείωση" : "Note",
+                    gr
+                            ? "Τυχόν κακή ποιότητα συνομιλίας οφείλεται σε εξωτερικούς παράγοντες."
+                            : "Any poor call quality is caused by external factors."
+            );
 
-speakOnce(
-        gr
-                ? "Έλεγχος κάτω μικροφώνου."
-                : "Bottom microphone test."
-);
+            logLine();
+            dismiss(dialogRef);
 
-// χρόνος για καθαρή αναπαραγωγή
-SystemClock.sleep(2200);
+            /* ====================================================
+               STAGE 2 — EARPIECE (HUMAN VERIFIED)
+               ==================================================== */
 
-// ----------------------------------------------------
-// 3) LOG — DETERMINISTIC VERDICT
-// ----------------------------------------------------
-appendHtml("<br>");
-logInfo(gr
-        ? "LAB 4 PRO — Στάδιο 1 (Κάτω μικρόφωνο)"
-        : "LAB 4 PRO — Stage 1 (Bottom microphone)");
-logLine();
+            // ---------- INSTRUCTION DIALOG ----------
+            runOnUiThread(() -> {
+                AlertDialog.Builder b =
+                        new AlertDialog.Builder(
+                                this,
+                                android.R.style.Theme_Material_Dialog_NoActionBar
+                        );
+                b.setCancelable(false);
 
-logLabelOkValue(
-        gr ? "Αποτέλεσμα" : "Result",
-        gr
-                ? "Το κάτω μικρόφωνο λειτουργεί κανονικά (καθαρή συνομιλία)."
-                : "Bottom microphone operates normally (clear call quality)."
-);
+                LinearLayout root = buildLab4Root();
 
-logLabelOkValue(
-        gr ? "Σημείωση" : "Note",
-        gr
-                ? "Τυχόν κακή ποιότητα συνομιλίας οφείλεται σε εξωτερικούς παράγοντες."
-                : "Any poor call quality is caused by external factors."
-);
+                root.addView(buildTitle(
+                        gr ? "LAB 4 PRO — Έλεγχος Ακουστικού"
+                           : "LAB 4 PRO — Earpiece Test"
+                ));
 
-logLine();
+                root.addView(buildMessage(
+                        gr
+                                ? "Βάλε το ακουστικό στο αυτί σου."
+                                : "Place the earpiece on your ear."
+                ));
 
-// ----------------------------------------------------
-// 4) CLOSE DIALOG
-// ----------------------------------------------------
-dismiss(dialogRef);
+                root.addView(
+                        footerMuteExit(gr, cancelled, dialogRef)
+                );
 
-// ----------------------------------------------------
-// 4) CLOSE DIALOG
-// ----------------------------------------------------
-dismiss(dialogRef);
+                b.setView(root);
+                AlertDialog d = b.create();
+                if (d.getWindow() != null) {
+                    d.getWindow().setBackgroundDrawable(
+                            new ColorDrawable(Color.TRANSPARENT)
+                    );
+                }
+                dialogRef.set(d);
+                d.show();
+            });
 
-/* ====================================================
-   STAGE 2 — EARPIECE (HUMAN VERIFIED)
-   ==================================================== */
+            waitDialog(dialogRef, cancelled);
+            if (cancelled.get()) return;
 
-// ----------------------------------------------------
-// 1) DIALOG: ΟΔΗΓΙΑ
-// ----------------------------------------------------
-runOnUiThread(() -> {
-    AlertDialog.Builder b = new AlertDialog.Builder(
-            this,
-            android.R.style.Theme_Material_Dialog_NoActionBar
-    );
-    b.setCancelable(false);
+            // ---------- ROUTE AUDIO → EARPIECE ----------
+            try {
+                AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
+                if (am != null) {
+                    am.stopBluetoothSco();
+                    am.setBluetoothScoOn(false);
+                    am.setSpeakerphoneOn(false);
+                    am.setMode(AudioManager.MODE_IN_COMMUNICATION);
+                }
+            } catch (Throwable ignore) {}
 
-    LinearLayout root = buildLab4Root();
+            SystemClock.sleep(400);
 
-    TextView title = buildTitle(
-            gr ? "LAB 4 PRO — Έλεγχος Ακουστικού"
-               : "LAB 4 PRO — Earpiece Test"
-    );
-    root.addView(title);
-
-    TextView msg = buildMessage(
-            gr
+            // ---------- EARPIECE TTS ----------
+            try { AppTTS.stop(); } catch (Throwable ignore) {}
+            speakOnce(gr
                     ? "Βάλε το ακουστικό στο αυτί σου."
                     : "Place the earpiece on your ear."
-    );
-    root.addView(msg);
-
-    Button exit = buildExitButton(cancelled, dialogRef);
-    root.addView(exit);
-
-    b.setView(root);
-    AlertDialog d = b.create();
-    if (d.getWindow() != null) {
-        d.getWindow().setBackgroundDrawable(
-                new ColorDrawable(Color.TRANSPARENT)
-        );
-    }
-    dialogRef.set(d);
-    d.show();
-});
-
-waitDialog(dialogRef, cancelled);
-if (cancelled.get()) return;
-
-// ----------------------------------------------------
-// 2) ROUTE AUDIO → EARPIECE
-// ----------------------------------------------------
-try {
-    AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
-    if (am != null) {
-        am.stopBluetoothSco();
-        am.setBluetoothScoOn(false);
-        am.setSpeakerphoneOn(false);                 // ⛔ speaker OFF
-        am.setMode(AudioManager.MODE_IN_COMMUNICATION); // 🔥 call mode
-    }
-} catch (Throwable ignore) {}
-
-// μικρή καθυστέρηση για να "δέσει" το routing
-SystemClock.sleep(400);
-
-// ----------------------------------------------------
-// 3) TTS ΣΤΟ ΑΚΟΥΣΤΙΚΟ
-// ----------------------------------------------------
-try { AppTTS.stop(); } catch (Throwable ignore) {}
-
-speakOnce(gr
-        ? "Βάλε το ακουστικό στο αυτί σου."
-        : "Place the earpiece on your ear."
-);
-
-// χρόνος για να το ακούσει καθαρά
-SystemClock.sleep(3500);
-
-// ----------------------------------------------------
-// 4) QUESTION DIALOG (YES / NO)
-// ----------------------------------------------------
-final AtomicBoolean heardClearly = new AtomicBoolean(false);
-final AtomicBoolean answered = new AtomicBoolean(false);
-
-runOnUiThread(() -> {
-    AlertDialog.Builder b = new AlertDialog.Builder(
-            this,
-            android.R.style.Theme_Material_Dialog_NoActionBar
-    );
-    b.setCancelable(false);
-
-    LinearLayout root = buildLab4Root();
-
-    TextView title = buildTitle(
-            gr ? "Ερώτηση" : "Question"
-    );
-    root.addView(title);
-
-    TextView msg = buildMessage(
-            gr ? "Με ακούς καθαρά;" : "Do you hear me clearly?"
-    );
-    root.addView(msg);
-
-    // YES / NO
-    LinearLayout btnRow = new LinearLayout(this);
-    btnRow.setOrientation(LinearLayout.HORIZONTAL);
-    btnRow.setGravity(Gravity.CENTER);
-    btnRow.setPadding(0, dp(6), 0, 0);
-
-    LinearLayout.LayoutParams lp =
-            new LinearLayout.LayoutParams(0, dp(52), 1f);
-    lp.setMargins(dp(8), 0, dp(8), 0);
-
-    Button noBtn = buildNoButton(() -> {
-        heardClearly.set(false);
-        answered.set(true);
-        dismiss(dialogRef);
-    });
-    noBtn.setLayoutParams(lp);
-
-    Button yesBtn = buildYesButton(() -> {
-        heardClearly.set(true);
-        answered.set(true);
-        dismiss(dialogRef);
-    });
-    yesBtn.setLayoutParams(lp);
-
-    btnRow.addView(noBtn);
-    btnRow.addView(yesBtn);
-    root.addView(btnRow);
-    
-root.addView(buildMuteRow());
-
-    // EXIT
-    Button exitBtn = buildExitButton(cancelled, dialogRef);
-    LinearLayout.LayoutParams lpExit =
-            new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    dp(52)
             );
-    lpExit.setMargins(0, dp(14), 0, 0);
-    exitBtn.setLayoutParams(lpExit);
-    root.addView(exitBtn);
+            SystemClock.sleep(3500);
 
-    b.setView(root);
-    AlertDialog d = b.create();
-    if (d.getWindow() != null) {
-        d.getWindow().setBackgroundDrawable(
-                new ColorDrawable(Color.TRANSPARENT)
-        );
-    }
-    dialogRef.set(d);
-    d.show();
-});
+            // ---------- QUESTION ----------
+            AtomicBoolean heardClearly = new AtomicBoolean(false);
+            AtomicBoolean answered = new AtomicBoolean(false);
 
-while (!cancelled.get() && !answered.get()) {
-    SystemClock.sleep(50);
-}
-if (cancelled.get()) return;
+            runOnUiThread(() -> {
+                AlertDialog.Builder b =
+                        new AlertDialog.Builder(
+                                this,
+                                android.R.style.Theme_Material_Dialog_NoActionBar
+                        );
+                b.setCancelable(false);
 
-// ----------------------------------------------------
-// 5) LOG STAGE 2
-// ----------------------------------------------------
-appendHtml("<br>");
-logInfo(gr
-        ? "LAB 4 PRO — Στάδιο 2 (Ακουστικό)"
-        : "LAB 4 PRO — Stage 2 (Earpiece)");
-logLine();
+                LinearLayout root = buildLab4Root();
 
-if (heardClearly.get()) {
-    logLabelOkValue(
-            gr ? "Αποτέλεσμα" : "Result",
-            gr
-                    ? "Το ακουστικό λειτουργεί κανονικά (καθαρή ακρόαση)"
-                    : "Earpiece operates normally (clear audio)"
-    );
-} else {
-    logLabelWarnValue(
-            gr ? "Αποτέλεσμα" : "Result",
-            gr
-                    ? "Η ακρόαση δεν ήταν καθαρή"
-                    : "Audio was not clear"
-    );
-}
+                root.addView(buildTitle(
+                        gr ? "Ερώτηση" : "Question"
+                ));
 
-logLabelOkValue(
-        gr ? "Σημείωση" : "Note",
-        gr
-                ? "Πιθανή κακή ποιότητα ακρόασης οφείλεται σε εξωτερικούς παράγοντες."
-                : "Possible poor audio quality is caused by external factors."
-);
+                root.addView(buildMessage(
+                        gr ? "Με ακούς καθαρά;" : "Do you hear me clearly?"
+                ));
 
-logLine();
+                root.addView(
+                        footerYesNo(
+                                gr,
+                                cancelled,
+                                dialogRef,
+                                () -> {
+                                    heardClearly.set(true);
+                                    answered.set(true);
+                                },
+                                () -> {
+                                    heardClearly.set(false);
+                                    answered.set(true);
+                                }
+                        )
+                );
+
+                b.setView(root);
+                AlertDialog d = b.create();
+                if (d.getWindow() != null) {
+                    d.getWindow().setBackgroundDrawable(
+                            new ColorDrawable(Color.TRANSPARENT)
+                    );
+                }
+                dialogRef.set(d);
+                d.show();
+            });
+
+            while (!cancelled.get() && !answered.get()) {
+                SystemClock.sleep(50);
+            }
+            if (cancelled.get()) return;
+
+            // ---------- LOG STAGE 2 ----------
+            appendHtml("<br>");
+            logInfo(gr
+                    ? "LAB 4 PRO — Στάδιο 2 (Ακουστικό)"
+                    : "LAB 4 PRO — Stage 2 (Earpiece)");
+            logLine();
+
+            if (heardClearly.get()) {
+                logLabelOkValue(
+                        gr ? "Αποτέλεσμα" : "Result",
+                        gr
+                                ? "Το ακουστικό λειτουργεί κανονικά (καθαρή ακρόαση)"
+                                : "Earpiece operates normally (clear audio)"
+                );
+            } else {
+                logLabelWarnValue(
+                        gr ? "Αποτέλεσμα" : "Result",
+                        gr
+                                ? "Η ακρόαση δεν ήταν καθαρή"
+                                : "Audio was not clear"
+                );
+            }
+
+            logLabelOkValue(
+                    gr ? "Σημείωση" : "Note",
+                    gr
+                            ? "Πιθανή κακή ποιότητα ακρόασης οφείλεται σε εξωτερικούς παράγοντες."
+                            : "Possible poor audio quality is caused by external factors."
+            );
+
+            logLine();
             logOk("Lab 4 PRO finished.");
             logLine();
 
@@ -4247,7 +4355,7 @@ logLine();
 }
 
 /* ============================================================
-   UI HELPERS — LAB 4 PRO
+   GEL UI HELPERS — LAB 4 PRO (LOCKED)
    ============================================================ */
 
 private LinearLayout buildLab4Root() {
@@ -4284,80 +4392,110 @@ private TextView buildMessage(String text) {
     return tv;
 }
 
-/* ============================================================
-   LAB 4 PRO — YES BUTTON
-   ============================================================ */
-private Button buildYesButton(Runnable action) {
+/* -------------------- BUTTONS -------------------- */
+
+private Button gelButton(String text, int bgColor, Runnable action) {
     Button b = new Button(this);
-    b.setText("ΝΑΙ");
+    b.setText(text);
     b.setAllCaps(false);
     b.setTextColor(Color.WHITE);
 
     GradientDrawable bg = new GradientDrawable();
-    bg.setColor(0xFF0B5F3B);          // σκούρο πράσινο (neon-safe)
+    bg.setColor(bgColor);
     bg.setCornerRadius(dp(14));
-    bg.setStroke(dp(3), 0xFFFFD700); // χρυσό περίγραμμα
+    bg.setStroke(dp(3), 0xFFFFD700);
     b.setBackground(bg);
+
+    LinearLayout.LayoutParams lp =
+            new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    dp(52)
+            );
+    lp.setMargins(0, dp(8), 0, 0);
+    b.setLayoutParams(lp);
 
     b.setOnClickListener(v -> action.run());
     return b;
 }
 
-/* ============================================================
-   LAB 4 PRO — NO BUTTON
-   ============================================================ */
-private Button buildNoButton(Runnable action) {
-    Button b = new Button(this);
-    b.setText("ΟΧΙ");
-    b.setAllCaps(false);
-    b.setTextColor(Color.WHITE);
-
-    GradientDrawable bg = new GradientDrawable();
-    bg.setColor(0xFF8B0000);          // σκούρο κόκκινο
-    bg.setCornerRadius(dp(14));
-    bg.setStroke(dp(3), 0xFFFFD700); // χρυσό περίγραμμα
-    b.setBackground(bg);
-
-    b.setOnClickListener(v -> action.run());
-    return b;
+private Button btnYes(boolean gr, Runnable action) {
+    return gelButton(gr ? "ΝΑΙ" : "YES", 0xFF0B5F3B, action);
 }
 
-root.addView(buildMuteRow());
+private Button btnNo(boolean gr, Runnable action) {
+    return gelButton(gr ? "ΟΧΙ" : "NO", 0xFF8B0000, action);
+}
 
-/* ============================================================
-   LAB 4 PRO — EXIT TEST BUTTON
-   ============================================================ */
-private Button buildExitButton(
+private Button btnExitTest(
+        boolean gr,
         AtomicBoolean cancelled,
         AtomicReference<AlertDialog> ref
 ) {
-    Button b = new Button(this);
-    b.setText("EXIT TEST");
-    b.setAllCaps(false);
-    b.setTextColor(Color.WHITE);
-
-    GradientDrawable bg = new GradientDrawable();
-    bg.setColor(0xFF202020);          // σκούρο γκρι / μαύρο
-    bg.setCornerRadius(dp(14));
-    bg.setStroke(dp(3), 0xFFFFD700); // χρυσό περίγραμμα
-    b.setBackground(bg);
-
-    b.setOnClickListener(v -> {
-        cancelled.set(true);
-        try { AppTTS.stop(); } catch (Throwable ignore) {}
-        dismiss(ref);
-
-        appendHtml("<br>");
-        logWarn("Lab 4 PRO cancelled by user.");
-        logLine();
-    });
-
-    return b;
+    return gelButton(
+            gr ? "ΕΞΟΔΟΣ ΤΕΣΤ" : "EXIT TEST",
+            0xFF202020,
+            () -> {
+                cancelled.set(true);
+                try { AppTTS.stop(); } catch (Throwable ignore) {}
+                dismiss(ref);
+                appendHtml("<br>");
+                logWarn("Test cancelled by user.");
+                logLine();
+            }
+    );
 }
 
-/* ============================================================
-   LAB 4 PRO — DIALOG WAIT
-   ============================================================ */
+/* -------------------- FOOTERS -------------------- */
+
+private LinearLayout footerMuteExit(
+        boolean gr,
+        AtomicBoolean cancelled,
+        AtomicReference<AlertDialog> ref
+) {
+    LinearLayout box = new LinearLayout(this);
+    box.setOrientation(LinearLayout.VERTICAL);
+    box.setPadding(0, dp(10), 0, 0);
+
+    box.addView(buildMuteRow());
+    box.addView(btnExitTest(gr, cancelled, ref));
+    return box;
+}
+
+private LinearLayout footerYesNo(
+        boolean gr,
+        AtomicBoolean cancelled,
+        AtomicReference<AlertDialog> ref,
+        Runnable yesAction,
+        Runnable noAction
+) {
+    LinearLayout box = new LinearLayout(this);
+    box.setOrientation(LinearLayout.VERTICAL);
+    box.setPadding(0, dp(10), 0, 0);
+
+    LinearLayout row = new LinearLayout(this);
+    row.setOrientation(LinearLayout.HORIZONTAL);
+    row.setGravity(Gravity.CENTER);
+
+    LinearLayout.LayoutParams lp =
+            new LinearLayout.LayoutParams(0, dp(52), 1f);
+    lp.setMargins(dp(8), 0, dp(8), 0);
+
+    Button no = btnNo(gr, noAction);
+    Button yes = btnYes(gr, yesAction);
+    no.setLayoutParams(lp);
+    yes.setLayoutParams(lp);
+
+    row.addView(no);
+    row.addView(yes);
+
+    box.addView(row);
+    box.addView(buildMuteRow());
+    box.addView(btnExitTest(gr, cancelled, ref));
+    return box;
+}
+
+/* -------------------- SAFE HELPERS -------------------- */
+
 private void waitDialog(
         AtomicReference<AlertDialog> ref,
         AtomicBoolean cancelled
@@ -4367,9 +4505,6 @@ private void waitDialog(
     }
 }
 
-/* ============================================================
-   LAB 4 PRO — SAFE DISMISS
-   ============================================================ */
 private void dismiss(AtomicReference<AlertDialog> ref) {
     try {
         AlertDialog d = ref.get();

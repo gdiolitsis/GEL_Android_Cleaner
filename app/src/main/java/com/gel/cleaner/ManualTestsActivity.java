@@ -4198,6 +4198,10 @@ logOk("Lab 4 PRO finished.");
 logLine();
 
 runOnUiThread(this::enableSingleExportButton);
+}
+}).start();
+}
+
 
 private VoiceMetrics lab4CaptureLoopback(
         AtomicBoolean cancelled,

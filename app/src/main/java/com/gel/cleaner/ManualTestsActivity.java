@@ -1179,52 +1179,28 @@ am.setSpeakerphoneOn(lab3OldSpeaker);
 }
 
 private void playEarpieceBeep() {
-
-    final int sampleRate = 8000;
-    final int durationMs = 400;
-    final int samples = sampleRate * durationMs / 1000;
-
-    short[] buffer = new short[samples];
-    double freq = 1000.0;
-
-    for (int i = 0; i < samples; i++) {
-        buffer[i] = (short)
-                (Math.sin(2 * Math.PI * i * freq / sampleRate) * 32767);
-    }
-
-    AudioTrack track = null;
-
-    try {
-        track = new AudioTrack(
-                AudioManager.STREAM_VOICE_CALL,
-                sampleRate,
-                AudioFormat.CHANNEL_OUT_MONO,
-                AudioFormat.ENCODING_PCM_16BIT,
-                buffer.length * 2,
-                AudioTrack.MODE_STATIC
-        );
-
-        if (track.getState() != AudioTrack.STATE_INITIALIZED) {
-            logError("Earpiece AudioTrack not initialized.");
-            return;
-        }
-
-        track.write(buffer, 0, buffer.length);
-        track.reloadStaticData();
-        track.play();
-
-        SystemClock.sleep(durationMs + 120);
-
-    } catch (Throwable t) {
-        logError("Earpiece beep failed.");
-    } finally {
-        try {
-            if (track != null) {
-                track.stop();
-                track.release();
-            }
-        } catch (Throwable ignore) {}
-    }
+int sampleRate = 8000;
+int durationMs = 400;
+int samples = sampleRate * durationMs / 1000;
+short[] buffer = new short[samples];
+double freq = 1000.0;
+for (int i = 0; i < samples; i++) {
+buffer[i] = (short)
+        (Math.sin(2 * Math.PI * i * freq / sampleRate) * 32767);
+}
+AudioTrack track = new AudioTrack(
+AudioManager.STREAM_VOICE_CALL,
+    sampleRate,
+    AudioFormat.CHANNEL_OUT_MONO,
+    AudioFormat.ENCODING_PCM_16BIT,
+    buffer.length * 2,
+    AudioTrack.MODE_STATIC
+);
+track.write(buffer, 0, buffer.length);
+track.play();
+SystemClock.sleep(durationMs + 100);
+track.stop();
+track.release();
 }
 
 // ============================================================
@@ -4388,7 +4364,26 @@ SystemClock.sleep(3500);
             logOk("Lab 4 PRO finished.");
             logLine();
 
-        } finally {
+finally {
+
+    // ===== HARD AUDIO RESTORE (CRITICAL) =====
+    try {
+        AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
+        if (am != null) {
+            try { am.stopBluetoothSco(); } catch (Throwable ignore) {}
+            try { am.setBluetoothScoOn(false); } catch (Throwable ignore) {}
+            try { am.setSpeakerphoneOn(false); } catch (Throwable ignore) {}
+            try { am.setMicrophoneMute(false); } catch (Throwable ignore) {}
+            try { am.setMode(AudioManager.MODE_NORMAL); } catch (Throwable ignore) {}
+        }
+    } catch (Throwable ignore) {}
+
+    try { AppTTS.stop(); } catch (Throwable ignore) {}
+
+    // ό,τι είχες ήδη
+    dismiss(dialogRef);
+    runOnUiThread(this::enableSingleExportButton);
+}
 
             // final dismiss (safe)
             try {

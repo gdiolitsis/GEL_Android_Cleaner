@@ -3754,7 +3754,7 @@ private void lab4MicManual() {
     new Handler(Looper.getMainLooper()).postDelayed(() -> {
 
         // 3️⃣ Μετά το PRO (voice analysis)
-        "lab4Mic"Pro();
+lab4MicPro();
 
     }, 600);
 }

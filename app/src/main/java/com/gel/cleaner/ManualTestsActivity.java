@@ -4350,8 +4350,23 @@ private void lab3EarpieceManual() {
         });
 
         d.show();
-    });
-}
+
+        // ------------------------------------------------------------
+        // TTS INTRO — ONE TIME, GLOBAL MUTE RESPECTED
+        // ------------------------------------------------------------
+        if (!isTtsMuted()) {
+            try {
+                if (tts != null && tts[0] != null && ttsReady[0]) {
+                    tts[0].stop();
+                    tts[0].speak(
+                            ttsText,
+                            TextToSpeech.QUEUE_FLUSH,
+                            null,
+                            "LAB3_INTRO"
+                    );
+                }
+            } catch (Throwable ignore) {}
+        }
         
 /* ============================================================
    LAB 4 — Microphone Recording Check (BOTTOM + TOP)

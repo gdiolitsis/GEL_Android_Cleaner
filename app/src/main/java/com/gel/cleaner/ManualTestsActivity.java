@@ -4356,7 +4356,6 @@ private void lab3EarpieceManual() {
         d.show();
     });
 }
-}
         
 /* ============================================================
    LAB 4 — Microphone Recording Check (BOTTOM + TOP)

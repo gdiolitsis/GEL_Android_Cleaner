@@ -344,24 +344,6 @@ private void lab4_putFloatPref(String key, float v) {
     } catch (Throwable ignore) {}
 }
 
-
-
-// ============================================================
-// OVERLOAD helper (3 args) — ΜΟΝΟ wrapper
-// ============================================================
-private VoiceMetrics lab4WaitSpeechStrict(
-        AtomicBoolean cancelled,
-        int audioSource,
-        int windowMs
-) {
-    return lab4WaitSpeechStrict(
-            cancelled,
-            audioSource,
-            1,
-            windowMs
-    );
-}
-
 /* ============================================================
    LAB 4 PRO — Update dialog message (thread-safe)
    ============================================================ */

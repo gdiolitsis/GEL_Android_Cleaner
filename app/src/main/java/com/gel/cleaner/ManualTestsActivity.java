@@ -4264,14 +4264,10 @@ private void lab3EarpieceManual() {
         msg.setPadding(0, 0, 0, dp(18));
         root.addView(msg);
 
-        // MUTE
-        CheckBox muteBox = new CheckBox(this);
-        muteBox.setChecked(isTtsMuted());
-        muteBox.setText(gr ? "Σίγαση φωνητικών οδηγιών" : "Mute voice instructions");
-        muteBox.setTextColor(0xFFDDDDDD);
-        muteBox.setGravity(Gravity.CENTER);
-        muteBox.setPadding(0, 0, 0, dp(16));
-        root.addView(muteBox);
+// ---------------------------
+// MUTE ROW (GLOBAL APP TTS)
+// ---------------------------
+root.addView(buildMuteRow());
 
         // START BUTTON
         Button start = new Button(this);

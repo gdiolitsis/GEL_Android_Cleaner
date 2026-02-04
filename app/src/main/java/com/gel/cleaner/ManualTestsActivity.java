@@ -1736,45 +1736,69 @@ private void askUserEarpieceConfirmation() {
         // YES ACTION (PASS)
         // ==========================
         yesBtn.setOnClickListener(v -> {
-            lab3WaitingUser = false;
 
-            logLabelOkValue(
-                    "LAB 3 — Earpiece",
-                    "User confirmed audio playback"
-            );
+    try { AppTTS.stop(); } catch (Throwable ignore) {}
 
-            appendHtml("<br>");
-            logOk("Lab 3 finished.");
-            logLine();
+    lab3WaitingUser = false;
 
-            restoreLab3Audio();
-            d.dismiss();
-        });
+    logLabelOkValue(
+            "LAB 3 — Earpiece",
+            "User confirmed audio playback"
+    );
 
-        // ==========================
-        // NO ACTION (FAIL)
-        // ==========================
-        noBtn.setOnClickListener(v -> {
-            lab3WaitingUser = false;
+    appendHtml("<br>");
+    logOk("Lab 3 finished.");
+    logLine();
 
-            logLabelErrorValue(
-                    "LAB 3 — Earpiece",
-                    "User did NOT hear tones"
-            );
-            logLabelWarnValue(
-                    "Possible issue",
-                    "Earpiece failure or audio routing problem"
-            );
+    restoreLab3Audio();
+    d.dismiss();
+});
 
-            appendHtml("<br>");
-            logOk("Lab 3 finished.");
-            logLine();
+// ==========================
+// NO ACTION (FAIL)
+// ==========================
+noBtn.setOnClickListener(v -> {
 
-            restoreLab3Audio();
-            d.dismiss();
-        });
+    try { AppTTS.stop(); } catch (Throwable ignore) {}
 
-        d.show();
+    lab3WaitingUser = false;
+
+    logLabelErrorValue(
+            "LAB 3 — Earpiece",
+            "User did NOT hear tones"
+    );
+
+    logLabelWarnValue(
+            "Possible issue",
+            "Earpiece failure or audio routing problem"
+    );
+
+    appendHtml("<br>");
+    logOk("Lab 3 finished.");
+    logLine();
+
+    restoreLab3Audio();
+    d.dismiss();
+});
+
+// ------------------------------------------------------------
+// BACK KEY — STOP TTS + RESTORE + DISMISS
+// ------------------------------------------------------------
+d.setOnKeyListener((dialog, keyCode, event) -> {
+    if (keyCode == KeyEvent.KEYCODE_BACK
+            && event.getAction() == KeyEvent.ACTION_UP) {
+
+        try { AppTTS.stop(); } catch (Throwable ignore) {}
+
+        lab3WaitingUser = false;
+        restoreLab3Audio();
+        dialog.dismiss();
+        return true;
+    }
+    return false;
+});
+
+d.show();
     });
 }
 // ============================================================
@@ -4334,14 +4358,16 @@ root.addView(buildMuteRow());
         });
 
         d.show();
-        
-// ------------------------------------------------------------
-// TTS INTRO — ONE TIME, GLOBAL MUTE SAFE
-// ------------------------------------------------------------
-if (!isTtsMuted()) {
-    speakOnce(ttsText);
-}
 
+// ------------------------------------------------------------
+// TTS INTRO — DIALOG BOUND (GLOBAL MUTE SAFE)
+// ------------------------------------------------------------
+new Handler(Looper.getMainLooper()).postDelayed(() -> {
+    if (d.isShowing() && !AppTTS.isMuted(this)) {
+        AppTTS.ensureSpeak(this, ttsText);
+    }
+}, 120);
+        
     }); // end runOnUiThread
 }       // end lab3EarpieceManual
         

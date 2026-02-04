@@ -3999,7 +3999,7 @@ private void lab4MicPro() {
                             : "Bottom microphone operates normally (clear call quality)"
             );
 
-            logLabeOkValue(
+            logLabelOkValue(
                     gr ? "Σημείωση" : "Note",
                     gr
                             ? "Πιθανή κακή ποιότητα συνομιλίας οφείλεται σε εξωτερικούς παράγοντες."

@@ -3730,10 +3730,6 @@ private SpeakerOutputState evaluateSpeakerOutput(
     if (r == null)
         return SpeakerOutputState.NO_OUTPUT;
 
-    // Absolute silence only
-    if (r.silenceDetected)
-        return SpeakerOutputState.NO_OUTPUT;
-
     if (r.rms <= 0 && r.peak <= 0)
         return SpeakerOutputState.NO_OUTPUT;
 

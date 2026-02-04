@@ -3754,7 +3754,7 @@ private void lab4MicManual() {
     new Handler(Looper.getMainLooper()).postDelayed(() -> {
 
         // 3️⃣ Μετά το PRO (voice analysis)
-        lab4MicPro();
+        "lab4Mic"Pro();
 
     }, 600);
 }
@@ -3999,7 +3999,7 @@ private void lab4MicPro() {
                             : "Bottom microphone operates normally (clear call quality)"
             );
 
-            logLabelInfoValue(
+            logLabeOkValue(
                     gr ? "Σημείωση" : "Note",
                     gr
                             ? "Πιθανή κακή ποιότητα συνομιλίας οφείλεται σε εξωτερικούς παράγοντες."
@@ -4148,7 +4148,7 @@ private void lab4MicPro() {
                 );
             }
 
-            logLabelInfoValue(
+            logLabelOkValue(
                     gr ? "Σημείωση" : "Note",
                     gr
                             ? "Πιθανή κακή ποιότητα ακρόασης οφείλεται σε εξωτερικούς παράγοντες."

@@ -4361,37 +4361,27 @@ SystemClock.sleep(3500);
             );
 
             logLine();
-            logOk("Lab 4 PRO finished.");
-            logLine();
+logOk("Lab 4 PRO finished.");
+logLine();
 
-finally {
+// ===== HARD AUDIO RESTORE (CRITICAL) =====
+try {
+    AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
+    if (am != null) {
+        try { am.stopBluetoothSco(); } catch (Throwable ignore) {}
+        try { am.setBluetoothScoOn(false); } catch (Throwable ignore) {}
+        try { am.setSpeakerphoneOn(false); } catch (Throwable ignore) {}
+        try { am.setMicrophoneMute(false); } catch (Throwable ignore) {}
+        try { am.setMode(AudioManager.MODE_NORMAL); } catch (Throwable ignore) {}
+    }
+} catch (Throwable ignore) {}
 
-    // ===== HARD AUDIO RESTORE (CRITICAL) =====
-    try {
-        AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
-        if (am != null) {
-            try { am.stopBluetoothSco(); } catch (Throwable ignore) {}
-            try { am.setBluetoothScoOn(false); } catch (Throwable ignore) {}
-            try { am.setSpeakerphoneOn(false); } catch (Throwable ignore) {}
-            try { am.setMicrophoneMute(false); } catch (Throwable ignore) {}
-            try { am.setMode(AudioManager.MODE_NORMAL); } catch (Throwable ignore) {}
-        }
-    } catch (Throwable ignore) {}
+try { AppTTS.stop(); } catch (Throwable ignore) {}
 
-    try { AppTTS.stop(); } catch (Throwable ignore) {}
-
-    // ό,τι είχες ήδη
-    dismiss(dialogRef);
-    runOnUiThread(this::enableSingleExportButton);
+dismiss(dialogRef);
+runOnUiThread(this::enableSingleExportButton);
 }
 
-            // final dismiss (safe)
-            try {
-                AlertDialog d = dialogRef.get();
-                if (d != null) d.dismiss();
-            } catch (Throwable ignore) {}
-
-            runOnUiThread(this::enableSingleExportButton);
         }
 
     }).start();

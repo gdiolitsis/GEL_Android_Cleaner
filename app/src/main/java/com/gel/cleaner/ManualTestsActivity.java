@@ -106,6 +106,7 @@ import android.util.TypedValue;
 import android.util.Range;
 import android.util.Size;
 import android.view.Surface;
+import android.view.KeyEvent;
 import android.view.TextureView;
 import android.view.Gravity;
 import android.view.View;

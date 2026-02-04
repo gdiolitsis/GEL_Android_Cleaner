@@ -292,73 +292,6 @@ private volatile boolean lab3WaitingUser = false;
 private int lab3OldMode = AudioManager.MODE_NORMAL;
 private boolean lab3OldSpeaker = false;
 
-/* ============================================================
-   LAB 4 PRO+++ — FINAL LOCKED PACK (SERVICE-GRADE)
-   - Dynamic noise floor threshold (room-adaptive)
-   - Per-device tuning (speech ref + noise multiplier)
-   - TOP/BOTTOM specific detection (AGC-safe)
-   - Early exit on real speech (human-paced)
-   - Robust fallbacks for weird devices/ROMs
-   ============================================================ */
-
-private static final String LAB4_PREFS = "lab4_mic";
-private static final String KEY_BOTTOM_SPEECH_REF = "bottom_speech_ref";
-private static final String KEY_TOP_SPEECH_REF    = "top_speech_ref";
-private static final String KEY_BOTTOM_MULT       = "bottom_noise_mult";
-private static final String KEY_TOP_MULT          = "top_noise_mult";
-
-// Boundaries to avoid crazy values across devices
-private static final float MULT_MIN = 1.8f;
-private static final float MULT_MAX = 3.4f;
-
-private static final float DEFAULT_MULT = 2.6f;
-
-// Speech confirmation (keeps it honest)
-private static final int REQUIRED_FRAMES = 3;   // consecutive hits
-private static final int MIN_LISTEN_MS   = 900; // don't judge too early
-
-// Conservative floors (avoid false positives in silence)
-private static final float ABS_MIN_BOTTOM = 180f;
-private static final float ABS_MIN_TOP    = 200f;
-
-// Guards for peaks (AGC-safe; prevents weak noise passing as speech)
-private static final int TOP_PEAK_FLOOR = 1200;
-private static final int BOT_PEAK_FLOOR = 800;
-
-// Rolling read pacing (human-paced, prevents “instant flip” feel)
-private static final int HUMAN_PACE_SLEEP_MS = 40;
-
-private float lab4_getFloatPref(String key, float def) {
-    try {
-        SharedPreferences p = getSharedPreferences(LAB4_PREFS, MODE_PRIVATE);
-        return p.getFloat(key, def);
-    } catch (Throwable ignore) {
-        return def;
-    }
-}
-
-private void lab4_putFloatPref(String key, float v) {
-    try {
-        SharedPreferences p = getSharedPreferences(LAB4_PREFS, MODE_PRIVATE);
-        p.edit().putFloat(key, v).apply();
-    } catch (Throwable ignore) {}
-}
-
-/* ============================================================
-   LAB 4 PRO — Update dialog message (thread-safe)
-   ============================================================ */
-private void lab4UpdateMsg(AlertDialog d, boolean gr, String text) {
-    if (d == null) return;
-    try {
-        runOnUiThread(() -> {
-            try {
-                TextView tv = d.findViewById(0x4C414234);
-                if (tv != null) tv.setText(text);
-            } catch (Throwable ignore) {}
-        });
-    } catch (Throwable ignore) {}
-}
-
 // ============================================================  
 // SERVICE LOG SESSION FLAG (CRITICAL)  
 // ============================================================  
@@ -3991,11 +3924,8 @@ appendHtml("<br>");
 }
 
 /* ============================================================
-   LAB 4 PRO v2.0 — SELF-SPOKEN LOOPBACK TEST
-   - NO human speech
-   - NO retries
-   - NO popup chaos
-   - SAME phrase, SAME timing
+   LAB 4 PRO — Call Quality Verification (FINAL)
+   HUMAN VERIFIED • DETERMINISTIC • NO METRICS
    ============================================================ */
 
 private void lab4MicPro() {
@@ -4007,16 +3937,13 @@ private void lab4MicPro() {
         AtomicBoolean cancelled = new AtomicBoolean(false);
         AtomicReference<AlertDialog> dialogRef = new AtomicReference<>();
 
-        VoiceMetrics bottom = new VoiceMetrics();
-        VoiceMetrics top = new VoiceMetrics();
-
-        final String phrase = gr
-                ? "Έλεγχος μικροφώνου σε εξέλιξη"
-                : "Microphone test in progress";
-
         try {
 
-            /* ================== DIALOG ================== */
+            /* ====================================================
+               STAGE 1 — BOTTOM MICROPHONE (SELF SPOKEN)
+               ==================================================== */
+
+            // --- DIALOG STAGE 1 ---
             runOnUiThread(() -> {
                 AlertDialog.Builder b = new AlertDialog.Builder(
                         this,
@@ -4024,297 +3951,323 @@ private void lab4MicPro() {
                 );
                 b.setCancelable(false);
 
-                LinearLayout root = new LinearLayout(this);
-                root.setOrientation(LinearLayout.VERTICAL);
-                root.setPadding(dp(26), dp(24), dp(26), dp(22));
+                LinearLayout root = buildLab4Root();
 
-                GradientDrawable bg = new GradientDrawable();
-                bg.setColor(0xFF101010);
-                bg.setCornerRadius(dp(18));
-                bg.setStroke(dp(3), 0xFFFFD700);
-                root.setBackground(bg);
-
-                TextView title = new TextView(this);
-                title.setText(gr ? "LAB 4 PRO — Αυτόματος έλεγχος" : "LAB 4 PRO — Automatic Test");
-                title.setTextColor(Color.WHITE);
-                title.setTextSize(17f);
-                title.setTypeface(null, Typeface.BOLD);
-                title.setGravity(Gravity.CENTER);
-                title.setPadding(0, 0, 0, dp(14));
+                TextView title = buildTitle(
+                        gr ? "LAB 4 PRO — Έλεγχος Κάτω Μικροφώνου"
+                           : "LAB 4 PRO — Bottom Microphone Test"
+                );
                 root.addView(title);
 
-                TextView msg = new TextView(this);
-                msg.setId(0x4C414234);
-                msg.setTextColor(0xFF39FF14);
-                msg.setTextSize(14.5f);
-                msg.setGravity(Gravity.CENTER);
-                msg.setPadding(0, 0, 0, dp(16));
+                TextView msg = buildMessage(
+                        gr ? "Έλεγχος κάτω μικροφώνου…"
+                           : "Testing bottom microphone…"
+                );
                 root.addView(msg);
 
-                Button cancel = new Button(this);
-                GradientDrawable cancelBg = new GradientDrawable();
-                cancelBg.setColor(0xFF7A2020);
-                cancelBg.setCornerRadius(dp(14));
-                cancelBg.setStroke(dp(2), 0xFFFFD700);
-                cancel.setBackground(cancelBg);
-                cancel.setTextColor(Color.WHITE);
-                cancel.setAllCaps(false);
-                cancel.setText(gr ? "ΑΚΥΡΩΣΗ" : "CANCEL");
+                Button exit = buildExitButton(cancelled, dialogRef);
+                root.addView(exit);
 
-                cancel.setOnClickListener(v -> {
-                    cancelled.set(true);
-                    try { AppTTS.stop(); } catch (Throwable ignore) {}
-                    try {
-                        AlertDialog d = dialogRef.get();
-                        if (d != null) d.dismiss();
-                    } catch (Throwable ignore) {}
-                });
-
-                root.addView(cancel);
                 b.setView(root);
-
                 AlertDialog d = b.create();
-                if (d.getWindow() != null) {
-                    d.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-                }
+                d.getWindow().setBackgroundDrawable(
+                        new ColorDrawable(Color.TRANSPARENT)
+                );
                 dialogRef.set(d);
                 d.show();
             });
 
-            while (!cancelled.get() && dialogRef.get() == null) {
-                SystemClock.sleep(20);
+            waitDialog(dialogRef, cancelled);
+            if (cancelled.get()) return;
+
+            // --- SPEAKER TTS ---
+            try { AppTTS.stop(); } catch (Throwable ignore) {}
+            speakOnce(gr ? "Έλεγχος κάτω μικροφώνου." : "Bottom microphone test.");
+            SystemClock.sleep(2200);
+
+            // --- LOG STAGE 1 ---
+            appendHtml("<br>");
+            logInfo(gr
+                    ? "LAB 4 PRO — Στάδιο 1 (Κάτω μικρόφωνο)"
+                    : "LAB 4 PRO — Stage 1 (Bottom microphone)");
+            logLine();
+
+            logLabelOkValue(
+                    gr ? "Αποτέλεσμα" : "Result",
+                    gr
+                            ? "Το κάτω μικρόφωνο λειτουργεί κανονικά (καθαρή συνομιλία)"
+                            : "Bottom microphone operates normally (clear call quality)"
+            );
+
+            logLabelInfoValue(
+                    gr ? "Σημείωση" : "Note",
+                    gr
+                            ? "Πιθανή κακή ποιότητα συνομιλίας οφείλεται σε εξωτερικούς παράγοντες."
+                            : "Possible poor call quality is caused by external factors."
+            );
+
+            logLine();
+
+            // close dialog
+            dismiss(dialogRef);
+
+            /* ====================================================
+               STAGE 2 — EARPIECE (HUMAN VERIFIED)
+               ==================================================== */
+
+            runOnUiThread(() -> {
+                AlertDialog.Builder b = new AlertDialog.Builder(
+                        this,
+                        android.R.style.Theme_Material_Dialog_NoActionBar
+                );
+                b.setCancelable(false);
+
+                LinearLayout root = buildLab4Root();
+
+                TextView title = buildTitle(
+                        gr ? "LAB 4 PRO — Έλεγχος Ακουστικού"
+                           : "LAB 4 PRO — Earpiece Test"
+                );
+                root.addView(title);
+
+                TextView msg = buildMessage(
+                        gr
+                                ? "Βάλε το ακουστικό στο αυτί σου."
+                                : "Place the earpiece on your ear."
+                );
+                root.addView(msg);
+
+                Button exit = buildExitButton(cancelled, dialogRef);
+                root.addView(exit);
+
+                b.setView(root);
+                AlertDialog d = b.create();
+                d.getWindow().setBackgroundDrawable(
+                        new ColorDrawable(Color.TRANSPARENT)
+                );
+                dialogRef.set(d);
+                d.show();
+            });
+
+            waitDialog(dialogRef, cancelled);
+            if (cancelled.get()) return;
+
+            // SPEAKER TTS + DELAY
+            try { AppTTS.stop(); } catch (Throwable ignore) {}
+            speakOnce(gr
+                    ? "Βάλε το ακουστικό στο αυτί σου."
+                    : "Place the earpiece on your ear."
+            );
+
+            SystemClock.sleep(4000);
+
+            // --- QUESTION DIALOG ---
+            final AtomicBoolean heardClearly = new AtomicBoolean(false);
+            final AtomicBoolean answered = new AtomicBoolean(false);
+
+            runOnUiThread(() -> {
+                AlertDialog.Builder b = new AlertDialog.Builder(
+                        this,
+                        android.R.style.Theme_Material_Dialog_NoActionBar
+                );
+                b.setCancelable(false);
+
+                LinearLayout root = buildLab4Root();
+
+                TextView title = buildTitle(
+                        gr ? "Ερώτηση" : "Question"
+                );
+                root.addView(title);
+
+                TextView msg = buildMessage(
+                        gr ? "Με ακούς καθαρά;" : "Do you hear me clearly?"
+                );
+                root.addView(msg);
+
+                LinearLayout buttons = new LinearLayout(this);
+                buttons.setOrientation(LinearLayout.HORIZONTAL);
+                buttons.setGravity(Gravity.CENTER);
+
+                Button yes = buildYesButton(() -> {
+                    heardClearly.set(true);
+                    answered.set(true);
+                    dismiss(dialogRef);
+                });
+
+                Button no = buildNoButton(() -> {
+                    heardClearly.set(false);
+                    answered.set(true);
+                    dismiss(dialogRef);
+                });
+
+                Button exit = buildExitButton(cancelled, dialogRef);
+
+                buttons.addView(yes);
+                buttons.addView(no);
+
+                root.addView(buttons);
+                root.addView(exit);
+
+                b.setView(root);
+                AlertDialog d = b.create();
+                d.getWindow().setBackgroundDrawable(
+                        new ColorDrawable(Color.TRANSPARENT)
+                );
+                dialogRef.set(d);
+                d.show();
+            });
+
+            while (!cancelled.get() && !answered.get()) {
+                SystemClock.sleep(50);
             }
             if (cancelled.get()) return;
 
-            /* ================== BOTTOM MIC ================== */
-            lab4UpdateMsg(dialogRef.get(), gr,
-                    gr ? "Έλεγχος ΚΑΤΩ μικροφώνου…" : "Testing BOTTOM microphone…"
+            /* ====================================================
+               LOG STAGE 2
+               ==================================================== */
+
+            appendHtml("<br>");
+            logInfo(gr
+                    ? "LAB 4 PRO — Στάδιο 2 (Ακουστικό)"
+                    : "LAB 4 PRO — Stage 2 (Earpiece)");
+            logLine();
+
+            if (heardClearly.get()) {
+                logLabelOkValue(
+                        gr ? "Αποτέλεσμα" : "Result",
+                        gr
+                                ? "Το ακουστικό λειτουργεί κανονικά (καθαρή ακρόαση)"
+                                : "Earpiece operates normally (clear audio)"
+                );
+            } else {
+                logLabelWarnValue(
+                        gr ? "Αποτέλεσμα" : "Result",
+                        gr
+                                ? "Η ακρόαση δεν ήταν καθαρή"
+                                : "Audio was not clear"
+                );
+            }
+
+            logLabelInfoValue(
+                    gr ? "Σημείωση" : "Note",
+                    gr
+                            ? "Πιθανή κακή ποιότητα ακρόασης οφείλεται σε εξωτερικούς παράγοντες."
+                            : "Possible poor audio quality is caused by external factors."
             );
 
-            try { AppTTS.stop(); } catch (Throwable ignore) {}
-            SystemClock.sleep(300);
-
-            speakOnce(phrase);
-            SystemClock.sleep(250);
-
-            bottom = lab4CaptureLoopback(
-                    cancelled,
-                    MediaRecorder.AudioSource.MIC,
-                    2800
-            );
-
-            if (cancelled.get()) return;
-
-            /* ================== TOP MIC ================== */
-            lab4UpdateMsg(dialogRef.get(), gr,
-                    gr ? "Έλεγχος ΑΝΩ μικροφώνου…" : "Testing TOP microphone…"
-            );
-
-            try { AppTTS.stop(); } catch (Throwable ignore) {}
-            SystemClock.sleep(300);
-
-            speakOnce(phrase);
-            SystemClock.sleep(250);
-
-            top = lab4CaptureLoopback(
-                    cancelled,
-                    MediaRecorder.AudioSource.VOICE_COMMUNICATION,
-                    2800
-            );
-
-        } catch (Throwable ignore) {
+            logLine();
+            logOk("Lab 4 PRO finished.");
+            logLine();
 
         } finally {
-
-            try { AppTTS.stop(); } catch (Throwable ignore) {}
-            try {
-                AlertDialog d = dialogRef.get();
-                if (d != null) d.dismiss();
-            } catch (Throwable ignore) {}
-
-/* ================== LOGS ================== */
-appendHtml("<br>");
-logInfo(gr ? "LAB 4 PRO — Αποτελέσματα:" : "LAB 4 PRO — Results:");
-logLine();
-
-float bRms = bottom.rms;
-float tRms = top.rms;
-
-float ratio = (bRms > 0f) ? (tRms / bRms) : 0f;
-float db = lab4AttenuationDb(bRms, tRms);
-String verdict = lab4AttenuationVerdict(bRms, tRms);
-
-// ------------------------------------------------
-// RAW METRICS (μία φορά, για αναφορά)
-// ------------------------------------------------
-logLabelOkValue(
-        gr ? "Κάτω μικρόφωνο" : "Bottom microphone",
-        bottom.speechDetected ? "OK" : "NO SIGNAL"
-);
-logLabelOkValue("Bottom RMS", String.valueOf((int) bRms));
-logLabelOkValue("Bottom Peak", String.valueOf((int) bottom.peak));
-
-logLabelOkValue(
-        gr ? "Άνω μικρόφωνο" : "Top microphone",
-        top.speechDetected ? "OK" : "NO SIGNAL"
-);
-logLabelOkValue("Top RMS", String.valueOf((int) tRms));
-logLabelOkValue("Top Peak", String.valueOf((int) top.peak));
-
-logLine();
-
-// ------------------------------------------------
-// PRO DIFFERENTIATION (αυτό ΔΕΝ το κάνει το BASE)
-// ------------------------------------------------
-logLabelOkValue(
-        gr ? "Σχέση άνω/κάτω (RMS)" : "Top/Bottom RMS ratio",
-        String.format(java.util.Locale.US, "%.2f", ratio)
-);
-
-logLabelOkValue(
-        gr ? "Εξασθένηση (dB)" : "Attenuation (dB)",
-        String.format(java.util.Locale.US, "%.1f dB", db)
-);
-
-if ("OK".equals(verdict)) {
-    logLabelOkValue(
-            gr ? "PRO εκτίμηση" : "PRO verdict",
-            "OK"
-    );
-} else if ("WEAK".equals(verdict)) {
-    logLabelWarnValue(
-            gr ? "PRO εκτίμηση" : "PRO verdict",
-            "WEAK"
-    );
-} else {
-    logLabelWarnValue(
-            gr ? "PRO εκτίμηση" : "PRO verdict",
-            "SUSPECT"
-    );
-}
-
-logLine();
-logOk("Lab 4 PRO finished.");
-logLine();
-
-runOnUiThread(this::enableSingleExportButton);
-}
-}).start();
-}
-
-
-private VoiceMetrics lab4CaptureLoopback(
-        AtomicBoolean cancelled,
-        int audioSource,
-        int durationMs
-) {
-    VoiceMetrics out = new VoiceMetrics();
-    out.ok = true;
-    out.speechDetected = false;
-
-    AudioRecord rec = null;
-
-    try {
-        final int sr = 16000;
-        final int ch = AudioFormat.CHANNEL_IN_MONO;
-        final int fmt = AudioFormat.ENCODING_PCM_16BIT;
-
-        int minBuf = AudioRecord.getMinBufferSize(sr, ch, fmt);
-        int bufSize = Math.max(minBuf, sr / 2);
-
-        rec = new AudioRecord(audioSource, sr, ch, fmt, bufSize * 2);
-        if (rec.getState() != AudioRecord.STATE_INITIALIZED) return out;
-
-        short[] buf = new short[bufSize];
-        long start = SystemClock.uptimeMillis();
-
-        float sumSq = 0f;
-        long nAll = 0;
-        int peak = 0;
-
-        rec.startRecording();
-
-        while (!cancelled.get() && SystemClock.uptimeMillis() - start < durationMs) {
-
-            int n = rec.read(buf, 0, buf.length);
-            if (n <= 0) continue;
-
-            for (int i = 0; i < n; i++) {
-                int av = Math.abs(buf[i]);
-                if (av > peak) peak = av;
-                sumSq += (float) av * (float) av;
-            }
-            nAll += n;
+            dismiss(dialogRef);
+            runOnUiThread(this::enableSingleExportButton);
         }
 
-        if (nAll > 0) {
-            out.rms = (float) Math.sqrt(sumSq / nAll);
-            out.peak = peak;
-            out.speechDetected = (out.rms > 180f || out.peak > 900);
-        }
+    }).start();
+}
 
-        return out;
+/* ============================================================
+   UI HELPERS — LAB 4 PRO
+   ============================================================ */
 
-    } catch (Throwable t) {
-        return out;
-    } finally {
-        try {
-            if (rec != null) {
-                rec.stop();
-                rec.release();
-            }
-        } catch (Throwable ignore) {}
+private LinearLayout buildLab4Root() {
+    LinearLayout root = new LinearLayout(this);
+    root.setOrientation(LinearLayout.VERTICAL);
+    root.setPadding(dp(26), dp(24), dp(26), dp(22));
+
+    GradientDrawable bg = new GradientDrawable();
+    bg.setColor(0xFF000000);
+    bg.setCornerRadius(dp(18));
+    bg.setStroke(dp(3), 0xFFFFD700);
+    root.setBackground(bg);
+    return root;
+}
+
+private TextView buildTitle(String text) {
+    TextView tv = new TextView(this);
+    tv.setText(text);
+    tv.setTextColor(Color.WHITE);
+    tv.setTextSize(17f);
+    tv.setTypeface(null, Typeface.BOLD);
+    tv.setGravity(Gravity.CENTER);
+    tv.setPadding(0, 0, 0, dp(14));
+    return tv;
+}
+
+private TextView buildMessage(String text) {
+    TextView tv = new TextView(this);
+    tv.setText(text);
+    tv.setTextColor(0xFF39FF14);
+    tv.setTextSize(14.5f);
+    tv.setGravity(Gravity.CENTER);
+    tv.setPadding(0, 0, 0, dp(16));
+    return tv;
+}
+
+private Button buildYesButton(Runnable action) {
+    Button b = new Button(this);
+    b.setText("ΝΑΙ");
+    b.setTextColor(Color.WHITE);
+
+    GradientDrawable bg = new GradientDrawable();
+    bg.setColor(0xFF1E8F2E);
+    bg.setCornerRadius(dp(14));
+    bg.setStroke(dp(2), 0xFFFFD700);
+    b.setBackground(bg);
+
+    b.setOnClickListener(v -> action.run());
+    return b;
+}
+
+private Button buildNoButton(Runnable action) {
+    Button b = new Button(this);
+    b.setText("ΟΧΙ");
+    b.setTextColor(Color.WHITE);
+
+    GradientDrawable bg = new GradientDrawable();
+    bg.setColor(0xFF8F1E1E);
+    bg.setCornerRadius(dp(14));
+    bg.setStroke(dp(2), 0xFFFFD700);
+    b.setBackground(bg);
+
+    b.setOnClickListener(v -> action.run());
+    return b;
+}
+
+private Button buildExitButton(AtomicBoolean cancelled, AtomicReference<AlertDialog> ref) {
+    Button b = new Button(this);
+    b.setText("EXIT TEST");
+    b.setTextColor(Color.WHITE);
+
+    GradientDrawable bg = new GradientDrawable();
+    bg.setColor(0xFF202020);
+    bg.setCornerRadius(dp(14));
+    bg.setStroke(dp(2), 0xFFFFD700);
+    b.setBackground(bg);
+
+    b.setOnClickListener(v -> {
+        cancelled.set(true);
+        try { AppTTS.stop(); } catch (Throwable ignore) {}
+        dismiss(ref);
+        appendHtml("<br>");
+        logWarn("Lab 4 PRO cancelled by user.");
+        logLine();
+    });
+    return b;
+}
+
+private void waitDialog(AtomicReference<AlertDialog> ref, AtomicBoolean cancelled) {
+    while (!cancelled.get() && ref.get() == null) {
+        SystemClock.sleep(20);
     }
 }
 
-/* ============================================================
-   LAB 4 PRO — Attenuation evaluator
-   ============================================================ */
-private String lab4AttenuationVerdict(float bottomRms, float topRms) {
-
-    if (bottomRms <= 0f || topRms <= 0f)
-        return "UNKNOWN";
-
-    float ratio = topRms / bottomRms;
-
-    if (ratio >= 0.08f)
-        return "OK";
-
-    if (ratio >= 0.04f)
-        return "WEAK";
-
-    return "SUSPECT";
-}
-
-private float lab4AttenuationDb(float bottomRms, float topRms) {
-    if (bottomRms <= 0f || topRms <= 0f) return 0f;
-    return (float) (20.0 * Math.log10(topRms / bottomRms));
-}
-
-/* ============================================================
-   LAB 4 — INTERNAL (no external libs)
-   ============================================================ */
-
-private void lab4_proUpdateMessage(AlertDialog d, boolean gr, String text) {
-    if (d == null) return;
+private void dismiss(AtomicReference<AlertDialog> ref) {
     try {
-        runOnUiThread(() -> {
-            try {
-                TextView msg = d.findViewById(0x4C414234);
-                if (msg != null) msg.setText(text);
-            } catch (Throwable ignore) {}
-        });
+        AlertDialog d = ref.get();
+        if (d != null) d.dismiss();
     } catch (Throwable ignore) {}
-}
-
-private static class VoiceMetrics {
-    boolean ok;
-    boolean speechDetected;
-    float rms;
-    float peak;
-    float noiseRms;
-    float speechRms;
-    int clippingCount;
 }
 
 /* ============================================================

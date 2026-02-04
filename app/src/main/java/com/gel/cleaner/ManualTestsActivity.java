@@ -4132,34 +4132,72 @@ private void lab4MicPro() {
                 if (d != null) d.dismiss();
             } catch (Throwable ignore) {}
 
-            /* ================== LOGS ================== */
-            appendHtml("<br>");
-            logInfo(gr ? "LAB 4 PRO — Αποτελέσματα:" : "LAB 4 PRO — Results:");
-            logLine();
+/* ================== LOGS ================== */
+appendHtml("<br>");
+logInfo(gr ? "LAB 4 PRO — Αποτελέσματα:" : "LAB 4 PRO — Results:");
+logLine();
 
-            logLabelOkValue(
-                    gr ? "Κάτω μικρόφωνο" : "Bottom microphone",
-                    bottom.speechDetected ? "OK" : "NO SIGNAL"
-            );
-            logLabelOkValue("Bottom RMS", String.valueOf((int) bottom.rms));
-            logLabelOkValue("Bottom Peak", String.valueOf(bottom.peak));
+float bRms = bottom.rms;
+float tRms = top.rms;
 
-            logLabelOkValue(
-                    gr ? "Άνω μικρόφωνο" : "Top microphone",
-                    top.speechDetected ? "OK" : "NO SIGNAL"
-            );
-            logLabelOkValue("Top RMS", String.valueOf((int) top.rms));
-            logLabelOkValue("Top Peak", String.valueOf(top.peak));
+float ratio = (bRms > 0f) ? (tRms / bRms) : 0f;
+float db = lab4AttenuationDb(bRms, tRms);
+String verdict = lab4AttenuationVerdict(bRms, tRms);
 
-            logLine();
-            logOk("Lab 4 PRO finished.");
-            logLine();
+// ------------------------------------------------
+// RAW METRICS (μία φορά, για αναφορά)
+// ------------------------------------------------
+logLabelOkValue(
+        gr ? "Κάτω μικρόφωνο" : "Bottom microphone",
+        bottom.speechDetected ? "OK" : "NO SIGNAL"
+);
+logLabelOkValue("Bottom RMS", String.valueOf((int) bRms));
+logLabelOkValue("Bottom Peak", String.valueOf((int) bottom.peak));
 
-            runOnUiThread(this::enableSingleExportButton);
-        }
+logLabelOkValue(
+        gr ? "Άνω μικρόφωνο" : "Top microphone",
+        top.speechDetected ? "OK" : "NO SIGNAL"
+);
+logLabelOkValue("Top RMS", String.valueOf((int) tRms));
+logLabelOkValue("Top Peak", String.valueOf((int) top.peak));
 
-    }).start();
+logLine();
+
+// ------------------------------------------------
+// PRO DIFFERENTIATION (αυτό ΔΕΝ το κάνει το BASE)
+// ------------------------------------------------
+logLabelOkValue(
+        gr ? "Σχέση άνω/κάτω (RMS)" : "Top/Bottom RMS ratio",
+        String.format(java.util.Locale.US, "%.2f", ratio)
+);
+
+logLabelOkValue(
+        gr ? "Εξασθένηση (dB)" : "Attenuation (dB)",
+        String.format(java.util.Locale.US, "%.1f dB", db)
+);
+
+if ("OK".equals(verdict)) {
+    logLabelOkValue(
+            gr ? "PRO εκτίμηση" : "PRO verdict",
+            "OK"
+    );
+} else if ("WEAK".equals(verdict)) {
+    logLabelWarnValue(
+            gr ? "PRO εκτίμηση" : "PRO verdict",
+            "WEAK"
+    );
+} else {
+    logLabelWarnValue(
+            gr ? "PRO εκτίμηση" : "PRO verdict",
+            "SUSPECT"
+    );
 }
+
+logLine();
+logOk("Lab 4 PRO finished.");
+logLine();
+
+runOnUiThread(this::enableSingleExportButton);
 
 private VoiceMetrics lab4CaptureLoopback(
         AtomicBoolean cancelled,
@@ -4224,6 +4262,31 @@ private VoiceMetrics lab4CaptureLoopback(
         } catch (Throwable ignore) {}
     }
 }
+
+/* ============================================================
+   LAB 4 PRO — Attenuation evaluator
+   ============================================================ */
+private String lab4AttenuationVerdict(float bottomRms, float topRms) {
+
+    if (bottomRms <= 0f || topRms <= 0f)
+        return "UNKNOWN";
+
+    float ratio = topRms / bottomRms;
+
+    if (ratio >= 0.08f)
+        return "OK";
+
+    if (ratio >= 0.04f)
+        return "WEAK";
+
+    return "SUSPECT";
+}
+
+private float lab4AttenuationDb(float bottomRms, float topRms) {
+    if (bottomRms <= 0f || topRms <= 0f) return 0f;
+    return (float) (20.0 * Math.log10(topRms / bottomRms));
+}
+
 /* ============================================================
    LAB 4 — INTERNAL (no external libs)
    ============================================================ */

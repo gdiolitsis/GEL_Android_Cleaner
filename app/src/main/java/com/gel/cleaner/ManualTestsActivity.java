@@ -3926,6 +3926,7 @@ appendHtml("<br>");
 /* ============================================================
    LAB 4 PRO — Call Quality Verification (FINAL • LOCKED)
    HUMAN VERIFIED • DETERMINISTIC • NO METRICS
+   (RESTORED — NO FOOTERS / NO EXTRA HELPERS)
    ============================================================ */
 
 private void lab4MicPro() {
@@ -3939,12 +3940,13 @@ private void lab4MicPro() {
 
         try {
 
-            /* ====================================================
-               STAGE 1 — BOTTOM MICROPHONE (SYSTEM SPOKEN)
-               ==================================================== */
+            // ====================================================
+            // STAGE 1 — BOTTOM MICROPHONE (SYSTEM SPOKEN)
+            // ====================================================
 
             // ---------- INFO DIALOG ----------
             runOnUiThread(() -> {
+
                 AlertDialog.Builder b =
                         new AlertDialog.Builder(
                                 this,
@@ -3952,32 +3954,84 @@ private void lab4MicPro() {
                         );
                 b.setCancelable(false);
 
-                LinearLayout root = buildLab4Root();
+                LinearLayout root = new LinearLayout(this);
+                root.setOrientation(LinearLayout.VERTICAL);
+                root.setPadding(dp(26), dp(24), dp(26), dp(22));
 
-                root.addView(buildTitle(
-                        gr ? "LAB 4 PRO — Έλεγχος" : "LAB 4 PRO — Test"
-                ));
+                GradientDrawable bg = new GradientDrawable();
+                bg.setColor(0xFF000000);
+                bg.setCornerRadius(dp(18));
+                bg.setStroke(dp(3), 0xFFFFD700);
+                root.setBackground(bg);
 
-                root.addView(buildMessage(
-                        gr ? "Παρακαλώ περίμενε…" : "Please wait…"
-                ));
+                TextView title = new TextView(this);
+                title.setText(gr ? "LAB 4 PRO — Έλεγχος" : "LAB 4 PRO — Test");
+                title.setTextColor(Color.WHITE);
+                title.setTextSize(17f);
+                title.setTypeface(null, Typeface.BOLD);
+                title.setGravity(Gravity.CENTER);
+                title.setPadding(0, 0, 0, dp(14));
+                root.addView(title);
 
-                root.addView(
-                        footerMuteExit(gr, cancelled, dialogRef)
-                );
+                TextView msg = new TextView(this);
+                msg.setText(gr ? "Παρακαλώ περίμενε…" : "Please wait…");
+                msg.setTextColor(0xFF39FF14);
+                msg.setTextSize(14.5f);
+                msg.setGravity(Gravity.CENTER);
+                msg.setPadding(0, 0, 0, dp(16));
+                root.addView(msg);
+
+                // MUTE ROW (existing global helper)
+                root.addView(buildMuteRow());
+
+                // EXIT BUTTON (inline)
+                Button exit = new Button(this);
+                exit.setAllCaps(false);
+                exit.setText(gr ? "ΕΞΟΔΟΣ ΤΕΣΤ" : "EXIT TEST");
+                exit.setTextColor(Color.WHITE);
+
+                GradientDrawable exitBg = new GradientDrawable();
+                exitBg.setColor(0xFF202020);
+                exitBg.setCornerRadius(dp(14));
+                exitBg.setStroke(dp(3), 0xFFFFD700);
+                exit.setBackground(exitBg);
+
+                LinearLayout.LayoutParams lpExit =
+                        new LinearLayout.LayoutParams(
+                                LinearLayout.LayoutParams.MATCH_PARENT,
+                                dp(52)
+                        );
+                lpExit.setMargins(0, dp(10), 0, 0);
+                exit.setLayoutParams(lpExit);
+
+                root.addView(exit);
 
                 b.setView(root);
+
                 AlertDialog d = b.create();
                 if (d.getWindow() != null) {
                     d.getWindow().setBackgroundDrawable(
                             new ColorDrawable(Color.TRANSPARENT)
                     );
                 }
+
+                exit.setOnClickListener(v -> {
+                    cancelled.set(true);
+                    try { AppTTS.stop(); } catch (Throwable ignore) {}
+                    try { d.dismiss(); } catch (Throwable ignore) {}
+                    appendHtml("<br>");
+                    logWarn("Test cancelled by user.");
+                    logLine();
+                });
+
                 dialogRef.set(d);
                 d.show();
             });
 
-            waitDialog(dialogRef, cancelled);
+            // wait dialog created
+            while (!cancelled.get() && dialogRef.get() == null) {
+                SystemClock.sleep(20);
+            }
             if (cancelled.get()) return;
 
             // ---------- SPEAKER TTS ----------
@@ -4010,14 +4064,21 @@ private void lab4MicPro() {
             );
 
             logLine();
-            dismiss(dialogRef);
 
-            /* ====================================================
-               STAGE 2 — EARPIECE (HUMAN VERIFIED)
-               ==================================================== */
+            // close dialog (if open)
+            try {
+                AlertDialog dd = dialogRef.get();
+                if (dd != null) dd.dismiss();
+            } catch (Throwable ignore) {}
+            dialogRef.set(null);
+
+            // ====================================================
+            // STAGE 2 — EARPIECE (HUMAN VERIFIED)
+            // ====================================================
 
             // ---------- INSTRUCTION DIALOG ----------
             runOnUiThread(() -> {
+
                 AlertDialog.Builder b =
                         new AlertDialog.Builder(
                                 this,
@@ -4025,35 +4086,83 @@ private void lab4MicPro() {
                         );
                 b.setCancelable(false);
 
-                LinearLayout root = buildLab4Root();
+                LinearLayout root = new LinearLayout(this);
+                root.setOrientation(LinearLayout.VERTICAL);
+                root.setPadding(dp(26), dp(24), dp(26), dp(22));
 
-                root.addView(buildTitle(
-                        gr ? "LAB 4 PRO — Έλεγχος Ακουστικού"
-                           : "LAB 4 PRO — Earpiece Test"
-                ));
+                GradientDrawable bg = new GradientDrawable();
+                bg.setColor(0xFF000000);
+                bg.setCornerRadius(dp(18));
+                bg.setStroke(dp(3), 0xFFFFD700);
+                root.setBackground(bg);
 
-                root.addView(buildMessage(
-                        gr
-                                ? "Βάλε το ακουστικό στο αυτί σου."
-                                : "Place the earpiece on your ear."
-                ));
+                TextView title = new TextView(this);
+                title.setText(gr ? "LAB 4 PRO — Έλεγχος Ακουστικού"
+                                 : "LAB 4 PRO — Earpiece Test");
+                title.setTextColor(Color.WHITE);
+                title.setTextSize(17f);
+                title.setTypeface(null, Typeface.BOLD);
+                title.setGravity(Gravity.CENTER);
+                title.setPadding(0, 0, 0, dp(14));
+                root.addView(title);
 
-                root.addView(
-                        footerMuteExit(gr, cancelled, dialogRef)
-                );
+                TextView msg = new TextView(this);
+                msg.setText(gr ? "Βάλε το ακουστικό στο αυτί σου."
+                               : "Place the earpiece on your ear.");
+                msg.setTextColor(0xFF39FF14);
+                msg.setTextSize(14.5f);
+                msg.setGravity(Gravity.CENTER);
+                msg.setPadding(0, 0, 0, dp(16));
+                root.addView(msg);
+
+                root.addView(buildMuteRow());
+
+                Button exit = new Button(this);
+                exit.setAllCaps(false);
+                exit.setText(gr ? "ΕΞΟΔΟΣ ΤΕΣΤ" : "EXIT TEST");
+                exit.setTextColor(Color.WHITE);
+
+                GradientDrawable exitBg = new GradientDrawable();
+                exitBg.setColor(0xFF202020);
+                exitBg.setCornerRadius(dp(14));
+                exitBg.setStroke(dp(3), 0xFFFFD700);
+                exit.setBackground(exitBg);
+
+                LinearLayout.LayoutParams lpExit =
+                        new LinearLayout.LayoutParams(
+                                LinearLayout.LayoutParams.MATCH_PARENT,
+                                dp(52)
+                        );
+                lpExit.setMargins(0, dp(10), 0, 0);
+                exit.setLayoutParams(lpExit);
+
+                root.addView(exit);
 
                 b.setView(root);
+
                 AlertDialog d = b.create();
                 if (d.getWindow() != null) {
                     d.getWindow().setBackgroundDrawable(
                             new ColorDrawable(Color.TRANSPARENT)
                     );
                 }
+
+                exit.setOnClickListener(v -> {
+                    cancelled.set(true);
+                    try { AppTTS.stop(); } catch (Throwable ignore) {}
+                    try { d.dismiss(); } catch (Throwable ignore) {}
+                    appendHtml("<br>");
+                    logWarn("Test cancelled by user.");
+                    logLine();
+                });
+
                 dialogRef.set(d);
                 d.show();
             });
 
-            waitDialog(dialogRef, cancelled);
+            while (!cancelled.get() && dialogRef.get() == null) {
+                SystemClock.sleep(20);
+            }
             if (cancelled.get()) return;
 
             // ---------- ROUTE AUDIO → EARPIECE ----------
@@ -4081,7 +4190,15 @@ private void lab4MicPro() {
             AtomicBoolean heardClearly = new AtomicBoolean(false);
             AtomicBoolean answered = new AtomicBoolean(false);
 
+            // close previous dialog
+            try {
+                AlertDialog dd = dialogRef.get();
+                if (dd != null) dd.dismiss();
+            } catch (Throwable ignore) {}
+            dialogRef.set(null);
+
             runOnUiThread(() -> {
+
                 AlertDialog.Builder b =
                         new AlertDialog.Builder(
                                 this,
@@ -4089,39 +4206,121 @@ private void lab4MicPro() {
                         );
                 b.setCancelable(false);
 
-                LinearLayout root = buildLab4Root();
+                LinearLayout root = new LinearLayout(this);
+                root.setOrientation(LinearLayout.VERTICAL);
+                root.setPadding(dp(26), dp(24), dp(26), dp(22));
 
-                root.addView(buildTitle(
-                        gr ? "Ερώτηση" : "Question"
-                ));
+                GradientDrawable bg = new GradientDrawable();
+                bg.setColor(0xFF000000);
+                bg.setCornerRadius(dp(18));
+                bg.setStroke(dp(3), 0xFFFFD700);
+                root.setBackground(bg);
 
-                root.addView(buildMessage(
-                        gr ? "Με ακούς καθαρά;" : "Do you hear me clearly?"
-                ));
+                TextView title = new TextView(this);
+                title.setText(gr ? "Ερώτηση" : "Question");
+                title.setTextColor(Color.WHITE);
+                title.setTextSize(17f);
+                title.setTypeface(null, Typeface.BOLD);
+                title.setGravity(Gravity.CENTER);
+                title.setPadding(0, 0, 0, dp(14));
+                root.addView(title);
 
-                root.addView(
-                        footerYesNo(
-                                gr,
-                                cancelled,
-                                dialogRef,
-                                () -> {
-                                    heardClearly.set(true);
-                                    answered.set(true);
-                                },
-                                () -> {
-                                    heardClearly.set(false);
-                                    answered.set(true);
-                                }
-                        )
-                );
+                TextView msg = new TextView(this);
+                msg.setText(gr ? "Με ακούς καθαρά;" : "Do you hear me clearly?");
+                msg.setTextColor(0xFF39FF14);
+                msg.setTextSize(14.5f);
+                msg.setGravity(Gravity.CENTER);
+                msg.setPadding(0, 0, 0, dp(16));
+                root.addView(msg);
+
+                // YES/NO row (inline)
+                LinearLayout row = new LinearLayout(this);
+                row.setOrientation(LinearLayout.HORIZONTAL);
+                row.setGravity(Gravity.CENTER);
+
+                LinearLayout.LayoutParams lpBtn =
+                        new LinearLayout.LayoutParams(0, dp(52), 1f);
+                lpBtn.setMargins(dp(8), 0, dp(8), 0);
+
+                Button no = new Button(this);
+                no.setAllCaps(false);
+                no.setText(gr ? "ΟΧΙ" : "NO");
+                no.setTextColor(Color.WHITE);
+                GradientDrawable noBg = new GradientDrawable();
+                noBg.setColor(0xFF8B0000);
+                noBg.setCornerRadius(dp(14));
+                noBg.setStroke(dp(3), 0xFFFFD700);
+                no.setBackground(noBg);
+                no.setLayoutParams(lpBtn);
+
+                Button yes = new Button(this);
+                yes.setAllCaps(false);
+                yes.setText(gr ? "ΝΑΙ" : "YES");
+                yes.setTextColor(Color.WHITE);
+                GradientDrawable yesBg = new GradientDrawable();
+                yesBg.setColor(0xFF0B5F3B);
+                yesBg.setCornerRadius(dp(14));
+                yesBg.setStroke(dp(3), 0xFFFFD700);
+                yes.setBackground(yesBg);
+                yes.setLayoutParams(lpBtn);
+
+                row.addView(no);
+                row.addView(yes);
+                root.addView(row);
+
+                root.addView(buildMuteRow());
+
+                Button exit = new Button(this);
+                exit.setAllCaps(false);
+                exit.setText(gr ? "ΕΞΟΔΟΣ ΤΕΣΤ" : "EXIT TEST");
+                exit.setTextColor(Color.WHITE);
+
+                GradientDrawable exitBg = new GradientDrawable();
+                exitBg.setColor(0xFF202020);
+                exitBg.setCornerRadius(dp(14));
+                exitBg.setStroke(dp(3), 0xFFFFD700);
+                exit.setBackground(exitBg);
+
+                LinearLayout.LayoutParams lpExit =
+                        new LinearLayout.LayoutParams(
+                                LinearLayout.LayoutParams.MATCH_PARENT,
+                                dp(52)
+                        );
+                lpExit.setMargins(0, dp(10), 0, 0);
+                exit.setLayoutParams(lpExit);
+
+                root.addView(exit);
 
                 b.setView(root);
+
                 AlertDialog d = b.create();
                 if (d.getWindow() != null) {
                     d.getWindow().setBackgroundDrawable(
                             new ColorDrawable(Color.TRANSPARENT)
                     );
                 }
+
+                no.setOnClickListener(v -> {
+                    heardClearly.set(false);
+                    answered.set(true);
+                    try { d.dismiss(); } catch (Throwable ignore) {}
+                });
+
+                yes.setOnClickListener(v -> {
+                    heardClearly.set(true);
+                    answered.set(true);
+                    try { d.dismiss(); } catch (Throwable ignore) {}
+                });
+
+                exit.setOnClickListener(v -> {
+                    cancelled.set(true);
+                    try { AppTTS.stop(); } catch (Throwable ignore) {}
+                    try { d.dismiss(); } catch (Throwable ignore) {}
+                    appendHtml("<br>");
+                    logWarn("Test cancelled by user.");
+                    logLine();
+                });
+
                 dialogRef.set(d);
                 d.show();
             });
@@ -4166,151 +4365,24 @@ private void lab4MicPro() {
             logLine();
 
         } finally {
-            dismiss(dialogRef);
+
+            // final dismiss (safe)
+            try {
+                AlertDialog d = dialogRef.get();
+                if (d != null) d.dismiss();
+            } catch (Throwable ignore) {}
+
             runOnUiThread(this::enableSingleExportButton);
         }
 
     }).start();
 }
 
-/* ============================================================
-   GEL UI HELPERS — LAB 4 PRO (LOCKED)
-   ============================================================ */
-
-private LinearLayout buildLab4Root() {
-    LinearLayout root = new LinearLayout(this);
-    root.setOrientation(LinearLayout.VERTICAL);
-    root.setPadding(dp(26), dp(24), dp(26), dp(22));
-
-    GradientDrawable bg = new GradientDrawable();
-    bg.setColor(0xFF000000);
-    bg.setCornerRadius(dp(18));
-    bg.setStroke(dp(3), 0xFFFFD700);
-    root.setBackground(bg);
-    return root;
-}
-
-private TextView buildTitle(String text) {
-    TextView tv = new TextView(this);
-    tv.setText(text);
-    tv.setTextColor(Color.WHITE);
-    tv.setTextSize(17f);
-    tv.setTypeface(null, Typeface.BOLD);
-    tv.setGravity(Gravity.CENTER);
-    tv.setPadding(0, 0, 0, dp(14));
-    return tv;
-}
-
-private TextView buildMessage(String text) {
-    TextView tv = new TextView(this);
-    tv.setText(text);
-    tv.setTextColor(0xFF39FF14);
-    tv.setTextSize(14.5f);
-    tv.setGravity(Gravity.CENTER);
-    tv.setPadding(0, 0, 0, dp(16));
-    return tv;
-}
-
-/* -------------------- BUTTONS -------------------- */
-
-private Button gelButton(String text, int bgColor, Runnable action) {
-    Button b = new Button(this);
-    b.setText(text);
-    b.setAllCaps(false);
-    b.setTextColor(Color.WHITE);
-
-    GradientDrawable bg = new GradientDrawable();
-    bg.setColor(bgColor);
-    bg.setCornerRadius(dp(14));
-    bg.setStroke(dp(3), 0xFFFFD700);
-    b.setBackground(bg);
-
-    LinearLayout.LayoutParams lp =
-            new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    dp(52)
-            );
-    lp.setMargins(0, dp(8), 0, 0);
-    b.setLayoutParams(lp);
-
-    b.setOnClickListener(v -> action.run());
-    return b;
-}
-
-private Button btnYes(boolean gr, Runnable action) {
-    return gelButton(gr ? "ΝΑΙ" : "YES", 0xFF0B5F3B, action);
-}
-
-private Button btnNo(boolean gr, Runnable action) {
-    return gelButton(gr ? "ΟΧΙ" : "NO", 0xFF8B0000, action);
-}
-
-private Button btnExitTest(
-        boolean gr,
-        AtomicBoolean cancelled,
-        AtomicReference<AlertDialog> ref
-) {
-    return gelButton(
-            gr ? "ΕΞΟΔΟΣ ΤΕΣΤ" : "EXIT TEST",
-            0xFF202020,
-            () -> {
-                cancelled.set(true);
-                try { AppTTS.stop(); } catch (Throwable ignore) {}
-                dismiss(ref);
-                appendHtml("<br>");
-                logWarn("Test cancelled by user.");
-                logLine();
-            }
-    );
-}
-
-/* -------------------- FOOTERS -------------------- */
-
-private LinearLayout footerMuteExit(
-        boolean gr,
-        AtomicBoolean cancelled,
-        AtomicReference<AlertDialog> ref
-) {
-    LinearLayout box = new LinearLayout(this);
-    box.setOrientation(LinearLayout.VERTICAL);
-    box.setPadding(0, dp(10), 0, 0);
-
-    box.addView(buildMuteRow());
-    box.addView(btnExitTest(gr, cancelled, ref));
-    return box;
-}
-
-private LinearLayout footerYesNo(
-        boolean gr,
-        AtomicBoolean cancelled,
-        AtomicReference<AlertDialog> ref,
-        Runnable yesAction,
-        Runnable noAction
-) {
-    LinearLayout box = new LinearLayout(this);
-    box.setOrientation(LinearLayout.VERTICAL);
-    box.setPadding(0, dp(10), 0, 0);
-
-    LinearLayout row = new LinearLayout(this);
-    row.setOrientation(LinearLayout.HORIZONTAL);
-    row.setGravity(Gravity.CENTER);
-
-    LinearLayout.LayoutParams lp =
-            new LinearLayout.LayoutParams(0, dp(52), 1f);
-    lp.setMargins(dp(8), 0, dp(8), 0);
-
-    Button no = btnNo(gr, noAction);
-    Button yes = btnYes(gr, yesAction);
-    no.setLayoutParams(lp);
-    yes.setLayoutParams(lp);
-
-    row.addView(no);
-    row.addView(yes);
-
-    box.addView(row);
-    box.addView(buildMuteRow());
-    box.addView(btnExitTest(gr, cancelled, ref));
-    return box;
+private void dismiss(AtomicReference<AlertDialog> ref) {
+    try {
+        AlertDialog d = ref.get();
+        if (d != null) d.dismiss();
+    } catch (Throwable ignore) {}
 }
 
 /* -------------------- SAFE HELPERS -------------------- */

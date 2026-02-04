@@ -1180,35 +1180,51 @@ am.setSpeakerphoneOn(lab3OldSpeaker);
 
 private void playEarpieceBeep() {
 
-int sampleRate = 8000;  
-int durationMs = 400;  
-int samples = sampleRate * durationMs / 1000;  
+    final int sampleRate = 8000;
+    final int durationMs = 400;
+    final int samples = sampleRate * durationMs / 1000;
 
-short[] buffer = new short[samples];  
-double freq = 1000.0;  
+    short[] buffer = new short[samples];
+    double freq = 1000.0;
 
-for (int i = 0; i < samples; i++) {  
-    buffer[i] = (short)  
-            (Math.sin(2 * Math.PI * i * freq / sampleRate) * 32767);  
-}  
+    for (int i = 0; i < samples; i++) {
+        buffer[i] = (short)
+                (Math.sin(2 * Math.PI * i * freq / sampleRate) * 32767);
+    }
 
-AudioTrack track = new AudioTrack(  
-        AudioManager.STREAM_VOICE_CALL,  
-        sampleRate,  
-        AudioFormat.CHANNEL_OUT_MONO,  
-        AudioFormat.ENCODING_PCM_16BIT,  
-        buffer.length * 2,  
-        AudioTrack.MODE_STATIC  
-);  
+    AudioTrack track = null;
 
-track.write(buffer, 0, buffer.length);  
-track.play();  
+    try {
+        track = new AudioTrack(
+                AudioManager.STREAM_VOICE_CALL,
+                sampleRate,
+                AudioFormat.CHANNEL_OUT_MONO,
+                AudioFormat.ENCODING_PCM_16BIT,
+                buffer.length * 2,
+                AudioTrack.MODE_STATIC
+        );
 
-SystemClock.sleep(durationMs + 100);  
+        if (track.getState() != AudioTrack.STATE_INITIALIZED) {
+            logError("Earpiece AudioTrack not initialized.");
+            return;
+        }
 
-track.stop();  
-track.release();
+        track.write(buffer, 0, buffer.length);
+        track.reloadStaticData();
+        track.play();
 
+        SystemClock.sleep(durationMs + 120);
+
+    } catch (Throwable t) {
+        logError("Earpiece beep failed.");
+    } finally {
+        try {
+            if (track != null) {
+                track.stop();
+                track.release();
+            }
+        } catch (Throwable ignore) {}
+    }
 }
 
 // ============================================================
@@ -3702,8 +3718,6 @@ d.setOnKeyListener((dialog, keyCode, event) -> {
 
     try { AppTTS.stop(); } catch (Throwable ignore) {}
 
-    d.dismiss();
-
     new Thread(() -> {
         try {
             logInfo("Playing earpiece test tones.");
@@ -3719,7 +3733,12 @@ d.setOnKeyListener((dialog, keyCode, event) -> {
         } catch (Throwable t) {
             logError("Earpiece tone playback failed.");
         } finally {
-            askUserEarpieceConfirmation();
+
+            runOnUiThread(() -> {
+                try { d.dismiss(); } catch (Throwable ignore) {}
+                askUserEarpieceConfirmation();
+            });
+
         }
     }).start();
 });
@@ -3991,7 +4010,7 @@ private void lab4MicPro() {
                 exit.setTextColor(Color.WHITE);
 
                 GradientDrawable exitBg = new GradientDrawable();
-                exitBg.setColor(0xFF202020);
+                exitBg.setColor(0xFF8B0000); // dark red (EXIT)
                 exitBg.setCornerRadius(dp(14));
                 exitBg.setStroke(dp(3), 0xFFFFD700);
                 exit.setBackground(exitBg);
@@ -4165,26 +4184,31 @@ private void lab4MicPro() {
             }
             if (cancelled.get()) return;
 
-            // ---------- ROUTE AUDIO → EARPIECE ----------
-            try {
-                AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
-                if (am != null) {
-                    am.stopBluetoothSco();
-                    am.setBluetoothScoOn(false);
-                    am.setSpeakerphoneOn(false);
-                    am.setMode(AudioManager.MODE_IN_COMMUNICATION);
-                }
-            } catch (Throwable ignore) {}
+// ---------- ROUTE AUDIO → EARPIECE ----------
+try {
+    AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
+    if (am != null) {
+        am.stopBluetoothSco();
+        am.setBluetoothScoOn(false);
+        am.setSpeakerphoneOn(false);
+        am.setMode(AudioManager.MODE_IN_COMMUNICATION);
+    }
+} catch (Throwable ignore) {}
 
-            SystemClock.sleep(400);
+// απαραίτητο routing settle
+SystemClock.sleep(600);
 
-            // ---------- EARPIECE TTS ----------
-            try { AppTTS.stop(); } catch (Throwable ignore) {}
-            speakOnce(gr
-                    ? "Βάλε το ακουστικό στο αυτί σου."
-                    : "Place the earpiece on your ear."
-            );
-            SystemClock.sleep(3500);
+// ---------- EARPIECE TTS ----------
+try { AppTTS.stop(); } catch (Throwable ignore) {}
+
+speakOnce(
+        gr
+                ? "Βάλε το ακουστικό στο αυτί σου."
+                : "Place the earpiece on your ear."
+);
+
+// χρόνος ακρόασης
+SystemClock.sleep(3500);
 
             // ---------- QUESTION ----------
             AtomicBoolean heardClearly = new AtomicBoolean(false);
@@ -4276,7 +4300,7 @@ private void lab4MicPro() {
                 exit.setTextColor(Color.WHITE);
 
                 GradientDrawable exitBg = new GradientDrawable();
-                exitBg.setColor(0xFF202020);
+                exitBg.setColor(0xFF8B0000); // dark red (EXIT)
                 exitBg.setCornerRadius(dp(14));
                 exitBg.setStroke(dp(3), 0xFFFFD700);
                 exit.setBackground(exitBg);

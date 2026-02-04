@@ -4380,7 +4380,6 @@ try { AppTTS.stop(); } catch (Throwable ignore) {}
 
 dismiss(dialogRef);
 runOnUiThread(this::enableSingleExportButton);
-}
 
         }
 

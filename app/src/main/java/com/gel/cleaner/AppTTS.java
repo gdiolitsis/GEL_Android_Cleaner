@@ -49,6 +49,13 @@ public final class AppTTS {
                     tts[0].setLanguage(Locale.ENGLISH);
                 }
 
+tts[0].setAudioAttributes(
+        new android.media.AudioAttributes.Builder()
+                .setUsage(android.media.AudioAttributes.USAGE_VOICE_COMMUNICATION)
+                .setContentType(android.media.AudioAttributes.CONTENT_TYPE_SPEECH)
+                .build()
+);
+                
                 ttsReady[0] = true;
 
                 // 🔑 speak pending ONLY if not muted
@@ -132,16 +139,3 @@ public final class AppTTS {
 
     // ============================================================
     // FULL RELEASE (OPTIONAL)
-    // ============================================================
-    public static void shutdown() {
-        if (tts[0] != null) {
-            try {
-                tts[0].stop();
-                tts[0].shutdown();
-            } catch (Throwable ignore) {}
-            tts[0] = null;
-            ttsReady[0] = false;
-            pendingSpeakText = null;
-        }
-    }
-}

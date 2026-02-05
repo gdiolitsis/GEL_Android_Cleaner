@@ -1161,59 +1161,103 @@ d.setOnKeyListener((dialog, keyCode, event) -> {
 d.show();
     });
 }
+
 // ============================================================
-// LAB 3 — STATE / HELPERS
+// LAB 3 — STATE / HELPERS (LOCKED)
 // ============================================================
 
 private ToneGenerator lab3Tone;
+
+/**
+ * HARD restore for LAB 3
+ * One single source of truth.
+ * Used on success / cancel / exception.
+ */
 private void restoreLab3Audio() {
-try {
-AudioManager am =
-(AudioManager) getSystemService(Context.AUDIO_SERVICE);
-if (am != null) {
-am.setMicrophoneMute(false);
-am.setMode(lab3OldMode);
-am.setSpeakerphoneOn(lab3OldSpeaker);
-}
-} catch (Throwable ignore) {}
+    try {
+        AudioManager am =
+                (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+
+        resetAudioAfterLab3(
+                am,
+                lab3OldMode,
+                lab3OldSpeaker,
+                lab3OldMicMute
+        );
+
+    } catch (Throwable ignore) {}
 }
 
+/**
+ * Plays a short earpiece beep using VOICE_CALL stream.
+ * Earpiece-only, OEM safe.
+ */
 private void playEarpieceBeep() {
-int sampleRate = 8000;
-int durationMs = 400;
-int samples = sampleRate * durationMs / 1000;
-short[] buffer = new short[samples];
-double freq = 1000.0;
-for (int i = 0; i < samples; i++) {
-buffer[i] = (short)
-        (Math.sin(2 * Math.PI * i * freq / sampleRate) * 32767);
+
+    int sampleRate = 8000;
+    int durationMs = 400;
+    int samples = sampleRate * durationMs / 1000;
+
+    short[] buffer = new short[samples];
+    double freq = 1000.0;
+
+    for (int i = 0; i < samples; i++) {
+        buffer[i] = (short)
+                (Math.sin(2 * Math.PI * i * freq / sampleRate) * 32767);
+    }
+
+    AudioTrack track = new AudioTrack(
+            AudioManager.STREAM_VOICE_CALL,
+            sampleRate,
+            AudioFormat.CHANNEL_OUT_MONO,
+            AudioFormat.ENCODING_PCM_16BIT,
+            buffer.length * 2,
+            AudioTrack.MODE_STATIC
+    );
+
+    try {
+        track.write(buffer, 0, buffer.length);
+        track.play();
+        SystemClock.sleep(durationMs + 100);
+    } finally {
+        try { track.stop(); } catch (Throwable ignore) {}
+        try { track.release(); } catch (Throwable ignore) {}
+    }
 }
-AudioTrack track = new AudioTrack(
-AudioManager.STREAM_VOICE_CALL,
-    sampleRate,
-    AudioFormat.CHANNEL_OUT_MONO,
-    AudioFormat.ENCODING_PCM_16BIT,
-    buffer.length * 2,
-    AudioTrack.MODE_STATIC
-);
-track.write(buffer, 0, buffer.length);
-track.play();
-SystemClock.sleep(durationMs + 100);
-track.stop();
-track.release();
+
+/**
+ * Optional tone stop helper (defensive).
+ */
+private void stopLab3Tone() {
+    try {
+        if (lab3Tone != null) {
+            lab3Tone.stopTone();
+            lab3Tone.release();
+        }
+    } catch (Throwable ignore) {}
+    lab3Tone = null;
 }
 
 // ============================================================
-// LAB 3 — Tone stop helper
+// AUDIO ROUTING — HARD EARPIECE LOCK (OEM SAFE)
 // ============================================================
-private void stopLab3Tone() {
-try {
-if (lab3Tone != null) {
-lab3Tone.stopTone();
-lab3Tone.release();
-}
-} catch (Throwable ignore) {}
-lab3Tone = null;
+private void forceEarpiece(AudioManager am) {
+
+    if (am == null) return;
+
+    try {
+        try { am.stopBluetoothSco(); } catch (Throwable ignore) {}
+        try { am.setBluetoothScoOn(false); } catch (Throwable ignore) {}
+        try { am.setSpeakerphoneOn(false); } catch (Throwable ignore) {}
+
+        try { am.setMode(AudioManager.MODE_IN_COMMUNICATION); } catch (Throwable ignore) {}
+        try { am.setMicrophoneMute(false); } catch (Throwable ignore) {}
+
+        SystemClock.sleep(120);
+        try { am.setSpeakerphoneOn(false); } catch (Throwable ignore) {}
+
+        SystemClock.sleep(120);
+    } catch (Throwable ignore) {}
 }
 
 // ============================================================
@@ -3561,14 +3605,15 @@ private void lab3EarpieceManual() {
         return;
     }
 
-    // ------------------------------------------------------------
-    // SAVE AUDIO STATE
-    // ------------------------------------------------------------
-    lab3OldMode = am.getMode();
-    lab3OldSpeaker = am.isSpeakerphoneOn();
+// ------------------------------------------------------------
+// SAVE AUDIO STATE
+// ------------------------------------------------------------
+lab3OldMode = am.getMode();
+lab3OldSpeaker = am.isSpeakerphoneOn();
+lab3OldMicMute = am.isMicrophoneMute();
 
-    logInfo("Saving audio state.");
-    logInfo("Preparing earpiece routing.");
+logInfo("Saving audio state.");
+logInfo("Preparing earpiece routing.");
 
     try {
         am.stopBluetoothSco();
@@ -3708,14 +3753,17 @@ d.setOnKeyListener((dialog, keyCode, event) -> {
 
         } catch (Throwable t) {
             logError("Earpiece tone playback failed.");
-        } finally {
+} finally {
 
-            runOnUiThread(() -> {
-                try { d.dismiss(); } catch (Throwable ignore) {}
-                askUserEarpieceConfirmation();
-            });
+    // 🔒 HARD AUDIO RESET (LAB 3)
+    resetAudioAfterLab3(am, lab3OldMode, lab3OldSpeaker, lab3OldMicMute);
 
-        }
+    runOnUiThread(() -> {
+        try { d.dismiss(); } catch (Throwable ignore) {}
+        askUserEarpieceConfirmation();
+    });
+
+}
     }).start();
 });
 
@@ -4053,8 +4101,8 @@ SystemClock.sleep(2200);
             logLabelOkValue(
                     gr ? "Σημείωση" : "Note",
                     gr
-                            ? "Τυχόν κακή ποιότητα συνομιλίας οφείλεται σε εξωτερικούς παράγοντες."
-                            : "Any poor call quality is caused by external factors."
+                            ? "Τυχόν κακή ποιότητα συνομιλίας, θα οφείλεται σε εξωτερικούς παράγοντες."
+                            : "Any poor call quality, will caused by external factors."
             );
 
             logLine();
@@ -4165,13 +4213,19 @@ try {
         try { am.stopBluetoothSco(); } catch (Throwable ignore) {}
         try { am.setBluetoothScoOn(false); } catch (Throwable ignore) {}
         try { am.setSpeakerphoneOn(false); } catch (Throwable ignore) {}
+
+        // 🔑 ΤΟ ΚΛΕΙΔΙ
+        try { am.setMode(AudioManager.MODE_IN_COMMUNICATION); } catch (Throwable ignore) {}
+
+        // OEM quirk guard
         try { am.setMicrophoneMute(false); } catch (Throwable ignore) {}
-        try { am.setMode(AudioManager.MODE_IN_CALL); } catch (Throwable ignore) {}
+        SystemClock.sleep(120);
+        try { am.setSpeakerphoneOn(false); } catch (Throwable ignore) {}
     }
 } catch (Throwable ignore) {}
 
 // απαραίτητο routing settle
-SystemClock.sleep(1200);
+SystemClock.sleep(400);
 
 // ---------- EARPIECE TTS ----------
 try { AppTTS.stop(); } catch (Throwable ignore) {}

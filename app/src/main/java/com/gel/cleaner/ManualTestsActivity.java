@@ -4364,22 +4364,22 @@ SystemClock.sleep(3500);
 logOk("Lab 4 PRO finished.");
 logLine();
 
-// ===== HARD AUDIO RESTORE (CRITICAL) =====
-try {
-    AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
-    if (am != null) {
-        try { am.stopBluetoothSco(); } catch (Throwable ignore) {}
-        try { am.setBluetoothScoOn(false); } catch (Throwable ignore) {}
-        try { am.setSpeakerphoneOn(false); } catch (Throwable ignore) {}
-        try { am.setMicrophoneMute(false); } catch (Throwable ignore) {}
-        try { am.setMode(AudioManager.MODE_NORMAL); } catch (Throwable ignore) {}
-    }
-} catch (Throwable ignore) {}
+} catch (Throwable t) {
 
-try { AppTTS.stop(); } catch (Throwable ignore) {}
+    appendHtml("<br>");
+    logLabelErrorValue(
+            gr ? "Σφάλμα" : "Error",
+            gr
+                    ? "Αποτυχία LAB 4 PRO"
+                    : "LAB 4 PRO failed"
+    );
+    logLine();
 
-dismiss(dialogRef);
-runOnUiThread(this::enableSingleExportButton);
+} finally {
+
+    // HARD SAFETY CLEANUP
+    try { AppTTS.stop(); } catch (Throwable ignore) {}
+    dismiss(dialogRef);
 
         }
 

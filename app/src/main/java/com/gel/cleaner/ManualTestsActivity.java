@@ -3912,7 +3912,6 @@ appendHtml("<br>");
             logOk("Lab 4 (BASE) finished.");
             logLine();
 
-            runOnUiThread(this::enableSingleExportButton);
         }
 
     }).start();
@@ -3929,6 +3928,8 @@ private void lab4MicPro() {
     final boolean gr = AppLang.isGreek(this);
 
     new Thread(() -> {
+
+        logWarn("LAB 4 PRO THREAD STARTED");
 
         AtomicBoolean cancelled = new AtomicBoolean(false);
         AtomicReference<AlertDialog> dialogRef = new AtomicReference<>();

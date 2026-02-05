@@ -1266,6 +1266,97 @@ private void resetAudioAfterLab3(
 }
 
 // ============================================================
+// HELPERS REQUIRED BY LAB 4 PRO (STRICT – DO NOT TOUCH)
+// ============================================================
+
+private AlertDialog buildInfoDialog(
+        String titleText,
+        String messageText,
+        AtomicBoolean cancelled,
+        AtomicReference<AlertDialog> dialogRef
+) {
+    AlertDialog.Builder b =
+            new AlertDialog.Builder(
+                    this,
+                    android.R.style.Theme_Material_Dialog_NoActionBar
+            );
+    b.setCancelable(false);
+
+    LinearLayout root = new LinearLayout(this);
+    root.setOrientation(LinearLayout.VERTICAL);
+    root.setPadding(dp(26), dp(24), dp(26), dp(22));
+
+    GradientDrawable bg = new GradientDrawable();
+    bg.setColor(0xFF000000);
+    bg.setCornerRadius(dp(18));
+    bg.setStroke(dp(3), 0xFFFFD700);
+    root.setBackground(bg);
+
+    TextView title = new TextView(this);
+    title.setText(titleText);
+    title.setTextColor(Color.WHITE);
+    title.setTextSize(17f);
+    title.setTypeface(null, Typeface.BOLD);
+    title.setGravity(Gravity.CENTER);
+    title.setPadding(0, 0, 0, dp(14));
+    root.addView(title);
+
+    TextView msg = new TextView(this);
+    msg.setText(messageText);
+    msg.setTextColor(0xFF39FF14);
+    msg.setTextSize(14.5f);
+    msg.setGravity(Gravity.CENTER);
+    msg.setPadding(0, 0, 0, dp(16));
+    root.addView(msg);
+
+    Button exit = new Button(this);
+    exit.setAllCaps(false);
+    exit.setText(AppLang.isGreek(this) ? "ΕΞΟΔΟΣ ΤΕΣΤ" : "EXIT TEST");
+    exit.setTextColor(Color.WHITE);
+
+    GradientDrawable exitBg = new GradientDrawable();
+    exitBg.setColor(0xFF8B0000);
+    exitBg.setCornerRadius(dp(14));
+    exitBg.setStroke(dp(3), 0xFFFFD700);
+    exit.setBackground(exitBg);
+
+    exit.setOnClickListener(v -> {
+        cancelled.set(true);
+        try { AppTTS.stop(); } catch (Throwable ignore) {}
+        try {
+            AlertDialog d = dialogRef.get();
+            if (d != null) d.dismiss();
+        } catch (Throwable ignore) {}
+    });
+
+    root.addView(exit);
+
+    b.setView(root);
+    AlertDialog d = b.create();
+    dialogRef.set(d);
+    return d;
+}
+
+private void forceSpeaker(AudioManager am) {
+    if (am == null) return;
+    try {
+        am.stopBluetoothSco();
+        am.setBluetoothScoOn(false);
+        am.setMicrophoneMute(false);
+        am.setMode(AudioManager.MODE_NORMAL);
+        am.setSpeakerphoneOn(true);
+        SystemClock.sleep(120);
+    } catch (Throwable ignore) {}
+}
+
+private void dismiss(AtomicReference<AlertDialog> ref) {
+    try {
+        AlertDialog d = ref.get();
+        if (d != null) d.dismiss();
+    } catch (Throwable ignore) {}
+}
+
+// ============================================================
 // LAB 8.1 — HUMAN SUMMARY HELPERS
 // ============================================================
 

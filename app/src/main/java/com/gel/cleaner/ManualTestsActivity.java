@@ -291,6 +291,7 @@ private SharedPreferences prefs;
 private volatile boolean lab3WaitingUser = false;
 private int lab3OldMode = AudioManager.MODE_NORMAL;
 private boolean lab3OldSpeaker = false;
+private boolean lab3OldMicMute = false;
 
 // ============================================================  
 // SERVICE LOG SESSION FLAG (CRITICAL)  

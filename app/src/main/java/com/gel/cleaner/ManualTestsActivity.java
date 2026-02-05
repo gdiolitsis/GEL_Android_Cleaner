@@ -4484,29 +4484,6 @@ private void forceSpeaker(AudioManager am) {
 }
 
 /* ============================================================
-   AUDIO ROUTING — HARD EARPIECE (STAGE 2)
-   ============================================================ */
-private void forceEarpiece(AudioManager am) {
-
-    if (am == null) return;
-
-    try {
-        try { am.stopBluetoothSco(); } catch (Throwable ignore) {}
-        try { am.setBluetoothScoOn(false); } catch (Throwable ignore) {}
-
-        try { am.setSpeakerphoneOn(false); } catch (Throwable ignore) {}
-
-        try { am.setMode(AudioManager.MODE_IN_COMMUNICATION); } catch (Throwable ignore) {}
-        try { am.setMicrophoneMute(false); } catch (Throwable ignore) {}
-
-        SystemClock.sleep(120);
-        try { am.setSpeakerphoneOn(false); } catch (Throwable ignore) {}
-
-        SystemClock.sleep(120);
-    } catch (Throwable ignore) {}
-}
-
-/* ============================================================
    AUDIO RESTORE — RETURN TO NORMAL (POST LAB 4 PRO)
    ============================================================ */
 private void restoreAudioNormal() {

@@ -3816,19 +3816,14 @@ new Handler(Looper.getMainLooper()).postDelayed(() -> {
 
 private void lab4MicManual() {
 
-    // 1️⃣ Πρώτα το BASE (hardware check)
-    lab4MicBase();
-
-    // 2️⃣ Μικρή καθυστέρηση για καθαρό separation στο log
-    new Handler(Looper.getMainLooper()).postDelayed(() -> {
-
-        // 3️⃣ Μετά το PRO (voice analysis)
-lab4MicPro();
-
-    }, 600);
+    lab4MicBase(() -> {
+        // ΤΩΡΑ που ΤΕΛΕΙΩΣΕ το BASE
+        lab4MicPro();
+    });
 }
 
-private void lab4MicBase() {
+
+private void lab4MicBase(Runnable onFinished) {
 
     appendHtml("<br>");
     logLine();
@@ -3985,6 +3980,10 @@ appendHtml("<br>");
             appendHtml("<br>");
             logOk("Lab 4 (BASE) finished.");
             logLine();
+            
+if (onFinished != null) {
+    runOnUiThread(onFinished);
+}
 
         }
 

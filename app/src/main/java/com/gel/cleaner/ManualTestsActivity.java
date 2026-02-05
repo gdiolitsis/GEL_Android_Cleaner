@@ -4110,47 +4110,61 @@ private void lab4MicPro() {
             SystemClock.sleep(300);
             if (cancelled.get()) return;
 
-            // ---------- STAGE 1 TTS (OPEN SPEAKER) ----------
-            try { AppTTS.stop(); } catch (Throwable ignore) {}
-            AudioManager am1 = (AudioManager) getSystemService(AUDIO_SERVICE);
-            forceSpeaker(am1);                 // 🔑 SPEAKER
-            SystemClock.sleep(150);
+// ---------- STAGE 1 TTS (OPEN SPEAKER) ----------
+try { AppTTS.stop(); } catch (Throwable ignore) {}
 
-            AppTTS.ensureSpeak(
-                    this,
-                    gr ? "Έλεγχος κάτω μικροφώνου." : "Bottom microphone test."
-            );
-            SystemClock.sleep(2200);
+AudioManager am1 = (AudioManager) getSystemService(AUDIO_SERVICE);
+if (am1 != null) {
+    try { am1.stopBluetoothSco(); } catch (Throwable ignore) {}
+    try { am1.setBluetoothScoOn(false); } catch (Throwable ignore) {}
 
-            // ---------- LOG STAGE 1 ----------
-            appendHtml("<br>");
-            logInfo(gr
-                    ? "LAB 4 PRO — Στάδιο 1 (Κάτω μικρόφωνο)"
-                    : "LAB 4 PRO — Stage 1 (Bottom microphone)");
-            logLine();
+    // 🔊 FORCE OPEN SPEAKER
+    try { am1.setMode(AudioManager.MODE_NORMAL); } catch (Throwable ignore) {}
+    try { am1.setSpeakerphoneOn(true); } catch (Throwable ignore) {}
+    try { am1.setMicrophoneMute(false); } catch (Throwable ignore) {}
 
-            logLabelOkValue(
-                    gr ? "Αποτέλεσμα" : "Result",
-                    gr
-                            ? "Το κάτω μικρόφωνο λειτουργεί κανονικά (καθαρή συνομιλία)."
-                            : "Bottom microphone operates normally (clear call quality)."
-            );
+    // ⏱️ απαραίτητο settle
+    SystemClock.sleep(300);
+}
 
-            logLabelOkValue(
-                    gr ? "Σημείωση" : "Note",
-                    gr
-                            ? "Τυχόν κακή ποιότητα συνομιλίας, θα οφείλεται σε εξωτερικούς παράγοντες."
-                            : "Any poor call quality, will caused by external factors."
-            );
+// 🔊 ΑΥΤΟ ΠΡΕΠΕΙ ΝΑ ΑΚΟΥΣΤΕΙ ΔΥΝΑΤΑ
+AppTTS.ensureSpeak(
+        this,
+        gr ? "Έλεγχος κάτω μικροφώνου." : "Bottom microphone test."
+);
 
-            logLine();
+// ⏱️ δίνουμε χρόνο να παιχτεί
+SystemClock.sleep(2200);
 
-            // close dialog
-            try {
-                AlertDialog dd = dialogRef.get();
-                if (dd != null) dd.dismiss();
-            } catch (Throwable ignore) {}
-            dialogRef.set(null);
+// ---------- LOG STAGE 1 ----------
+appendHtml("<br>");
+logInfo(gr
+        ? "LAB 4 PRO — Στάδιο 1 (Κάτω μικρόφωνο)"
+        : "LAB 4 PRO — Stage 1 (Bottom microphone)");
+logLine();
+
+logLabelOkValue(
+        gr ? "Αποτέλεσμα" : "Result",
+        gr
+                ? "Το κάτω μικρόφωνο λειτουργεί κανονικά (καθαρή συνομιλία)."
+                : "Bottom microphone operates normally (clear call quality)."
+);
+
+logLabelOkValue(
+        gr ? "Σημείωση" : "Note",
+        gr
+                ? "Τυχόν κακή ποιότητα συνομιλίας, θα οφείλεται σε εξωτερικούς παράγοντες."
+                : "Any poor call quality, will caused by external factors."
+);
+
+logLine();
+
+// close dialog
+try {
+    AlertDialog dd = dialogRef.get();
+    if (dd != null) dd.dismiss();
+} catch (Throwable ignore) {}
+dialogRef.set(null);
 
             // ====================================================
             // STAGE 2 — EARPIECE (HUMAN VERIFIED) [EARPIECE]
@@ -4241,37 +4255,46 @@ private void lab4MicPro() {
             SystemClock.sleep(300);
             if (cancelled.get()) return;
 
-            // ---------- ROUTE -> EARPIECE ----------
-            AudioManager am2 = (AudioManager) getSystemService(AUDIO_SERVICE);
-            forceEarpiece(am2);                // 🔑 EARPIECE
-            SystemClock.sleep(200);
+// ---------- QUESTION TTS (EARPIECE ONLY) ----------
+try { AppTTS.stop(); } catch (Throwable ignore) {}
 
-            // ---------- EARPIECE TTS (INSTRUCTION) ----------
-            try { AppTTS.stop(); } catch (Throwable ignore) {}
-            AppTTS.ensureSpeak(
-                    this,
-                    gr ? "Βάλε το ακουστικό στο αυτί σου."
-                       : "Place the earpiece on your ear."
-            );
-            SystemClock.sleep(1700);
+AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
+if (am != null) {
+    try { am.stopBluetoothSco(); } catch (Throwable ignore) {}
+    try { am.setBluetoothScoOn(false); } catch (Throwable ignore) {}
 
-            // ---------- QUESTION TTS (EARPIECE) ----------
-            try { AppTTS.stop(); } catch (Throwable ignore) {}
-            forceEarpiece(am2);
-            SystemClock.sleep(200);
+    // 🔑 ROUTE → EARPIECE
+    try { am.setSpeakerphoneOn(false); } catch (Throwable ignore) {}
+    try { am.setMode(AudioManager.MODE_IN_COMMUNICATION); } catch (Throwable ignore) {}
+    try { am.setMicrophoneMute(false); } catch (Throwable ignore) {}
 
-            AppTTS.ensureSpeak(
-                    this,
-                    gr ? "Με ακούς καθαρά;" : "Do you hear me clearly?"
-            );
-            SystemClock.sleep(800);
+    // ⏱️ ΑΠΑΡΑΙΤΗΤΟ settle
+    SystemClock.sleep(300);
+}
 
-            // close instruction dialog
-            try {
-                AlertDialog dd = dialogRef.get();
-                if (dd != null) dd.dismiss();
-            } catch (Throwable ignore) {}
-            dialogRef.set(null);
+// 🎧 ΜΟΝΟ ΑΥΤΟ μιλάει στο ακουστικό
+AppTTS.ensureSpeak(
+        this,
+        gr ? "Με ακούς καθαρά;" : "Do you hear me clearly?"
+);
+
+// ⏱️ ΔΙΝΟΥΜΕ ΧΡΟΝΟ ΝΑ ΠΑΙΞΕΙ
+SystemClock.sleep(1800);
+
+// ---------- RESTORE TO NORMAL ----------
+try {
+    if (am != null) {
+        try { am.setMode(AudioManager.MODE_NORMAL); } catch (Throwable ignore) {}
+        try { am.setSpeakerphoneOn(false); } catch (Throwable ignore) {}
+    }
+} catch (Throwable ignore) {}
+
+// close instruction dialog
+try {
+    AlertDialog dd = dialogRef.get();
+    if (dd != null) dd.dismiss();
+} catch (Throwable ignore) {}
+dialogRef.set(null);
 
             // ---------- QUESTION POPUP ----------
             final AtomicBoolean heardClearly = new AtomicBoolean(false);

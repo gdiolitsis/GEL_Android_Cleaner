@@ -562,7 +562,7 @@ protected void onCreate(@Nullable Bundle savedInstanceState) {
     root.addView(lab14DotsView);
 
     // ============================================================  
-    // SECTION 1: AUDIO & VIBRATION — LABS 1â€“5  
+    // SECTION 1: AUDIO & VIBRATION — LABS 1-5  
     // ============================================================  
     LinearLayout body1 = makeSectionBody();  
     Button header1 = makeSectionHeader(getString(R.string.manual_cat_1), body1);  
@@ -1237,6 +1237,31 @@ private void stopLab3Tone() {
         }
     } catch (Throwable ignore) {}
     lab3Tone = null;
+}
+
+// ============================================================
+// LAB 3 — HARD AUDIO RESET (SINGLE SOURCE OF TRUTH)
+// ============================================================
+private void resetAudioAfterLab3(
+        AudioManager am,
+        int oldMode,
+        boolean oldSpeaker,
+        boolean oldMicMute
+) {
+    if (am == null) return;
+
+    try {
+        try { am.stopBluetoothSco(); } catch (Throwable ignore) {}
+        try { am.setBluetoothScoOn(false); } catch (Throwable ignore) {}
+
+        // Force clean baseline
+        try { am.setMode(AudioManager.MODE_NORMAL); } catch (Throwable ignore) {}
+        try { am.setSpeakerphoneOn(oldSpeaker); } catch (Throwable ignore) {}
+        try { am.setMicrophoneMute(oldMicMute); } catch (Throwable ignore) {}
+
+        SystemClock.sleep(120);
+
+    } catch (Throwable ignore) {}
 }
 
 // ============================================================

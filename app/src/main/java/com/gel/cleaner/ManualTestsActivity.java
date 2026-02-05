@@ -1272,17 +1272,28 @@ private void forceEarpiece(AudioManager am) {
     if (am == null) return;
 
     try {
+        // kill any BT/SCO
         try { am.stopBluetoothSco(); } catch (Throwable ignore) {}
         try { am.setBluetoothScoOn(false); } catch (Throwable ignore) {}
+
+        // force no speaker
         try { am.setSpeakerphoneOn(false); } catch (Throwable ignore) {}
 
+        // ✅ the real lock
         try { am.setMode(AudioManager.MODE_IN_COMMUNICATION); } catch (Throwable ignore) {}
+
+        // OEM quirk guard
         try { am.setMicrophoneMute(false); } catch (Throwable ignore) {}
 
-        SystemClock.sleep(120);
+        // 🔒 double-hit speaker OFF (Samsung/Xiaomi classic)
+        SystemClock.sleep(80);
+        try { am.setSpeakerphoneOn(false); } catch (Throwable ignore) {}
+        SystemClock.sleep(80);
         try { am.setSpeakerphoneOn(false); } catch (Throwable ignore) {}
 
-        SystemClock.sleep(120);
+        // settle
+        SystemClock.sleep(200);
+
     } catch (Throwable ignore) {}
 }
 
@@ -3993,7 +4004,10 @@ if (onFinished != null) {
 /* ============================================================
    LAB 4 PRO — Call Quality Verification (FINAL • LOCKED)
    HUMAN VERIFIED • DETERMINISTIC • NO METRICS
-   (RESTORED — NO FOOTERS / NO EXTRA HELPERS)
+   FIXED AUDIO FLOW:
+   - STAGE 1 TTS => OPEN SPEAKER (MODE_NORMAL + speakerphone ON)
+   - STAGE 2 TTS => EARPIECE (MODE_IN_COMMUNICATION + speakerphone OFF)
+   - FINALLY     => RESTORE NORMAL
    ============================================================ */
 
 private void lab4MicPro() {
@@ -4004,13 +4018,13 @@ private void lab4MicPro() {
 
         logWarn("LAB 4 PRO THREAD STARTED");
 
-        AtomicBoolean cancelled = new AtomicBoolean(false);
-        AtomicReference<AlertDialog> dialogRef = new AtomicReference<>();
+        final AtomicBoolean cancelled = new AtomicBoolean(false);
+        final AtomicReference<AlertDialog> dialogRef = new AtomicReference<>();
 
         try {
 
             // ====================================================
-            // STAGE 1 — BOTTOM MICROPHONE (SYSTEM SPOKEN)
+            // STAGE 1 — BOTTOM MICROPHONE (SYSTEM SPOKEN) [SPEAKER]
             // ====================================================
 
             // ---------- INFO DIALOG ----------
@@ -4043,24 +4057,22 @@ private void lab4MicPro() {
                 root.addView(title);
 
                 TextView msg = new TextView(this);
-                msg.setText(gr ? "Παρακαλώ περίμενε…" : "Please wait…");
+                msg.setText(gr ? "Έλεγχος κάτω μικροφώνου." : "Bottom microphone test.");
                 msg.setTextColor(0xFF39FF14);
                 msg.setTextSize(14.5f);
                 msg.setGravity(Gravity.CENTER);
                 msg.setPadding(0, 0, 0, dp(16));
                 root.addView(msg);
 
-                // MUTE ROW (existing global helper)
                 root.addView(buildMuteRow());
 
-                // EXIT BUTTON (inline)
                 Button exit = new Button(this);
                 exit.setAllCaps(false);
                 exit.setText(gr ? "ΕΞΟΔΟΣ ΤΕΣΤ" : "EXIT TEST");
                 exit.setTextColor(Color.WHITE);
 
                 GradientDrawable exitBg = new GradientDrawable();
-                exitBg.setColor(0xFF8B0000); // dark red (EXIT)
+                exitBg.setColor(0xFF8B0000);
                 exitBg.setCornerRadius(dp(14));
                 exitBg.setStroke(dp(3), 0xFFFFD700);
                 exit.setBackground(exitBg);
@@ -4079,9 +4091,7 @@ private void lab4MicPro() {
 
                 AlertDialog d = b.create();
                 if (d.getWindow() != null) {
-                    d.getWindow().setBackgroundDrawable(
-                            new ColorDrawable(Color.TRANSPARENT)
-                    );
+                    d.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
                 }
 
                 exit.setOnClickListener(v -> {
@@ -4097,17 +4107,20 @@ private void lab4MicPro() {
                 d.show();
             });
 
-// wait dialog created
-SystemClock.sleep(300);
-if (cancelled.get()) return;
+            SystemClock.sleep(300);
+            if (cancelled.get()) return;
 
-// ---------- SPEAKER TTS ----------
-try { AppTTS.stop(); } catch (Throwable ignore) {}
-speakOnce(gr
-        ? "Έλεγχος κάτω μικροφώνου."
-        : "Bottom microphone test."
-);
-SystemClock.sleep(2200);
+            // ---------- STAGE 1 TTS (OPEN SPEAKER) ----------
+            try { AppTTS.stop(); } catch (Throwable ignore) {}
+            AudioManager am1 = (AudioManager) getSystemService(AUDIO_SERVICE);
+            forceSpeaker(am1);                 // 🔑 SPEAKER
+            SystemClock.sleep(150);
+
+            AppTTS.ensureSpeak(
+                    this,
+                    gr ? "Έλεγχος κάτω μικροφώνου." : "Bottom microphone test."
+            );
+            SystemClock.sleep(2200);
 
             // ---------- LOG STAGE 1 ----------
             appendHtml("<br>");
@@ -4132,148 +4145,137 @@ SystemClock.sleep(2200);
 
             logLine();
 
-            // close dialog (if open)
+            // close dialog
             try {
                 AlertDialog dd = dialogRef.get();
                 if (dd != null) dd.dismiss();
             } catch (Throwable ignore) {}
             dialogRef.set(null);
 
-// ====================================================
-// STAGE 2 — EARPIECE (HUMAN VERIFIED)
-// ====================================================
+            // ====================================================
+            // STAGE 2 — EARPIECE (HUMAN VERIFIED) [EARPIECE]
+            // ====================================================
 
-// ---------- INSTRUCTION DIALOG ----------
-runOnUiThread(() -> {
+            // ---------- INSTRUCTION DIALOG ----------
+            runOnUiThread(() -> {
 
-    AlertDialog.Builder b =
-            new AlertDialog.Builder(
+                AlertDialog.Builder b =
+                        new AlertDialog.Builder(
+                                this,
+                                android.R.style.Theme_Material_Dialog_NoActionBar
+                        );
+                b.setCancelable(false);
+
+                LinearLayout root = new LinearLayout(this);
+                root.setOrientation(LinearLayout.VERTICAL);
+                root.setPadding(dp(26), dp(24), dp(26), dp(22));
+
+                GradientDrawable bg = new GradientDrawable();
+                bg.setColor(0xFF000000);
+                bg.setCornerRadius(dp(18));
+                bg.setStroke(dp(3), 0xFFFFD700);
+                root.setBackground(bg);
+
+                TextView title = new TextView(this);
+                title.setText(gr ? "LAB 4 PRO — Έλεγχος Ακουστικού"
+                                 : "LAB 4 PRO — Earpiece Test");
+                title.setTextColor(Color.WHITE);
+                title.setTextSize(17f);
+                title.setTypeface(null, Typeface.BOLD);
+                title.setGravity(Gravity.CENTER);
+                title.setPadding(0, 0, 0, dp(14));
+                root.addView(title);
+
+                TextView msg = new TextView(this);
+                msg.setText(gr ? "Βάλε το ακουστικό στο αυτί σου."
+                               : "Place the earpiece on your ear.");
+                msg.setTextColor(0xFF39FF14);
+                msg.setTextSize(14.5f);
+                msg.setGravity(Gravity.CENTER);
+                msg.setPadding(0, 0, 0, dp(16));
+                root.addView(msg);
+
+                root.addView(buildMuteRow());
+
+                Button exit = new Button(this);
+                exit.setAllCaps(false);
+                exit.setText(gr ? "ΕΞΟΔΟΣ ΤΕΣΤ" : "EXIT TEST");
+                exit.setTextColor(Color.WHITE);
+
+                GradientDrawable exitBg = new GradientDrawable();
+                exitBg.setColor(0xFF202020);
+                exitBg.setCornerRadius(dp(14));
+                exitBg.setStroke(dp(3), 0xFFFFD700);
+                exit.setBackground(exitBg);
+
+                LinearLayout.LayoutParams lpExit =
+                        new LinearLayout.LayoutParams(
+                                LinearLayout.LayoutParams.MATCH_PARENT,
+                                dp(52)
+                        );
+                lpExit.setMargins(0, dp(10), 0, 0);
+                exit.setLayoutParams(lpExit);
+
+                root.addView(exit);
+
+                b.setView(root);
+
+                AlertDialog d = b.create();
+                if (d.getWindow() != null) {
+                    d.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+                }
+
+                exit.setOnClickListener(v -> {
+                    cancelled.set(true);
+                    try { AppTTS.stop(); } catch (Throwable ignore) {}
+                    try { d.dismiss(); } catch (Throwable ignore) {}
+                    appendHtml("<br>");
+                    logWarn("Test cancelled by user.");
+                    logLine();
+                });
+
+                dialogRef.set(d);
+                d.show();
+            });
+
+            SystemClock.sleep(300);
+            if (cancelled.get()) return;
+
+            // ---------- ROUTE -> EARPIECE ----------
+            AudioManager am2 = (AudioManager) getSystemService(AUDIO_SERVICE);
+            forceEarpiece(am2);                // 🔑 EARPIECE
+            SystemClock.sleep(200);
+
+            // ---------- EARPIECE TTS (INSTRUCTION) ----------
+            try { AppTTS.stop(); } catch (Throwable ignore) {}
+            AppTTS.ensureSpeak(
                     this,
-                    android.R.style.Theme_Material_Dialog_NoActionBar
+                    gr ? "Βάλε το ακουστικό στο αυτί σου."
+                       : "Place the earpiece on your ear."
             );
-    b.setCancelable(false);
+            SystemClock.sleep(1700);
 
-    LinearLayout root = new LinearLayout(this);
-    root.setOrientation(LinearLayout.VERTICAL);
-    root.setPadding(dp(26), dp(24), dp(26), dp(22));
+            // ---------- QUESTION TTS (EARPIECE) ----------
+            try { AppTTS.stop(); } catch (Throwable ignore) {}
+            forceEarpiece(am2);
+            SystemClock.sleep(200);
 
-    GradientDrawable bg = new GradientDrawable();
-    bg.setColor(0xFF000000);
-    bg.setCornerRadius(dp(18));
-    bg.setStroke(dp(3), 0xFFFFD700);
-    root.setBackground(bg);
-
-    TextView title = new TextView(this);
-    title.setText(gr ? "LAB 4 PRO — Έλεγχος Ακουστικού"
-                     : "LAB 4 PRO — Earpiece Test");
-    title.setTextColor(Color.WHITE);
-    title.setTextSize(17f);
-    title.setTypeface(null, Typeface.BOLD);
-    title.setGravity(Gravity.CENTER);
-    title.setPadding(0, 0, 0, dp(14));
-    root.addView(title);
-
-    TextView msg = new TextView(this);
-    msg.setText(gr ? "Βάλε το ακουστικό στο αυτί σου."
-                   : "Place the earpiece on your ear.");
-    msg.setTextColor(0xFF39FF14);
-    msg.setTextSize(14.5f);
-    msg.setGravity(Gravity.CENTER);
-    msg.setPadding(0, 0, 0, dp(16));
-    root.addView(msg);
-
-    root.addView(buildMuteRow());
-
-    Button exit = new Button(this);
-    exit.setAllCaps(false);
-    exit.setText(gr ? "ΕΞΟΔΟΣ ΤΕΣΤ" : "EXIT TEST");
-    exit.setTextColor(Color.WHITE);
-
-    GradientDrawable exitBg = new GradientDrawable();
-    exitBg.setColor(0xFF202020);
-    exitBg.setCornerRadius(dp(14));
-    exitBg.setStroke(dp(3), 0xFFFFD700);
-    exit.setBackground(exitBg);
-
-    LinearLayout.LayoutParams lpExit =
-            new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    dp(52)
+            AppTTS.ensureSpeak(
+                    this,
+                    gr ? "Με ακούς καθαρά;" : "Do you hear me clearly?"
             );
-    lpExit.setMargins(0, dp(10), 0, 0);
-    exit.setLayoutParams(lpExit);
+            SystemClock.sleep(800);
 
-    root.addView(exit);
-
-    b.setView(root);
-
-    AlertDialog d = b.create();
-    if (d.getWindow() != null) {
-        d.getWindow().setBackgroundDrawable(
-                new ColorDrawable(Color.TRANSPARENT)
-        );
-    }
-
-    exit.setOnClickListener(v -> {
-        cancelled.set(true);
-        try { AppTTS.stop(); } catch (Throwable ignore) {}
-        try { d.dismiss(); } catch (Throwable ignore) {}
-        appendHtml("<br>");
-        logWarn("Test cancelled by user.");
-        logLine();
-    });
-
-    dialogRef.set(d);
-    d.show();
-});
-
-// ---- UI settle (ΟΧΙ while, ΟΧΙ polling) ----
-SystemClock.sleep(300);
-if (cancelled.get()) return;
-
-// ---------- ROUTE AUDIO → EARPIECE ----------
-try {
-    AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
-    if (am != null) {
-        try { am.stopBluetoothSco(); } catch (Throwable ignore) {}
-        try { am.setBluetoothScoOn(false); } catch (Throwable ignore) {}
-        try { am.setSpeakerphoneOn(false); } catch (Throwable ignore) {}
-
-        // 🔑 ΤΟ ΚΛΕΙΔΙ
-        try { am.setMode(AudioManager.MODE_IN_COMMUNICATION); } catch (Throwable ignore) {}
-
-        // OEM quirk guard
-        try { am.setMicrophoneMute(false); } catch (Throwable ignore) {}
-        SystemClock.sleep(120);
-        try { am.setSpeakerphoneOn(false); } catch (Throwable ignore) {}
-    }
-} catch (Throwable ignore) {}
-
-// απαραίτητο routing settle
-SystemClock.sleep(400);
-
-// ---------- EARPIECE TTS ----------
-try { AppTTS.stop(); } catch (Throwable ignore) {}
-
-speakOnce(
-        gr
-                ? "Βάλε το ακουστικό στο αυτί σου."
-                : "Place the earpiece on your ear."
-);
-
-// χρόνος ακρόασης
-SystemClock.sleep(3500);
-
-            // ---------- QUESTION ----------
-            AtomicBoolean heardClearly = new AtomicBoolean(false);
-            AtomicBoolean answered = new AtomicBoolean(false);
-
-            // close previous dialog
+            // close instruction dialog
             try {
                 AlertDialog dd = dialogRef.get();
                 if (dd != null) dd.dismiss();
             } catch (Throwable ignore) {}
             dialogRef.set(null);
+
+            // ---------- QUESTION POPUP ----------
+            final AtomicBoolean heardClearly = new AtomicBoolean(false);
+            final AtomicBoolean answered = new AtomicBoolean(false);
 
             runOnUiThread(() -> {
 
@@ -4311,7 +4313,6 @@ SystemClock.sleep(3500);
                 msg.setPadding(0, 0, 0, dp(16));
                 root.addView(msg);
 
-                // YES/NO row (inline)
                 LinearLayout row = new LinearLayout(this);
                 row.setOrientation(LinearLayout.HORIZONTAL);
                 row.setGravity(Gravity.CENTER);
@@ -4354,7 +4355,7 @@ SystemClock.sleep(3500);
                 exit.setTextColor(Color.WHITE);
 
                 GradientDrawable exitBg = new GradientDrawable();
-                exitBg.setColor(0xFF8B0000); // dark red (EXIT)
+                exitBg.setColor(0xFF8B0000);
                 exitBg.setCornerRadius(dp(14));
                 exitBg.setStroke(dp(3), 0xFFFFD700);
                 exit.setBackground(exitBg);
@@ -4373,9 +4374,7 @@ SystemClock.sleep(3500);
 
                 AlertDialog d = b.create();
                 if (d.getWindow() != null) {
-                    d.getWindow().setBackgroundDrawable(
-                            new ColorDrawable(Color.TRANSPARENT)
-                    );
+                    d.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
                 }
 
                 no.setOnClickListener(v -> {
@@ -4439,29 +4438,94 @@ SystemClock.sleep(3500);
             );
 
             logLine();
-logOk("Lab 4 PRO finished.");
-logLine();
+            logOk("Lab 4 PRO finished.");
+            logLine();
 
-} catch (Throwable t) {
+        } catch (Throwable t) {
 
-    appendHtml("<br>");
-    logLabelErrorValue(
-            gr ? "Σφάλμα" : "Error",
-            gr
-                    ? "Αποτυχία LAB 4 PRO"
-                    : "LAB 4 PRO failed"
-    );
-    logLine();
+            appendHtml("<br>");
+            logLabelErrorValue(
+                    gr ? "Σφάλμα" : "Error",
+                    gr ? "Αποτυχία LAB 4 PRO" : "LAB 4 PRO failed"
+            );
+            logLine();
 
-} finally {
+        } finally {
 
-    // HARD SAFETY CLEANUP
-    try { AppTTS.stop(); } catch (Throwable ignore) {}
-    dismiss(dialogRef);
+            try { AppTTS.stop(); } catch (Throwable ignore) {}
+            dismiss(dialogRef);
 
+            // ✅ HARD RESTORE
+            restoreAudioNormal();
         }
 
     }).start();
+}
+
+/* ============================================================
+   AUDIO ROUTING — HARD SPEAKER (STAGE 1)
+   ============================================================ */
+private void forceSpeaker(AudioManager am) {
+
+    if (am == null) return;
+
+    try {
+        try { am.stopBluetoothSco(); } catch (Throwable ignore) {}
+        try { am.setBluetoothScoOn(false); } catch (Throwable ignore) {}
+
+        try { am.setMicrophoneMute(false); } catch (Throwable ignore) {}
+
+        try { am.setMode(AudioManager.MODE_NORMAL); } catch (Throwable ignore) {}
+
+        try { am.setSpeakerphoneOn(true); } catch (Throwable ignore) {}
+
+        SystemClock.sleep(120);
+    } catch (Throwable ignore) {}
+}
+
+/* ============================================================
+   AUDIO ROUTING — HARD EARPIECE (STAGE 2)
+   ============================================================ */
+private void forceEarpiece(AudioManager am) {
+
+    if (am == null) return;
+
+    try {
+        try { am.stopBluetoothSco(); } catch (Throwable ignore) {}
+        try { am.setBluetoothScoOn(false); } catch (Throwable ignore) {}
+
+        try { am.setSpeakerphoneOn(false); } catch (Throwable ignore) {}
+
+        try { am.setMode(AudioManager.MODE_IN_COMMUNICATION); } catch (Throwable ignore) {}
+        try { am.setMicrophoneMute(false); } catch (Throwable ignore) {}
+
+        SystemClock.sleep(120);
+        try { am.setSpeakerphoneOn(false); } catch (Throwable ignore) {}
+
+        SystemClock.sleep(120);
+    } catch (Throwable ignore) {}
+}
+
+/* ============================================================
+   AUDIO RESTORE — RETURN TO NORMAL (POST LAB 4 PRO)
+   ============================================================ */
+private void restoreAudioNormal() {
+
+    try {
+        AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
+        if (am == null) return;
+
+        try { am.stopBluetoothSco(); } catch (Throwable ignore) {}
+        try { am.setBluetoothScoOn(false); } catch (Throwable ignore) {}
+
+        try { am.setMicrophoneMute(false); } catch (Throwable ignore) {}
+
+        try { am.setSpeakerphoneOn(false); } catch (Throwable ignore) {}
+        try { am.setMode(AudioManager.MODE_NORMAL); } catch (Throwable ignore) {}
+
+        SystemClock.sleep(120);
+
+    } catch (Throwable ignore) {}
 }
 
 private void dismiss(AtomicReference<AlertDialog> ref) {

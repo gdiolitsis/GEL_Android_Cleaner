@@ -3,14 +3,15 @@ package com.gel.cleaner;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.media.AudioAttributes;
+import android.os.Handler;
+import android.os.Looper;
 import android.speech.tts.TextToSpeech;
 
 import java.util.Locale;
 
 // ============================================================
 // AppTTS — GLOBAL TTS MANAGER (LEGACY SAFE)
-// • SAME STYLE AS ManualTestsActivity
-// • Uses TextToSpeech[1] + boolean[1]
+// • Dual route: SPEAKER (media) / EARPIECE (voice comm)
 // • Global persistent mute
 // ============================================================
 public final class AppTTS {
@@ -18,12 +19,24 @@ public final class AppTTS {
     private static final String PREFS_NAME = "gel_prefs";
     private static final String PREF_TTS_MUTED = "tts_muted_global";
 
-    // 🔒 SAME PATTERN AS LEGACY
     private static final TextToSpeech[] tts = new TextToSpeech[1];
     private static final boolean[] ttsReady = { false };
 
     private static boolean muted = false;
     private static String pendingSpeakText = null;
+
+    // 🔒 attrs
+    private static final AudioAttributes ATTR_EARPIECE =
+            new AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_VOICE_COMMUNICATION)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                    .build();
+
+    private static final AudioAttributes ATTR_SPEAKER =
+            new AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_MEDIA)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                    .build();
 
     private AppTTS() {}
 
@@ -36,7 +49,6 @@ public final class AppTTS {
 
         Context appCtx = ctx.getApplicationContext();
 
-        // load mute state ONCE
         SharedPreferences prefs =
                 appCtx.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         muted = prefs.getBoolean(PREF_TTS_MUTED, false);
@@ -50,19 +62,11 @@ public final class AppTTS {
                     tts[0].setLanguage(Locale.ENGLISH);
                 }
 
-                // 🔑 FORCE VOICE COMMUNICATION STREAM (EARPIECE SAFE)
-                try {
-                    tts[0].setAudioAttributes(
-                            new AudioAttributes.Builder()
-                                    .setUsage(AudioAttributes.USAGE_VOICE_COMMUNICATION)
-                                    .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
-                                    .build()
-                    );
-                } catch (Throwable ignore) {}
+                // default route = EARPIECE (safe for labs)
+                try { tts[0].setAudioAttributes(ATTR_EARPIECE); } catch (Throwable ignore) {}
 
                 ttsReady[0] = true;
 
-                // 🔑 speak pending ONLY if not muted
                 if (!muted && pendingSpeakText != null) {
                     try {
                         tts[0].speak(
@@ -80,15 +84,15 @@ public final class AppTTS {
     }
 
     // ============================================================
-    // SPEAK — RESPECTS GLOBAL MUTE
+    // INTERNAL SPEAK
     // ============================================================
-    public static void ensureSpeak(Context ctx, String text) {
+    private static void speakInternal(Context ctx, String text, String utteranceId) {
 
         if (text == null || text.trim().isEmpty()) return;
 
         init(ctx);
 
-        if (muted) return; // 🔇 absolute silence
+        if (muted) return;
 
         if (!ttsReady[0] || tts[0] == null) {
             pendingSpeakText = text;
@@ -100,9 +104,42 @@ public final class AppTTS {
                     text,
                     TextToSpeech.QUEUE_FLUSH,
                     null,
-                    "GEL_TTS"
+                    utteranceId
             );
         } catch (Throwable ignore) {}
+    }
+
+    // ============================================================
+    // SPEAK — DEFAULT (EARPIECE)
+    // ============================================================
+    public static void ensureSpeak(Context ctx, String text) {
+        // default: earpiece route
+        try {
+            init(ctx);
+            if (tts[0] != null) tts[0].setAudioAttributes(ATTR_EARPIECE);
+        } catch (Throwable ignore) {}
+        speakInternal(ctx, text, "GEL_TTS");
+    }
+
+    // ============================================================
+    // SPEAK ON SPEAKER (OPEN LISTENING)
+    // ============================================================
+    public static void ensureSpeakSpeaker(Context ctx, String text) {
+        init(ctx);
+        if (muted) return;
+
+        try {
+            if (tts[0] != null) tts[0].setAudioAttributes(ATTR_SPEAKER);
+        } catch (Throwable ignore) {}
+
+        speakInternal(ctx, text, "GEL_TTS_SPK");
+
+        // restore to earpiece shortly after (so labs stay earpiece-safe)
+        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+            try {
+                if (tts[0] != null) tts[0].setAudioAttributes(ATTR_EARPIECE);
+            } catch (Throwable ignore) {}
+        }, 250);
     }
 
     // ============================================================
@@ -119,9 +156,7 @@ public final class AppTTS {
         prefs.edit().putBoolean(PREF_TTS_MUTED, m).apply();
 
         if (m && tts[0] != null) {
-            try {
-                tts[0].stop();
-            } catch (Throwable ignore) {}
+            try { tts[0].stop(); } catch (Throwable ignore) {}
         }
     }
 
@@ -131,13 +166,11 @@ public final class AppTTS {
     }
 
     // ============================================================
-    // STOP (NO SHUTDOWN)
+    // STOP
     // ============================================================
     public static void stop() {
         if (tts[0] != null) {
-            try {
-                tts[0].stop();
-            } catch (Throwable ignore) {}
+            try { tts[0].stop(); } catch (Throwable ignore) {}
         }
     }
 

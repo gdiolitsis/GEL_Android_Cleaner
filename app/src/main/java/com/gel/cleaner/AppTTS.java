@@ -145,7 +145,7 @@ public final class AppTTS {
         return muted;
     }
 
-    // ============================================================
+// ============================================================
     // FULL RELEASE (ON DESTROY)
     // ============================================================
     public static void shutdown() {
@@ -160,5 +160,32 @@ public final class AppTTS {
         tts[0] = null;
         ready[0] = false;
         pendingText = null;
+    }
+
+    // ============================================================
+    // LEGACY COMPAT — REQUIRED BY MANUAL TESTS
+    // DO NOT REMOVE
+    // ============================================================
+    public static void ensureSpeak(Context ctx, String text) {
+
+        if (text == null || text.trim().isEmpty()) return;
+
+        init(ctx);
+
+        if (muted) return;
+
+        if (!ready[0] || tts[0] == null) {
+            pendingText = text;
+            return;
+        }
+
+        try {
+            tts[0].speak(
+                    text,
+                    TextToSpeech.QUEUE_FLUSH,
+                    null,
+                    "APP_TTS"
+            );
+        } catch (Throwable ignore) {}
     }
 }

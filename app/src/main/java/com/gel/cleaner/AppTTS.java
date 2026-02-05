@@ -2,6 +2,7 @@ package com.gel.cleaner;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.media.AudioAttributes;
 import android.speech.tts.TextToSpeech;
 
 import java.util.Locale;
@@ -18,8 +19,8 @@ public final class AppTTS {
     private static final String PREF_TTS_MUTED = "tts_muted_global";
 
     // 🔒 SAME PATTERN AS LEGACY
-    private static TextToSpeech[] tts = new TextToSpeech[1];
-    private static boolean[] ttsReady = { false };
+    private static final TextToSpeech[] tts = new TextToSpeech[1];
+    private static final boolean[] ttsReady = { false };
 
     private static boolean muted = false;
     private static String pendingSpeakText = null;
@@ -45,17 +46,20 @@ public final class AppTTS {
 
                 int res = tts[0].setLanguage(Locale.US);
                 if (res == TextToSpeech.LANG_MISSING_DATA ||
-                    res == TextToSpeech.LANG_NOT_SUPPORTED) {
+                        res == TextToSpeech.LANG_NOT_SUPPORTED) {
                     tts[0].setLanguage(Locale.ENGLISH);
                 }
 
-tts[0].setAudioAttributes(
-        new android.media.AudioAttributes.Builder()
-                .setUsage(android.media.AudioAttributes.USAGE_VOICE_COMMUNICATION)
-                .setContentType(android.media.AudioAttributes.CONTENT_TYPE_SPEECH)
-                .build()
-);
-                
+                // 🔑 FORCE VOICE COMMUNICATION STREAM (EARPIECE SAFE)
+                try {
+                    tts[0].setAudioAttributes(
+                            new AudioAttributes.Builder()
+                                    .setUsage(AudioAttributes.USAGE_VOICE_COMMUNICATION)
+                                    .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                                    .build()
+                    );
+                } catch (Throwable ignore) {}
+
                 ttsReady[0] = true;
 
                 // 🔑 speak pending ONLY if not muted
@@ -139,3 +143,16 @@ tts[0].setAudioAttributes(
 
     // ============================================================
     // FULL RELEASE (OPTIONAL)
+    // ============================================================
+    public static void shutdown() {
+        if (tts[0] != null) {
+            try {
+                tts[0].stop();
+                tts[0].shutdown();
+            } catch (Throwable ignore) {}
+            tts[0] = null;
+            ttsReady[0] = false;
+            pendingSpeakText = null;
+        }
+    }
+}

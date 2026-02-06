@@ -6,101 +6,70 @@ import android.speech.tts.TextToSpeech;
 
 import java.util.Locale;
 
-/*
- ============================================================
- AppTTS — GLOBAL TEXT TO SPEECH MANAGER
- FINAL • SAFE • LEGACY AUDIO PATH
- ------------------------------------------------------------
- • One global TextToSpeech instance
- • Persistent global mute
- • NO AudioAttributes
- • NO audio routing
- • NO media usage
- • SAFE for mic capture (LABs 1–29)
- ============================================================
-*/
+// ============================================================
+// AppTTS — GLOBAL TTS MANAGER (LEGACY SAFE)
+// • SAME STYLE AS ManualTestsActivity
+// • Uses TextToSpeech[1] + boolean[1]
+// • Global persistent mute
+// ============================================================
 public final class AppTTS {
 
     private static final String PREFS_NAME = "gel_prefs";
     private static final String PREF_TTS_MUTED = "tts_muted_global";
 
-    private static TextToSpeech tts = null;
-    private static boolean ready = false;
+    // 🔒 SAME PATTERN AS LEGACY
+    private static TextToSpeech[] tts = new TextToSpeech[1];
+    private static boolean[] ttsReady = { false };
 
     private static boolean muted = false;
-    private static String pendingText = null;
+    private static String pendingSpeakText = null;
 
     private AppTTS() {}
 
     // ============================================================
-    // INIT — SAFE TO CALL ANYTIME
+    // INIT — CALL SAFELY ANYTIME
     // ============================================================
-    public static synchronized void init(Context ctx) {
+    public static void init(Context ctx) {
 
-        if (tts != null) return;
+        if (tts[0] != null) return;
 
         Context appCtx = ctx.getApplicationContext();
 
+        // load mute state ONCE
         SharedPreferences prefs =
                 appCtx.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         muted = prefs.getBoolean(PREF_TTS_MUTED, false);
 
-        tts = new TextToSpeech(appCtx, status -> {
+        tts[0] = new TextToSpeech(appCtx, status -> {
+            if (status == TextToSpeech.SUCCESS) {
 
-            if (status != TextToSpeech.SUCCESS) return;
+                int res = tts[0].setLanguage(Locale.US);
+                if (res == TextToSpeech.LANG_MISSING_DATA ||
+                    res == TextToSpeech.LANG_NOT_SUPPORTED) {
+                    tts[0].setLanguage(Locale.ENGLISH);
+                }
 
-            int res = tts.setLanguage(Locale.US);
-            if (res == TextToSpeech.LANG_MISSING_DATA ||
-                res == TextToSpeech.LANG_NOT_SUPPORTED) {
-                tts.setLanguage(Locale.ENGLISH);
+                ttsReady[0] = true;
+
+                // 🔑 speak pending ONLY if not muted
+                if (!muted && pendingSpeakText != null) {
+                    try {
+                        tts[0].speak(
+                                pendingSpeakText,
+                                TextToSpeech.QUEUE_FLUSH,
+                                null,
+                                "GEL_TTS_PENDING"
+                        );
+                    } catch (Throwable ignore) {}
+                }
+
+                pendingSpeakText = null;
             }
-
-            // ❗ NO AudioAttributes here — legacy safe path
-            ready = true;
-
-            if (!muted && pendingText != null) {
-                try {
-                    tts.speak(
-                            pendingText,
-                            TextToSpeech.QUEUE_ADD,
-                            null,
-                            null
-                    );
-                } catch (Throwable ignore) {}
-            }
-
-            pendingText = null;
         });
     }
 
     // ============================================================
-    // SPEAK — GENERIC (SAFE)
-    // ============================================================
-    public static void speak(Context ctx, String text) {
-
-        if (text == null || text.trim().isEmpty()) return;
-
-        init(ctx);
-
-        if (muted) return;
-
-        if (!ready || tts == null) {
-            pendingText = text;
-            return;
-        }
-
-        try {
-            tts.speak(
-                    text,
-                    TextToSpeech.QUEUE_ADD,
-                    null,
-                    null
-            );
-        } catch (Throwable ignore) {}
-    }
-
-    // ============================================================
-    // LEGACY COMPAT — REQUIRED BY LABs
+    // SPEAK — RESPECTS GLOBAL MUTE
     // ============================================================
     public static void ensureSpeak(Context ctx, String text) {
 
@@ -108,49 +77,40 @@ public final class AppTTS {
 
         init(ctx);
 
-        if (muted) return;
+        if (muted) return; // 🔇 absolute silence
 
-        if (!ready || tts == null) {
-            pendingText = text;
+        if (!ttsReady[0] || tts[0] == null) {
+            pendingSpeakText = text;
             return;
         }
 
         try {
-            tts.speak(
+            tts[0].speak(
                     text,
-                    TextToSpeech.QUEUE_ADD,
+                    TextToSpeech.QUEUE_FLUSH,
                     null,
-                    "APP_TTS"
+                    "GEL_TTS"
             );
         } catch (Throwable ignore) {}
     }
 
     // ============================================================
-    // STOP — IMMEDIATE
-    // ============================================================
-    public static void stop() {
-        if (tts != null) {
-            try {
-                tts.stop();
-            } catch (Throwable ignore) {}
-        }
-    }
-
-    // ============================================================
-    // GLOBAL MUTE (PERSISTENT)
+    // MUTE — GLOBAL + PERSISTENT
     // ============================================================
     public static void setMuted(Context ctx, boolean m) {
 
         muted = m;
 
+        Context appCtx = ctx.getApplicationContext();
         SharedPreferences prefs =
-                ctx.getApplicationContext()
-                        .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+                appCtx.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
 
         prefs.edit().putBoolean(PREF_TTS_MUTED, m).apply();
 
-        if (m && tts != null) {
-            try { tts.stop(); } catch (Throwable ignore) {}
+        if (m && tts[0] != null) {
+            try {
+                tts[0].stop();
+            } catch (Throwable ignore) {}
         }
     }
 
@@ -160,19 +120,28 @@ public final class AppTTS {
     }
 
     // ============================================================
-    // FULL RELEASE (ON DESTROY)
+    // STOP (NO SHUTDOWN)
     // ============================================================
-    public static synchronized void shutdown() {
-
-        if (tts != null) {
+    public static void stop() {
+        if (tts[0] != null) {
             try {
-                tts.stop();
-                tts.shutdown();
+                tts[0].stop();
             } catch (Throwable ignore) {}
         }
+    }
 
-        tts = null;
-        ready = false;
-        pendingText = null;
+    // ============================================================
+    // FULL RELEASE (OPTIONAL)
+    // ============================================================
+    public static void shutdown() {
+        if (tts[0] != null) {
+            try {
+                tts[0].stop();
+                tts[0].shutdown();
+            } catch (Throwable ignore) {}
+            tts[0] = null;
+            ttsReady[0] = false;
+            pendingSpeakText = null;
+        }
     }
 }

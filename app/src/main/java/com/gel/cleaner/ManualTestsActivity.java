@@ -3422,6 +3422,22 @@ private void lab1SpeakerTone() {
             // MIC ANALYSIS
             // ------------------------------------------------------------
 
+// ------------------------------------------------------------
+// HARD AUDIO RESET BEFORE MIC CAPTURE (MANDATORY)
+// ------------------------------------------------------------
+AudioManager amFix =
+        (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+
+if (amFix != null) {
+    try { amFix.stopBluetoothSco(); } catch (Throwable ignore) {}
+    try { amFix.setBluetoothScoOn(false); } catch (Throwable ignore) {}
+    try { amFix.setSpeakerphoneOn(true); } catch (Throwable ignore) {}
+    try { amFix.setMicrophoneMute(false); } catch (Throwable ignore) {}
+    try { amFix.setMode(AudioManager.MODE_NORMAL); } catch (Throwable ignore) {}
+}
+
+SystemClock.sleep(250);
+
 MicDiagnosticEngine.Result r =
         MicDiagnosticEngine.run(this);
 
@@ -3588,6 +3604,23 @@ private void lab2SpeakerSweep() {
 // ----------------------------------------------------
 // MIC FEEDBACK ANALYSIS
 // ----------------------------------------------------
+
+// ------------------------------------------------------------
+// HARD AUDIO RESET BEFORE MIC CAPTURE (MANDATORY)
+// ------------------------------------------------------------
+AudioManager amFix =
+        (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+
+if (amFix != null) {
+    try { amFix.stopBluetoothSco(); } catch (Throwable ignore) {}
+    try { amFix.setBluetoothScoOn(false); } catch (Throwable ignore) {}
+    try { amFix.setSpeakerphoneOn(true); } catch (Throwable ignore) {}
+    try { amFix.setMicrophoneMute(false); } catch (Throwable ignore) {}
+    try { amFix.setMode(AudioManager.MODE_NORMAL); } catch (Throwable ignore) {}
+}
+
+SystemClock.sleep(250);
+
 MicDiagnosticEngine.Result r =
         MicDiagnosticEngine.run(this);
 

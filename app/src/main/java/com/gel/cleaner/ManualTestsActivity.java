@@ -1266,6 +1266,31 @@ private void resetAudioAfterLab3(
 }
 
 // ============================================================
+// HARD AUDIO NORMALIZE — BEFORE MIC CAPTURE (MANDATORY)
+// ============================================================
+private void hardNormalizeAudioForMic() {
+
+    try {
+        AudioManager am =
+                (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+
+        if (am == null) return;
+
+        try { am.stopBluetoothSco(); } catch (Throwable ignore) {}
+        try { am.setBluetoothScoOn(false); } catch (Throwable ignore) {}
+
+        try { am.setMicrophoneMute(false); } catch (Throwable ignore) {}
+        try { am.setSpeakerphoneOn(false); } catch (Throwable ignore) {}
+
+        // 🔴 ΤΟ ΣΗΜΑΝΤΙΚΟ
+        try { am.setMode(AudioManager.MODE_NORMAL); } catch (Throwable ignore) {}
+
+        SystemClock.sleep(300);
+
+    } catch (Throwable ignore) {}
+}
+
+// ============================================================
 // HELPERS REQUIRED BY LAB 4 PRO (STRICT – DO NOT TOUCH)
 // ============================================================
 
@@ -3425,21 +3450,16 @@ private void lab1SpeakerTone() {
 // ------------------------------------------------------------
 // HARD AUDIO RESET BEFORE MIC CAPTURE (MANDATORY)
 // ------------------------------------------------------------
-AudioManager amFix =
-        (AudioManager) getSystemService(Context.AUDIO_SERVICE);
 
-if (amFix != null) {
-    try { amFix.stopBluetoothSco(); } catch (Throwable ignore) {}
-    try { amFix.setBluetoothScoOn(false); } catch (Throwable ignore) {}
-    try { amFix.setSpeakerphoneOn(true); } catch (Throwable ignore) {}
-    try { amFix.setMicrophoneMute(false); } catch (Throwable ignore) {}
-    try { amFix.setMode(AudioManager.MODE_NORMAL); } catch (Throwable ignore) {}
-}
-
-SystemClock.sleep(250);
+hardNormalizeAudioForMic();
 
 MicDiagnosticEngine.Result r =
         MicDiagnosticEngine.run(this);
+
+if (r == null) {
+    logLabelErrorValue("Mic", "No data captured");
+    return;
+}
 
 int rms  = (int) r.rms;
 int peak = (int) r.peak;
@@ -3608,21 +3628,16 @@ private void lab2SpeakerSweep() {
 // ------------------------------------------------------------
 // HARD AUDIO RESET BEFORE MIC CAPTURE (MANDATORY)
 // ------------------------------------------------------------
-AudioManager amFix =
-        (AudioManager) getSystemService(Context.AUDIO_SERVICE);
 
-if (amFix != null) {
-    try { amFix.stopBluetoothSco(); } catch (Throwable ignore) {}
-    try { amFix.setBluetoothScoOn(false); } catch (Throwable ignore) {}
-    try { amFix.setSpeakerphoneOn(true); } catch (Throwable ignore) {}
-    try { amFix.setMicrophoneMute(false); } catch (Throwable ignore) {}
-    try { amFix.setMode(AudioManager.MODE_NORMAL); } catch (Throwable ignore) {}
-}
-
-SystemClock.sleep(250);
+hardNormalizeAudioForMic();
 
 MicDiagnosticEngine.Result r =
         MicDiagnosticEngine.run(this);
+
+if (r == null) {
+    logLabelErrorValue("Mic", "No data captured");
+    return;
+}
 
 int rms  = (int) r.rms;
 int peak = (int) r.peak;
@@ -3748,7 +3763,6 @@ logInfo("Preparing earpiece routing.");
         am.stopBluetoothSco();
         am.setBluetoothScoOn(false);
         am.setSpeakerphoneOn(false);
-        am.setMicrophoneMute(true);
         am.setMode(AudioManager.MODE_IN_COMMUNICATION);
     } catch (Throwable t) {
         logError("Audio routing failed.");
@@ -3956,22 +3970,15 @@ private void lab4MicBase(Runnable onFinished) {
                     : "Bottom microphone signal check:");
             logLine();
 
-            AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
-            if (am != null) {
-                try { am.stopBluetoothSco(); } catch (Throwable ignore) {}
-                try { am.setBluetoothScoOn(false); } catch (Throwable ignore) {}
-                try { am.setSpeakerphoneOn(false); } catch (Throwable ignore) {}
-                try { am.setMicrophoneMute(false); } catch (Throwable ignore) {}
-                try { am.setMode(AudioManager.MODE_NORMAL); } catch (Throwable ignore) {}
-            }
+hardNormalizeAudioForMic();
 
-            SystemClock.sleep(300);
+MicDiagnosticEngine.Result bottom =
+        MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.BOTTOM);
 
-            MicDiagnosticEngine.Result bottom =
-                    MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.BOTTOM);
-
-            bottomRms  = (int) bottom.rms;
-            bottomPeak = (int) bottom.peak;
+if (bottom != null) {
+    bottomRms  = (int) bottom.rms;
+    bottomPeak = (int) bottom.peak;
+}
 
             logLabelOkValue("Bottom RMS",  String.valueOf(bottomRms));
             logLabelOkValue("Bottom Peak", String.valueOf(bottomPeak));
@@ -3999,22 +4006,15 @@ private void lab4MicBase(Runnable onFinished) {
                     : "Top microphone signal check:");
             logLine();
 
-            AudioManager amTop = (AudioManager) getSystemService(AUDIO_SERVICE);
-            if (amTop != null) {
-                try { amTop.stopBluetoothSco(); } catch (Throwable ignore) {}
-                try { amTop.setBluetoothScoOn(false); } catch (Throwable ignore) {}
-                try { amTop.setSpeakerphoneOn(false); } catch (Throwable ignore) {}
-                try { amTop.setMicrophoneMute(false); } catch (Throwable ignore) {}
-                try { amTop.setMode(AudioManager.MODE_NORMAL); } catch (Throwable ignore) {}
-            }
+hardNormalizeAudioForMic();
 
-            SystemClock.sleep(300);
+MicDiagnosticEngine.Result top =
+        MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.TOP);
 
-            MicDiagnosticEngine.Result top =
-                    MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.TOP);
-
-            topRms  = (int) top.rms;
-            topPeak = (int) top.peak;
+if (top != null) {
+    topRms  = (int) top.rms;
+    topPeak = (int) top.peak;
+}
 
             logLabelOkValue("Top RMS",  String.valueOf(topRms));
             logLabelOkValue("Top Peak", String.valueOf(topPeak));
@@ -4141,7 +4141,6 @@ runOnUiThread(() -> {
     d.show();
 });
 
-SystemClock.sleep(300);
 if (cancelled.get()) return;
 
 // ----------------------------------------------------
@@ -4178,9 +4177,12 @@ dismiss(dialogRef);
 // ----------------------------------------------------
 // Analyze captured signal (quality, not presence)
 // ----------------------------------------------------
-MicDiagnosticEngine.Result r =
-        MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.BOTTOM);
 
+hardNormalizeAudioForMic();
+
+MicDiagnosticEngine.Result r =
+        MicDiagnosticEngine.run(this);
+        
 appendHtml("<br>");
 logInfo(gr
         ? "LAB 4 PRO — Ποιότητα συνομιλίας (κάτω μικρόφωνο)"

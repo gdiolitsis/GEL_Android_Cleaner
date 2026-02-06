@@ -45,6 +45,14 @@ public class MainActivity extends GELAutoActivityHook
         	
         private boolean welcomeShown = false;
                 
+  private static final int REQ_PERMISSIONS = 1001;
+
+private final String[] REQUIRED_PERMISSIONS = new String[] {
+        Manifest.permission.RECORD_AUDIO,
+        Manifest.permission.ACCESS_FINE_LOCATION,
+        Manifest.permission.BLUETOOTH_CONNECT
+};
+
     // ==========================
     // STATE
     // ==========================
@@ -120,6 +128,10 @@ protected void onCreate(Bundle savedInstanceState) {
     setupLangButtons();
     setupDonate();
     setupButtons();
+    
+    if (!hasAllRequiredPermissions()) {
+    showInitialPermissionsPopupStyled();
+}
 
     // =====================================================
     // RETURN BUTTON — TEXT + ACTION (IN-PLACE, LOCKED)
@@ -277,6 +289,229 @@ private void savePlatform(String mode) {
 private String getSavedPlatform() {
     return getSharedPreferences(PREFS, MODE_PRIVATE)
             .getString(KEY_PLATFORM, "android"); // default
+}
+
+private boolean hasAllRequiredPermissions() {
+    for (String p : REQUIRED_PERMISSIONS) {
+        if (ContextCompat.checkSelfPermission(this, p)
+                != PackageManager.PERMISSION_GRANTED) {
+            return false;
+        }
+    }
+    return true;
+}
+
+private void showInitialPermissionsPopupStyled() {
+
+    AlertDialog.Builder b =
+            new AlertDialog.Builder(MainActivity.this);
+    b.setCancelable(false);
+
+    // ================= ROOT =================
+    LinearLayout box = new LinearLayout(MainActivity.this);
+    box.setOrientation(LinearLayout.VERTICAL);
+    box.setPadding(dp(24), dp(20), dp(24), dp(18));
+
+    GradientDrawable bg = new GradientDrawable();
+    bg.setColor(0xFF101010);
+    bg.setCornerRadius(dp(18));
+    bg.setStroke(dp(4), 0xFFFFD700);
+    box.setBackground(bg);
+
+    // ================= TITLE =================
+    TextView title = new TextView(MainActivity.this);
+    title.setText("REQUIRED PERMISSIONS");
+    title.setTextColor(Color.WHITE);
+    title.setTextSize(18f);
+    title.setTypeface(null, Typeface.BOLD);
+    title.setGravity(Gravity.CENTER);
+    title.setPadding(0, 0, 0, dp(12));
+    box.addView(title);
+
+    // ================= MESSAGE =================
+    TextView msg = new TextView(MainActivity.this);
+    msg.setTextColor(0xFFDDDDDD);
+    msg.setTextSize(15f);
+    msg.setGravity(Gravity.START);
+    msg.setPadding(0, 0, 0, dp(12));
+    box.addView(msg);
+
+    // αρχική γλώσσα από σύστημα
+    String sys = LocaleHelper.getLang(this); // "el" | "en"
+    final String[] lang = new String[1];
+    lang[0] = ("el".equalsIgnoreCase(sys)) ? "GR" : "EN";
+
+    Runnable updateText = () -> {
+        if ("GR".equals(lang[0])) {
+            title.setText("ΑΠΑΙΤΟΥΜΕΝΕΣ ΑΔΕΙΕΣ");
+            msg.setText(
+                    "Για να λειτουργήσει σωστά η εφαρμογή, απαιτούνται ορισμένες άδειες.\n\n" +
+                    "Θα σας ζητηθούν μία-μία.\n\n" +
+                    "Μπορείτε να συνεχίσετε χωρίς αυτές, αλλά ορισμένα εργαστήρια δεν θα λειτουργούν."
+            );
+        } else {
+            title.setText("REQUIRED PERMISSIONS");
+            msg.setText(
+                    "To function properly, the app requires certain permissions.\n\n" +
+                    "You will be asked for them one by one.\n\n" +
+                    "You may continue without them, but some labs will not work."
+            );
+        }
+    };
+    updateText.run();
+
+    // ============================================================
+    // CONTROLS ROW — LANGUAGE SPINNER
+    // ============================================================
+    LinearLayout controls = new LinearLayout(MainActivity.this);
+    controls.setOrientation(LinearLayout.HORIZONTAL);
+    controls.setGravity(Gravity.CENTER_VERTICAL);
+    controls.setPadding(0, dp(14), 0, dp(10));
+
+    LinearLayout langBox = new LinearLayout(MainActivity.this);
+    langBox.setOrientation(LinearLayout.HORIZONTAL);
+    langBox.setGravity(Gravity.CENTER);
+    langBox.setPadding(dp(12), 0, dp(12), 0);
+
+    GradientDrawable langBg = new GradientDrawable();
+    langBg.setColor(0xFF1A1A1A);
+    langBg.setCornerRadius(dp(12));
+    langBg.setStroke(dp(2), 0xFFFFD700);
+    langBox.setBackground(langBg);
+
+    LinearLayout.LayoutParams lpLangBox =
+            new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    dp(72)
+            );
+    langBox.setLayoutParams(lpLangBox);
+
+    Spinner langSpinner = new Spinner(MainActivity.this);
+    ArrayAdapter<String> langAdapter =
+            new ArrayAdapter<>(
+                    MainActivity.this,
+                    android.R.layout.simple_spinner_item,
+                    new String[]{"EN", "GR"}
+            );
+    langAdapter.setDropDownViewResource(
+            android.R.layout.simple_spinner_dropdown_item);
+    langSpinner.setAdapter(langAdapter);
+
+    langSpinner.setSelection("GR".equals(lang[0]) ? 1 : 0);
+
+    langSpinner.setOnItemSelectedListener(
+            new AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(
+                        AdapterView<?> p, View v, int pos, long id) {
+                    lang[0] = (pos == 0) ? "EN" : "GR";
+                    updateText.run();
+                }
+                @Override public void onNothingSelected(AdapterView<?> p) {}
+            });
+
+    langBox.addView(langSpinner);
+    controls.addView(langBox);
+    box.addView(controls);
+
+    // ================= BUTTONS =================
+    LinearLayout buttons = new LinearLayout(MainActivity.this);
+    buttons.setOrientation(LinearLayout.HORIZONTAL);
+    buttons.setGravity(Gravity.CENTER);
+    buttons.setPadding(0, dp(12), 0, 0);
+
+    // ---------- CONTINUE ----------
+    Button btnContinue = new Button(MainActivity.this);
+    btnContinue.setText("CONTINUE");
+    btnContinue.setAllCaps(false);
+    btnContinue.setTextColor(Color.WHITE);
+    btnContinue.setTextSize(18f);
+    btnContinue.setGravity(Gravity.CENTER);
+    btnContinue.setPadding(dp(20), dp(18), dp(20), dp(18));
+
+    GradientDrawable contBg = new GradientDrawable();
+    contBg.setColor(0xFF0F8A3B);
+    contBg.setCornerRadius(dp(18));
+    contBg.setStroke(dp(3), 0xFFFFD700);
+    btnContinue.setBackground(contBg);
+
+    LinearLayout.LayoutParams lpC =
+            new LinearLayout.LayoutParams(0, dp(88), 1f);
+    lpC.setMargins(0, 0, dp(8), 0);
+    btnContinue.setLayoutParams(lpC);
+
+    // ---------- SKIP ----------
+    Button btnSkip = new Button(MainActivity.this);
+    btnSkip.setText("SKIP");
+    btnSkip.setAllCaps(false);
+    btnSkip.setTextColor(Color.WHITE);
+    btnSkip.setTextSize(18f);
+    btnSkip.setGravity(Gravity.CENTER);
+    btnSkip.setPadding(dp(20), dp(18), dp(20), dp(18));
+
+    GradientDrawable skipBg = new GradientDrawable();
+    skipBg.setColor(0xFF444444);
+    skipBg.setCornerRadius(dp(18));
+    skipBg.setStroke(dp(3), 0xFFFFD700);
+    btnSkip.setBackground(skipBg);
+
+    LinearLayout.LayoutParams lpS =
+            new LinearLayout.LayoutParams(0, dp(88), 1f);
+    btnSkip.setLayoutParams(lpS);
+
+    buttons.addView(btnContinue);
+    buttons.addView(btnSkip);
+    box.addView(buttons);
+
+    // ================= DIALOG =================
+    b.setView(box);
+    final AlertDialog d = b.create();
+
+    if (d.getWindow() != null) {
+        d.getWindow().setBackgroundDrawable(
+                new ColorDrawable(Color.TRANSPARENT));
+    }
+
+    btnContinue.setOnClickListener(v -> {
+        d.dismiss();
+        requestNextPermission();
+    });
+
+    btnSkip.setOnClickListener(v -> {
+        d.dismiss();
+        logWarn("User skipped initial permissions.");
+    });
+
+    if (!isFinishing() && !isDestroyed()) d.show();
+}
+
+    AlertDialog d = b.create();
+    if (!isFinishing() && !isDestroyed()) d.show();
+}
+
+private int permissionIndex = 0;
+
+private void requestNextPermission() {
+
+    while (permissionIndex < REQUIRED_PERMISSIONS.length) {
+
+        String p = REQUIRED_PERMISSIONS[permissionIndex];
+
+        if (ContextCompat.checkSelfPermission(this, p)
+                != PackageManager.PERMISSION_GRANTED) {
+
+            ActivityCompat.requestPermissions(
+                    this,
+                    new String[]{ p },
+                    REQ_PERMISSIONS
+            );
+            return;
+        }
+
+        permissionIndex++;
+    }
+
+    logOk("All permission checks completed.");
 }
 
     // =========================================================

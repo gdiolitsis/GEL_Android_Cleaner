@@ -4131,33 +4131,6 @@ private void lab4MicPro() {
                     : "LAB 4 PRO — Stage 1 (Bottom microphone)");
             logLine();
 
-            // ====================================================
-            // STAGE 2 — ΟΔΗΓΙΑ (POPUP + TTS)
-            // ====================================================
-            runOnUiThread(() -> {
-                AlertDialog d = buildInfoDialog(
-                        gr ? "Οδηγία"
-                           : "Instruction",
-                        gr ? "Βάλε το ακουστικό στο αυτί σου."
-                           : "Place the earpiece on your ear.",
-                        cancelled,
-                        dialogRef
-                );
-                d.show();
-            });
-
-            SystemClock.sleep(300);
-            if (cancelled.get()) return;
-
-            AppTTS.ensureSpeak(
-                    this,
-                    gr ? "Βάλε το ακουστικό στο αυτί σου."
-                       : "Place the earpiece on your ear."
-            );
-
-            SystemClock.sleep(2000);
-            dismiss(dialogRef);
-
 // ====================================================
 // STAGE 3 — EARPIECE HARDWARE TEST (PORTABLE • LOCKED)
 // ====================================================
@@ -4216,7 +4189,7 @@ runOnUiThread(() -> {
     d.show();
 });
 
-// 🗣️ TTS ΟΔΗΓΙΑ (ΔΕΝ ΜΑΣ ΝΟΙΑΖΕΙ ROUTING)
+// 2️⃣ TTS — ΕΔΩ ΑΚΡΙΒΩΣ
 AppTTS.ensureSpeak(
         this,
         gr
@@ -4224,9 +4197,10 @@ AppTTS.ensureSpeak(
                 : "Place the earpiece on your ear."
 );
 
+// 3️⃣ Μικρή αναμονή
 SystemClock.sleep(2200);
 
-// κλείνουμε το popup
+// 4️⃣ Κλείνουμε το popup
 dismiss(dialogRef);
 
 // ====================================================
@@ -4245,13 +4219,20 @@ if (am2 != null) {
 
 SystemClock.sleep(200);
 
-// 🎵 PLAY MELODY — ΜΟΝΟ ΑΚΟΥΣΤΙΚΟ
+// 🎵 PLAY MELODY — EARPIECE (COMPATIBLE)
 MediaPlayer mp = MediaPlayer.create(this, R.raw.nine_half_weeks);
 if (mp != null) {
     try {
-        mp.setAudioStreamType(AudioManager.STREAM_VOICE_CALL);
+        mp.setAudioAttributes(
+                new AudioAttributes.Builder()
+                        .setUsage(AudioAttributes.USAGE_MEDIA)
+                        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                        .build()
+        );
+
         mp.start();
         SystemClock.sleep(8000); // χρόνος ακρόασης
+
     } catch (Throwable ignore) {
     } finally {
         try { mp.stop(); } catch (Throwable ignore) {}
@@ -4308,14 +4289,36 @@ runOnUiThread(() -> {
     row.setGravity(Gravity.CENTER);
 
     Button yes = new Button(this);
-    yes.setText(gr ? "ΝΑΙ" : "YES");
+yes.setText(gr ? "ΝΑΙ" : "YES");
+yes.setTextColor(Color.BLACK);
+yes.setTextSize(14f);
+
+GradientDrawable yesBg = new GradientDrawable();
+yesBg.setColor(0xFF39FF14); // GEL neon green
+yesBg.setCornerRadius(dp(14));
+yesBg.setStroke(dp(2), 0xFFFFD700);
+yes.setBackground(yesBg);
+
+yes.setPadding(dp(20), dp(10), dp(20), dp(10));
+
     yes.setOnClickListener(v -> {
         heardClearly.set(true);
         answered.set(true);
     });
 
     Button no = new Button(this);
-    no.setText(gr ? "ΟΧΙ" : "NO");
+no.setText(gr ? "ΟΧΙ" : "NO");
+no.setTextColor(Color.WHITE);
+no.setTextSize(14f);
+
+GradientDrawable noBg = new GradientDrawable();
+noBg.setColor(0xFF444444); // dark gray
+noBg.setCornerRadius(dp(14));
+noBg.setStroke(dp(2), 0xFFFFD700);
+no.setBackground(noBg);
+
+no.setPadding(dp(20), dp(10), dp(20), dp(10));
+
     no.setOnClickListener(v -> {
         heardClearly.set(false);
         answered.set(true);

@@ -3425,49 +3425,6 @@ private MicQuickResult micCaptureOnceMs(int ms) {
 }
 
 // ============================================================
-// GLOBAL PERMISSION GATE — MIC / LOCATION
-// Single source of truth
-// ============================================================
-
-private static final int REQ_CORE_PERMS = 9001;
-
-private Runnable pendingAfterPermission = null;
-
-private boolean ensureCorePermissions(Runnable onGranted) {
-
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-        onGranted.run();
-        return true;
-    }
-
-    ArrayList<String> req = new ArrayList<>();
-
-    if (checkSelfPermission(Manifest.permission.RECORD_AUDIO)
-            != PackageManager.PERMISSION_GRANTED) {
-        req.add(Manifest.permission.RECORD_AUDIO);
-    }
-
-    if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION)
-            != PackageManager.PERMISSION_GRANTED) {
-        req.add(Manifest.permission.ACCESS_FINE_LOCATION);
-    }
-
-    if (req.isEmpty()) {
-        onGranted.run();
-        return true;
-    }
-
-    pendingAfterPermission = onGranted;
-
-    requestPermissions(
-            req.toArray(new String[0]),
-            REQ_CORE_PERMS
-    );
-
-    return false;
-}
-
-// ============================================================
 // LABS 1-5: AUDIO & VIBRATION
 // ============================================================
 
@@ -4416,9 +4373,11 @@ AppTTS.ensureSpeak(
 SystemClock.sleep(2200);
 dismiss(dialogRef);
 
-// ====================================================
-// STAGE 3 — EARPIECE MELODY TEST (NO UI / NO TTS)
-// ====================================================
+// ============================================================
+// 🎵 PLAY VOICE WAV — AUTO LANGUAGE (EARPIECE ONLY)
+// ============================================================
+
+private void playAnswerCheckWav() {
 
 // 🔒 HARD ROUTE TO EARPIECE
 AudioManager am2 = (AudioManager) getSystemService(AUDIO_SERVICE);
@@ -4430,28 +4389,42 @@ if (am2 != null) {
     try { am2.setMode(AudioManager.MODE_IN_COMMUNICATION); } catch (Throwable ignore) {}
 }
 
-SystemClock.sleep(300);
+    SystemClock.sleep(200);
 
-// 🎵 PLAY WAV — EARPIECE ONLY
-MediaPlayer mp = new MediaPlayer();
-try {
-    AssetFileDescriptor afd = getResources().openRawResourceFd(R.raw.nine_half_weeks);
-    if (afd != null) {
-        mp.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
-        afd.close();
+    // 🌐 AUTO LANGUAGE SELECTION
+    boolean gr = AppLang.isGreek(this);
+    int resId = gr
+            ? R.raw.answercheck_el
+            : R.raw.answercheck_en;
+
+    MediaPlayer mp = new MediaPlayer();
+
+    try {
+        AssetFileDescriptor afd =
+                getResources().openRawResourceFd(resId);
+
+        if (afd != null) {
+            mp.setDataSource(
+                    afd.getFileDescriptor(),
+                    afd.getStartOffset(),
+                    afd.getLength()
+            );
+            afd.close();
+        }
+
+        mp.setAudioStreamType(AudioManager.STREAM_VOICE_CALL);
+        mp.prepare();
+        mp.start();
+
+        // ⏱ αφήνουμε να ολοκληρωθεί
+        SystemClock.sleep(mp.getDuration());
+
+    } catch (Throwable ignore) {
+
+    } finally {
+        try { mp.stop(); } catch (Throwable ignore) {}
+        try { mp.release(); } catch (Throwable ignore) {}
     }
-
-    mp.setAudioStreamType(AudioManager.STREAM_VOICE_CALL);
-    mp.prepare();
-    mp.start();
-
-    SystemClock.sleep(8000);
-
-} catch (Throwable ignore) {
-
-} finally {
-    try { mp.stop(); } catch (Throwable ignore) {}
-    try { mp.release(); } catch (Throwable ignore) {}
 }
 
 // ====================================================

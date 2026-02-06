@@ -4296,6 +4296,14 @@ runOnUiThread(() -> {
     btnRow.setOrientation(LinearLayout.HORIZONTAL);
     btnRow.setGravity(Gravity.CENTER);
 
+    // ✅ ΚΟΙΝΑ LayoutParams ΓΙΑ ΤΑ ΚΟΥΜΠΙΑ
+    LinearLayout.LayoutParams btnLp =
+            new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+            );
+    btnLp.setMargins(dp(10), 0, dp(10), 0);
+
     // ---------- NO ----------
     Button noBtn = new Button(this);
     noBtn.setText(gr ? "ΟΧΙ" : "NO");
@@ -4349,7 +4357,7 @@ runOnUiThread(() -> {
     d.show();
 });
 
-// 🔊 FORCE SPEAKER FOR TTS (SAFE)
+// 🔊 FORCE SPEAKER FOR TTS
 AudioManager amSpeak = (AudioManager) getSystemService(AUDIO_SERVICE);
 if (amSpeak != null) {
     try { amSpeak.setMode(AudioManager.MODE_NORMAL); } catch (Throwable ignore) {}
@@ -4364,7 +4372,7 @@ AppTTS.ensureSpeak(
                 : "Did you hear the music clearly?"
 );
 
-// ⏳ WAIT FOR ANSWER (HUMAN BLOCKING)
+// ⏳ WAIT FOR ANSWER
 while (!answered.get()) {
     SystemClock.sleep(50);
 }

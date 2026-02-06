@@ -1160,7 +1160,8 @@ d.setOnKeyListener((dialog, keyCode, event) -> {
     return false;
 });
 
-d.show();
+if (isFinishing() || isDestroyed()) return;
+    d.show();
     });
 }
 
@@ -3214,7 +3215,9 @@ private void showLab28Popup() {
         }
 
         d.setOnDismissListener(dialog -> AppTTS.stop());
-        d.show();
+        
+       if (isFinishing() || isDestroyed()) return;
+    d.show();
 
         // ==========================
         // SPEAK (ONLY IF NOT MUTED)
@@ -3341,6 +3344,126 @@ private AudioOutputContext getAudioOutputContext() {
     c.wiredRouted = am.isWiredHeadsetOn();
 
     return c;
+}
+
+// ============================
+// MIC CAPTURE (LOCAL HELPER)
+// ============================
+private static final class MicQuickResult {
+    final int rms;
+    final int peak;
+    MicQuickResult(int rms, int peak) { this.rms = rms; this.peak = peak; }
+}
+
+private MicQuickResult micCaptureOnceMs(int ms) {
+
+    // Permission gate (mandatory)
+    try {
+        if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.RECORD_AUDIO
+        ) != PackageManager.PERMISSION_GRANTED) {
+            return new MicQuickResult(0, 0);
+        }
+    } catch (Throwable ignore) {
+        // if anything weird, fail closed
+        return new MicQuickResult(0, 0);
+    }
+
+    final int sr = 44100;
+    final int ch = AudioFormat.CHANNEL_IN_MONO;
+    final int fmt = AudioFormat.ENCODING_PCM_16BIT;
+
+    int min = AudioRecord.getMinBufferSize(sr, ch, fmt);
+    if (min <= 0) return new MicQuickResult(0, 0);
+
+    AudioRecord ar = null;
+    try {
+        ar = new AudioRecord(
+                MediaRecorder.AudioSource.MIC,
+                sr, ch, fmt,
+                min * 2
+        );
+
+        short[] buf = new short[Math.max(256, min)];
+        ar.startRecording();
+
+        long until = SystemClock.uptimeMillis() + Math.max(250, ms);
+
+        long sumSq = 0;
+        long nSamp = 0;
+        int peak = 0;
+
+        while (SystemClock.uptimeMillis() < until) {
+            int n = ar.read(buf, 0, buf.length);
+            if (n > 0) {
+                for (int i = 0; i < n; i++) {
+                    int v = Math.abs(buf[i]);
+                    if (v > peak) peak = v;
+                    sumSq += (long) v * (long) v;
+                    nSamp++;
+                }
+            }
+        }
+
+        if (nSamp <= 0) return new MicQuickResult(0, 0);
+
+        int rms = (int) Math.sqrt((double) sumSq / (double) nSamp);
+        return new MicQuickResult(rms, peak);
+
+    } catch (Throwable t) {
+        return new MicQuickResult(0, 0);
+    } finally {
+        try {
+            if (ar != null) {
+                try { ar.stop(); } catch (Throwable ignore) {}
+                try { ar.release(); } catch (Throwable ignore) {}
+            }
+        } catch (Throwable ignore) {}
+    }
+}
+
+// ============================================================
+// GLOBAL PERMISSION GATE — MIC / LOCATION
+// Single source of truth
+// ============================================================
+
+private static final int REQ_CORE_PERMS = 9001;
+
+private Runnable pendingAfterPermission = null;
+
+private boolean ensureCorePermissions(Runnable onGranted) {
+
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+        onGranted.run();
+        return true;
+    }
+
+    ArrayList<String> req = new ArrayList<>();
+
+    if (checkSelfPermission(Manifest.permission.RECORD_AUDIO)
+            != PackageManager.PERMISSION_GRANTED) {
+        req.add(Manifest.permission.RECORD_AUDIO);
+    }
+
+    if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION)
+            != PackageManager.PERMISSION_GRANTED) {
+        req.add(Manifest.permission.ACCESS_FINE_LOCATION);
+    }
+
+    if (req.isEmpty()) {
+        onGranted.run();
+        return true;
+    }
+
+    pendingAfterPermission = onGranted;
+
+    requestPermissions(
+            req.toArray(new String[0]),
+            REQ_CORE_PERMS
+    );
+
+    return false;
 }
 
 // ============================================================
@@ -3910,7 +4033,8 @@ d.setOnKeyListener((dialog, keyCode, event) -> {
     }).start();
 });
 
-        d.show();
+        if (isFinishing() || isDestroyed()) return;
+d.show();
 
 // ------------------------------------------------------------
 // TTS INTRO — DIALOG BOUND (GLOBAL MUTE SAFE)
@@ -4138,7 +4262,8 @@ runOnUiThread(() -> {
             cancelled,
             dialogRef
     );
-    d.show();
+    if (isFinishing() || isDestroyed()) return;
+d.show();
 });
 
 if (cancelled.get()) return;
@@ -4270,6 +4395,7 @@ runOnUiThread(() -> {
     }
 
     dialogRef.set(d);
+    if (isFinishing() || isDestroyed()) return;
     d.show();
 });
 
@@ -4303,20 +4429,28 @@ if (am2 != null) {
     try { am2.setMode(AudioManager.MODE_IN_COMMUNICATION); } catch (Throwable ignore) {}
 }
 
-SystemClock.sleep(200);
+SystemClock.sleep(300);
 
-// 🎵 PLAY MELODY — EARPIECE ONLY
-MediaPlayer mp = MediaPlayer.create(this, R.raw.nine_half_weeks);
-if (mp != null) {
-    try {
-        mp.setAudioStreamType(AudioManager.STREAM_VOICE_CALL);
-        mp.start();
-        SystemClock.sleep(8000);
-    } catch (Throwable ignore) {
-    } finally {
-        try { mp.stop(); } catch (Throwable ignore) {}
-        try { mp.release(); } catch (Throwable ignore) {}
+// 🎵 PLAY WAV — EARPIECE ONLY
+MediaPlayer mp = new MediaPlayer();
+try {
+    AssetFileDescriptor afd = getResources().openRawResourceFd(R.raw.nine_half_weeks);
+    if (afd != null) {
+        mp.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
+        afd.close();
     }
+
+    mp.setAudioStreamType(AudioManager.STREAM_VOICE_CALL);
+    mp.prepare();
+    mp.start();
+
+    SystemClock.sleep(8000);
+
+} catch (Throwable ignore) {
+
+} finally {
+    try { mp.stop(); } catch (Throwable ignore) {}
+    try { mp.release(); } catch (Throwable ignore) {}
 }
 
 // ====================================================
@@ -4418,6 +4552,8 @@ runOnUiThread(() -> {
     }
 
     dialogRef.set(d);
+    
+    if (isFinishing() || isDestroyed()) return;
     d.show();
 });
 
@@ -4718,7 +4854,8 @@ d.setOnShowListener(dialog -> {
     }
 });
 
-d.show();
+if (isFinishing() || isDestroyed()) return;
+    d.show();
 
 // ---------------------------
 // ACTION
@@ -4854,7 +4991,8 @@ root.addView(msg);
                     new ColorDrawable(Color.TRANSPARENT)
             );
 
-        d.show();
+        if (isFinishing() || isDestroyed()) return;
+    d.show();
 
         // ---------------------------
         // TTS (ONLY IF NOT MUTED)
@@ -5187,6 +5325,7 @@ root.addView(msg);
         }
     });
 
+    if (isFinishing() || isDestroyed()) return;
     d.show();
 
     start.setOnClickListener(v -> {
@@ -5505,6 +5644,8 @@ root.addView(hint);
     final AlertDialog d = b.create();
     if (d.getWindow() != null)
         d.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        
+    if (isFinishing() || isDestroyed()) return;
     d.show();
     
 // ---------------------------
@@ -6044,7 +6185,9 @@ root.addView(msg);
         AlertDialog d = b.create();
         if (d.getWindow() != null)
             d.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        d.show();
+            
+      if (isFinishing() || isDestroyed()) return;
+    d.show();
         
         yes.setOnClickListener(v -> {
     AppTTS.stop();
@@ -6623,20 +6766,58 @@ public void onRequestPermissionsResult(
 
     super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
+    // =====================================================
+    // CORE PERMISSIONS (MIC / LOCATION / etc)
+    // =====================================================
+    if (requestCode == REQ_CORE_PERMS) {
+
+        boolean allGranted = true;
+
+        for (int r : grantResults) {
+            if (r != PackageManager.PERMISSION_GRANTED) {
+                allGranted = false;
+                break;
+            }
+        }
+
+        if (allGranted) {
+            logOk("Core permissions granted.");
+
+            if (pendingAfterPermission != null) {
+                Runnable r = pendingAfterPermission;
+                pendingAfterPermission = null;
+                r.run();
+            }
+
+        } else {
+
+            logLabelErrorValue(
+                    "Permissions",
+                    "Required permissions denied"
+            );
+            pendingAfterPermission = null;
+        }
+
+        return;
+    }
+
+    // =====================================================
+    // LAB 13 — BLUETOOTH CONNECT PERMISSION
+    // =====================================================
     if (requestCode == REQ_LAB13_BT_CONNECT) {
 
         if (grantResults.length > 0 &&
             grantResults[0] == PackageManager.PERMISSION_GRANTED) {
 
             lab13Running = true;
-            
+
         } else {
 
             lab13Running = false;
 
             logWarn("BLUETOOTH_CONNECT permission denied.");
             logWarn("External Bluetooth device monitoring skipped.");
-           
+
             appendHtml("<br>");
             logOk("Lab 13 finished.");
             logLine();

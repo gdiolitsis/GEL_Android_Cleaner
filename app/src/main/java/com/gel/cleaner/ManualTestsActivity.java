@@ -3914,77 +3914,85 @@ private void lab4MicBase(Runnable onFinished) {
 
         try {
 
-            // ====================================================
-            // BOTTOM MICROPHONE — SIGNAL CHECK
-            // ====================================================
+// ------------------------------------------------------------
+// BOTTOM MICROPHONE — SIGNAL CHECK
+// ------------------------------------------------------------
 
 appendHtml("<br>");
-            logInfo(gr
-                    ? "Έλεγχος κάτω μικροφώνου (σήμα):"
-                    : "Bottom microphone signal check:");
-            logLine();
+logInfo(gr
+        ? "Έλεγχος κάτω μικροφώνου (σήμα):"
+        : "Bottom microphone signal check:");
+logLine();
 
-            MicDiagnosticEngine.Result bottom =
-                    MicDiagnosticEngine.run(
-                            this,
-                            MicDiagnosticEngine.MicType.BOTTOM
-                    );
+// 🔊 FORCE SPEAKER FOR TTS
+AudioManager amSpeak = (AudioManager) getSystemService(AUDIO_SERVICE);
+if (amSpeak != null) {
+    try { amSpeak.setMode(AudioManager.MODE_NORMAL); } catch (Throwable ignore) {}
+    try { amSpeak.setSpeakerphoneOn(true); } catch (Throwable ignore) {}
+}
 
-            bottomRms  = (int) bottom.rms;
-            bottomPeak = (int) bottom.peak;
+// 🗣️ SPOKEN INSTRUCTION
+AppTTS.ensureSpeak(
+        this,
+        gr ? "Έλεγχος κάτω μικροφώνου." : "Bottom microphone check."
+);
 
-            logLabelOkValue("Bottom RMS",  String.valueOf(bottomRms));
-            logLabelOkValue("Bottom Peak", String.valueOf(bottomPeak));
+// ⏱️ Άσε το TTS να τελειώσει
+SystemClock.sleep(1800);
 
-            bottomOk = bottomRms > 0 || bottomPeak > 0;
+// 🔇 STOP TTS
+try { AppTTS.stop(); } catch (Throwable ignore) {}
 
-            if (bottomOk) {
-                logLabelOkValue(
-                        "Bottom microphone",
-                        gr ? "Σήμα ανιχνεύθηκε" : "Signal detected"
-                );
-            } else {
-                logLabelErrorValue(
-                        "Bottom microphone",
-                        gr ? "Δεν ανιχνεύθηκε σήμα" : "No signal detected"
-                );
-            }
+// 🎧 RESET AUDIO STACK FOR MIC INPUT
+AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
+if (am != null) {
+    try { am.stopBluetoothSco(); } catch (Throwable ignore) {}
+    try { am.setBluetoothScoOn(false); } catch (Throwable ignore) {}
+    try { am.setSpeakerphoneOn(false); } catch (Throwable ignore) {}
+    try { am.setMicrophoneMute(false); } catch (Throwable ignore) {}
+    try { am.setMode(AudioManager.MODE_NORMAL); } catch (Throwable ignore) {}
+}
 
-            // ====================================================
-            // TOP MICROPHONE — SIGNAL CHECK
-            // ====================================================
-            
+SystemClock.sleep(300); // ⬅️ ΑΠΑΡΑΙΤΗΤΟ ΠΡΙΝ ΤΟ MIC
+
+// ▶️ RUN MIC ENGINE
+MicDiagnosticEngine.Result bottom =
+        MicDiagnosticEngine.run(
+                this,
+                MicDiagnosticEngine.MicType.BOTTOM
+        );
+
+// ====================================================
+// TOP MICROPHONE — SIGNAL CHECK
+// ====================================================
+
 appendHtml("<br>");
-            logInfo(gr
-                    ? "Έλεγχος άνω μικροφώνου (σήμα):"
-                    : "Top microphone signal check:");
-            logLine();
+logInfo(gr
+        ? "Έλεγχος άνω μικροφώνου (σήμα):"
+        : "Top microphone signal check:");
+logLine();
 
-            MicDiagnosticEngine.Result top =
-                    MicDiagnosticEngine.run(
-                            this,
-                            MicDiagnosticEngine.MicType.TOP
-                    );
+// 🎧 RESET AUDIO STACK (TOP)
+AudioManager amTop = (AudioManager) getSystemService(AUDIO_SERVICE);
+if (amTop != null) {
+    try { amTop.stopBluetoothSco(); } catch (Throwable ignore) {}
+    try { amTop.setBluetoothScoOn(false); } catch (Throwable ignore) {}
+    try { amTop.setSpeakerphoneOn(false); } catch (Throwable ignore) {}
+    try { amTop.setMicrophoneMute(false); } catch (Throwable ignore) {}
+    try { amTop.setMode(AudioManager.MODE_NORMAL); } catch (Throwable ignore) {}
+}
 
-            topRms  = (int) top.rms;
-            topPeak = (int) top.peak;
+SystemClock.sleep(300);
 
-            logLabelOkValue("Top RMS",  String.valueOf(topRms));
-            logLabelOkValue("Top Peak", String.valueOf(topPeak));
+// ▶️ RUN TOP MIC ENGINE
+MicDiagnosticEngine.Result top =
+        MicDiagnosticEngine.run(
+                this,
+                MicDiagnosticEngine.MicType.TOP
+        );
 
-            topOk = topRms > 0 || topPeak > 0;
-
-            if (topOk) {
-                logLabelOkValue(
-                        "Top microphone",
-                        gr ? "Σήμα ανιχνεύθηκε" : "Signal detected"
-                );
-            } else {
-                logLabelErrorValue(
-                        "Top microphone",
-                        gr ? "Δεν ανιχνεύθηκε σήμα" : "No signal detected"
-                );
-            }
+topRms  = (int) top.rms;
+topPeak = (int) top.peak;
 
             // ====================================================
             // FINAL HARDWARE CONCLUSIONS (ΠΡΙΝ ΤΟ FINISHED)
@@ -4244,7 +4252,7 @@ if (mp != null) {
 // 3️⃣ SAFE ZONE — ΕΡΩΤΗΣΗ (Popup + TTS από speaker)
 // ====================================================
 
-// επιστροφή σε normal
+// επιστροφή audio σε normal
 try {
     if (am != null) {
         am.setMode(AudioManager.MODE_NORMAL);
@@ -4281,60 +4289,74 @@ runOnUiThread(() -> {
     msg.setTextColor(0xFF39FF14);
     msg.setTextSize(15f);
     msg.setGravity(Gravity.CENTER);
-    msg.setPadding(0, 0, dp(18), dp(18));
+    msg.setPadding(0, 0, 0, dp(18));
     root.addView(msg);
 
-    LinearLayout row = new LinearLayout(this);
-    row.setOrientation(LinearLayout.HORIZONTAL);
-    row.setGravity(Gravity.CENTER);
+    LinearLayout btnRow = new LinearLayout(this);
+    btnRow.setOrientation(LinearLayout.HORIZONTAL);
+    btnRow.setGravity(Gravity.CENTER);
 
-    Button yes = new Button(this);
-yes.setText(gr ? "ΝΑΙ" : "YES");
-yes.setTextColor(Color.BLACK);
-yes.setTextSize(14f);
+    // ---------- NO ----------
+    Button noBtn = new Button(this);
+    noBtn.setText(gr ? "ΟΧΙ" : "NO");
+    noBtn.setAllCaps(false);
+    noBtn.setTextColor(Color.WHITE);
 
-GradientDrawable yesBg = new GradientDrawable();
-yesBg.setColor(0xFF39FF14); // GEL neon green
-yesBg.setCornerRadius(dp(14));
-yesBg.setStroke(dp(2), 0xFFFFD700);
-yes.setBackground(yesBg);
+    GradientDrawable noBg = new GradientDrawable();
+    noBg.setColor(0xFF8B0000);
+    noBg.setCornerRadius(dp(14));
+    noBg.setStroke(dp(3), 0xFFFFD700);
+    noBtn.setBackground(noBg);
+    noBtn.setLayoutParams(btnLp);
 
-yes.setPadding(dp(20), dp(10), dp(20), dp(10));
-
-    yes.setOnClickListener(v -> {
-        heardClearly.set(true);
-        answered.set(true);
-    });
-
-    Button no = new Button(this);
-no.setText(gr ? "ΟΧΙ" : "NO");
-no.setTextColor(Color.WHITE);
-no.setTextSize(14f);
-
-GradientDrawable noBg = new GradientDrawable();
-noBg.setColor(0xFF444444); // dark gray
-noBg.setCornerRadius(dp(14));
-noBg.setStroke(dp(2), 0xFFFFD700);
-no.setBackground(noBg);
-
-no.setPadding(dp(20), dp(10), dp(20), dp(10));
-
-    no.setOnClickListener(v -> {
+    noBtn.setOnClickListener(v -> {
         heardClearly.set(false);
         answered.set(true);
     });
 
-    row.addView(yes);
-    row.addView(no);
-    root.addView(row);
+    // ---------- YES ----------
+    Button yesBtn = new Button(this);
+    yesBtn.setText(gr ? "ΝΑΙ" : "YES");
+    yesBtn.setAllCaps(false);
+    yesBtn.setTextColor(Color.WHITE);
+
+    GradientDrawable yesBg = new GradientDrawable();
+    yesBg.setColor(0xFF0B5F3B);
+    yesBg.setCornerRadius(dp(14));
+    yesBg.setStroke(dp(3), 0xFFFFD700);
+    yesBtn.setBackground(yesBg);
+    yesBtn.setLayoutParams(btnLp);
+
+    yesBtn.setOnClickListener(v -> {
+        heardClearly.set(true);
+        answered.set(true);
+    });
+
+    btnRow.addView(noBtn);
+    btnRow.addView(yesBtn);
+    root.addView(btnRow);
 
     b.setView(root);
+
     AlertDialog d = b.create();
+    if (d.getWindow() != null) {
+        d.getWindow().setBackgroundDrawable(
+                new ColorDrawable(Color.TRANSPARENT)
+        );
+    }
+
     dialogRef.set(d);
     d.show();
 });
 
-// 🗣️ TTS ΕΡΩΤΗΣΗ (SAFE — speaker)
+// 🔊 FORCE SPEAKER FOR TTS (SAFE)
+AudioManager amSpeak = (AudioManager) getSystemService(AUDIO_SERVICE);
+if (amSpeak != null) {
+    try { amSpeak.setMode(AudioManager.MODE_NORMAL); } catch (Throwable ignore) {}
+    try { amSpeak.setSpeakerphoneOn(true); } catch (Throwable ignore) {}
+}
+
+// 🗣️ TTS ΕΡΩΤΗΣΗ
 AppTTS.ensureSpeak(
         this,
         gr
@@ -4342,10 +4364,12 @@ AppTTS.ensureSpeak(
                 : "Did you hear the music clearly?"
 );
 
+// ⏳ WAIT FOR ANSWER (HUMAN BLOCKING)
 while (!answered.get()) {
     SystemClock.sleep(50);
 }
 
+// κλείσιμο popup
 dismiss(dialogRef);
 
 // ====================================================

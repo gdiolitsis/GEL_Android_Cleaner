@@ -4451,6 +4451,36 @@ runOnUiThread(this::enableSingleExportButton);
 cancelled.set(true);
 return;
 
+} catch (Throwable t) {
+
+    appendHtml("<br>");
+    logLabelErrorValue(
+            gr ? "Σφάλμα" : "Error",
+            gr ? "Αποτυχία LAB 4 PRO" : "LAB 4 PRO failed"
+    );
+    logLine();
+
+} finally {
+
+    // HARD SAFETY CLEANUP (ABSOLUTE)
+    try { AppTTS.stop(); } catch (Throwable ignore) {}
+    dismiss(dialogRef);
+
+    try {
+        AudioManager amX = (AudioManager) getSystemService(AUDIO_SERVICE);
+        if (amX != null) {
+            try { amX.stopBluetoothSco(); } catch (Throwable ignore) {}
+            try { amX.setBluetoothScoOn(false); } catch (Throwable ignore) {}
+            try { amX.setMicrophoneMute(false); } catch (Throwable ignore) {}
+            try { amX.setSpeakerphoneOn(false); } catch (Throwable ignore) {}
+            try { amX.setMode(AudioManager.MODE_NORMAL); } catch (Throwable ignore) {}
+        }
+    } catch (Throwable ignore) {}
+}
+
+}).start();
+}
+
 /* ============================================================
 LAB 5 — Vibration Motor Test (AUTO)
 ============================================================ */

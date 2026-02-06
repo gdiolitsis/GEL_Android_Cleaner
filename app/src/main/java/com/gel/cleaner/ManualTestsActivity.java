@@ -4163,11 +4163,11 @@ if (r != null && (r.rms > 0 || r.peak > 0)) {
                     : "Speech was clear. Bottom microphone performs correctly in calls."
     );
 
-    logLabelInfoValue(
+    logLabelOkValue(
             gr ? "Σημείωση" : "Note",
             gr
-                    ? "Τυχόν προβλήματα σε κλήσεις οφείλονται σε εξωτερικούς παράγοντες."
-                    : "Any call issues are attributed to external factors."
+                    ? "Τυχόν προβλήματα σε κλήσεις, θα οφείλονται σε εξωτερικούς παράγοντες."
+                    : "Any call issues, will attributed to external factors."
     );
 
 } else {

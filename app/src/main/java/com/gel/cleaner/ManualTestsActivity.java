@@ -3914,125 +3914,121 @@ private void lab4MicBase(Runnable onFinished) {
 
         try {
 
-// ------------------------------------------------------------
-// BOTTOM MICROPHONE — SIGNAL CHECK
-// ------------------------------------------------------------
-
-appendHtml("<br>");
-logInfo(gr
-        ? "Έλεγχος κάτω μικροφώνου (σήμα):"
-        : "Bottom microphone signal check:");
-logLine();
-
-// 🔊 FORCE SPEAKER FOR TTS
-AudioManager amSpeak = (AudioManager) getSystemService(AUDIO_SERVICE);
-if (amSpeak != null) {
-    try { amSpeak.setMode(AudioManager.MODE_NORMAL); } catch (Throwable ignore) {}
-    try { amSpeak.setSpeakerphoneOn(true); } catch (Throwable ignore) {}
-}
-
-// 🗣️ SPOKEN INSTRUCTION
-AppTTS.ensureSpeak(
-        this,
-        gr ? "Έλεγχος κάτω μικροφώνου." : "Bottom microphone check."
-);
-
-// ⏱️ Άσε το TTS να τελειώσει
-SystemClock.sleep(1800);
-
-// 🔇 STOP TTS
-try { AppTTS.stop(); } catch (Throwable ignore) {}
-
-// 🎧 RESET AUDIO STACK FOR MIC INPUT
-AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
-if (am != null) {
-    try { am.stopBluetoothSco(); } catch (Throwable ignore) {}
-    try { am.setBluetoothScoOn(false); } catch (Throwable ignore) {}
-    try { am.setSpeakerphoneOn(false); } catch (Throwable ignore) {}
-    try { am.setMicrophoneMute(false); } catch (Throwable ignore) {}
-    try { am.setMode(AudioManager.MODE_NORMAL); } catch (Throwable ignore) {}
-}
-
-SystemClock.sleep(300); // ⬅️ ΑΠΑΡΑΙΤΗΤΟ ΠΡΙΝ ΤΟ MIC
-
-// ▶️ RUN MIC ENGINE
-MicDiagnosticEngine.Result bottom =
-        MicDiagnosticEngine.run(
-                this,
-                MicDiagnosticEngine.MicType.BOTTOM
-        );
-
-// ====================================================
-// TOP MICROPHONE — SIGNAL CHECK
-// ====================================================
-
-appendHtml("<br>");
-logInfo(gr
-        ? "Έλεγχος άνω μικροφώνου (σήμα):"
-        : "Top microphone signal check:");
-logLine();
-
-// 🎧 RESET AUDIO STACK (TOP)
-AudioManager amTop = (AudioManager) getSystemService(AUDIO_SERVICE);
-if (amTop != null) {
-    try { amTop.stopBluetoothSco(); } catch (Throwable ignore) {}
-    try { amTop.setBluetoothScoOn(false); } catch (Throwable ignore) {}
-    try { amTop.setSpeakerphoneOn(false); } catch (Throwable ignore) {}
-    try { amTop.setMicrophoneMute(false); } catch (Throwable ignore) {}
-    try { amTop.setMode(AudioManager.MODE_NORMAL); } catch (Throwable ignore) {}
-}
-
-SystemClock.sleep(300);
-
-// ▶️ RUN TOP MIC ENGINE
-MicDiagnosticEngine.Result top =
-        MicDiagnosticEngine.run(
-                this,
-                MicDiagnosticEngine.MicType.TOP
-        );
-
-topRms  = (int) top.rms;
-topPeak = (int) top.peak;
-
-            // ====================================================
-            // FINAL HARDWARE CONCLUSIONS (ΠΡΙΝ ΤΟ FINISHED)
-            // ====================================================
-
-appendHtml("<br>");
+            // ----------------------------------------------------
+            // BOTTOM MICROPHONE
+            // ----------------------------------------------------
+            appendHtml("<br>");
             logInfo(gr
-                    ? "Συμπεράσματα υλικού:"
-                    : "Hardware conclusions:");
+                    ? "Έλεγχος κάτω μικροφώνου (σήμα):"
+                    : "Bottom microphone signal check:");
+            logLine();
+
+            AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
+            if (am != null) {
+                try { am.stopBluetoothSco(); } catch (Throwable ignore) {}
+                try { am.setBluetoothScoOn(false); } catch (Throwable ignore) {}
+                try { am.setSpeakerphoneOn(false); } catch (Throwable ignore) {}
+                try { am.setMicrophoneMute(false); } catch (Throwable ignore) {}
+                try { am.setMode(AudioManager.MODE_NORMAL); } catch (Throwable ignore) {}
+            }
+
+            SystemClock.sleep(300);
+
+            MicDiagnosticEngine.Result bottom =
+                    MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.BOTTOM);
+
+            bottomRms  = (int) bottom.rms;
+            bottomPeak = (int) bottom.peak;
+
+            logLabelOkValue("Bottom RMS",  String.valueOf(bottomRms));
+            logLabelOkValue("Bottom Peak", String.valueOf(bottomPeak));
+
+            bottomOk = bottomRms > 0 || bottomPeak > 0;
+
+            if (bottomOk) {
+                logLabelOkValue(
+                        gr ? "Κάτω μικρόφωνο" : "Bottom microphone",
+                        gr ? "Σήμα ανιχνεύθηκε" : "Signal detected"
+                );
+            } else {
+                logLabelErrorValue(
+                        gr ? "Κάτω μικρόφωνο" : "Bottom microphone",
+                        gr ? "Δεν ανιχνεύθηκε σήμα" : "No signal detected"
+                );
+            }
+
+            // ----------------------------------------------------
+            // TOP MICROPHONE
+            // ----------------------------------------------------
+            appendHtml("<br>");
+            logInfo(gr
+                    ? "Έλεγχος άνω μικροφώνου (σήμα):"
+                    : "Top microphone signal check:");
+            logLine();
+
+            AudioManager amTop = (AudioManager) getSystemService(AUDIO_SERVICE);
+            if (amTop != null) {
+                try { amTop.stopBluetoothSco(); } catch (Throwable ignore) {}
+                try { amTop.setBluetoothScoOn(false); } catch (Throwable ignore) {}
+                try { amTop.setSpeakerphoneOn(false); } catch (Throwable ignore) {}
+                try { amTop.setMicrophoneMute(false); } catch (Throwable ignore) {}
+                try { amTop.setMode(AudioManager.MODE_NORMAL); } catch (Throwable ignore) {}
+            }
+
+            SystemClock.sleep(300);
+
+            MicDiagnosticEngine.Result top =
+                    MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.TOP);
+
+            topRms  = (int) top.rms;
+            topPeak = (int) top.peak;
+
+            logLabelOkValue("Top RMS",  String.valueOf(topRms));
+            logLabelOkValue("Top Peak", String.valueOf(topPeak));
+
+            topOk = topRms > 0 || topPeak > 0;
+
+            if (topOk) {
+                logLabelOkValue(
+                        gr ? "Άνω μικρόφωνο" : "Top microphone",
+                        gr ? "Σήμα ανιχνεύθηκε" : "Signal detected"
+                );
+            } else {
+                logLabelErrorValue(
+                        gr ? "Άνω μικρόφωνο" : "Top microphone",
+                        gr ? "Δεν ανιχνεύθηκε σήμα" : "No signal detected"
+                );
+            }
+
+            // ----------------------------------------------------
+            // FINAL BASE CONCLUSION
+            // ----------------------------------------------------
+            appendHtml("<br>");
+            logInfo(gr ? "Συμπεράσματα υλικού:" : "Hardware conclusions:");
             logLine();
 
             if (bottomOk && topOk) {
-
                 logLabelOkValue(
                         gr ? "Κατάσταση" : "Status",
                         gr
                                 ? "Και τα δύο μικρόφωνα λειτουργούν κανονικά"
                                 : "Both microphones are operational"
                 );
-
             } else if (bottomOk) {
-
                 logLabelWarnValue(
                         gr ? "Κατάσταση" : "Status",
                         gr
                                 ? "Μόνο το κάτω μικρόφωνο λειτουργεί"
                                 : "Only bottom microphone is operational"
                 );
-
             } else if (topOk) {
-
                 logLabelWarnValue(
                         gr ? "Κατάσταση" : "Status",
                         gr
                                 ? "Μόνο το άνω μικρόφωνο λειτουργεί"
                                 : "Only top microphone is operational"
                 );
-
             } else {
-
                 logLabelErrorValue(
                         gr ? "Κατάσταση" : "Status",
                         gr
@@ -4052,17 +4048,13 @@ appendHtml("<br>");
 
         } finally {
 
-            // ====================================================
-            // BASE FINISHED — ΚΛΕΙΝΕΙ ΟΡΙΣΤΙΚΑ ΤΟ BASE
-            // ====================================================
             appendHtml("<br>");
             logOk("Lab 4 (BASE) finished.");
             logLine();
-            
-if (onFinished != null) {
-    runOnUiThread(onFinished);
-}
 
+            if (onFinished != null) {
+                runOnUiThread(onFinished);
+            }
         }
 
     }).start();
@@ -4102,48 +4094,97 @@ private void lab4MicPro() {
 
         try {
 
-            // ====================================================
-            // STAGE 1 — ΚΑΤΩ ΜΙΚΡΟΦΩΝΟ (ΟΠΩΣ ΗΤΑΝ)
-            // ====================================================
-            runOnUiThread(() -> {
-                AlertDialog d = buildInfoDialog(
-                        gr ? "LAB 4 PRO — Έλεγχος"
-                           : "LAB 4 PRO — Test",
-                        gr ? "Έλεγχος κάτω μικροφώνου."
-                           : "Bottom microphone test.",
-                        cancelled,
-                        dialogRef
-                );
-                d.show();
-            });
+// ====================================================
+// STAGE 1 — Bottom microphone CALL QUALITY check
+// ====================================================
+runOnUiThread(() -> {
+    AlertDialog d = buildInfoDialog(
+            gr ? "LAB 4 PRO — Έλεγχος" : "LAB 4 PRO — Test",
+            gr ? "Έλεγχος κάτω μικροφώνου."
+               : "Bottom microphone test.",
+            cancelled,
+            dialogRef
+    );
+    d.show();
+});
 
-            SystemClock.sleep(300);
-            if (cancelled.get()) return;
+SystemClock.sleep(300);
+if (cancelled.get()) return;
 
-            // 🔊 ΑΝΟΙΧΤΗ ΑΚΡΟΑΣΗ
-            AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
-            forceSpeaker(am);
+// ----------------------------------------------------
+// Call-like audio routing (speaker + mic)
+// ----------------------------------------------------
+AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
+if (am != null) {
+    try { am.stopBluetoothSco(); } catch (Throwable ignore) {}
+    try { am.setBluetoothScoOn(false); } catch (Throwable ignore) {}
+    try { am.setSpeakerphoneOn(true); } catch (Throwable ignore) {}
+    try { am.setMicrophoneMute(false); } catch (Throwable ignore) {}
+    try { am.setMode(AudioManager.MODE_IN_COMMUNICATION); } catch (Throwable ignore) {}
+}
 
-            AppTTS.ensureSpeak(
-                    this,
-                    gr ? "Έλεγχος κάτω μικροφώνου."
-                       : "Bottom microphone test."
-            );
+SystemClock.sleep(200);
 
-            SystemClock.sleep(2200);
+// ----------------------------------------------------
+// TTS phrase — this IS the test signal
+// ----------------------------------------------------
+AppTTS.ensureSpeak(
+        this,
+        gr ? "Έλεγχος κάτω μικροφώνου."
+           : "Bottom microphone test."
+);
 
-            dismiss(dialogRef);
+// ----------------------------------------------------
+// Let phrase play fully, mic listens simultaneously
+// ----------------------------------------------------
+SystemClock.sleep(2200);
 
-            logInfo(gr
-                    ? "LAB 4 PRO — Στάδιο 1 (Κάτω μικρόφωνο)"
-                    : "LAB 4 PRO — Stage 1 (Bottom microphone)");
-            logLine();
+// Close popup
+dismiss(dialogRef);
+
+// ----------------------------------------------------
+// Analyze captured signal (quality, not presence)
+// ----------------------------------------------------
+MicDiagnosticEngine.Result r =
+        MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.BOTTOM);
+
+appendHtml("<br>");
+logInfo(gr
+        ? "LAB 4 PRO — Ποιότητα συνομιλίας (κάτω μικρόφωνο)"
+        : "LAB 4 PRO — Call quality (bottom microphone)");
+logLine();
+
+if (r != null && (r.rms > 0 || r.peak > 0)) {
+
+    logLabelOkValue(
+            gr ? "Συμπέρασμα" : "Conclusion",
+            gr
+                    ? "Η ομιλία ήταν καθαρή. Το κάτω μικρόφωνο αποδίδει σωστά σε συνομιλία."
+                    : "Speech was clear. Bottom microphone performs correctly in calls."
+    );
+
+    logLabelInfoValue(
+            gr ? "Σημείωση" : "Note",
+            gr
+                    ? "Τυχόν προβλήματα σε κλήσεις οφείλονται σε εξωτερικούς παράγοντες."
+                    : "Any call issues are attributed to external factors."
+    );
+
+} else {
+
+    logLabelWarnValue(
+            gr ? "Συμπέρασμα" : "Conclusion",
+            gr
+                    ? "Η ομιλία δεν ήταν καθαρή. Απαιτείται περαιτέρω έλεγχος."
+                    : "Speech was not clear. Further inspection is required."
+    );
+}
+
+logLine();
 
 // ====================================================
-// STAGE 3 — EARPIECE HARDWARE TEST (PORTABLE • LOCKED)
+// STAGE 2 — USER INSTRUCTION (Popup + TTS ONLY)
 // ====================================================
-
-// 1️⃣ ΟΔΗΓΙΑ ΠΡΟΣ ΧΡΗΣΤΗ (Popup + TTS) — ΔΕΝ ΕΙΝΑΙ TEST
 runOnUiThread(() -> {
 
     AlertDialog.Builder b =
@@ -4197,50 +4238,45 @@ runOnUiThread(() -> {
     d.show();
 });
 
-// 2️⃣ TTS — ΕΔΩ ΑΚΡΙΒΩΣ
+// 🔊 Speaker ONLY for instruction
+AudioManager amSpeak = (AudioManager) getSystemService(AUDIO_SERVICE);
+if (amSpeak != null) {
+    try { amSpeak.setMode(AudioManager.MODE_NORMAL); } catch (Throwable ignore) {}
+    try { amSpeak.setSpeakerphoneOn(true); } catch (Throwable ignore) {}
+}
+
 AppTTS.ensureSpeak(
         this,
-        gr
-                ? "Βάλε το ακουστικό στο αυτί σου."
-                : "Place the earpiece on your ear."
+        gr ? "Βάλε το ακουστικό στο αυτί σου."
+           : "Place the earpiece on your ear."
 );
 
-// 3️⃣ Μικρή αναμονή
 SystemClock.sleep(2200);
-
-// 4️⃣ Κλείνουμε το popup
 dismiss(dialogRef);
 
 // ====================================================
-// 2️⃣ ΠΡΑΓΜΑΤΙΚΟ HARDWARE TEST — ΧΩΡΙΣ TTS / ΧΩΡΙΣ UI
+// STAGE 3 — EARPIECE MELODY TEST (NO UI / NO TTS)
 // ====================================================
 
-// 🎧 ROUTE → EARPIECE (MINIMAL / COMPATIBLE)
+// 🔒 HARD ROUTE TO EARPIECE
 AudioManager am2 = (AudioManager) getSystemService(AUDIO_SERVICE);
 if (am2 != null) {
     try { am2.stopBluetoothSco(); } catch (Throwable ignore) {}
     try { am2.setBluetoothScoOn(false); } catch (Throwable ignore) {}
     try { am2.setSpeakerphoneOn(false); } catch (Throwable ignore) {}
-    try { am2.setMode(AudioManager.MODE_IN_COMMUNICATION); } catch (Throwable ignore) {}
     try { am2.setMicrophoneMute(false); } catch (Throwable ignore) {}
+    try { am2.setMode(AudioManager.MODE_IN_COMMUNICATION); } catch (Throwable ignore) {}
 }
 
 SystemClock.sleep(200);
 
-// 🎵 PLAY MELODY — EARPIECE (COMPATIBLE)
+// 🎵 PLAY MELODY — EARPIECE ONLY
 MediaPlayer mp = MediaPlayer.create(this, R.raw.nine_half_weeks);
 if (mp != null) {
     try {
-        mp.setAudioAttributes(
-                new AudioAttributes.Builder()
-                        .setUsage(AudioAttributes.USAGE_MEDIA)
-                        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                        .build()
-        );
-
+        mp.setAudioStreamType(AudioManager.STREAM_VOICE_CALL);
         mp.start();
-        SystemClock.sleep(8000); // χρόνος ακρόασης
-
+        SystemClock.sleep(8000);
     } catch (Throwable ignore) {
     } finally {
         try { mp.stop(); } catch (Throwable ignore) {}
@@ -4249,16 +4285,14 @@ if (mp != null) {
 }
 
 // ====================================================
-// 3️⃣ SAFE ZONE — ΕΡΩΤΗΣΗ (Popup + TTS από speaker)
+// STAGE 4 — HUMAN CONFIRMATION (Popup + TTS)
 // ====================================================
 
-// επιστροφή audio σε normal
-try {
-    if (am != null) {
-        am.setMode(AudioManager.MODE_NORMAL);
-        am.setSpeakerphoneOn(false);
-    }
-} catch (Throwable ignore) {}
+// 🔊 Return to speaker for question
+if (am2 != null) {
+    try { am2.setMode(AudioManager.MODE_NORMAL); } catch (Throwable ignore) {}
+    try { am2.setSpeakerphoneOn(true); } catch (Throwable ignore) {}
+}
 
 final AtomicBoolean answered = new AtomicBoolean(false);
 final AtomicBoolean heardClearly = new AtomicBoolean(false);
@@ -4292,79 +4326,66 @@ runOnUiThread(() -> {
     msg.setPadding(0, 0, 0, dp(18));
     root.addView(msg);
 
-    LinearLayout btnRow = new LinearLayout(this);
-    btnRow.setOrientation(LinearLayout.HORIZONTAL);
-    btnRow.setGravity(Gravity.CENTER);
+    LinearLayout row = new LinearLayout(this);
+    row.setOrientation(LinearLayout.HORIZONTAL);
+    row.setGravity(Gravity.CENTER);
 
-    // ✅ ΚΟΙΝΑ LayoutParams ΓΙΑ ΤΑ ΚΟΥΜΠΙΑ
-    LinearLayout.LayoutParams btnLp =
+    LinearLayout.LayoutParams lp =
             new LinearLayout.LayoutParams(
                     ViewGroup.LayoutParams.WRAP_CONTENT,
                     ViewGroup.LayoutParams.WRAP_CONTENT
             );
-    btnLp.setMargins(dp(10), 0, dp(10), 0);
+    lp.setMargins(dp(10), 0, dp(10), 0);
 
-    // ---------- NO ----------
     Button noBtn = new Button(this);
     noBtn.setText(gr ? "ΟΧΙ" : "NO");
     noBtn.setAllCaps(false);
     noBtn.setTextColor(Color.WHITE);
+    noBtn.setLayoutParams(lp);
 
     GradientDrawable noBg = new GradientDrawable();
     noBg.setColor(0xFF8B0000);
     noBg.setCornerRadius(dp(14));
     noBg.setStroke(dp(3), 0xFFFFD700);
     noBtn.setBackground(noBg);
-    noBtn.setLayoutParams(btnLp);
 
     noBtn.setOnClickListener(v -> {
         heardClearly.set(false);
         answered.set(true);
     });
 
-    // ---------- YES ----------
     Button yesBtn = new Button(this);
     yesBtn.setText(gr ? "ΝΑΙ" : "YES");
     yesBtn.setAllCaps(false);
     yesBtn.setTextColor(Color.WHITE);
+    yesBtn.setLayoutParams(lp);
 
     GradientDrawable yesBg = new GradientDrawable();
     yesBg.setColor(0xFF0B5F3B);
     yesBg.setCornerRadius(dp(14));
     yesBg.setStroke(dp(3), 0xFFFFD700);
     yesBtn.setBackground(yesBg);
-    yesBtn.setLayoutParams(btnLp);
 
     yesBtn.setOnClickListener(v -> {
         heardClearly.set(true);
         answered.set(true);
     });
 
-    btnRow.addView(noBtn);
-    btnRow.addView(yesBtn);
-    root.addView(btnRow);
+    row.addView(noBtn);
+    row.addView(yesBtn);
+    root.addView(row);
 
     b.setView(root);
 
     AlertDialog d = b.create();
     if (d.getWindow() != null) {
-        d.getWindow().setBackgroundDrawable(
-                new ColorDrawable(Color.TRANSPARENT)
-        );
+        d.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
     }
 
     dialogRef.set(d);
     d.show();
 });
 
-// 🔊 FORCE SPEAKER FOR TTS
-AudioManager amSpeak = (AudioManager) getSystemService(AUDIO_SERVICE);
-if (amSpeak != null) {
-    try { amSpeak.setMode(AudioManager.MODE_NORMAL); } catch (Throwable ignore) {}
-    try { amSpeak.setSpeakerphoneOn(true); } catch (Throwable ignore) {}
-}
-
-// 🗣️ TTS ΕΡΩΤΗΣΗ
 AppTTS.ensureSpeak(
         this,
         gr
@@ -4372,73 +4393,63 @@ AppTTS.ensureSpeak(
                 : "Did you hear the music clearly?"
 );
 
-// ⏳ WAIT FOR ANSWER
 while (!answered.get()) {
     SystemClock.sleep(50);
 }
 
-// κλείσιμο popup
 dismiss(dialogRef);
 
 // ====================================================
-// 4️⃣ RESULT
+// RESULT — EARPIECE
 // ====================================================
 appendHtml("<br>");
-logInfo(gr
-        ? "LAB 4 PRO — Ακουστικό"
-        : "LAB 4 PRO — Earpiece");
+logInfo(gr ? "LAB 4 PRO — Ακουστικό" : "LAB 4 PRO — Earpiece");
 logLine();
 
 if (heardClearly.get()) {
     logLabelOkValue(
             gr ? "Αποτέλεσμα" : "Result",
             gr
-                    ? "Το ακουστικό λειτουργεί κανονικά."
-                    : "Earpiece operates normally."
+                    ? "Το ακουστικό αποδίδει καθαρό ήχο."
+                    : "Earpiece delivers clear audio."
     );
 } else {
     logLabelWarnValue(
             gr ? "Αποτέλεσμα" : "Result",
             gr
-                    ? "Η ακρόαση δεν ήταν καθαρή."
-                    : "Audio was not clear."
+                    ? "Σύμφωνα με τη δήλωση χρήστη, το ακουστικό δεν αποδίδει καθαρό ήχο. Απαιτείται έλεγχος."
+                    : "According to the user, the earpiece does not deliver clear audio. Further inspection is required."
     );
 }
 
 logLine();
-logOk("Lab 4 PRO finished.");
+
+// ====================================================
+// LAB 4 — FINAL CLOSE (MANDATORY)
+// ====================================================
+
+logLine();
+logOk("Lab 4 finished.");
 logLine();
 
-        } catch (Throwable t) {
+// 🔒 HARD AUDIO RESTORE (GLOBAL SAFE)
+try {
+    AudioManager amF = (AudioManager) getSystemService(AUDIO_SERVICE);
+    if (amF != null) {
+        try { amF.stopBluetoothSco(); } catch (Throwable ignore) {}
+        try { amF.setBluetoothScoOn(false); } catch (Throwable ignore) {}
+        try { amF.setMicrophoneMute(false); } catch (Throwable ignore) {}
+        try { amF.setSpeakerphoneOn(false); } catch (Throwable ignore) {}
+        try { amF.setMode(AudioManager.MODE_NORMAL); } catch (Throwable ignore) {}
+    }
+} catch (Throwable ignore) {}
 
-            appendHtml("<br>");
-            logLabelErrorValue(
-                    gr ? "Σφάλμα" : "Error",
-                    gr ? "Αποτυχία LAB 4 PRO" : "LAB 4 PRO failed"
-            );
-            logLine();
+// 🔓 UI / EXPORT
+runOnUiThread(this::enableSingleExportButton);
 
-        } finally {
-
-            // HARD SAFETY CLEANUP
-            try { AppTTS.stop(); } catch (Throwable ignore) {}
-            dismiss(dialogRef);
-
-            // HARD RESTORE (INLINE — no helper methods, no refactor)
-            try {
-                AudioManager am3 = (AudioManager) getSystemService(AUDIO_SERVICE);
-                if (am3 != null) {
-    try { am3.stopBluetoothSco(); } catch (Throwable ignore) {}
-    try { am3.setBluetoothScoOn(false); } catch (Throwable ignore) {}
-    try { am3.setMicrophoneMute(false); } catch (Throwable ignore) {}
-    try { am3.setSpeakerphoneOn(false); } catch (Throwable ignore) {}
-    try { am3.setMode(AudioManager.MODE_NORMAL); } catch (Throwable ignore) {}
-}
-            } catch (Throwable ignore) {}
-        }
-
-    }).start();
-}
+// 🛑 HARD STOP
+cancelled.set(true);
+return;
 
 /* ============================================================
 LAB 5 — Vibration Motor Test (AUTO)

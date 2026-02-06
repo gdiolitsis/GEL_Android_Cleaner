@@ -33,6 +33,7 @@ import android.app.KeyguardManager;
 import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.res.AssetFileDescriptor;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageInfo;

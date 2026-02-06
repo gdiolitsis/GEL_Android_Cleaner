@@ -4376,26 +4376,21 @@ dismiss(dialogRef);
 // ============================================================
 // 🎵 PLAY VOICE WAV — AUTO LANGUAGE (EARPIECE ONLY)
 // ============================================================
-
 private void playAnswerCheckWav() {
 
-// 🔒 HARD ROUTE TO EARPIECE
-AudioManager am2 = (AudioManager) getSystemService(AUDIO_SERVICE);
-if (am2 != null) {
-    try { am2.stopBluetoothSco(); } catch (Throwable ignore) {}
-    try { am2.setBluetoothScoOn(false); } catch (Throwable ignore) {}
-    try { am2.setSpeakerphoneOn(false); } catch (Throwable ignore) {}
-    try { am2.setMicrophoneMute(false); } catch (Throwable ignore) {}
-    try { am2.setMode(AudioManager.MODE_IN_COMMUNICATION); } catch (Throwable ignore) {}
-}
+    AudioManager am2 = (AudioManager) getSystemService(AUDIO_SERVICE);
+    if (am2 != null) {
+        try { am2.stopBluetoothSco(); } catch (Throwable ignore) {}
+        try { am2.setBluetoothScoOn(false); } catch (Throwable ignore) {}
+        try { am2.setSpeakerphoneOn(false); } catch (Throwable ignore) {}
+        try { am2.setMicrophoneMute(false); } catch (Throwable ignore) {}
+        try { am2.setMode(AudioManager.MODE_IN_COMMUNICATION); } catch (Throwable ignore) {}
+    }
 
     SystemClock.sleep(200);
 
-    // 🌐 AUTO LANGUAGE SELECTION
     boolean gr = AppLang.isGreek(this);
-    int resId = gr
-            ? R.raw.answercheck_el
-            : R.raw.answercheck_en;
+    int resId = gr ? R.raw.answercheck_el : R.raw.answercheck_en;
 
     MediaPlayer mp = new MediaPlayer();
 
@@ -4416,133 +4411,134 @@ if (am2 != null) {
         mp.prepare();
         mp.start();
 
-        // ⏱ αφήνουμε να ολοκληρωθεί
         SystemClock.sleep(mp.getDuration());
 
     } catch (Throwable ignore) {
-
     } finally {
         try { mp.stop(); } catch (Throwable ignore) {}
         try { mp.release(); } catch (Throwable ignore) {}
     }
+
+    showAnswerCheckConfirmation();
 }
 
 // ====================================================
 // STAGE 4 — HUMAN CONFIRMATION (Popup + TTS)
 // ====================================================
+private void showAnswerCheckConfirmation() {
 
-// 🔊 Return to speaker for question
-if (am2 != null) {
-    try { am2.setMode(AudioManager.MODE_NORMAL); } catch (Throwable ignore) {}
-    try { am2.setSpeakerphoneOn(true); } catch (Throwable ignore) {}
-}
-
-final AtomicBoolean answered = new AtomicBoolean(false);
-final AtomicBoolean heardClearly = new AtomicBoolean(false);
-
-runOnUiThread(() -> {
-
-    AlertDialog.Builder b =
-            new AlertDialog.Builder(
-                    this,
-                    android.R.style.Theme_Material_Dialog_NoActionBar
-            );
-    b.setCancelable(false);
-
-    LinearLayout root = new LinearLayout(this);
-    root.setOrientation(LinearLayout.VERTICAL);
-    root.setPadding(dp(26), dp(24), dp(26), dp(22));
-
-    GradientDrawable bg = new GradientDrawable();
-    bg.setColor(0xFF000000);
-    bg.setCornerRadius(dp(18));
-    bg.setStroke(dp(3), 0xFFFFD700);
-    root.setBackground(bg);
-
-    TextView msg = new TextView(this);
-    msg.setText(gr
-            ? "Άκουσες καθαρά το μουσικό κομμάτι;"
-            : "Did you hear the music clearly?");
-    msg.setTextColor(0xFF39FF14);
-    msg.setTextSize(15f);
-    msg.setGravity(Gravity.CENTER);
-    msg.setPadding(0, 0, 0, dp(18));
-    root.addView(msg);
-
-    LinearLayout row = new LinearLayout(this);
-    row.setOrientation(LinearLayout.HORIZONTAL);
-    row.setGravity(Gravity.CENTER);
-
-    LinearLayout.LayoutParams lp =
-            new LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.WRAP_CONTENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT
-            );
-    lp.setMargins(dp(10), 0, dp(10), 0);
-
-    Button noBtn = new Button(this);
-    noBtn.setText(gr ? "ΟΧΙ" : "NO");
-    noBtn.setAllCaps(false);
-    noBtn.setTextColor(Color.WHITE);
-    noBtn.setLayoutParams(lp);
-
-    GradientDrawable noBg = new GradientDrawable();
-    noBg.setColor(0xFF8B0000);
-    noBg.setCornerRadius(dp(14));
-    noBg.setStroke(dp(3), 0xFFFFD700);
-    noBtn.setBackground(noBg);
-
-    noBtn.setOnClickListener(v -> {
-        heardClearly.set(false);
-        answered.set(true);
-    });
-
-    Button yesBtn = new Button(this);
-    yesBtn.setText(gr ? "ΝΑΙ" : "YES");
-    yesBtn.setAllCaps(false);
-    yesBtn.setTextColor(Color.WHITE);
-    yesBtn.setLayoutParams(lp);
-
-    GradientDrawable yesBg = new GradientDrawable();
-    yesBg.setColor(0xFF0B5F3B);
-    yesBg.setCornerRadius(dp(14));
-    yesBg.setStroke(dp(3), 0xFFFFD700);
-    yesBtn.setBackground(yesBg);
-
-    yesBtn.setOnClickListener(v -> {
-        heardClearly.set(true);
-        answered.set(true);
-    });
-
-    row.addView(noBtn);
-    row.addView(yesBtn);
-    root.addView(row);
-
-    b.setView(root);
-
-    AlertDialog d = b.create();
-    if (d.getWindow() != null) {
-        d.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+    AudioManager am2 = (AudioManager) getSystemService(AUDIO_SERVICE);
+    if (am2 != null) {
+        try { am2.setMode(AudioManager.MODE_NORMAL); } catch (Throwable ignore) {}
+        try { am2.setSpeakerphoneOn(true); } catch (Throwable ignore) {}
     }
 
-    dialogRef.set(d);
-    
-    if (isFinishing() || isDestroyed()) return;
-    d.show();
-});
+    final boolean gr = AppLang.isGreek(this);
+    final AtomicBoolean answered = new AtomicBoolean(false);
+    final AtomicBoolean heardClearly = new AtomicBoolean(false);
 
-AppTTS.ensureSpeak(
-        this,
-        gr
-                ? "Άκουσες καθαρά το μουσικό κομμάτι;"
-                : "Did you hear the music clearly?"
-);
+    runOnUiThread(() -> {
 
-while (!answered.get()) {
-    SystemClock.sleep(50);
+        AlertDialog.Builder b =
+                new AlertDialog.Builder(
+                        this,
+                        android.R.style.Theme_Material_Dialog_NoActionBar
+                );
+        b.setCancelable(false);
+
+        LinearLayout root = new LinearLayout(this);
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.setPadding(dp(26), dp(24), dp(26), dp(22));
+
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(0xFF000000);
+        bg.setCornerRadius(dp(18));
+        bg.setStroke(dp(3), 0xFFFFD700);
+        root.setBackground(bg);
+
+        TextView msg = new TextView(this);
+        msg.setText(gr
+                ? "Με άκουσες καθαρά; Τσέκαρε την απάντησή σου στην εφαρμογή."
+                : "Did you hear me clearly? Check your answer in the app.");
+        msg.setTextColor(0xFF39FF14); // ✅ ΣΩΣΤΟ
+        msg.setTextSize(15f);
+        msg.setGravity(Gravity.CENTER);
+        msg.setPadding(0, 0, 0, dp(18));
+        root.addView(msg);
+
+        LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER);
+
+        LinearLayout.LayoutParams lpBtn =
+                new LinearLayout.LayoutParams(0, dp(56), 1f);
+        lpBtn.setMargins(dp(8), 0, dp(8), 0);
+
+        Button no = new Button(this);
+        no.setAllCaps(false);
+        no.setText(gr ? "ΟΧΙ" : "NO");
+        no.setTextColor(Color.WHITE);
+        GradientDrawable noBg = new GradientDrawable();
+        noBg.setColor(0xFF8B0000);
+        noBg.setCornerRadius(dp(14));
+        noBg.setStroke(dp(3), 0xFFFFD700);
+        no.setBackground(noBg);
+        no.setLayoutParams(lpBtn);
+
+        Button yes = new Button(this);
+        yes.setAllCaps(false);
+        yes.setText(gr ? "ΝΑΙ" : "YES");
+        yes.setTextColor(Color.WHITE);
+        GradientDrawable yesBg = new GradientDrawable();
+        yesBg.setColor(0xFF0B5F3B);
+        yesBg.setCornerRadius(dp(14));
+        yesBg.setStroke(dp(3), 0xFFFFD700);
+        yes.setBackground(yesBg);
+        yes.setLayoutParams(lpBtn);
+
+        row.addView(no);
+        row.addView(yes);
+        root.addView(row);
+
+        b.setView(root);
+        AlertDialog d = b.create();
+
+        if (d.getWindow() != null) {
+            d.getWindow().setBackgroundDrawable(
+                    new ColorDrawable(Color.TRANSPARENT)
+            );
+        }
+
+        no.setOnClickListener(v -> {
+            heardClearly.set(false);
+            answered.set(true);
+            d.dismiss();
+        });
+
+        yes.setOnClickListener(v -> {
+            heardClearly.set(true);
+            answered.set(true);
+            d.dismiss();
+        });
+
+        if (!isFinishing() && !isDestroyed()) d.show();
+
+        // 🔊 TTS ΜΕΣΑ ΣΤΟ UI
+        AppTTS.ensureSpeak(
+                this,
+                gr
+                        ? "Με άκουσες καθαρά; Τσέκαρε την απάντησή σου στην εφαρμογή."
+                        : "Did you hear me clearly? Check your answer in the app."
+        );
+    });
+
+    // ⏳ WAIT FOR ANSWER (BACKGROUND)
+    while (!answered.get()) {
+        SystemClock.sleep(50);
+    }
+
+    // εδώ συνεχίζεις result logic
 }
-
-dismiss(dialogRef);
 
 // ====================================================
 // RESULT — EARPIECE

@@ -485,10 +485,6 @@ private void showInitialPermissionsPopupStyled() {
     if (!isFinishing() && !isDestroyed()) d.show();
 }
 
-    AlertDialog d = b.create();
-    if (!isFinishing() && !isDestroyed()) d.show();
-}
-
 private int permissionIndex = 0;
 
 private void requestNextPermission() {

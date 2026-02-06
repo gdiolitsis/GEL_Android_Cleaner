@@ -4234,13 +4234,13 @@ dismiss(dialogRef);
 // ====================================================
 
 // 🎧 ROUTE → EARPIECE (MINIMAL / COMPATIBLE)
-AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
-if (am != null) {
-    try { am.stopBluetoothSco(); } catch (Throwable ignore) {}
-    try { am.setBluetoothScoOn(false); } catch (Throwable ignore) {}
-    try { am.setSpeakerphoneOn(false); } catch (Throwable ignore) {}
-    try { am.setMode(AudioManager.MODE_IN_COMMUNICATION); } catch (Throwable ignore) {}
-    try { am.setMicrophoneMute(false); } catch (Throwable ignore) {}
+AudioManager am2 = (AudioManager) getSystemService(AUDIO_SERVICE);
+if (am2 != null) {
+    try { am2.stopBluetoothSco(); } catch (Throwable ignore) {}
+    try { am2.setBluetoothScoOn(false); } catch (Throwable ignore) {}
+    try { am2.setSpeakerphoneOn(false); } catch (Throwable ignore) {}
+    try { am2.setMode(AudioManager.MODE_IN_COMMUNICATION); } catch (Throwable ignore) {}
+    try { am2.setMicrophoneMute(false); } catch (Throwable ignore) {}
 }
 
 SystemClock.sleep(200);
@@ -4391,14 +4391,14 @@ logLine();
 
             // HARD RESTORE (INLINE — no helper methods, no refactor)
             try {
-                AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
-                if (am != null) {
-                    try { am.stopBluetoothSco(); } catch (Throwable ignore) {}
-                    try { am.setBluetoothScoOn(false); } catch (Throwable ignore) {}
-                    try { am.setMicrophoneMute(false); } catch (Throwable ignore) {}
-                    try { am.setSpeakerphoneOn(false); } catch (Throwable ignore) {}
-                    try { am.setMode(AudioManager.MODE_NORMAL); } catch (Throwable ignore) {}
-                }
+                AudioManager am3 = (AudioManager) getSystemService(AUDIO_SERVICE);
+                if (am3 != null) {
+    try { am3.stopBluetoothSco(); } catch (Throwable ignore) {}
+    try { am3.setBluetoothScoOn(false); } catch (Throwable ignore) {}
+    try { am3.setMicrophoneMute(false); } catch (Throwable ignore) {}
+    try { am3.setSpeakerphoneOn(false); } catch (Throwable ignore) {}
+    try { am3.setMode(AudioManager.MODE_NORMAL); } catch (Throwable ignore) {}
+}
             } catch (Throwable ignore) {}
         }
 

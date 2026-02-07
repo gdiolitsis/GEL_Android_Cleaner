@@ -9,12 +9,16 @@ import com.gel.cleaner.base.*;
 import android.Manifest;
 import android.content.*;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.graphics.*;
 import android.graphics.drawable.*;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.provider.Settings;
 import android.speech.tts.TextToSpeech;
+import android.util.TypedValue;
 import android.view.*;
 import android.widget.*;
 
@@ -23,6 +27,9 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import java.util.Locale;
+import java.util.List;
+import java.util.Map;
+import java.util.LinkedHashMap;
 
 public class MainActivity extends GELAutoActivityHook
         implements GELCleaner.LogCallback {
@@ -242,6 +249,49 @@ public class MainActivity extends GELAutoActivityHook
         return getSharedPreferences(PREFS, MODE_PRIVATE)
                 .getString(KEY_PLATFORM, "android");
     }
+
+private void setSkipWelcomeOnce(boolean v) {
+    getSharedPreferences(PREFS, MODE_PRIVATE)
+            .edit()
+            .putBoolean("skip_welcome_once", v)
+            .apply();
+}
+
+private boolean consumeSkipWelcomeOnce() {
+    SharedPreferences sp = getSharedPreferences(PREFS, MODE_PRIVATE);
+    boolean v = sp.getBoolean("skip_welcome_once", false);
+    if (v) sp.edit().remove("skip_welcome_once").apply();
+    return v;
+}
+
+private boolean isWelcomeDisabled() {
+    return getSharedPreferences(PREFS, MODE_PRIVATE)
+            .getBoolean("welcome_disabled", false);
+}
+
+private void disableWelcomeForever() {
+    getSharedPreferences(PREFS, MODE_PRIVATE)
+            .edit()
+            .putBoolean("welcome_disabled", true)
+            .apply();
+}
+
+private boolean isAppleMode() {
+    return "apple".equals(getSavedPlatform());
+}
+
+private AlertDialog.Builder buildNeonDialog() {
+    AlertDialog.Builder b = new AlertDialog.Builder(this);
+    return b;
+}
+
+private ArrayAdapter<String> neonAdapter(String[] names) {
+    return new ArrayAdapter<String>(
+            this,
+            android.R.layout.simple_list_item_1,
+            names
+    );
+}
 
     // =========================================================
     // TTS — WELCOME

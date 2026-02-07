@@ -133,7 +133,7 @@ protected void onCreate(Bundle savedInstanceState) {
     setupButtons();
     
     if (!hasAllRequiredPermissions()) {
-    showPermissionsGate()
+    showPermissionsGate();
 }
 
     // =====================================================

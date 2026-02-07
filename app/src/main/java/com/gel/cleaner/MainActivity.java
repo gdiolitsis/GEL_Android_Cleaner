@@ -229,54 +229,15 @@ private void showMissingPermissionsDialog() {
                 missing.append(gr ? "• Τοποθεσία" : "• Location");
             } else if (Manifest.permission.BLUETOOTH_CONNECT.equals(p)) {
                 missing.append(gr ? "• Bluetooth" : "• Bluetooth");
+            } else {
+                missing.append("• ").append(p);
             }
         }
     }
 
     if (missing.length() == 0) return;
 
-    String title = gr
-            ? "Λείπουν άδειες"
-            : "Missing permissions";
-
-    String message = gr
-            ? "Η εφαρμογή δεν μπορεί να λειτουργήσει σωστά χωρίς τις παρακάτω άδειες:\n\n"
-              + missing
-              + "\n\nΜπορείς να τις ενεργοποιήσεις από τις ρυθμίσεις."
-            : "The app cannot function properly without the following permissions:\n\n"
-              + missing
-              + "\n\nYou can enable them from system settings.";
-
-    new AlertDialog.Builder(this)
-            .setTitle(title)
-            .setMessage(message)private void showMissingPermissionsDialog() {
-
-    boolean gr = "el".equalsIgnoreCase(LocaleHelper.getLang(this));
-
-    StringBuilder missing = new StringBuilder();
-
-    for (String p : REQUIRED_PERMISSIONS) {
-
-        if (ContextCompat.checkSelfPermission(this, p)
-                != PackageManager.PERMISSION_GRANTED) {
-
-            if (missing.length() > 0) missing.append("\n");
-
-            if (Manifest.permission.RECORD_AUDIO.equals(p)) {
-                missing.append(gr ? "• Μικρόφωνο" : "• Microphone");
-            } else if (Manifest.permission.ACCESS_FINE_LOCATION.equals(p)) {
-                missing.append(gr ? "• Τοποθεσία" : "• Location");
-            } else if (Manifest.permission.BLUETOOTH_CONNECT.equals(p)) {
-                missing.append(gr ? "• Bluetooth" : "• Bluetooth");
-            }
-        }
-    }
-
-    if (missing.length() == 0) return;
-
-    String title = gr
-            ? "Λείπουν άδειες"
-            : "Missing permissions";
+    String title = gr ? "Λείπουν άδειες" : "Missing permissions";
 
     String message = gr
             ? "Η εφαρμογή δεν μπορεί να λειτουργήσει σωστά χωρίς τις παρακάτω άδειες:\n\n"
@@ -289,23 +250,6 @@ private void showMissingPermissionsDialog() {
     new AlertDialog.Builder(this)
             .setTitle(title)
             .setMessage(message)
-            .setCancelable(false)
-            .setPositiveButton(
-                    gr ? "ΡΥΘΜΙΣΕΙΣ" : "SETTINGS",
-                    (d, w) -> {
-                        Intent i = new Intent(
-                                Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-                                Uri.fromParts("package", getPackageName(), null)
-                        );
-                        startActivity(i);
-                    }
-            )
-            .setNegativeButton(
-                    gr ? "ΑΚΥΡΟ" : "CANCEL",
-                    (d, w) -> d.dismiss()
-            )
-            .show();
-}
             .setCancelable(false)
             .setPositiveButton(
                     gr ? "ΡΥΘΜΙΣΕΙΣ" : "SETTINGS",

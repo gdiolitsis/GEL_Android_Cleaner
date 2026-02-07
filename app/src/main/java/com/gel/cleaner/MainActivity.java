@@ -242,7 +242,6 @@ public class MainActivity extends GELAutoActivityHook
         return getSharedPreferences(PREFS, MODE_PRIVATE)
                 .getString(KEY_PLATFORM, "android");
     }
-}
 
     // =========================================================
     // TTS — WELCOME

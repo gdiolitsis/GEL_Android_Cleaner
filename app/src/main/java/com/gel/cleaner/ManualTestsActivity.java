@@ -4041,83 +4041,141 @@ private void lab4MicBase(Runnable onFinished) {
         int topRms = 0;
         int topPeak = 0;
 
+        boolean fallbackUsed = false;
+
         try {
 
-            // ----------------------------------------------------
-            // BOTTOM MICROPHONE
-            // ----------------------------------------------------
+            // ====================================================
+            // AUTO CHECK — BOTTOM MIC
+            // ====================================================
             appendHtml("<br>");
             logInfo(gr
-                    ? "Έλεγχος κάτω μικροφώνου (σήμα):"
-                    : "Bottom microphone signal check:");
+                    ? "Έλεγχος κάτω μικροφώνου (αυτόματος):"
+                    : "Bottom microphone auto check:");
             logLine();
 
-hardNormalizeAudioForMic();
+            hardNormalizeAudioForMic();
 
-MicDiagnosticEngine.Result bottom =
-        MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.BOTTOM);
+            MicDiagnosticEngine.Result bottom =
+                    MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.BOTTOM);
 
-if (bottom != null) {
-    bottomRms  = (int) bottom.rms;
-    bottomPeak = (int) bottom.peak;
-}
+            if (bottom != null) {
+                bottomRms  = (int) bottom.rms;
+                bottomPeak = (int) bottom.peak;
+            }
 
             logLabelOkValue("Bottom RMS",  String.valueOf(bottomRms));
             logLabelOkValue("Bottom Peak", String.valueOf(bottomPeak));
 
             bottomOk = bottomRms > 0 || bottomPeak > 0;
 
-            if (bottomOk) {
-                logLabelOkValue(
-                        gr ? "Κάτω μικρόφωνο" : "Bottom microphone",
-                        gr ? "Σήμα ανιχνεύθηκε" : "Signal detected"
-                );
-            } else {
-                logLabelErrorValue(
-                        gr ? "Κάτω μικρόφωνο" : "Bottom microphone",
-                        gr ? "Δεν ανιχνεύθηκε σήμα" : "No signal detected"
-                );
-            }
-
-            // ----------------------------------------------------
-            // TOP MICROPHONE
-            // ----------------------------------------------------
+            // ====================================================
+            // AUTO CHECK — TOP MIC
+            // ====================================================
             appendHtml("<br>");
             logInfo(gr
-                    ? "Έλεγχος άνω μικροφώνου (σήμα):"
-                    : "Top microphone signal check:");
+                    ? "Έλεγχος άνω μικροφώνου (αυτόματος):"
+                    : "Top microphone auto check:");
             logLine();
 
-hardNormalizeAudioForMic();
+            hardNormalizeAudioForMic();
 
-MicDiagnosticEngine.Result top =
-        MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.TOP);
+            MicDiagnosticEngine.Result top =
+                    MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.TOP);
 
-if (top != null) {
-    topRms  = (int) top.rms;
-    topPeak = (int) top.peak;
-}
+            if (top != null) {
+                topRms  = (int) top.rms;
+                topPeak = (int) top.peak;
+            }
 
             logLabelOkValue("Top RMS",  String.valueOf(topRms));
             logLabelOkValue("Top Peak", String.valueOf(topPeak));
 
             topOk = topRms > 0 || topPeak > 0;
 
-            if (topOk) {
-                logLabelOkValue(
-                        gr ? "Άνω μικρόφωνο" : "Top microphone",
-                        gr ? "Σήμα ανιχνεύθηκε" : "Signal detected"
-                );
-            } else {
-                logLabelErrorValue(
-                        gr ? "Άνω μικρόφωνο" : "Top microphone",
-                        gr ? "Δεν ανιχνεύθηκε σήμα" : "No signal detected"
-                );
+            // ====================================================
+            // FALLBACK — HUMAN VOICE (ONLY IF BOTH = 0)
+            // ====================================================
+            if (!bottomOk && !topOk) {
+
+                fallbackUsed = true;
+
+                appendHtml("<br>");
+                logWarn(gr
+                        ? "Δεν ανιχνεύθηκε σήμα. Ενεργοποίηση ελέγχου με ανθρώπινη φωνή."
+                        : "No signal detected. Activating human voice fallback.");
+                logLine();
+
+                final String instructionText = gr
+                        ? "Παρακαλώ μέτρησε έως το τρία, δυνατά,\nκοντά στο μικρόφωνο."
+                        : "Please count to three, loudly,\nclose to the microphone.";
+
+                runOnUiThread(() -> {
+
+                    AlertDialog.Builder b =
+                            new AlertDialog.Builder(
+                                    this,
+                                    android.R.style.Theme_Material_Dialog_NoActionBar
+                            );
+                    b.setCancelable(false);
+
+                    LinearLayout root = new LinearLayout(this);
+                    root.setOrientation(LinearLayout.VERTICAL);
+                    root.setPadding(dp(26), dp(24), dp(26), dp(22));
+
+                    GradientDrawable bg = new GradientDrawable();
+                    bg.setColor(0xFF000000);
+                    bg.setCornerRadius(dp(18));
+                    bg.setStroke(dp(3), 0xFFFFD700);
+                    root.setBackground(bg);
+
+                    TextView msg = new TextView(this);
+                    msg.setText(instructionText);
+                    msg.setTextColor(0xFF39FF14);
+                    msg.setTextSize(15f);
+                    msg.setGravity(Gravity.CENTER);
+                    root.addView(msg);
+
+                    b.setView(root);
+
+                    AlertDialog d = b.create();
+                    if (d.getWindow() != null)
+                        d.getWindow().setBackgroundDrawable(
+                                new ColorDrawable(Color.TRANSPARENT));
+
+                    d.show();
+
+                    AppTTS.ensureSpeak(this, instructionText);
+
+                    root.postDelayed(d::dismiss, 3500);
+                });
+
+                SystemClock.sleep(3800);
+
+                hardNormalizeAudioForMic();
+
+                MicDiagnosticEngine.Result fbBottom =
+                        MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.BOTTOM);
+                MicDiagnosticEngine.Result fbTop =
+                        MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.TOP);
+
+                if (fbBottom != null) {
+                    bottomRms  = Math.max(bottomRms,  (int) fbBottom.rms);
+                    bottomPeak = Math.max(bottomPeak, (int) fbBottom.peak);
+                }
+
+                if (fbTop != null) {
+                    topRms  = Math.max(topRms,  (int) fbTop.rms);
+                    topPeak = Math.max(topPeak, (int) fbTop.peak);
+                }
+
+                bottomOk = bottomRms > 0 || bottomPeak > 0;
+                topOk    = topRms > 0    || topPeak > 0;
             }
 
-            // ----------------------------------------------------
-            // FINAL BASE CONCLUSION
-            // ----------------------------------------------------
+            // ====================================================
+            // FINAL BASE VERDICT
+            // ====================================================
             appendHtml("<br>");
             logInfo(gr ? "Συμπεράσματα υλικού:" : "Hardware conclusions:");
             logLine();
@@ -4125,30 +4183,25 @@ if (top != null) {
             if (bottomOk && topOk) {
                 logLabelOkValue(
                         gr ? "Κατάσταση" : "Status",
-                        gr
-                                ? "Και τα δύο μικρόφωνα λειτουργούν κανονικά"
-                                : "Both microphones are operational"
+                        fallbackUsed
+                                ? (gr ? "Μικρόφωνα λειτουργούν (με ανθρώπινη επιβεβαίωση)"
+                                      : "Microphones operational (human verified)")
+                                : (gr ? "Και τα δύο μικρόφωνα λειτουργούν κανονικά"
+                                      : "Both microphones are operational")
                 );
-            } else if (bottomOk) {
+            } else if (bottomOk || topOk) {
                 logLabelWarnValue(
                         gr ? "Κατάσταση" : "Status",
                         gr
-                                ? "Μόνο το κάτω μικρόφωνο λειτουργεί"
-                                : "Only bottom microphone is operational"
-                );
-            } else if (topOk) {
-                logLabelWarnValue(
-                        gr ? "Κατάσταση" : "Status",
-                        gr
-                                ? "Μόνο το άνω μικρόφωνο λειτουργεί"
-                                : "Only top microphone is operational"
+                                ? "Μερική λειτουργία μικροφώνων"
+                                : "Partial microphone operation detected"
                 );
             } else {
                 logLabelErrorValue(
                         gr ? "Κατάσταση" : "Status",
                         gr
-                                ? "Δεν ανιχνεύθηκε σήμα από μικρόφωνα"
-                                : "No microphone signal detected"
+                                ? "Αποτυχία ελέγχου μικροφώνων — Πιθανή βλάβη υλικού"
+                                : "Microphone check failed — Possible hardware failure"
                 );
             }
 
@@ -4184,10 +4237,10 @@ private volatile boolean lastAnswerHeardClearly = false;
 private void lab4MicPro() {
 
     final boolean gr = AppLang.isGreek(this);
-    
-boolean lab4Success = false;
 
     new Thread(() -> {
+
+        boolean lab4Success = false; // ✅ ΜΕΣΑ ΣΤΟ THREAD (σωστό)
 
         AtomicBoolean cancelled = new AtomicBoolean(false);
         AtomicReference<AlertDialog> dialogRef = new AtomicReference<>();
@@ -4205,8 +4258,7 @@ boolean lab4Success = false;
                         cancelled,
                         dialogRef
                 );
-                if (isFinishing() || isDestroyed()) return;
-                d.show();
+                if (!isFinishing() && !isDestroyed()) d.show();
             });
 
             if (cancelled.get()) return;
@@ -4243,16 +4295,13 @@ boolean lab4Success = false;
             logLine();
 
             if (r != null && (r.rms > 0 || r.peak > 0)) {
-
                 logLabelOkValue(
                         gr ? "Συμπέρασμα" : "Conclusion",
                         gr
                                 ? "Η ομιλία ήταν καθαρή. Το κάτω μικρόφωνο αποδίδει σωστά σε συνομιλία."
                                 : "Speech was clear. Bottom microphone performs correctly in calls."
                 );
-
             } else {
-
                 logLabelWarnValue(
                         gr ? "Συμπέρασμα" : "Conclusion",
                         gr
@@ -4297,9 +4346,11 @@ boolean lab4Success = false;
                 b.setView(root);
 
                 AlertDialog d = b.create();
-                if (d.getWindow() != null)
+                if (d.getWindow() != null) {
                     d.getWindow().setBackgroundDrawable(
-                            new ColorDrawable(Color.TRANSPARENT));
+                            new ColorDrawable(Color.TRANSPARENT)
+                    );
+                }
 
                 dialogRef.set(d);
                 if (!isFinishing() && !isDestroyed()) d.show();
@@ -4339,19 +4390,19 @@ boolean lab4Success = false;
                                 ? "Το ακουστικό αποδίδει καθαρό ήχο."
                                 : "Earpiece delivers clear audio."
                 );
-} else {
-    logLabelWarnValue(
-            gr ? "Αποτέλεσμα" : "Result",
-            gr
-                    ? "Σύμφωνα με τη δήλωση χρήστη, το ακουστικό δεν αποδίδει καθαρό ήχο."
-                    : "According to the user's declaration, the earpiece does not deliver clear audio."
-    );
-}
+            } else {
+                logLabelWarnValue(
+                        gr ? "Αποτέλεσμα" : "Result",
+                        gr
+                                ? "Σύμφωνα με τη δήλωση χρήστη, το ακουστικό δεν αποδίδει καθαρό ήχο."
+                                : "According to the user's declaration, the earpiece does not deliver clear audio."
+                );
+            }
 
-logLine();
+            logLine();
 
-// ✅ ΕΔΩ ΑΚΡΙΒΩΣ
-lab4Success = true;
+            // ✅ SUCCESS
+            lab4Success = true;
 
             appendHtml("<br>");
             logOk("Lab 4 finished.");
@@ -4367,10 +4418,19 @@ lab4Success = true;
                     gr ? "Σφάλμα" : "Error",
                     gr ? "Αποτυχία LAB 4 PRO" : "LAB 4 PRO failed"
             );
+
+            logWarn(gr
+                    ? "Το εργαστήριο απέτυχε. Παρακαλώ τρέξτε το ξανά από την αρχή."
+                    : "The lab failed. Please rerun it from the beginning."
+            );
+
+            appendHtml("<br>");
+            logOk("Lab 4 finished.");
             logLine();
 
         } finally {
 
+            // ABSOLUTE SAFETY
             try { AppTTS.stop(); } catch (Throwable ignore) {}
             dismiss(dialogRef);
 
@@ -4388,7 +4448,6 @@ lab4Success = true;
 
     }).start();
 }
-
 // ============================================================
 // 🎵 PLAY VOICE WAV — AUTO LANGUAGE (EARPIECE ONLY)
 // ============================================================
@@ -4522,65 +4581,6 @@ private void showAnswerCheckConfirmation() {
     while (!answered.get()) {
         SystemClock.sleep(50);
     }
-}
-
-// ====================================================
-// LAB 4 — FINAL CLOSE (MANDATORY)
-// ====================================================
-
-appendHtml("<br>");
-logOk("Lab 4 finished.");
-logLine();
-
-// 🔇 HARD STOP TTS
-try { AppTTS.stop(); } catch (Throwable ignore) {}
-
-// ❌ CLOSE ANY OPEN DIALOG
-dismiss(dialogRef);
-
-// 🔒 HARD AUDIO RESTORE (GLOBAL SAFE)
-try {
-    AudioManager amF = (AudioManager) getSystemService(AUDIO_SERVICE);
-    if (amF != null) {
-        try { amF.stopBluetoothSco(); } catch (Throwable ignore) {}
-        try { amF.setBluetoothScoOn(false); } catch (Throwable ignore) {}
-        try { amF.setMicrophoneMute(false); } catch (Throwable ignore) {}
-        try { amF.setSpeakerphoneOn(false); } catch (Throwable ignore) {}
-        try { amF.setMode(AudioManager.MODE_NORMAL); } catch (Throwable ignore) {}
-    }
-} catch (Throwable ignore) {}
-
-// 🔓 UI / EXPORT
-runOnUiThread(this::enableSingleExportButton);
-
-// 🛑 HARD STOP THREAD
-cancelled.set(true);
-return;
-
-} catch (Throwable t) {
-
-    appendHtml("<br>");
-    logLabelErrorValue(
-            gr ? "Σφάλμα" : "Error",
-            gr ? "Αποτυχία LAB 4 PRO" : "LAB 4 PRO failed"
-    );
-
-    logWarn(gr
-            ? "Ξανατρέξτε το εργαστήριο από την αρχή."
-            : "Please rerun the lab from the beginning.");
-
-appendHtml("<br>");
-    logOk("Lab 4 finished.");
-    logLine();
-
-} finally {
-
-    // ABSOLUTE SAFETY
-    try { AppTTS.stop(); } catch (Throwable ignore) {}
-    dismiss(dialogRef);
-}
-
-}).start();
 }
 
 /* ============================================================

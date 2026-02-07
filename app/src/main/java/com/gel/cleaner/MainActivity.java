@@ -133,7 +133,7 @@ protected void onCreate(Bundle savedInstanceState) {
     setupButtons();
     
     if (!hasAllRequiredPermissions()) {
-    showInitialPermissionsPopupStyled();
+    showPermissionsGate()
 }
 
     // =====================================================
@@ -296,17 +296,114 @@ private String getSavedPlatform() {
             .getString(KEY_PLATFORM, "android"); // default
 }
 
-private boolean hasAllRequiredPermissions() {
+private void showMissingPermissionsToast() {
+
+    StringBuilder sb = new StringBuilder();
+    boolean gr = "el".equalsIgnoreCase(LocaleHelper.getLang(this));
+
+    for (String p : REQUIRED_PERMISSIONS) {
+
+        if (ContextCompat.checkSelfPermission(this, p)
+                != PackageManager.PERMISSION_GRANTED) {
+
+            if (sb.length() > 0) sb.append("\n");
+
+            if (Manifest.permission.CAMERA.equals(p)) {
+                sb.append(gr ? "Λείπει άδεια Κάμερας"
+                             : "Camera permission is missing");
+            } else if (Manifest.permission.RECORD_AUDIO.equals(p)) {
+                sb.append(gr ? "Λείπει άδεια Μικροφώνου"
+                             : "Microphone permission is missing");
+            } else if (Manifest.permission.ACCESS_FINE_LOCATION.equals(p)) {
+                sb.append(gr ? "Λείπει άδεια Τοποθεσίας"
+                             : "Location permission is missing");
+            } else if (Manifest.permission.BLUETOOTH_CONNECT.equals(p)) {
+                sb.append(gr ? "Λείπει άδεια Bluetooth"
+                             : "Bluetooth permission is missing");
+            } else {
+                sb.append(gr ? "Λείπει άδεια: " : "Missing permission: ")
+                  .append(p);
+            }
+        }
+    }
+
+    if (sb.length() > 0) {
+        Toast.makeText(
+                this,
+                sb.toString(),
+                Toast.LENGTH_LONG
+        ).show();
+    }
+}
+
+private void showMissingPermissionsDialog() {
+
+    boolean gr = "el".equalsIgnoreCase(LocaleHelper.getLang(this));
+
+    StringBuilder missing = new StringBuilder();
+
     for (String p : REQUIRED_PERMISSIONS) {
         if (ContextCompat.checkSelfPermission(this, p)
                 != PackageManager.PERMISSION_GRANTED) {
-            return false;
+
+            if (missing.length() > 0) missing.append(", ");
+
+            if (Manifest.permission.CAMERA.equals(p)) {
+                missing.append(gr ? "Κάμερα" : "Camera");
+            } else if (Manifest.permission.BLUETOOTH_CONNECT.equals(p)) {
+                missing.append(gr ? "Bluetooth" : "Bluetooth");
+            } else if (Manifest.permission.RECORD_AUDIO.equals(p)) {
+                missing.append(gr ? "Μικρόφωνο" : "Microphone");
+            } else if (Manifest.permission.ACCESS_FINE_LOCATION.equals(p)) {
+                missing.append(gr ? "Τοποθεσία" : "Location");
+            }
         }
     }
-    return true;
+
+    if (missing.length() == 0) return;
+
+    String title = gr
+            ? "Λείπουν άδειες"
+            : "Missing permissions";
+
+    String message = gr
+            ? "Λείπουν οι άδειες:\n\n"
+              + missing
+              + "\n\nΘέλεις να ανοίξουν τώρα οι ρυθμίσεις για να τις ενεργοποιήσεις;"
+            : "The following permissions are missing:\n\n"
+              + missing
+              + "\n\nDo you want to open settings now to enable them?";
+
+    new AlertDialog.Builder(this)
+            .setTitle(title)
+            .setMessage(message)
+            .setCancelable(false)
+            .setPositiveButton(
+                    gr ? "ΝΑΙ" : "YES",
+                    (d, w) -> {
+                        Intent i = new Intent(
+                                Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                                Uri.fromParts("package", getPackageName(), null)
+                        );
+                        startActivity(i);
+                    }
+            )
+            .setNegativeButton(
+                    gr ? "ΟΧΙ" : "NO",
+                    (d, w) -> d.dismiss()
+            )
+            .show();
 }
 
-private void showInitialPermissionsPopupStyled() {
+// =========================================================
+// PERMISSIONS — ENTRY GATE (MANDATORY)
+// ---------------------------------------------------------
+// This dialog blocks application entry until the user
+// explicitly decides how to handle required permissions.
+// No labs should request permissions before this gate.
+// =========================================================
+
+private void showPermissionsGate() {
 
     AlertDialog.Builder b =
             new AlertDialog.Builder(MainActivity.this);
@@ -482,9 +579,10 @@ private void showInitialPermissionsPopupStyled() {
         requestNextPermission();
     });
 
-    btnSkip.setOnClickListener(v -> {
-        d.dismiss();
-    });
+btnSkip.setOnClickListener(v -> {
+    d.dismiss();
+    showMissingPermissionsDialog();
+});
 
     if (!isFinishing() && !isDestroyed()) d.show();
 }
@@ -518,8 +616,8 @@ private void requestNextPermission() {
 @Override
 public void onRequestPermissionsResult(
         int requestCode,
-        @NonNull String[] permissions,
-        @NonNull int[] grantResults
+        String[] permissions,
+        int[] grantResults
 ) {
     super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 

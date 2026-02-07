@@ -212,28 +212,7 @@ private void syncReturnButtonText() {
         return;
     }
     
-    @Override
-public void onRequestPermissionsResult(
-        int requestCode,
-        @NonNull String[] permissions,
-        @NonNull int[] grantResults
-) {
-    super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
-    if (requestCode != REQ_PERMISSIONS) return;
-
-    if (grantResults.length > 0
-            && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-
-        permissionIndex++;
-        requestNextPermission();
-
-    } else {
-
-        appendHtml("<br>Permissions not fully granted.");
-        onPermissionsDenied();
-    }
-}
+    
 
     String mode = getSavedPlatform(); // "android" | "apple"
     String txt = "apple".equals(mode)
@@ -251,8 +230,6 @@ public void onBackPressed() {
 
     showPlatformSelectPopup();
 }
-
-
 
 // =========================================================
 // PLATFORM FLOW — ALWAYS SHOW WELCOME
@@ -536,6 +513,31 @@ private void requestNextPermission() {
 
     // ✅ Όλες οι άδειες οκ
     onAllPermissionsGranted();
+}
+
+@Override
+public void onRequestPermissionsResult(
+        int requestCode,
+        @NonNull String[] permissions,
+        @NonNull int[] grantResults
+) {
+    super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+    if (requestCode != REQ_PERMISSIONS) return;
+
+    if (grantResults.length > 0
+            && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+        // ✅ Πήρε την άδεια → πάμε στην επόμενη
+        permissionIndex++;
+        requestNextPermission();
+
+    } else {
+
+        // ❌ Άρνηση
+        appendHtml("<br>Permissions not fully granted.");
+        onPermissionsDenied();
+    }
 }
 
     // =========================================================

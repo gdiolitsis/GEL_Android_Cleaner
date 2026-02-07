@@ -4339,12 +4339,12 @@ boolean lab4Success = false;
                                 ? "Το ακουστικό αποδίδει καθαρό ήχο."
                                 : "Earpiece delivers clear audio."
                 );
-            } else {
-                logLabelWarnValue(
-                        gr ? "Αποτέλεσμα" : "Result",
-                        gr
-                                ? "Σύμφωνα με τη δήλωση χρήστη, το ακουστικό δεν αποδίδει καθαρό ήχο."
-                    : "According to the user, the earpiece does not deliver clear audio."
+} else {
+    logLabelWarnValue(
+            gr ? "Αποτέλεσμα" : "Result",
+            gr
+                    ? "Σύμφωνα με τη δήλωση χρήστη, το ακουστικό δεν αποδίδει καθαρό ήχο."
+                    : "According to the user's declaration, the earpiece does not deliver clear audio."
     );
 }
 
@@ -4522,29 +4522,6 @@ private void showAnswerCheckConfirmation() {
     while (!answered.get()) {
         SystemClock.sleep(50);
     }
-}
-
-// ====================================================
-// RESULT — EARPIECE
-// ====================================================
-appendHtml("<br>");
-logInfo(gr ? "LAB 4 PRO — Ακουστικό" : "LAB 4 PRO — Earpiece");
-logLine();
-
-if (lastAnswerHeardClearly) {
-    logLabelOkValue(
-            gr ? "Αποτέλεσμα" : "Result",
-            gr
-                    ? "Το ακουστικό αποδίδει καθαρό ήχο."
-                    : "Earpiece delivers clear audio."
-    );
-} else {
-    logLabelWarnValue(
-            gr ? "Αποτέλεσμα" : "Result",
-            gr
-                    ? "Σύμφωνα με τη δήλωση χρήστη, το ακουστικό δεν αποδίδει καθαρό ήχο. Απαιτείται έλεγχος."
-                    : "According to the user, the earpiece does not deliver clear audio. Further inspection is required."
-    );
 }
 
 // ====================================================

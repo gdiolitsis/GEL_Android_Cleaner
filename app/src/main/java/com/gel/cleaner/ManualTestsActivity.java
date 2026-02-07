@@ -179,6 +179,9 @@ public class ManualTestsActivity extends AppCompatActivity {
 private static final int REQ_LAB6_TOUCH = 6006;
 private static final int REQ_LAB6_COLOR = 6007;
 
+private static final int REQ_CORE_PERMS = 1001;
+private Runnable pendingAfterPermission = null;
+
 private AlertDialog lab14RunningDialog;
 private static final int REQ_LAB13_BT_CONNECT = 1313;
 

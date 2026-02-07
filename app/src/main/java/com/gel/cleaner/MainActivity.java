@@ -132,7 +132,6 @@ protected void onCreate(Bundle savedInstanceState) {
     setupDonate();
     setupButtons();
     
-    if (!hasAllRequiredPermissions()) {
     showPermissionsGate();
 }
 
@@ -609,15 +608,11 @@ private void requestNextPermission() {
         permissionIndex++;
     }
 
-    // ✅ Όλες οι άδειες οκ
-    onAllPermissionsGranted();
-}
-
 @Override
 public void onRequestPermissionsResult(
         int requestCode,
-        String[] permissions,
-        int[] grantResults
+        @NonNull String[] permissions,
+        @NonNull int[] grantResults
 ) {
     super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
@@ -626,15 +621,14 @@ public void onRequestPermissionsResult(
     if (grantResults.length > 0
             && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
 
-        // ✅ Πήρε την άδεια → πάμε στην επόμενη
+        // Πήρε άδεια → συνέχισε το chain
         permissionIndex++;
         requestNextPermission();
 
     } else {
 
-        // ❌ Άρνηση
-        appendHtml("<br>Permissions not fully granted.");
-        onPermissionsDenied();
+        // Άρνηση → ΜΕΝΕΙ ΣΤΟ GATE
+        showPermissionsGate();
     }
 }
 

@@ -42,11 +42,12 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-
 public class MainActivity extends GELAutoActivityHook
         implements GELCleaner.LogCallback {
         	
         private boolean welcomeShown = false;
+        
+        private int permissionIndex = 0;
                 
   private static final int REQ_PERMISSIONS = 1001;
 
@@ -599,7 +600,7 @@ private void requestNextPermission() {
 
             ActivityCompat.requestPermissions(
                     this,
-                    new String[]{ p },
+                    new String[]{p},
                     REQ_PERMISSIONS
             );
             return;
@@ -608,11 +609,15 @@ private void requestNextPermission() {
         permissionIndex++;
     }
 
+    // ✅ Όλες οι άδειες πέρασαν
+    // εδώ ΜΠΟΡΕΙΣ να συνεχίσεις app flow
+}
+
 @Override
 public void onRequestPermissionsResult(
         int requestCode,
-        @NonNull String[] permissions,
-        @NonNull int[] grantResults
+        String[] permissions,
+        int[] grantResults
 ) {
     super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
@@ -621,13 +626,12 @@ public void onRequestPermissionsResult(
     if (grantResults.length > 0
             && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
 
-        // Πήρε άδεια → συνέχισε το chain
+        // ✅ πήρε άδεια → συνεχίζουμε το chain
         permissionIndex++;
         requestNextPermission();
 
     } else {
-
-        // Άρνηση → ΜΕΝΕΙ ΣΤΟ GATE
+        // ❌ άρνηση → μένει στο gate
         showPermissionsGate();
     }
 }

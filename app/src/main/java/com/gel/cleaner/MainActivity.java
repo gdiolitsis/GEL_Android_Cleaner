@@ -21,6 +21,7 @@ import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.Manifest;
 import android.net.Uri;
 import android.provider.Settings;
 import android.speech.tts.TextToSpeech;
@@ -33,6 +34,8 @@ import android.widget.*;
 import android.view.Window;
 
 import androidx.appcompat.app.AlertDialog;
+import androidx.core.content.ContextCompat;
+import androidx.core.app.ActivityCompat;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -208,6 +211,29 @@ private void syncReturnButtonText() {
         log("❌ btnReturnAndroid = NULL", true);
         return;
     }
+    
+    @Override
+public void onRequestPermissionsResult(
+        int requestCode,
+        @NonNull String[] permissions,
+        @NonNull int[] grantResults
+) {
+    super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+    if (requestCode != REQ_PERMISSIONS) return;
+
+    if (grantResults.length > 0
+            && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+        permissionIndex++;
+        requestNextPermission();
+
+    } else {
+
+        appendHtml("<br>Permissions not fully granted.");
+        onPermissionsDenied();
+    }
+}
 
     String mode = getSavedPlatform(); // "android" | "apple"
     String txt = "apple".equals(mode)
@@ -225,6 +251,8 @@ public void onBackPressed() {
 
     showPlatformSelectPopup();
 }
+
+
 
 // =========================================================
 // PLATFORM FLOW — ALWAYS SHOW WELCOME
@@ -479,7 +507,6 @@ private void showInitialPermissionsPopupStyled() {
 
     btnSkip.setOnClickListener(v -> {
         d.dismiss();
-        logWarn("User skipped initial permissions.");
     });
 
     if (!isFinishing() && !isDestroyed()) d.show();
@@ -507,7 +534,8 @@ private void requestNextPermission() {
         permissionIndex++;
     }
 
-    logOk("All permission checks completed.");
+    // ✅ Όλες οι άδειες οκ
+    onAllPermissionsGranted();
 }
 
     // =========================================================

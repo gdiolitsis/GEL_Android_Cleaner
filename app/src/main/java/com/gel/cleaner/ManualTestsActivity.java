@@ -4243,8 +4243,10 @@ if (!bottomOk && !topOk) {
         gr ? "Κατάσταση" : "Status",
         gr
                 ? "Δεν ανιχνεύθηκε ανθρώπινη φωνή. Ισχυρή ένδειξη βλάβης μικροφώνου."
-                : "Human voice not detected. Strong indication of microphone hardware damage."
-);
+                        : "Human voice not detected. Strong indication of microphone hardware damage."
+        );
+    }
+}
 
 // ====================================================
 // FINAL BASE VERDICT

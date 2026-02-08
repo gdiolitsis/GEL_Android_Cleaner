@@ -4458,7 +4458,7 @@ if (lastAnswerHeardClearly) {
                     : "According to the user's declaration, the earpiece delivers clear audio."
     );
 
-    loglabelokvalue(
+    logLabelOkValue(
             gr
                     ? "Σημείωση: Αν παρουσιαστούν προβλήματα σε πραγματικές συνομιλίες, "
                       + "ενδέχεται να οφείλονται στο δίκτυο, στον codec ή "

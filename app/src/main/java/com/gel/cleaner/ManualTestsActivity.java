@@ -4125,109 +4125,106 @@ if (FORCE_LAB4_FALLBACK) {
     topOk = false;
 }
 
-            // ====================================================
-            // FALLBACK — HUMAN VOICE ONLY (FINAL)
-            // ====================================================
-            if (!bottomOk && !topOk) {
+// ====================================================
+// FALLBACK — HUMAN VOICE ONLY (FINAL • SAFE)
+// ====================================================
+if (!bottomOk && !topOk) {
 
-                fallbackUsed = true;
-lab4HumanFallbackUsed = true; // 🔒 PRO must skip
-stopBaseHere = true;
+    fallbackUsed = true;
+    lab4HumanFallbackUsed = true;
+    stopBaseHere = true;
 
-                appendHtml("<br>");
-                logWarn(gr ? "Δεν ανιχνεύθηκε σήμα. Έλεγχος με ανθρώπινη φωνή."
-                           : "No signal detected. Human voice verification.");
-                logLine();
+    appendHtml("<br>");
+    logWarn(gr
+            ? "Δεν ανιχνεύθηκε σήμα. Έλεγχος με ανθρώπινη φωνή."
+            : "No signal detected. Human voice verification.");
+    logLine();
 
-                final String text = gr
-                        ? "Παρακαλώ μέτρησε έως το τρία, δυνατά, κοντά στο μικρόφωνο."
-                        : "Please count to three loudly, close to the microphone.";
+    final String text = gr
+            ? "Παρακαλώ μέτρησε έως το τρία, δυνατά, κοντά στο μικρόφωνο."
+            : "Please count to three loudly, close to the microphone.";
 
-                final AtomicReference<AlertDialog> ref = new AtomicReference<>();
+    final AtomicReference<AlertDialog> ref = new AtomicReference<>();
 
-                runOnUiThread(() -> {
-                    AlertDialog.Builder b =
-                            new AlertDialog.Builder(this,
-                                    android.R.style.Theme_Material_Dialog_NoActionBar);
-                    b.setCancelable(false);
+    // ---------- UI ----------
+    runOnUiThread(() -> {
+        AlertDialog.Builder b =
+                new AlertDialog.Builder(
+                        this,
+                        android.R.style.Theme_Material_Dialog_NoActionBar
+                );
+        b.setCancelable(false);
 
-                    LinearLayout root = new LinearLayout(this);
-                    root.setOrientation(LinearLayout.VERTICAL);
-                    root.setPadding(dp(26), dp(24), dp(26), dp(22));
+        LinearLayout root = new LinearLayout(this);
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.setPadding(dp(26), dp(24), dp(26), dp(22));
 
-                    GradientDrawable bg = new GradientDrawable();
-                    bg.setColor(0xFF000000);
-                    bg.setCornerRadius(dp(18));
-                    bg.setStroke(dp(3), 0xFFFFD700);
-                    root.setBackground(bg);
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(0xFF000000);
+        bg.setCornerRadius(dp(18));
+        bg.setStroke(dp(3), 0xFFFFD700);
+        root.setBackground(bg);
 
-                    TextView msg = new TextView(this);
-                    msg.setText(text);
-                    msg.setTextColor(0xFF39FF14);
-                    msg.setTextSize(15f);
-                    msg.setGravity(Gravity.CENTER);
-                    root.addView(msg);
+        TextView msg = new TextView(this);
+        msg.setText(text);
+        msg.setTextColor(0xFF39FF14);
+        msg.setTextSize(15f);
+        msg.setGravity(Gravity.CENTER);
+        root.addView(msg);
 
-                    b.setView(root);
-                    AlertDialog d = b.create();
-                    if (d.getWindow() != null)
-                        d.getWindow().setBackgroundDrawable(
-                                new ColorDrawable(Color.TRANSPARENT));
+        b.setView(root);
 
-                    ref.set(d);
+        AlertDialog d = b.create();
+        if (d.getWindow() != null) {
+            d.getWindow().setBackgroundDrawable(
+                    new ColorDrawable(Color.TRANSPARENT)
+            );
+        }
 
-if (!isFinishing() && !isDestroyed()) {
-    d.show();
-}
+        ref.set(d);
+        if (!isFinishing() && !isDestroyed()) d.show();
+    });
 
-// 🔊 TTS ΜΟΝΟ αφού «δέσει» το UI
-new Handler(Looper.getMainLooper()).postDelayed(() -> {
+    // ---------- TTS (εκτός UI) ----------
+    SystemClock.sleep(500);
     AppTTS.ensureSpeak(this, text);
-}, 500);
 
-// ==========================
-// HARD NORMALIZE + HUMAN WINDOW
-// ==========================
-hardNormalizeAudioForMic();
-SystemClock.sleep(4200);
+    // ---------- HUMAN WINDOW ----------
+    hardNormalizeAudioForMic();
+    SystemClock.sleep(4200);
 
-// ==========================
-// CLOSE DIALOG
-// ==========================
-runOnUiThread(() -> {
-    AlertDialog dd = ref.get();
-    if (dd != null && dd.isShowing()) dd.dismiss();
-});
+    // ---------- CLOSE UI ----------
+    runOnUiThread(() -> {
+        AlertDialog d = ref.get();
+        if (d != null && d.isShowing()) d.dismiss();
+    });
 
-// ==========================
-// SINGLE HUMAN MEASURE
-// ==========================
-MicDiagnosticEngine.Result probe =
-        MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.BOTTOM);
+    // ---------- MIC PROBE ----------
+    MicDiagnosticEngine.Result probe =
+            MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.BOTTOM);
 
-boolean spoke =
-        probe != null && (probe.rms > 0 || probe.peak > 0);
+    boolean spoke =
+            probe != null && (probe.rms > 0 || probe.peak > 0);
 
-if (spoke) {
-    bottomOk = true;
-    topOk = true;
+    if (spoke) {
+        bottomOk = true;
+        topOk = true;
 
-    logLabelOkValue(
-            gr ? "Κατάσταση" : "Status",
-            gr
-                    ? "Ανιχνεύθηκε ανθρώπινη φωνή. Τα μικρόφωνα λειτουργούν σωστά."
-                    : "Human voice detected. Microphones are operational."
-    );
-} else {
-    logLabelErrorValue(
-            gr ? "Κατάσταση" : "Status",
-            gr
-                    ? "Δεν ανιχνεύθηκε ανθρώπινη φωνή. Ισχυρή ένδειξη βλάβης μικροφώνου."
-                    : "Human voice not detected. Strong indication of microphone hardware damage."
-    );
+        logLabelOkValue(
+                gr ? "Κατάσταση" : "Status",
+                gr
+                        ? "Ανιχνεύθηκε ανθρώπινη φωνή. Τα μικρόφωνα λειτουργούν σωστά."
+                        : "Human voice detected. Microphones are operational."
+        );
+    } else {
+        logLabelErrorValue(
+                gr ? "Κατάσταση" : "Status",
+                gr
+                        ? "Δεν ανιχνεύθηκε ανθρώπινη φωνή. Ισχυρή ένδειξη βλάβης μικροφώνου."
+                        : "Human voice not detected. Strong indication of microphone hardware damage."
+        );
+    }
 }
-
-if (stopBaseHere) return;
 
             // ====================================================
             // FINAL BASE VERDICT (NO FALLBACK)

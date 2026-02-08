@@ -298,7 +298,7 @@ private int lab3OldMode = AudioManager.MODE_NORMAL;
 private boolean lab3OldSpeaker = false;
 private boolean lab3OldMicMute = false;
 
-private volatile boolean lab4HumanFallbackActive = false;
+private volatile boolean lab4HumanFallbackUsed = false;
 
 // ============================================================  
 // SERVICE LOG SESSION FLAG (CRITICAL)  
@@ -4045,19 +4045,12 @@ new Handler(Looper.getMainLooper()).postDelayed(() -> {
         
 /* ============================================================
    LAB 4 — Microphone Recording Check (BOTTOM + TOP)
-   NEW FLOW: BASE (functional) → PRO (voice analysis)
-   PRO: Prompt (text + TTS) → wait up to 3s for speech → switch prompt → repeat
-   Retry rule: if no speech in 3s → repeat once (another 3s)
+   BASE — FINAL • CLEAN • ISOLATED
    ============================================================ */
 
 private void lab4MicManual() {
-
-    lab4MicBase(() -> {
-        // ΤΩΡΑ που ΤΕΛΕΙΩΣΕ το BASE
-        lab4MicPro();
-    });
+    lab4MicBase(() -> lab4MicPro());
 }
-
 
 private void lab4MicBase(Runnable onFinished) {
 
@@ -4072,13 +4065,12 @@ private void lab4MicBase(Runnable onFinished) {
 
         boolean bottomOk = false;
         boolean topOk = false;
-
-        int bottomRms = 0;
-        int bottomPeak = 0;
-        int topRms = 0;
-        int topPeak = 0;
-
         boolean fallbackUsed = false;
+
+        int bottomRms = 0, bottomPeak = 0;
+        int topRms = 0, topPeak = 0;
+
+        boolean stopBaseHere = false;
 
         try {
 
@@ -4086,13 +4078,11 @@ private void lab4MicBase(Runnable onFinished) {
             // AUTO CHECK — BOTTOM MIC
             // ====================================================
             appendHtml("<br>");
-            logInfo(gr
-                    ? "Έλεγχος κάτω μικροφώνου (αυτόματος):"
-                    : "Bottom microphone auto check:");
+            logInfo(gr ? "Έλεγχος κάτω μικροφώνου (αυτόματος):"
+                       : "Bottom microphone auto check:");
             logLine();
 
             hardNormalizeAudioForMic();
-
             MicDiagnosticEngine.Result bottom =
                     MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.BOTTOM);
 
@@ -4110,13 +4100,11 @@ private void lab4MicBase(Runnable onFinished) {
             // AUTO CHECK — TOP MIC
             // ====================================================
             appendHtml("<br>");
-            logInfo(gr
-                    ? "Έλεγχος άνω μικροφώνου (αυτόματος):"
-                    : "Top microphone auto check:");
+            logInfo(gr ? "Έλεγχος άνω μικροφώνου (αυτόματος):"
+                       : "Top microphone auto check:");
             logLine();
 
             hardNormalizeAudioForMic();
-
             MicDiagnosticEngine.Result top =
                     MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.TOP);
 
@@ -4130,191 +4118,133 @@ private void lab4MicBase(Runnable onFinished) {
 
             topOk = topRms > 0 || topPeak > 0;
 
-// ====================================================
-// LAB 4 — FALLBACK SUB-LAB (HUMAN VOICE ONLY)
-// ISOLATED • BLOCKING • NO AUTO MIC CHECKS
-// ====================================================
-if (!bottomOk && !topOk) {
+            // ====================================================
+            // FALLBACK — HUMAN VOICE ONLY (FINAL)
+            // ====================================================
+            if (!bottomOk && !topOk) {
 
-    fallbackUsed = true;
-    lab4HumanFallbackActive = true;   // 🔒 LOCK LAB 4 FLOW
+                fallbackUsed = true;
+lab4HumanFallbackUsed = true; // 🔒 PRO must skip
+stopBaseHere = true;
 
-    appendHtml("<br>");
-    logWarn(gr
-            ? "Δεν ανιχνεύθηκε σήμα. Έλεγχος με ανθρώπινη φωνή."
-            : "No signal detected. Switching to human voice verification.");
-    logLine();
+                appendHtml("<br>");
+                logWarn(gr ? "Δεν ανιχνεύθηκε σήμα. Έλεγχος με ανθρώπινη φωνή."
+                           : "No signal detected. Human voice verification.");
+                logLine();
 
-    final String instructionText = gr
-            ? "Παρακαλώ μέτρησε έως το τρία, δυνατά,\nκοντά στο μικρόφωνο."
-            : "Please count to three, loudly,\nclose to the microphone.";
+                final String text = gr
+                        ? "Παρακαλώ μέτρησε έως το τρία, δυνατά, κοντά στο μικρόφωνο."
+                        : "Please count to three loudly, close to the microphone.";
 
-    final AtomicReference<AlertDialog> dialogRef = new AtomicReference<>();
+                final AtomicReference<AlertDialog> ref = new AtomicReference<>();
 
-    // ==========================
-    // SHOW HUMAN INSTRUCTION
-    // ==========================
-    runOnUiThread(() -> {
+                runOnUiThread(() -> {
+                    AlertDialog.Builder b =
+                            new AlertDialog.Builder(this,
+                                    android.R.style.Theme_Material_Dialog_NoActionBar);
+                    b.setCancelable(false);
 
-        AlertDialog.Builder b =
-                new AlertDialog.Builder(
-                        this,
-                        android.R.style.Theme_Material_Dialog_NoActionBar
+                    LinearLayout root = new LinearLayout(this);
+                    root.setOrientation(LinearLayout.VERTICAL);
+                    root.setPadding(dp(26), dp(24), dp(26), dp(22));
+
+                    GradientDrawable bg = new GradientDrawable();
+                    bg.setColor(0xFF000000);
+                    bg.setCornerRadius(dp(18));
+                    bg.setStroke(dp(3), 0xFFFFD700);
+                    root.setBackground(bg);
+
+                    TextView msg = new TextView(this);
+                    msg.setText(text);
+                    msg.setTextColor(0xFF39FF14);
+                    msg.setTextSize(15f);
+                    msg.setGravity(Gravity.CENTER);
+                    root.addView(msg);
+
+                    b.setView(root);
+                    AlertDialog d = b.create();
+                    if (d.getWindow() != null)
+                        d.getWindow().setBackgroundDrawable(
+                                new ColorDrawable(Color.TRANSPARENT));
+
+                    ref.set(d);
+                    if (!isFinishing() && !isDestroyed()) d.show();
+                    AppTTS.ensureSpeak(this, text);
+                });
+
+                hardNormalizeAudioForMic();
+                SystemClock.sleep(4200);
+
+                runOnUiThread(() -> {
+                    AlertDialog d = ref.get();
+                    if (d != null && d.isShowing()) d.dismiss();
+                });
+
+                MicDiagnosticEngine.Result probe =
+                        MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.BOTTOM);
+
+                boolean spoke =
+                        probe != null && (probe.rms > 0 || probe.peak > 0);
+
+                if (spoke) {
+                    bottomOk = true;
+                    topOk = true;
+
+                    logLabelOkValue(
+                            gr ? "Κατάσταση" : "Status",
+                            gr ? "Ανιχνεύθηκε ανθρώπινη φωνή. Τα μικρόφωνα λειτουργούν."
+                               : "Human voice detected. Microphones are operational."
+                    );
+                } else {
+                    logLabelErrorValue(
+                            gr ? "Κατάσταση" : "Status",
+                            gr ? "Δεν ανιχνεύθηκε ανθρώπινη φωνή. Ισχυρή ένδειξη βλάβης μικροφώνου."
+                               : "Human voice not detected. Strong indication of microphone hardware damage."
+                    );
+                }
+            }
+
+            if (stopBaseHere) return;
+
+            // ====================================================
+            // FINAL BASE VERDICT (NO FALLBACK)
+            // ====================================================
+            appendHtml("<br>");
+            logInfo(gr ? "Συμπεράσματα υλικού:" : "Hardware conclusions:");
+            logLine();
+
+            if (bottomOk && topOk) {
+                logLabelOkValue(
+                        gr ? "Κατάσταση" : "Status",
+                        gr ? "Και τα δύο μικρόφωνα λειτουργούν κανονικά"
+                           : "Both microphones are operational"
                 );
-        b.setCancelable(false);
+            } else if (bottomOk || topOk) {
+                logLabelWarnValue(
+                        gr ? "Κατάσταση" : "Status",
+                        gr ? "Μερική λειτουργία μικροφώνων"
+                           : "Partial microphone operation detected"
+                );
+            } else {
+                logLabelErrorValue(
+                        gr ? "Κατάσταση" : "Status",
+                        gr ? "Αποτυχία ελέγχου — Πιθανή βλάβη υλικού μικροφώνου"
+                           : "Check failed — Possible microphone hardware failure"
+                );
+            }
 
-        LinearLayout root = new LinearLayout(this);
-        root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(dp(26), dp(24), dp(26), dp(22));
+        } finally {
 
-        GradientDrawable bg = new GradientDrawable();
-        bg.setColor(0xFF000000);
-        bg.setCornerRadius(dp(18));
-        bg.setStroke(dp(3), 0xFFFFD700);
-        root.setBackground(bg);
+            appendHtml("<br>");
+            logOk("Lab 4 (BASE) finished.");
+            logLine();
 
-        TextView msg = new TextView(this);
-        msg.setText(instructionText);
-        msg.setTextColor(0xFF39FF14);
-        msg.setTextSize(15f);
-        msg.setGravity(Gravity.CENTER);
-        root.addView(msg);
-
-        b.setView(root);
-
-        AlertDialog d = b.create();
-        if (d.getWindow() != null) {
-            d.getWindow().setBackgroundDrawable(
-                    new ColorDrawable(Color.TRANSPARENT)
-            );
-        }
-
-        dialogRef.set(d);
-        if (!isFinishing() && !isDestroyed()) d.show();
-
-        AppTTS.ensureSpeak(this, instructionText);
-    });
-
-    // ==========================
-    // HARD NORMALIZE — CLEAN SLATE
-    // ==========================
-    hardNormalizeAudioForMic();
-
-    // ==========================
-    // ⏱️ HUMAN-ONLY WINDOW
-    // ==========================
-    SystemClock.sleep(4200);   // ⬅️ εδώ μιλά ο άνθρωπος, ΤΕΛΟΣ
-
-    // ==========================
-    // CLOSE INSTRUCTION
-    // ==========================
-    runOnUiThread(() -> {
-        AlertDialog d = dialogRef.get();
-        if (d != null && d.isShowing()) d.dismiss();
-    });
-
-    // ==========================
-    // SINGLE HUMAN MEASURE
-    // ==========================
-    MicDiagnosticEngine.Result humanProbe =
-            MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.BOTTOM);
-
-    boolean spoke =
-            humanProbe != null &&
-            (humanProbe.rms > 0 || humanProbe.peak > 0);
-
-    // ==========================
-    // FINAL VERDICT — HUMAN ONLY
-    // ==========================
-    if (spoke) {
-
-        bottomOk = true;
-        topOk = true;
-
-        logLabelOkValue(
-                gr ? "Κατάσταση" : "Status",
-                gr
-                        ? "Ανιχνεύθηκε ανθρώπινη φωνή. Τα μικρόφωνα λειτουργούν."
-                        : "Human voice detected. Microphones are operational."
-        );
-
-    } else {
-
-        bottomOk = false;
-        topOk = false;
-
-        logLabelErrorValue(
-                gr ? "Κατάσταση" : "Status",
-                gr
-                        ? "Δεν ανιχνεύθηκε ανθρώπινη φωνή. Ισχυρή ένδειξη βλάβης μικροφώνου."
-                        : "Human voice not detected. Strong indication of microphone hardware damage."
-        );
-    }
-
-    lab4HumanFallbackActive = false;  // 🔓 UNLOCK LAB 4
-}
-
-// ====================================================
-// FINAL BASE VERDICT
-// ====================================================
-appendHtml("<br>");
-logInfo(gr ? "Συμπεράσματα υλικού:" : "Hardware conclusions:");
-logLine();
-
-if (bottomOk && topOk) {
-
-    logLabelOkValue(
-            gr ? "Κατάσταση" : "Status",
-            fallbackUsed
-                    ? (gr
-                        ? "Μικρόφωνα λειτουργούν (επιβεβαιώθηκαν με ανθρώπινη φωνή)"
-                        : "Microphones operational (human voice verified)")
-                    : (gr
-                        ? "Και τα δύο μικρόφωνα λειτουργούν κανονικά"
-                        : "Both microphones are operational")
-    );
-
-} else if (bottomOk || topOk) {
-
-    logLabelWarnValue(
-            gr ? "Κατάσταση" : "Status",
-            gr
-                    ? "Μερική λειτουργία μικροφώνων"
-                    : "Partial microphone operation detected"
-    );
-
-} else {
-
-    logLabelErrorValue(
-            gr ? "Κατάσταση" : "Status",
-            gr
-                    ? "Αποτυχία ελέγχου — Πιθανή βλάβη υλικού μικροφώνου"
-                    : "Check failed — Possible microphone hardware failure"
-    );
-}
-
-} catch (Throwable t) {
-
-    logLabelErrorValue(
-            gr ? "Πιθανή βλάβη υλικού" : "Possible hardware failure",
-            gr
-                    ? "Δεν ανιχνεύθηκε ανθρώπινη φωνή σε επαναλαμβανόμενες δοκιμές"
-                    : "Human voice not detected after repeated verification attempts"
-    );
-
-} finally {
-
-    appendHtml("<br>");
-    logOk("Lab 4 (BASE) finished.");
-    logLine();
-
-    if (onFinished != null) {
+            if (onFinished != null && !fallbackUsed) {
                 runOnUiThread(onFinished);
             }
         }
 
-    }).start();   // 🔴 ΑΥΤΟ ΛΕΙΠΕΙ
-
+    }).start();
 }
 
 /* ============================================================
@@ -4325,12 +4255,15 @@ private volatile boolean lastAnswerHeardClearly = false;
 
 private void lab4MicPro() {
 
-    // 🔴 ΑΝ ΕΓΙΝΕ HUMAN FALLBACK ΣΤΟ BASE → ΔΕΝ ΤΡΕΧΕΙ PRO
-    if (lab4HumanFallbackActive) {
+    // 🔒 Αν έγινε HUMAN FALLBACK στο BASE → το PRO ΔΕΝ τρέχει
+    if (lab4HumanFallbackUsed) {
+
+        lab4HumanFallbackUsed = false; // reset για επόμενο LAB run
+
         logInfo(
                 AppLang.isGreek(this)
-                        ? "LAB 4 PRO παραλείφθηκε (έγινε έλεγχος με ανθρώπινη φωνή)."
-                        : "LAB 4 PRO skipped (human voice verification was used)."
+                        ? "LAB 4 PRO παραλείφθηκε (έγινε έλεγχος με ανθρώπινη φωνή στο BASE)."
+                        : "LAB 4 PRO skipped (human voice verification was performed in BASE)."
         );
         return;
     }
@@ -4339,8 +4272,7 @@ private void lab4MicPro() {
 
     new Thread(() -> {
 
-        boolean lab4Success = false; // ✅ ΜΕΣΑ ΣΤΟ THREAD (σωστό)
-
+        boolean lab4Success = false;
         AtomicBoolean cancelled = new AtomicBoolean(false);
         AtomicReference<AlertDialog> dialogRef = new AtomicReference<>();
 

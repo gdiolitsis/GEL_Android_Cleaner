@@ -4460,13 +4460,14 @@ if (lastAnswerHeardClearly) {
     );
 
     logLabelOkValue(
-            gr
-                    ? "Σημείωση: Αν παρουσιαστούν προβλήματα σε πραγματικές συνομιλίες, "
-                      + "ενδέχεται να οφείλονται στο δίκτυο, στον codec ή "
-                      + "στο μικρόφωνο / ακουστικό της άλλης συσκευής."
-                    : "Note: If issues occur during real calls, they may be related to network conditions, "
-                      + "codec selection, or the microphone / earpiece of the other party."
-    );
+        gr ? "Σημείωση" : "Note",
+        gr
+                ? "Αν παρουσιαστούν προβλήματα σε πραγματικές συνομιλίες, "
+                  + "ενδέχεται να οφείλονται στο δίκτυο, στον codec ή "
+                  + "στο μικρόφωνο / ακουστικό της άλλης συσκευής."
+                : "If issues occur during real calls, they may be related to network conditions, "
+                  + "codec selection, or the microphone / earpiece of the other party."
+);
 
 } else {
 

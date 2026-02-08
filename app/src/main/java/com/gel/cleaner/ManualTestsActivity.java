@@ -4176,7 +4176,11 @@ stopBaseHere = true;
 
                     ref.set(d);
                     if (!isFinishing() && !isDestroyed()) d.show();
-                    AppTTS.ensureSpeak(this, text);
+});
+
+SystemClock.sleep(500); // ⏱️ ΔΩΣΕ ΧΡΟΝΟ ΣΤΟ UI / AUDIO
+
+AppTTS.ensureSpeak(this, text);
                 });
 
                 hardNormalizeAudioForMic();
@@ -4313,11 +4317,16 @@ try {
 } catch (Throwable ignore) {}
 
 runOnUiThread(() -> {
-    AppTTS.ensureSpeak(
-            this,
-            gr ? "Έλεγχος κάτω μικροφώνου."
-               : "Bottom microphone test."
-    );
+    // ΜΟΝΟ dialog εδώ
+});
+
+SystemClock.sleep(300); // ⏱️ κρίσιμο
+
+AppTTS.ensureSpeak(
+        this,
+        gr ? "Έλεγχος κάτω μικροφώνου."
+           : "Bottom microphone test."
+);
 });
 
             SystemClock.sleep(2200);
@@ -4418,9 +4427,13 @@ runOnUiThread(() -> {
     }
 
     dialogRef.set(d);
-    if (!isFinishing() && !isDestroyed()) d.show();
+if (!isFinishing() && !isDestroyed()) d.show();
 });
 
+// ⏱️ άσε το UI + audio να σταθεροποιηθεί
+SystemClock.sleep(500);
+
+// 🔊 TTS ΠΑΝΤΑ εκτός UI thread
 AppTTS.ensureSpeak(
         this,
         gr ? "Βάλε το ακουστικό στο αυτί σου."
@@ -4716,15 +4729,16 @@ private void showAnswerCheckConfirmation() {
 
         if (!isFinishing() && !isDestroyed()) d.show();
 
-        // ==========================
-        // TTS (SPEAKER)
-        // ==========================
-        AppTTS.ensureSpeak(
-                this,
-                gr
-                        ? "Με άκουσες καθαρά; Τσέκαρε την απάντησή σου."
-                        : "Did you hear me clearly? Check your answer."
-        );
+// ⏱️ άσε UI + audio να «δέσουν»
+SystemClock.sleep(500);
+
+// 🔊 TTS ΠΑΝΤΑ εκτός UI thread
+AppTTS.ensureSpeak(
+        this,
+        gr
+                ? "Με άκουσες καθαρά; Τσέκαρε την απάντησή σου."
+                : "Did you hear me clearly? Check your answer."
+);
     });
 
     long waitUntil = SystemClock.uptimeMillis() + 8000;

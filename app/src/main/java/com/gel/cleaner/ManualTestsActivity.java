@@ -4541,40 +4541,64 @@ cancelled.set(true);
         }
 
 // ============================================================
-// 🎵 PLAY VOICE WAV — AUTO LANGUAGE (EARPIECE ONLY)
+// 🎵 PLAY VOICE WAV — AUTO LANGUAGE (EARPIECE ONLY • LOCKED)
 // ============================================================
 private void playAnswerCheckWav() {
 
-    // 🔊 AUDIO ROUTE — EARPICE PLAYBACK
+    // 👂 HARD ROUTE TO EARPICE (MEDIA -> EARPICE)
     routeToEarpiecePlayback();
 
-    boolean gr = AppLang.isGreek(this);
-    int resId = gr ? R.raw.answercheck_el : R.raw.answercheck_en;
+    AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
+    if (am != null) {
+        try { am.stopBluetoothSco(); } catch (Throwable ignore) {}
+        try { am.setBluetoothScoOn(false); } catch (Throwable ignore) {}
+        try { am.setSpeakerphoneOn(false); } catch (Throwable ignore) {}
+        try { am.setMode(AudioManager.MODE_IN_COMMUNICATION); } catch (Throwable ignore) {}
+    }
+
+    SystemClock.sleep(120);
+
+    // 🌍 AUTO LANGUAGE
+    final boolean gr = AppLang.isGreek(this);
+    final int resId = gr ? R.raw.answercheck_el : R.raw.answercheck_en;
 
     MediaPlayer mp = new MediaPlayer();
 
     try {
         AssetFileDescriptor afd =
                 getResources().openRawResourceFd(resId);
-        if (afd != null) {
-            mp.setDataSource(
-                    afd.getFileDescriptor(),
-                    afd.getStartOffset(),
-                    afd.getLength()
-            );
-            afd.close();
-        }
+        if (afd == null) return;
 
-        mp.setAudioStreamType(AudioManager.STREAM_MUSIC); // 🔒 ΚΛΕΙΔΩΜΕΝΟ
+        mp.setDataSource(
+                afd.getFileDescriptor(),
+                afd.getStartOffset(),
+                afd.getLength()
+        );
+        afd.close();
+
+        // 🔒 CRITICAL: VOICE_CALL stream → earpiece
+        mp.setAudioStreamType(AudioManager.STREAM_VOICE_CALL);
+
         mp.prepare();
         mp.start();
-        SystemClock.sleep(mp.getDuration());
+
+        int dur = 0;
+        try { dur = mp.getDuration(); } catch (Throwable ignore) {}
+        if (dur > 0) {
+            SystemClock.sleep(dur);
+        } else {
+            SystemClock.sleep(1800);
+        }
 
     } catch (Throwable ignore) {
+
     } finally {
         try { mp.stop(); } catch (Throwable ignore) {}
         try { mp.release(); } catch (Throwable ignore) {}
     }
+
+    // 🔊 Μετά το WAV, επιστροφή σε speaker για ερωτήσεις
+    routeToSpeaker();
 
     showAnswerCheckConfirmation();
 }
@@ -4625,15 +4649,35 @@ private void showAnswerCheckConfirmation() {
         row.setOrientation(LinearLayout.HORIZONTAL);
         row.setGravity(Gravity.CENTER);
 
-        Button no = new Button(this);
-        no.setText(gr ? "ΟΧΙ" : "NO");
+                // ---------- NO ----------
+        Button noBtn = new Button(this);
+        noBtn.setText(gr ? "ΟΧΙ" : "NO");
+        noBtn.setAllCaps(false);
+        noBtn.setTextColor(Color.WHITE);
 
-        Button yes = new Button(this);
-        yes.setText(gr ? "ΝΑΙ" : "YES");
+        GradientDrawable noBg = new GradientDrawable();
+        noBg.setColor(0xFF8B0000);
+        noBg.setCornerRadius(dp(14));
+        noBg.setStroke(dp(3), 0xFFFFD700);
+        noBtn.setBackground(noBg);
+        noBtn.setLayoutParams(btnLp);
 
-        row.addView(no);
-        row.addView(yes);
-        root.addView(row);
+        // ---------- YES ----------
+        Button yesBtn = new Button(this);
+        yesBtn.setText(gr ? "ΝΑΙ" : "YES");
+        yesBtn.setAllCaps(false);
+        yesBtn.setTextColor(Color.WHITE);
+
+        GradientDrawable yesBg = new GradientDrawable();
+        yesBg.setColor(0xFF0B5F3B);
+        yesBg.setCornerRadius(dp(14));
+        yesBg.setStroke(dp(3), 0xFFFFD700);
+        yesBtn.setBackground(yesBg);
+        yesBtn.setLayoutParams(btnLp);
+
+        btnRow.addView(noBtn);
+        btnRow.addView(yesBtn);
+        root.addView(btnRow);
 
         b.setView(root);
         AlertDialog d = b.create();

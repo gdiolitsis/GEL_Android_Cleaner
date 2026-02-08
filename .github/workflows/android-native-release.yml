@@ -3,7 +3,8 @@ name: Manual Build — GEL iDoctor (APK + AAB)
 on:
   workflow_dispatch:
   push:
-    branches: [ main ]:
+    branches:
+      - main
 
 jobs:
   build:

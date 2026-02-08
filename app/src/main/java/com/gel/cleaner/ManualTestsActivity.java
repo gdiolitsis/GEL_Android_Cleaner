@@ -4176,59 +4176,63 @@ private void lab4MicBase(Runnable onFinished) {
                 topOk    = topRms > 0    || topPeak > 0;
             }
 
-            // ====================================================
-            // FINAL BASE VERDICT
-            // ====================================================
-            appendHtml("<br>");
-            logInfo(gr ? "Συμπεράσματα υλικού:" : "Hardware conclusions:");
-            logLine();
+// ====================================================
+// FINAL BASE VERDICT
+// ====================================================
+appendHtml("<br>");
+logInfo(gr ? "Συμπεράσματα υλικού:" : "Hardware conclusions:");
+logLine();
 
-            if (bottomOk && topOk) {
-                logLabelOkValue(
-                        gr ? "Κατάσταση" : "Status",
-                        fallbackUsed
-                                ? (gr ? "Μικρόφωνα λειτουργούν (με ανθρώπινη επιβεβαίωση)"
-                                      : "Microphones operational (human verified)")
-                                : (gr ? "Και τα δύο μικρόφωνα λειτουργούν κανονικά"
-                                      : "Both microphones are operational")
-                );
-            } else if (bottomOk || topOk) {
-                logLabelWarnValue(
-                        gr ? "Κατάσταση" : "Status",
-                        gr
-                                ? "Μερική λειτουργία μικροφώνων"
-                                : "Partial microphone operation detected"
-                );
-            } else {
-                logLabelErrorValue(
-                        gr ? "Κατάσταση" : "Status",
-                        gr
-                                ? "Αποτυχία ελέγχου μικροφώνων — Πιθανή βλάβη υλικού"
-                                : "Microphone check failed — Possible hardware failure"
-                );
-            }
+if (bottomOk && topOk) {
 
-        } catch (Throwable t) {
+    logLabelOkValue(
+            gr ? "Κατάσταση" : "Status",
+            fallbackUsed
+                    ? (gr
+                        ? "Μικρόφωνα λειτουργούν (επιβεβαιώθηκαν με ανθρώπινη φωνή)"
+                        : "Microphones operational (human voice verified)")
+                    : (gr
+                        ? "Και τα δύο μικρόφωνα λειτουργούν κανονικά"
+                        : "Both microphones are operational")
+    );
 
-            logLabelErrorValue(
-                    gr ? "Σφάλμα" : "Error",
-                    gr
-                            ? "Αποτυχία ελέγχου μικροφώνων"
-                            : "Microphone hardware check failed"
-            );
+} else if (bottomOk || topOk) {
 
-        } finally {
+    logLabelWarnValue(
+            gr ? "Κατάσταση" : "Status",
+            gr
+                    ? "Μερική λειτουργία μικροφώνων"
+                    : "Partial microphone operation detected"
+    );
 
-            appendHtml("<br>");
-            logOk("Lab 4 (BASE) finished.");
-            logLine();
+} else {
 
-            if (onFinished != null) {
-                runOnUiThread(onFinished);
-            }
-        }
+    logLabelErrorValue(
+            gr ? "Κατάσταση" : "Status",
+            gr
+                    ? "Αποτυχία ελέγχου — Πιθανή βλάβη υλικού μικροφώνου"
+                    : "Check failed — Possible microphone hardware failure"
+    );
+}
 
-    }).start();
+} catch (Throwable t) {
+
+    logLabelErrorValue(
+            gr ? "Πιθανή βλάβη υλικού" : "Possible hardware failure",
+            gr
+                    ? "Δεν ανιχνεύθηκε ανθρώπινη φωνή σε επαναλαμβανόμενες δοκιμές"
+                    : "Human voice not detected after repeated verification attempts"
+    );
+
+} finally {
+
+    appendHtml("<br>");
+    logOk("Lab 4 (BASE) finished.");
+    logLine();
+
+    if (onFinished != null) {
+        runOnUiThread(onFinished);
+    }
 }
 
 /* ============================================================
@@ -4275,13 +4279,15 @@ private void lab4MicPro() {
                 try { am.setMode(AudioManager.MODE_IN_COMMUNICATION); } catch (Throwable ignore) {}
             }
 
-            SystemClock.sleep(200);
+            SystemClock.sleep(500);
 
-            AppTTS.ensureSpeak(
-                    this,
-                    gr ? "Έλεγχος κάτω μικροφώνου."
-                       : "Bottom microphone test."
-            );
+            runOnUiThread(() ->
+        AppTTS.ensureSpeak(
+                this,
+                gr ? "Έλεγχος κάτω μικροφώνου."
+                   : "Bottom microphone test."
+        )
+);
 
             SystemClock.sleep(2200);
             dismiss(dialogRef);
@@ -4292,28 +4298,42 @@ private void lab4MicPro() {
                     MicDiagnosticEngine.run(this);
 
             appendHtml("<br>");
-            logInfo(gr
-                    ? "LAB 4 PRO — Ποιότητα συνομιλίας (κάτω μικρόφωνο)"
-                    : "LAB 4 PRO — Call quality (bottom microphone)");
-            logLine();
+logInfo(gr
+        ? "LAB 4 PRO — Ποιότητα συνομιλίας (κάτω μικρόφωνο)"
+        : "LAB 4 PRO — Call quality (bottom microphone)");
+logLine();
 
-            if (r != null && (r.rms > 0 || r.peak > 0)) {
-                logLabelOkValue(
-                        gr ? "Συμπέρασμα" : "Conclusion",
-                        gr
-                                ? "Η ομιλία ήταν καθαρή. Το κάτω μικρόφωνο αποδίδει σωστά σε συνομιλία."
-                                : "Speech was clear. Bottom microphone performs correctly in calls."
-                );
-            } else {
-                logLabelWarnValue(
-                        gr ? "Συμπέρασμα" : "Conclusion",
-                        gr
-                                ? "Η ομιλία δεν ήταν καθαρή. Απαιτείται περαιτέρω έλεγχος."
-                                : "Speech was not clear. Further inspection is required."
-                );
-            }
+if (r != null && (r.rms > 0 || r.peak > 0)) {
 
-            logLine();
+    logLabelOkValue(
+            gr ? "Συμπέρασμα" : "Conclusion",
+            gr
+                    ? "Η ομιλία ήταν καθαρή. Το κάτω μικρόφωνο αποδίδει σωστά σε τοπικό τεστ συνομιλίας."
+                    : "Speech was clear. The bottom microphone performs correctly in the local call test."
+    );
+
+    logInfo(
+            gr
+                    ? "Σημείωση: Αν παρουσιαστούν προβλήματα σε πραγματικές συνομιλίες, "
+                      + "ενδέχεται να οφείλονται στο δίκτυο, στον codec ή "
+                      + "στο μικρόφωνο / ακουστικό της άλλης συσκευής."
+                    : "Note: If issues occur during real calls, they may be related to network conditions, "
+                      + "codec selection, or the microphone / earpiece of the other party."
+    );
+
+} else {
+
+    logLabelWarnValue(
+            gr ? "Συμπέρασμα" : "Conclusion",
+            gr
+                    ? "Η ομιλία δεν ανιχνεύθηκε καθαρά στο τοπικό τεστ — "
+                      + "ισχυρή ένδειξη προβλήματος στο κάτω μικρόφωνο της συσκευής."
+                    : "Speech was not clearly detected in the local test — "
+                      + "strong indication of an issue with the device bottom microphone."
+    );
+}
+
+logLine();
 
             // ====================================================
             // STAGE 2 — USER INSTRUCTION
@@ -4379,57 +4399,84 @@ private void lab4MicPro() {
             // ====================================================
             playAnswerCheckWav();
 
-            // ====================================================
-            // RESULT — EARPIECE
-            // ====================================================
-            appendHtml("<br>");
-            logInfo(gr ? "LAB 4 PRO — Ακουστικό" : "LAB 4 PRO — Earpiece");
-            logLine();
+// ====================================================
+// RESULT — EARPIECE
+// ====================================================
+appendHtml("<br>");
+logInfo(gr ? "LAB 4 PRO — Ακουστικό" : "LAB 4 PRO — Earpiece");
+logLine();
 
-            if (lastAnswerHeardClearly) {
-                logLabelOkValue(
-                        gr ? "Αποτέλεσμα" : "Result",
-                        gr
-                                ? "Το ακουστικό αποδίδει καθαρό ήχο."
-                                : "Earpiece delivers clear audio."
-                );
-            } else {
-                logLabelWarnValue(
-                        gr ? "Αποτέλεσμα" : "Result",
-                        gr
-                                ? "Σύμφωνα με τη δήλωση χρήστη, το ακουστικό δεν αποδίδει καθαρό ήχο."
-                                : "According to the user's declaration, the earpiece does not deliver clear audio."
-                );
-            }
+if (lastAnswerHeardClearly) {
 
-            logLine();
+    logLabelOkValue(
+            gr ? "Αποτέλεσμα" : "Result",
+            gr
+                    ? "Σύμφωνα με τη δήλωση χρήστη, το ακουστικό αποδίδει καθαρό ήχο."
+                    : "According to the user's declaration, the earpiece delivers clear audio."
+    );
 
-            // ✅ SUCCESS
-            lab4Success = true;
+    logInfo(
+            gr
+                    ? "Σημείωση: Αν παρουσιαστούν προβλήματα σε πραγματικές συνομιλίες, "
+                      + "ενδέχεται να οφείλονται στο δίκτυο, στον codec ή "
+                      + "στο μικρόφωνο / ακουστικό της άλλης συσκευής."
+                    : "Note: If issues occur during real calls, they may be related to network conditions, "
+                      + "codec selection, or the microphone / earpiece of the other party."
+    );
 
-            appendHtml("<br>");
-            logOk("Lab 4 finished.");
-            logLine();
+} else {
 
-            runOnUiThread(this::enableSingleExportButton);
-            cancelled.set(true);
+    logLabelWarnValue(
+            gr ? "Αποτέλεσμα" : "Result",
+            gr
+                    ? "Σύμφωνα με τη δήλωση χρήστη, ο ήχος από το ακουστικό δεν ήταν καθαρός."
+                    : "According to the user's declaration, the earpiece audio was not clear."
+    );
 
-        } catch (Throwable t) {
+    logInfo(
+            gr
+                    ? "Πιθανές αιτίες: χαμηλή στάθμη έντασης, βουλωμένο ακουστικό, "
+                      + "προστατευτικό οθόνης, θέση συσκευής, ή πραγματική βλάβη ακουστικού."
+                    : "Possible causes: low volume level, obstructed earpiece, "
+                      + "screen protector interference, device position, or actual earpiece hardware issue."
+    );
+}
 
-            appendHtml("<br>");
-            logLabelErrorValue(
-                    gr ? "Σφάλμα" : "Error",
-                    gr ? "Αποτυχία LAB 4 PRO" : "LAB 4 PRO failed"
-            );
+logLine();
 
-            logWarn(gr
-                    ? "Το εργαστήριο απέτυχε. Παρακαλώ τρέξτε το ξανά από την αρχή."
-                    : "The lab failed. Please rerun it from the beginning."
-            );
+// ✅ LAB COMPLETED (regardless of user perception)
+lab4Success = true;
 
-            appendHtml("<br>");
-            logOk("Lab 4 finished.");
-            logLine();
+appendHtml("<br>");
+logOk("Lab 4 finished.");
+logLine();
+
+runOnUiThread(this::enableSingleExportButton);
+cancelled.set(true);
+
+} catch (Throwable t) {
+
+    appendHtml("<br>");
+
+    logLabelWarnValue(
+            gr ? "Διακοπή" : "Interrupted",
+            gr
+                    ? "Το LAB 4 PRO δεν ολοκληρώθηκε κανονικά."
+                    : "LAB 4 PRO did not complete normally."
+    );
+
+    logInfo(
+            gr
+                    ? "Πιθανές αιτίες: διακοπή από τον χρήστη, "
+                      + "πρόβλημα TTS ή προσωρινό θέμα audio routing."
+                    : "Possible causes: user interruption, "
+                      + "TTS issue or temporary audio routing problem."
+    );
+
+    appendHtml("<br>");
+    logOk("Lab 4 finished.");
+    logLine();
+}
 
         } finally {
 
@@ -4532,8 +4579,8 @@ private void showAnswerCheckConfirmation() {
 
         TextView msg = new TextView(this);
         msg.setText(gr
-                ? "Με άκουσες καθαρά;"
-                : "Did you hear me clearly?");
+                ? "Με άκουσες καθαρά; Τσέκαρε την απάντηση σου."
+                        : "Did you hear me clearly? Check your answer.");
         msg.setTextColor(0xFF39FF14);
         msg.setTextSize(15f);
         msg.setGravity(Gravity.CENTER);

@@ -4262,9 +4262,12 @@ if (bottomOk && topOk) {
     logLine();
 
     if (onFinished != null) {
-        runOnUiThread(onFinished);
-    }
-}
+                runOnUiThread(onFinished);
+            }
+        }
+
+    }).start();   // 🔴 ΑΥΤΟ ΛΕΙΠΕΙ
+
 }
 
 /* ============================================================

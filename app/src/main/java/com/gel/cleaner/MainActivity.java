@@ -107,23 +107,31 @@ public class MainActivity extends GELAutoActivityHook
             if (ttsReady[0] && welcomeShown) speakWelcomeTTS();
         });
 
-        // APPLY PLATFORM UI
-        if ("apple".equals(getSavedPlatform())) {
-            applyAppleModeUI();
-        } else {
-            applyAndroidModeUI();
-        }
-        syncReturnButtonText();
+        // 🚨 PERMISSIONS ENTRY GATE — ΠΑΝΤΑ ΠΡΩΤΟ
+if (hasMissingPermissions()) {
+    showPermissionsGate();
+    return;
+}
 
-        if (!consumeSkipWelcomeOnce() && !isWelcomeDisabled()) {
-            showWelcomePopup();
-        }
+// APPLY PLATFORM UI
+if ("apple".equals(getSavedPlatform())) {
+    applyAppleModeUI();
+} else {
+    applyAndroidModeUI();
+}
+syncReturnButtonText();
 
-        // 🚨 PERMISSIONS ENTRY GATE
-        showPermissionsGate();
+if (!consumeSkipWelcomeOnce() && !isWelcomeDisabled()) {
+    showWelcomePopup();
+}
 
-        log("📱 Device ready", false);
-    }
+// 🚨 PERMISSIONS ENTRY GATE (ONLY IF NEEDED)
+if (hasMissingPermissions()) {
+    permissionIndex = 0;   // 🔒 καθαρό start
+    showPermissionsGate();
+}
+
+log("📱 Device ready", false);
 
     // =========================================================
     // PERMISSIONS — ENTRY GATE (MANDATORY)
@@ -163,18 +171,58 @@ public class MainActivity extends GELAutoActivityHook
                 ? "Η εφαρμογή χρειάζεται άδειες για να λειτουργήσει σωστά.\n\nΘα ζητηθούν μία-μία."
                 : "The app requires permissions to function properly.\n\nThey will be requested one by one.");
 
-        LinearLayout buttons = new LinearLayout(this);
-        buttons.setOrientation(LinearLayout.HORIZONTAL);
+        // ================= BUTTONS (CENTERED — GEL STYLE) =================
+LinearLayout buttons = new LinearLayout(this);
+buttons.setOrientation(LinearLayout.HORIZONTAL);
+buttons.setGravity(Gravity.CENTER);
+buttons.setPadding(0, dp(18), 0, 0);
 
-        Button btnContinue = new Button(this);
-        btnContinue.setText(gr ? "ΣΥΝΕΧΕΙΑ" : "CONTINUE");
+// ---------- CONTINUE (GREEN) ----------
+Button btnContinue = new Button(this);
+btnContinue.setText(gr ? "ΣΥΝΕΧΕΙΑ" : "CONTINUE");
+btnContinue.setAllCaps(false);
+btnContinue.setTextColor(Color.WHITE);
+btnContinue.setTextSize(16f);
 
-        Button btnSkip = new Button(this);
-        btnSkip.setText(gr ? "ΠΑΡΑΛΕΙΨΗ" : "SKIP");
+GradientDrawable bgContinue = new GradientDrawable();
+bgContinue.setColor(0xFF0F8A3B);          // GEL green
+bgContinue.setCornerRadius(dp(16));
+bgContinue.setStroke(dp(3), 0xFFFFD700);  // gold stroke
+btnContinue.setBackground(bgContinue);
 
-        buttons.addView(btnContinue);
-        buttons.addView(btnSkip);
-        box.addView(buttons);
+LinearLayout.LayoutParams lpContinue =
+        new LinearLayout.LayoutParams(
+                dp(140),
+                dp(56)
+        );
+lpContinue.setMargins(dp(10), 0, dp(10), 0);
+btnContinue.setLayoutParams(lpContinue);
+
+// ---------- SKIP (RED) ----------
+Button btnSkip = new Button(this);
+btnSkip.setText(gr ? "ΠΑΡΑΛΕΙΨΗ" : "SKIP");
+btnSkip.setAllCaps(false);
+btnSkip.setTextColor(Color.WHITE);
+btnSkip.setTextSize(16f);
+
+GradientDrawable bgSkip = new GradientDrawable();
+bgSkip.setColor(0xFF8A1F1F);              // GEL red
+bgSkip.setCornerRadius(dp(16));
+bgSkip.setStroke(dp(3), 0xFFFFD700);      // gold stroke
+btnSkip.setBackground(bgSkip);
+
+LinearLayout.LayoutParams lpSkip =
+        new LinearLayout.LayoutParams(
+                dp(140),
+                dp(56)
+        );
+lpSkip.setMargins(dp(10), 0, dp(10), 0);
+btnSkip.setLayoutParams(lpSkip);
+
+// ADD
+buttons.addView(btnContinue);
+buttons.addView(btnSkip);
+box.addView(buttons);
 
         b.setView(box);
         AlertDialog d = b.create();
@@ -197,18 +245,28 @@ public class MainActivity extends GELAutoActivityHook
     }
 
     private void requestNextPermission() {
-        while (permissionIndex < REQUIRED_PERMISSIONS.length) {
-            String p = REQUIRED_PERMISSIONS[permissionIndex];
-            if (ContextCompat.checkSelfPermission(this, p)
-                    != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(
-                        this, new String[]{p}, REQ_PERMISSIONS);
-                return;
-            }
-            permissionIndex++;
+
+    while (permissionIndex < REQUIRED_PERMISSIONS.length) {
+
+        String p = REQUIRED_PERMISSIONS[permissionIndex];
+
+        if (ContextCompat.checkSelfPermission(this, p)
+                != PackageManager.PERMISSION_GRANTED) {
+
+            ActivityCompat.requestPermissions(
+                    this,
+                    new String[]{p},
+                    REQ_PERMISSIONS
+            );
+            return;
         }
-        // όλα OK
+
+        permissionIndex++;
     }
+
+    // ✅ ΟΛΕΣ ΟΙ ΑΔΕΙΕΣ OK
+    // εδώ συνεχίζει κανονικά το app
+}
 
 private void showMissingPermissionsDialog() {
 
@@ -269,27 +327,45 @@ private void showMissingPermissionsDialog() {
 }
 
     @Override
-    public void onRequestPermissionsResult(
-            int requestCode,
-            String[] permissions,
-            int[] grantResults
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode != REQ_PERMISSIONS) return;
+public void onRequestPermissionsResult(
+        int requestCode,
+        String[] permissions,
+        int[] grantResults
+) {
+    super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
-        if (grantResults.length > 0
-                && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            permissionIndex++;
-            requestNextPermission();
-        } else {
-            showPermissionsGate();
-        }
+    if (requestCode != REQ_PERMISSIONS) return;
+
+    if (grantResults.length > 0
+            && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+        // ✅ πήρε άδεια → επόμενη
+        permissionIndex++;
+        requestNextPermission();
+
+    } else {
+
+        // ❌ άρνηση → RESET + επιστροφή στο gate
+        permissionIndex = 0;   // 🔒 ΑΠΑΡΑΙΤΗΤΟ
+        showPermissionsGate();
     }
+}
 
     // =========================================================
     // HELPERS
     // =========================================================
-    private void syncReturnButtonText() {
+    
+private boolean hasMissingPermissions() {
+    for (String p : REQUIRED_PERMISSIONS) {
+        if (ContextCompat.checkSelfPermission(this, p)
+                != PackageManager.PERMISSION_GRANTED) {
+            return true;
+        }
+    }
+    return false;
+}
+
+private void syncReturnButtonText() {
         Button b = findViewById(R.id.btnReturnAndroid);
         if (b != null) {
             b.setText("apple".equals(getSavedPlatform())

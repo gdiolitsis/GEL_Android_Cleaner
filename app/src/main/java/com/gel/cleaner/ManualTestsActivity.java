@@ -300,6 +300,8 @@ private boolean lab3OldMicMute = false;
 
 private volatile boolean lab4HumanFallbackUsed = false;
 
+private static final boolean FORCE_LAB4_FALLBACK = true;
+
 // ============================================================  
 // SERVICE LOG SESSION FLAG (CRITICAL)  
 // ============================================================  
@@ -4117,6 +4119,11 @@ private void lab4MicBase(Runnable onFinished) {
             logLabelOkValue("Top Peak", String.valueOf(topPeak));
 
             topOk = topRms > 0 || topPeak > 0;
+// 🔧 FORCE FALLBACK FOR TESTING
+if (FORCE_LAB4_FALLBACK) {
+    bottomOk = false;
+    topOk = false;
+}
 
             // ====================================================
             // FALLBACK — HUMAN VOICE ONLY (FINAL)

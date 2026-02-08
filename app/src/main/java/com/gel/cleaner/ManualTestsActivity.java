@@ -298,6 +298,8 @@ private int lab3OldMode = AudioManager.MODE_NORMAL;
 private boolean lab3OldSpeaker = false;
 private boolean lab3OldMicMute = false;
 
+private volatile boolean lab4HumanFallbackActive = false;
+
 // ============================================================  
 // SERVICE LOG SESSION FLAG (CRITICAL)  
 // ============================================================  
@@ -4129,12 +4131,13 @@ private void lab4MicBase(Runnable onFinished) {
             topOk = topRms > 0 || topPeak > 0;
 
 // ====================================================
-// FALLBACK — HUMAN VOICE (ONLY IF BOTH = 0)
-// HUMAN VERIFIED — NO AUTO RECHECK (FINAL)
+// LAB 4 — FALLBACK SUB-LAB (HUMAN VOICE ONLY)
+// ISOLATED • BLOCKING • NO AUTO MIC CHECKS
 // ====================================================
 if (!bottomOk && !topOk) {
 
     fallbackUsed = true;
+    lab4HumanFallbackActive = true;   // 🔒 LOCK LAB 4 FLOW
 
     appendHtml("<br>");
     logWarn(gr
@@ -4198,10 +4201,9 @@ if (!bottomOk && !topOk) {
     hardNormalizeAudioForMic();
 
     // ==========================
-    // ⏱️ HUMAN VOICE WINDOW
-    // (ΔΙΝΟΥΜΕ ΧΡΟΝΟ ΣΤΟΝ ΑΝΘΡΩΠΟ)
+    // ⏱️ HUMAN-ONLY WINDOW
     // ==========================
-    SystemClock.sleep(4200);
+    SystemClock.sleep(4200);   // ⬅️ εδώ μιλά ο άνθρωπος, ΤΕΛΟΣ
 
     // ==========================
     // CLOSE INSTRUCTION
@@ -4212,13 +4214,14 @@ if (!bottomOk && !topOk) {
     });
 
     // ==========================
-    // SINGLE MEASURE — HUMAN ONLY
+    // SINGLE HUMAN MEASURE
     // ==========================
-    MicDiagnosticEngine.Result probe =
+    MicDiagnosticEngine.Result humanProbe =
             MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.BOTTOM);
 
     boolean spoke =
-            probe != null && (probe.rms > 0 || probe.peak > 0);
+            humanProbe != null &&
+            (humanProbe.rms > 0 || humanProbe.peak > 0);
 
     // ==========================
     // FINAL VERDICT — HUMAN ONLY
@@ -4231,8 +4234,8 @@ if (!bottomOk && !topOk) {
         logLabelOkValue(
                 gr ? "Κατάσταση" : "Status",
                 gr
-                        ? "Τα μικρόφωνα λειτουργούν. (επιβεβαίωση με ανθρώπινη φωνή)"
-                        : "Microphones operational. (human voice verified)"
+                        ? "Ανιχνεύθηκε ανθρώπινη φωνή. Τα μικρόφωνα λειτουργούν."
+                        : "Human voice detected. Microphones are operational."
         );
 
     } else {
@@ -4247,6 +4250,8 @@ if (!bottomOk && !topOk) {
                         : "Human voice not detected. Strong indication of microphone hardware damage."
         );
     }
+
+    lab4HumanFallbackActive = false;  // 🔓 UNLOCK LAB 4
 }
 
 // ====================================================
@@ -4319,6 +4324,16 @@ if (bottomOk && topOk) {
 private volatile boolean lastAnswerHeardClearly = false;
 
 private void lab4MicPro() {
+
+    // 🔴 ΑΝ ΕΓΙΝΕ HUMAN FALLBACK ΣΤΟ BASE → ΔΕΝ ΤΡΕΧΕΙ PRO
+    if (lab4HumanFallbackActive) {
+        logInfo(
+                AppLang.isGreek(this)
+                        ? "LAB 4 PRO παραλείφθηκε (έγινε έλεγχος με ανθρώπινη φωνή)."
+                        : "LAB 4 PRO skipped (human voice verification was used)."
+        );
+        return;
+    }
 
     final boolean gr = AppLang.isGreek(this);
 

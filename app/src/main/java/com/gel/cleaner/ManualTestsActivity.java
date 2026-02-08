@@ -4638,11 +4638,11 @@ private void playAnswerCheckWav() {
 }
 
 // ============================================================
-// STAGE 4 — HUMAN CONFIRMATION
+// STAGE 4 — HUMAN CONFIRMATION (FINAL • COMPILE SAFE)
 // ============================================================
 private void showAnswerCheckConfirmation() {
 
-    // 🔊 ΟΔΗΓΙΕΣ ΑΠΟ SPEAKER (ΣΩΣΤΟ)
+    // 🔊 ΟΔΗΓΙΕΣ ΑΠΟ SPEAKER
     AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
     if (am != null) {
         try { am.setMode(AudioManager.MODE_NORMAL); } catch (Throwable ignore) {}
@@ -4661,9 +4661,6 @@ private void showAnswerCheckConfirmation() {
                 );
         b.setCancelable(false);
 
-        // ==========================
-        // ROOT
-        // ==========================
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
         root.setPadding(dp(26), dp(24), dp(26), dp(22));
@@ -4674,9 +4671,6 @@ private void showAnswerCheckConfirmation() {
         bg.setStroke(dp(3), 0xFFFFD700);
         root.setBackground(bg);
 
-        // ==========================
-        // MESSAGE
-        // ==========================
         TextView msg = new TextView(this);
         msg.setText(gr
                 ? "Με άκουσες καθαρά; Τσέκαρε την απάντησή σου."
@@ -4687,21 +4681,17 @@ private void showAnswerCheckConfirmation() {
         msg.setPadding(0, 0, 0, dp(18));
         root.addView(msg);
 
-        // ==========================
-        // BUTTON ROW
-        // ==========================
         LinearLayout btnRow = new LinearLayout(this);
         btnRow.setOrientation(LinearLayout.HORIZONTAL);
         btnRow.setGravity(Gravity.CENTER);
 
-        LinearLayout.LayoutParams btnLp =
+        LinearLayout.LayoutParams lp =
                 new LinearLayout.LayoutParams(
                         ViewGroup.LayoutParams.WRAP_CONTENT,
                         ViewGroup.LayoutParams.WRAP_CONTENT
                 );
-        btnLp.setMargins(dp(12), dp(8), dp(12), dp(8));
+        lp.setMargins(dp(12), dp(8), dp(12), dp(8));
 
-        // ---------- NO ----------
         Button noBtn = new Button(this);
         noBtn.setText(gr ? "ΟΧΙ" : "NO");
         noBtn.setAllCaps(false);
@@ -4712,9 +4702,8 @@ private void showAnswerCheckConfirmation() {
         noBg.setCornerRadius(dp(14));
         noBg.setStroke(dp(3), 0xFFFFD700);
         noBtn.setBackground(noBg);
-        noBtn.setLayoutParams(btnLp);
+        noBtn.setLayoutParams(lp);
 
-        // ---------- YES ----------
         Button yesBtn = new Button(this);
         yesBtn.setText(gr ? "ΝΑΙ" : "YES");
         yesBtn.setAllCaps(false);
@@ -4725,9 +4714,8 @@ private void showAnswerCheckConfirmation() {
         yesBg.setCornerRadius(dp(14));
         yesBg.setStroke(dp(3), 0xFFFFD700);
         yesBtn.setBackground(yesBg);
-        yesBtn.setLayoutParams(btnLp);
+        yesBtn.setLayoutParams(lp);
 
-        // ---------- ADD ----------
         btnRow.addView(noBtn);
         btnRow.addView(yesBtn);
         root.addView(btnRow);
@@ -4741,9 +4729,6 @@ private void showAnswerCheckConfirmation() {
             );
         }
 
-        // ==========================
-        // LISTENERS
-        // ==========================
         noBtn.setOnClickListener(v -> {
             lastAnswerHeardClearly = false;
             answered.set(true);
@@ -4756,33 +4741,32 @@ private void showAnswerCheckConfirmation() {
             d.dismiss();
         });
 
-     if (!isFinishing() && !isDestroyed()) {
-    d.show();
-}
+        if (!isFinishing() && !isDestroyed()) {
+            d.show();
+        }
 
-// 🔊 TTS ΜΟΝΟ μετά από UI attach
-runOnUiThread(() -> {
-    new Handler(Looper.getMainLooper()).postDelayed(() -> {
-        AppTTS.ensureSpeak(
-                this,
-                gr
-                        ? "Με άκουσες καθαρά; Τσέκαρε την απάντησή σου."
-                        : "Did you hear me clearly? Check your answer."
-        );
-    }, 500); // ⭐ sweet spot
-});
+        // 🔊 TTS ΜΕΤΑ από UI attach
+        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+            AppTTS.ensureSpeak(
+                    this,
+                    gr
+                            ? "Με άκουσες καθαρά; Τσέκαρε την απάντησή σου."
+                            : "Did you hear me clearly? Check your answer."
+            );
+        }, 500);
+    });
 
-// ==========================
-// WAIT FOR USER ANSWER
-// ==========================
-long waitUntil = SystemClock.uptimeMillis() + 8000;
-while (!answered.get() && SystemClock.uptimeMillis() < waitUntil) {
-    SystemClock.sleep(50);
-}
+    // ==========================
+    // WAIT FOR USER ANSWER (BACKGROUND)
+    // ==========================
+    long waitUntil = SystemClock.uptimeMillis() + 8000;
+    while (!answered.get() && SystemClock.uptimeMillis() < waitUntil) {
+        SystemClock.sleep(50);
+    }
 
-if (!answered.get()) {
-    lastAnswerHeardClearly = false;
-}
+    if (!answered.get()) {
+        lastAnswerHeardClearly = false;
+    }
 }
 
 /* ============================================================

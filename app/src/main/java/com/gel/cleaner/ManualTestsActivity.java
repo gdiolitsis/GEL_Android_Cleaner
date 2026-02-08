@@ -4234,6 +4234,7 @@ if (bottomOk && topOk) {
         runOnUiThread(onFinished);
     }
 }
+}
 
 /* ============================================================
    LAB 4 PRO — CALL QUALITY VERIFICATION (FINAL • LOCKED)

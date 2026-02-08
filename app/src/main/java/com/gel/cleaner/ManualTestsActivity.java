@@ -4348,14 +4348,15 @@ if (r != null && (r.rms > 0 || r.peak > 0)) {
                     : "Speech was clear. The bottom microphone performs correctly in the local call test."
     );
 
-    loglabelokvalue(
-            gr
-                    ? "Σημείωση: Αν παρουσιαστούν προβλήματα σε πραγματικές συνομιλίες, "
-                      + "ενδέχεται να οφείλονται στο δίκτυο, στον codec ή "
-                      + "στο μικρόφωνο / ακουστικό της άλλης συσκευής."
-                    : "Note: If issues occur during real calls, they may be related to network conditions, "
-                      + "codec selection, or the microphone / earpiece of the other party."
-    );
+    logLabelOkValue(
+        gr ? "Σημείωση" : "Note",
+        gr
+                ? "Αν παρουσιαστούν προβλήματα σε πραγματικές συνομιλίες, "
+                  + "ενδέχεται να οφείλονται στο δίκτυο, στον codec ή "
+                  + "στο μικρόφωνο / ακουστικό της άλλης συσκευής."
+                : "If issues occur during real calls, they may be related to network conditions, "
+                  + "codec selection, or the microphone / earpiece of the other party."
+);
 
 } else {
 

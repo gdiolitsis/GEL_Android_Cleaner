@@ -4128,85 +4128,124 @@ private void lab4MicBase(Runnable onFinished) {
 
             topOk = topRms > 0 || topPeak > 0;
 
-            // ====================================================
-            // FALLBACK — HUMAN VOICE (ONLY IF BOTH = 0)
-            // ====================================================
-            if (!bottomOk && !topOk) {
+// ====================================================
+// FALLBACK — HUMAN VOICE (ONLY IF BOTH = 0)
+// ====================================================
+if (!bottomOk && !topOk) {
 
-                fallbackUsed = true;
+    fallbackUsed = true;
 
-                appendHtml("<br>");
-                logWarn(gr
-                        ? "Δεν ανιχνεύθηκε σήμα. Ενεργοποίηση ελέγχου με ανθρώπινη φωνή."
-                        : "No signal detected. Activating human voice fallback.");
-                logLine();
+    appendHtml("<br>");
+    logWarn(gr
+            ? "Δεν ανιχνεύθηκε σήμα. Ενεργοποίηση ελέγχου με ανθρώπινη φωνή."
+            : "No signal detected. Activating human voice fallback.");
+    logLine();
 
-                final String instructionText = gr
-                        ? "Παρακαλώ μέτρησε έως το τρία, δυνατά,\nκοντά στο μικρόφωνο."
-                        : "Please count to three, loudly,\nclose to the microphone.";
+    final String instructionText = gr
+            ? "Παρακαλώ μέτρησε έως το τρία, δυνατά,\nκοντά στο μικρόφωνο."
+            : "Please count to three, loudly,\nclose to the microphone.";
 
-                runOnUiThread(() -> {
+    final AtomicReference<AlertDialog> dialogRef = new AtomicReference<>();
 
-                    AlertDialog.Builder b =
-                            new AlertDialog.Builder(
-                                    this,
-                                    android.R.style.Theme_Material_Dialog_NoActionBar
-                            );
-                    b.setCancelable(false);
+    // ==========================
+    // SHOW INSTRUCTION DIALOG
+    // ==========================
+    runOnUiThread(() -> {
 
-                    LinearLayout root = new LinearLayout(this);
-                    root.setOrientation(LinearLayout.VERTICAL);
-                    root.setPadding(dp(26), dp(24), dp(26), dp(22));
+        AlertDialog.Builder b =
+                new AlertDialog.Builder(
+                        this,
+                        android.R.style.Theme_Material_Dialog_NoActionBar
+                );
+        b.setCancelable(false);
 
-                    GradientDrawable bg = new GradientDrawable();
-                    bg.setColor(0xFF000000);
-                    bg.setCornerRadius(dp(18));
-                    bg.setStroke(dp(3), 0xFFFFD700);
-                    root.setBackground(bg);
+        LinearLayout root = new LinearLayout(this);
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.setPadding(dp(26), dp(24), dp(26), dp(22));
 
-                    TextView msg = new TextView(this);
-                    msg.setText(instructionText);
-                    msg.setTextColor(0xFF39FF14);
-                    msg.setTextSize(15f);
-                    msg.setGravity(Gravity.CENTER);
-                    root.addView(msg);
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(0xFF000000);
+        bg.setCornerRadius(dp(18));
+        bg.setStroke(dp(3), 0xFFFFD700);
+        root.setBackground(bg);
 
-                    b.setView(root);
+        TextView msg = new TextView(this);
+        msg.setText(instructionText);
+        msg.setTextColor(0xFF39FF14);
+        msg.setTextSize(15f);
+        msg.setGravity(Gravity.CENTER);
+        root.addView(msg);
 
-                    AlertDialog d = b.create();
-                    if (d.getWindow() != null)
-                        d.getWindow().setBackgroundDrawable(
-                                new ColorDrawable(Color.TRANSPARENT));
+        b.setView(root);
 
-                    d.show();
+        AlertDialog d = b.create();
+        if (d.getWindow() != null)
+            d.getWindow().setBackgroundDrawable(
+                    new ColorDrawable(Color.TRANSPARENT));
 
-                    AppTTS.ensureSpeak(this, instructionText);
+        dialogRef.set(d);
+        if (!isFinishing() && !isDestroyed()) d.show();
 
-                    root.postDelayed(d::dismiss, 3500);
-                });
+        AppTTS.ensureSpeak(this, instructionText);
+    });
 
-                SystemClock.sleep(3800);
+    // ==========================
+    // HARD NORMALIZE BEFORE LISTEN
+    // ==========================
+    hardNormalizeAudioForMic();
 
-                hardNormalizeAudioForMic();
+    // ==========================
+    // ⏱️ WAIT FOR HUMAN VOICE (REAL)
+    // ==========================
+    long waitUntil = SystemClock.uptimeMillis() + 4000;
+    boolean spoke = false;
 
-                MicDiagnosticEngine.Result fbBottom =
-                        MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.BOTTOM);
-                MicDiagnosticEngine.Result fbTop =
-                        MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.TOP);
+    while (SystemClock.uptimeMillis() < waitUntil) {
 
-                if (fbBottom != null) {
-                    bottomRms  = Math.max(bottomRms,  (int) fbBottom.rms);
-                    bottomPeak = Math.max(bottomPeak, (int) fbBottom.peak);
-                }
+        MicDiagnosticEngine.Result probeBottom =
+                MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.BOTTOM);
 
-                if (fbTop != null) {
-                    topRms  = Math.max(topRms,  (int) fbTop.rms);
-                    topPeak = Math.max(topPeak, (int) fbTop.peak);
-                }
+        MicDiagnosticEngine.Result probeTop =
+                MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.TOP);
 
-                bottomOk = bottomRms > 0 || bottomPeak > 0;
-                topOk    = topRms > 0    || topPeak > 0;
-            }
+        if ((probeBottom != null && (probeBottom.rms > 0 || probeBottom.peak > 0)) ||
+            (probeTop != null && (probeTop.rms > 0 || probeTop.peak > 0))) {
+            spoke = true;
+            break;
+        }
+
+        SystemClock.sleep(200);
+    }
+
+    // ==========================
+    // CLOSE DIALOG
+    // ==========================
+    runOnUiThread(() -> {
+        AlertDialog d = dialogRef.get();
+        if (d != null && d.isShowing()) d.dismiss();
+    });
+
+    // ==========================
+    // FINAL MEASURE AFTER SPEECH
+    // ==========================
+    MicDiagnosticEngine.Result fbBottom =
+            MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.BOTTOM);
+    MicDiagnosticEngine.Result fbTop =
+            MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.TOP);
+
+    if (fbBottom != null) {
+        bottomRms  = Math.max(bottomRms,  (int) fbBottom.rms);
+        bottomPeak = Math.max(bottomPeak, (int) fbBottom.peak);
+    }
+
+    if (fbTop != null) {
+        topRms  = Math.max(topRms,  (int) fbTop.rms);
+        topPeak = Math.max(topPeak, (int) fbTop.peak);
+    }
+
+    bottomOk = bottomRms > 0 || bottomPeak > 0;
+    topOk    = topRms > 0    || topPeak > 0;
+}
 
 // ====================================================
 // FINAL BASE VERDICT

@@ -1173,6 +1173,33 @@ if (isFinishing() || isDestroyed()) return;
 // LAB 3 — STATE / HELPERS (LOCKED)
 // ============================================================
 
+private void routeToCallEarpiece() {
+    try {
+        AudioManager am =
+                (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        if (am == null) return;
+
+        am.stopBluetoothSco();
+        am.setBluetoothScoOn(false);
+        am.setSpeakerphoneOn(false);
+        am.setMicrophoneMute(false);
+        am.setMode(AudioManager.MODE_IN_COMMUNICATION);
+    } catch (Throwable ignore) {}
+}
+
+private void routeToEarpiecePlayback() {
+    try {
+        AudioManager am =
+                (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        if (am == null) return;
+
+        am.stopBluetoothSco();
+        am.setBluetoothScoOn(false);
+        am.setSpeakerphoneOn(false);
+        am.setMode(AudioManager.MODE_NORMAL);
+    } catch (Throwable ignore) {}
+}
+
 private ToneGenerator lab3Tone;
 
 /**
@@ -1180,10 +1207,13 @@ private ToneGenerator lab3Tone;
  * One single source of truth.
  * Used on success / cancel / exception.
  */
+ 
 private void restoreLab3Audio() {
     try {
         AudioManager am =
                 (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+
+        if (am == null) return;   // 🔒 safety
 
         resetAudioAfterLab3(
                 am,
@@ -3843,16 +3873,17 @@ lab3OldMicMute = am.isMicrophoneMute();
 logInfo("Saving audio state.");
 logInfo("Preparing earpiece routing.");
 
-    try {
-        am.stopBluetoothSco();
-        am.setBluetoothScoOn(false);
-        am.setSpeakerphoneOn(false);
-        am.setMode(AudioManager.MODE_IN_COMMUNICATION);
-    } catch (Throwable t) {
-        logError("Audio routing failed.");
-        restoreLab3Audio();
-        return;
-    }
+try {
+    am.stopBluetoothSco();
+    am.setBluetoothScoOn(false);
+    am.setSpeakerphoneOn(false);
+    am.setMicrophoneMute(false);              // 🔴 ΑΠΑΡΑΙΤΗΤΟ
+    am.setMode(AudioManager.MODE_IN_COMMUNICATION);
+} catch (Throwable t) {
+    logError("Audio routing failed.");
+    restoreLab3Audio();                        // 🔒 FAIL-SAFE
+    return;
+}
 
     SystemClock.sleep(250);
 
@@ -4271,24 +4302,24 @@ private void lab4MicPro() {
 
             if (cancelled.get()) return;
 
-            AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
-            if (am != null) {
-                try { am.stopBluetoothSco(); } catch (Throwable ignore) {}
-                try { am.setBluetoothScoOn(false); } catch (Throwable ignore) {}
-                try { am.setSpeakerphoneOn(true); } catch (Throwable ignore) {}
-                try { am.setMicrophoneMute(false); } catch (Throwable ignore) {}
-                try { am.setMode(AudioManager.MODE_IN_COMMUNICATION); } catch (Throwable ignore) {}
-            }
-
             SystemClock.sleep(500);
 
-            runOnUiThread(() ->
-        AppTTS.ensureSpeak(
-                this,
-                gr ? "Έλεγχος κάτω μικροφώνου."
-                   : "Bottom microphone test."
-        )
-);
+// 🔊 ΟΔΗΓΙΑ ΠΑΝΤΑ ΑΠΟ SPEAKER
+routeToEarpiecePlayback();
+try {
+    AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
+    if (am != null) {
+        am.setSpeakerphoneOn(true);
+    }
+} catch (Throwable ignore) {}
+
+runOnUiThread(() -> {
+    AppTTS.ensureSpeak(
+            this,
+            gr ? "Έλεγχος κάτω μικροφώνου."
+               : "Bottom microphone test."
+    );
+});
 
             SystemClock.sleep(2200);
             dismiss(dialogRef);
@@ -4336,64 +4367,71 @@ if (r != null && (r.rms > 0 || r.peak > 0)) {
 
 logLine();
 
-            // ====================================================
-            // STAGE 2 — USER INSTRUCTION
-            // ====================================================
-            runOnUiThread(() -> {
+// ====================================================
+// STAGE 2 — USER INSTRUCTION (SPEAKER)
+// ====================================================
 
-                AlertDialog.Builder b =
-                        new AlertDialog.Builder(
-                                this,
-                                android.R.style.Theme_Material_Dialog_NoActionBar
-                        );
-                b.setCancelable(false);
+// 🔊 Προσωρινά στον speaker για οδηγία
+routeToEarpiecePlayback();
+try {
+    AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
+    if (am != null) {
+        am.setSpeakerphoneOn(true);
+    }
+} catch (Throwable ignore) {}
 
-                LinearLayout root = new LinearLayout(this);
-                root.setOrientation(LinearLayout.VERTICAL);
-                root.setPadding(dp(26), dp(24), dp(26), dp(22));
+runOnUiThread(() -> {
 
-                GradientDrawable bg = new GradientDrawable();
-                bg.setColor(0xFF000000);
-                bg.setCornerRadius(dp(18));
-                bg.setStroke(dp(3), 0xFFFFD700);
-                root.setBackground(bg);
-
-                TextView msg = new TextView(this);
-                msg.setText(gr
-                        ? "Βάλε το ακουστικό στο αυτί σου."
-                        : "Place the earpiece on your ear.");
-                msg.setTextColor(0xFF39FF14);
-                msg.setTextSize(15f);
-                msg.setGravity(Gravity.CENTER);
-                root.addView(msg);
-
-                b.setView(root);
-
-                AlertDialog d = b.create();
-                if (d.getWindow() != null) {
-                    d.getWindow().setBackgroundDrawable(
-                            new ColorDrawable(Color.TRANSPARENT)
-                    );
-                }
-
-                dialogRef.set(d);
-                if (!isFinishing() && !isDestroyed()) d.show();
-            });
-
-            AudioManager amSpeak = (AudioManager) getSystemService(AUDIO_SERVICE);
-            if (amSpeak != null) {
-                try { amSpeak.setMode(AudioManager.MODE_NORMAL); } catch (Throwable ignore) {}
-                try { amSpeak.setSpeakerphoneOn(true); } catch (Throwable ignore) {}
-            }
-
-            AppTTS.ensureSpeak(
+    AlertDialog.Builder b =
+            new AlertDialog.Builder(
                     this,
-                    gr ? "Βάλε το ακουστικό στο αυτί σου."
-                       : "Place the earpiece on your ear."
+                    android.R.style.Theme_Material_Dialog_NoActionBar
             );
+    b.setCancelable(false);
 
-            SystemClock.sleep(2200);
-            dismiss(dialogRef);
+    LinearLayout root = new LinearLayout(this);
+    root.setOrientation(LinearLayout.VERTICAL);
+    root.setPadding(dp(26), dp(24), dp(26), dp(22));
+
+    GradientDrawable bg = new GradientDrawable();
+    bg.setColor(0xFF000000);
+    bg.setCornerRadius(dp(18));
+    bg.setStroke(dp(3), 0xFFFFD700);
+    root.setBackground(bg);
+
+    TextView msg = new TextView(this);
+    msg.setText(gr
+            ? "Βάλε το ακουστικό στο αυτί σου."
+            : "Place the earpiece on your ear.");
+    msg.setTextColor(0xFF39FF14);
+    msg.setTextSize(15f);
+    msg.setGravity(Gravity.CENTER);
+    root.addView(msg);
+
+    b.setView(root);
+
+    AlertDialog d = b.create();
+    if (d.getWindow() != null) {
+        d.getWindow().setBackgroundDrawable(
+                new ColorDrawable(Color.TRANSPARENT)
+        );
+    }
+
+    dialogRef.set(d);
+    if (!isFinishing() && !isDestroyed()) d.show();
+});
+
+AppTTS.ensureSpeak(
+        this,
+        gr ? "Βάλε το ακουστικό στο αυτί σου."
+           : "Place the earpiece on your ear."
+);
+
+SystemClock.sleep(2200);
+dismiss(dialogRef);
+
+// 🔁 Επιστροφή σε call earpiece για συνέχεια LAB
+routeToCallEarpiece();
 
             // ====================================================
             // STAGE 3 — WAV (EARPIECE ONLY)
@@ -4497,21 +4535,15 @@ cancelled.set(true);
         }
 
     }).start();
+        }
 
 // ============================================================
 // 🎵 PLAY VOICE WAV — AUTO LANGUAGE (EARPIECE ONLY)
 // ============================================================
 private void playAnswerCheckWav() {
 
-    AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
-    if (am != null) {
-        try { am.stopBluetoothSco(); } catch (Throwable ignore) {}
-        try { am.setBluetoothScoOn(false); } catch (Throwable ignore) {}
-        try { am.setSpeakerphoneOn(false); } catch (Throwable ignore) {}
-        try { am.setMode(AudioManager.MODE_IN_COMMUNICATION); } catch (Throwable ignore) {}
-    }
-
-    SystemClock.sleep(200);
+    // 🔊 AUDIO ROUTE — EARPICE PLAYBACK
+    routeToEarpiecePlayback();
 
     boolean gr = AppLang.isGreek(this);
     int resId = gr ? R.raw.answercheck_el : R.raw.answercheck_en;
@@ -4530,7 +4562,7 @@ private void playAnswerCheckWav() {
             afd.close();
         }
 
-        mp.setAudioStreamType(AudioManager.STREAM_VOICE_CALL);
+        mp.setAudioStreamType(AudioManager.STREAM_MUSIC); // 🔒 ΚΛΕΙΔΩΜΕΝΟ
         mp.prepare();
         mp.start();
         SystemClock.sleep(mp.getDuration());
@@ -4628,9 +4660,16 @@ private void showAnswerCheckConfirmation() {
         );
     });
 
-    while (!answered.get()) {
-        SystemClock.sleep(50);
-    }
+    long waitUntil = SystemClock.uptimeMillis() + 8000;
+
+while (!answered.get() && SystemClock.uptimeMillis() < waitUntil) {
+    SystemClock.sleep(50);
+}
+
+if (!answered.get()) {
+    // Timeout or dialog not answered
+    lastAnswerHeardClearly = false;
+}
 }
 
 /* ============================================================

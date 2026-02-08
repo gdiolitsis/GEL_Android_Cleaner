@@ -4405,6 +4405,9 @@ try {
     }
 } catch (Throwable ignore) {}
 
+// ==========================
+// SHOW DIALOG (UI THREAD)
+// ==========================
 runOnUiThread(() -> {
 
     AlertDialog.Builder b =
@@ -4435,121 +4438,125 @@ runOnUiThread(() -> {
 
     b.setView(root);
 
-AlertDialog d = b.create();
-if (d.getWindow() != null) {
-    d.getWindow().setBackgroundDrawable(
-            new ColorDrawable(Color.TRANSPARENT)
-    );
-}
+    AlertDialog d = b.create();
+    if (d.getWindow() != null) {
+        d.getWindow().setBackgroundDrawable(
+                new ColorDrawable(Color.TRANSPARENT)
+        );
+    }
 
-dialogRef.set(d);
+    dialogRef.set(d);
 
-if (!isFinishing() && !isDestroyed()) {
-    d.show();
-}
+    if (!isFinishing() && !isDestroyed()) {
+        d.show();
+    }
 
-// 🔊 TTS ΜΕΤΑ από UI attach + μικρό delay
-runOnUiThread(() -> {
+    // 🔊 TTS ΜΕΤΑ από UI attach (SAFE)
     new Handler(Looper.getMainLooper()).postDelayed(() -> {
         AppTTS.ensureSpeak(
                 this,
                 gr ? "Βάλε το ακουστικό στο αυτί σου."
                    : "Place the earpiece on your ear."
         );
-    }, 500); // ⭐ sweet spot (300–400ms)
+    }, 400); // ⭐ sweet spot
 });
 
-// ⏱️ χρόνος για να ακούσει ο χρήστης
+// ==========================
+// WAIT (BACKGROUND THREAD)
+// ==========================
 SystemClock.sleep(2200);
 
+// ==========================
+// CLOSE DIALOG
+// ==========================
 dismiss(dialogRef);
 
 // 🔁 Επιστροφή σε call earpiece για συνέχεια LAB
 routeToCallEarpiece();
 
-            // ====================================================
+// ====================================================
             // STAGE 3 — WAV (EARPIECE ONLY)
             // ====================================================
             playAnswerCheckWav();
 
-// ====================================================
-// RESULT — EARPIECE
-// ====================================================
-appendHtml("<br>");
-logInfo(gr ? "LAB 4 PRO — Ακουστικό" : "LAB 4 PRO — Earpiece");
-logLine();
+            // ====================================================
+            // RESULT — EARPIECE
+            // ====================================================
+            appendHtml("<br>");
+            logInfo(gr ? "LAB 4 PRO — Ακουστικό" : "LAB 4 PRO — Earpiece");
+            logLine();
 
-if (lastAnswerHeardClearly) {
+            if (lastAnswerHeardClearly) {
 
-    logLabelOkValue(
-            gr ? "Αποτέλεσμα" : "Result",
-            gr
-                    ? "Σύμφωνα με τη δήλωση χρήστη, το ακουστικό αποδίδει καθαρό ήχο."
-                    : "According to the user's declaration, the earpiece delivers clear audio."
-    );
+                logLabelOkValue(
+                        gr ? "Αποτέλεσμα" : "Result",
+                        gr
+                                ? "Σύμφωνα με τη δήλωση χρήστη, το ακουστικό αποδίδει καθαρό ήχο."
+                                : "According to the user's declaration, the earpiece delivers clear audio."
+                );
 
-    logLabelOkValue(
-        gr ? "Σημείωση" : "Note",
-        gr
-                ? "Αν παρουσιαστούν προβλήματα σε πραγματικές συνομιλίες, "
-                  + "ενδέχεται να οφείλονται στο δίκτυο, στον codec ή "
-                  + "στο μικρόφωνο / ακουστικό της άλλης συσκευής."
-                : "If issues occur during real calls, they may be related to network conditions, "
-                  + "codec selection, or the microphone / earpiece of the other party."
-);
+                logLabelOkValue(
+                        gr ? "Σημείωση" : "Note",
+                        gr
+                                ? "Αν παρουσιαστούν προβλήματα σε πραγματικές συνομιλίες, "
+                                + "ενδέχεται να οφείλονται στο δίκτυο, στον codec ή "
+                                + "στο μικρόφωνο / ακουστικό της άλλης συσκευής."
+                                : "If issues occur during real calls, they may be related to network conditions, "
+                                + "codec selection, or the microphone / earpiece of the other party."
+                );
 
-} else {
+            } else {
 
-    logLabelWarnValue(
-            gr ? "Αποτέλεσμα" : "Result",
-            gr
-                    ? "Σύμφωνα με τη δήλωση χρήστη, ο ήχος από το ακουστικό δεν ήταν καθαρός."
-                    : "According to the user's declaration, the earpiece audio was not clear."
-    );
+                logLabelWarnValue(
+                        gr ? "Αποτέλεσμα" : "Result",
+                        gr
+                                ? "Σύμφωνα με τη δήλωση χρήστη, ο ήχος από το ακουστικό δεν ήταν καθαρός."
+                                : "According to the user's declaration, the earpiece audio was not clear."
+                );
 
-    logInfo(
-            gr
-                    ? "Πιθανές αιτίες: χαμηλή στάθμη έντασης, βουλωμένο ακουστικό, "
-                      + "προστατευτικό οθόνης, θέση συσκευής, ή πραγματική βλάβη ακουστικού."
-                    : "Possible causes: low volume level, obstructed earpiece, "
-                      + "screen protector interference, device position, or actual earpiece hardware issue."
-    );
-}
+                logInfo(
+                        gr
+                                ? "Πιθανές αιτίες: χαμηλή στάθμη έντασης, βουλωμένο ακουστικό, "
+                                + "προστατευτικό οθόνης, θέση συσκευής, ή πραγματική βλάβη ακουστικού."
+                                : "Possible causes: low volume level, obstructed earpiece, "
+                                + "screen protector interference, device position, or actual earpiece hardware issue."
+                );
+            }
 
-logLine();
+            logLine();
 
-// ✅ LAB COMPLETED (regardless of user perception)
-lab4Success = true;
+            // ✅ LAB COMPLETED
+            lab4Success = true;
 
-appendHtml("<br>");
-logOk("Lab 4 finished.");
-logLine();
+            appendHtml("<br>");
+            logOk("Lab 4 finished.");
+            logLine();
 
-runOnUiThread(this::enableSingleExportButton);
-cancelled.set(true);
+            runOnUiThread(this::enableSingleExportButton);
+            cancelled.set(true);
 
-} catch (Throwable t) {
+        } catch (Throwable t) {
 
-    appendHtml("<br>");
+            appendHtml("<br>");
 
-    logLabelWarnValue(
-            gr ? "Διακοπή" : "Interrupted",
-            gr
-                    ? "Το LAB 4 PRO δεν ολοκληρώθηκε κανονικά."
-                    : "LAB 4 PRO did not complete normally."
-    );
+            logLabelWarnValue(
+                    gr ? "Διακοπή" : "Interrupted",
+                    gr
+                            ? "Το LAB 4 PRO δεν ολοκληρώθηκε κανονικά."
+                            : "LAB 4 PRO did not complete normally."
+            );
 
-    logInfo(
-            gr
-                    ? "Πιθανές αιτίες: διακοπή από τον χρήστη, "
-                      + "πρόβλημα TTS ή προσωρινό θέμα audio routing."
-                    : "Possible causes: user interruption, "
-                      + "TTS issue or temporary audio routing problem."
-    );
+            logInfo(
+                    gr
+                            ? "Πιθανές αιτίες: διακοπή από τον χρήστη, "
+                            + "πρόβλημα TTS ή προσωρινό θέμα audio routing."
+                            : "Possible causes: user interruption, "
+                            + "TTS issue or temporary audio routing problem."
+            );
 
-    appendHtml("<br>");
-    logOk("Lab 4 finished.");
-    logLine();
+            appendHtml("<br>");
+            logOk("Lab 4 finished.");
+            logLine();
 
         } finally {
 
@@ -4569,8 +4576,9 @@ cancelled.set(true);
             } catch (Throwable ignore) {}
         }
 
-    }).start();
-        }
+}).start();
+}
+    
 
 // ============================================================
 // 🎵 PLAY VOICE WAV — AUTO LANGUAGE (EARPIECE ONLY • LOCKED)

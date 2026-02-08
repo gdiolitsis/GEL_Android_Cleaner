@@ -4476,7 +4476,6 @@ cancelled.set(true);
     appendHtml("<br>");
     logOk("Lab 4 finished.");
     logLine();
-}
 
         } finally {
 

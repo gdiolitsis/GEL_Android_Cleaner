@@ -4348,7 +4348,7 @@ if (r != null && (r.rms > 0 || r.peak > 0)) {
                     : "Speech was clear. The bottom microphone performs correctly in the local call test."
     );
 
-    logInfo(
+    loglabelokvalue(
             gr
                     ? "Σημείωση: Αν παρουσιαστούν προβλήματα σε πραγματικές συνομιλίες, "
                       + "ενδέχεται να οφείλονται στο δίκτυο, στον codec ή "
@@ -4458,7 +4458,7 @@ if (lastAnswerHeardClearly) {
                     : "According to the user's declaration, the earpiece delivers clear audio."
     );
 
-    logInfo(
+    loglabelokvalue(
             gr
                     ? "Σημείωση: Αν παρουσιαστούν προβλήματα σε πραγματικές συνομιλίες, "
                       + "ενδέχεται να οφείλονται στο δίκτυο, στον codec ή "

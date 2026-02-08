@@ -4175,47 +4175,59 @@ stopBaseHere = true;
                                 new ColorDrawable(Color.TRANSPARENT));
 
                     ref.set(d);
-                    if (!isFinishing() && !isDestroyed()) d.show();
+
+if (!isFinishing() && !isDestroyed()) {
+    d.show();
+}
+
+// 🔊 TTS ΜΟΝΟ αφού «δέσει» το UI
+new Handler(Looper.getMainLooper()).postDelayed(() -> {
+    AppTTS.ensureSpeak(this, text);
+}, 500);
+
+// ==========================
+// HARD NORMALIZE + HUMAN WINDOW
+// ==========================
+hardNormalizeAudioForMic();
+SystemClock.sleep(4200);
+
+// ==========================
+// CLOSE DIALOG
+// ==========================
+runOnUiThread(() -> {
+    AlertDialog dd = ref.get();
+    if (dd != null && dd.isShowing()) dd.dismiss();
 });
 
-SystemClock.sleep(500); // ⏱️ ΔΩΣΕ ΧΡΟΝΟ ΣΤΟ UI / AUDIO
+// ==========================
+// SINGLE HUMAN MEASURE
+// ==========================
+MicDiagnosticEngine.Result probe =
+        MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.BOTTOM);
 
-AppTTS.ensureSpeak(this, text);
-                });
+boolean spoke =
+        probe != null && (probe.rms > 0 || probe.peak > 0);
 
-                hardNormalizeAudioForMic();
-                SystemClock.sleep(4200);
+if (spoke) {
+    bottomOk = true;
+    topOk = true;
 
-                runOnUiThread(() -> {
-                    AlertDialog d = ref.get();
-                    if (d != null && d.isShowing()) d.dismiss();
-                });
+    logLabelOkValue(
+            gr ? "Κατάσταση" : "Status",
+            gr
+                    ? "Ανιχνεύθηκε ανθρώπινη φωνή. Τα μικρόφωνα λειτουργούν σωστά."
+                    : "Human voice detected. Microphones are operational."
+    );
+} else {
+    logLabelErrorValue(
+            gr ? "Κατάσταση" : "Status",
+            gr
+                    ? "Δεν ανιχνεύθηκε ανθρώπινη φωνή. Ισχυρή ένδειξη βλάβης μικροφώνου."
+                    : "Human voice not detected. Strong indication of microphone hardware damage."
+    );
+}
 
-                MicDiagnosticEngine.Result probe =
-                        MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.BOTTOM);
-
-                boolean spoke =
-                        probe != null && (probe.rms > 0 || probe.peak > 0);
-
-                if (spoke) {
-                    bottomOk = true;
-                    topOk = true;
-
-                    logLabelOkValue(
-                            gr ? "Κατάσταση" : "Status",
-                            gr ? "Ανιχνεύθηκε ανθρώπινη φωνή. Τα μικρόφωνα λειτουργούν."
-                               : "Human voice detected. Microphones are operational."
-                    );
-                } else {
-                    logLabelErrorValue(
-                            gr ? "Κατάσταση" : "Status",
-                            gr ? "Δεν ανιχνεύθηκε ανθρώπινη φωνή. Ισχυρή ένδειξη βλάβης μικροφώνου."
-                               : "Human voice not detected. Strong indication of microphone hardware damage."
-                    );
-                }
-            }
-
-            if (stopBaseHere) return;
+if (stopBaseHere) return;
 
             // ====================================================
             // FINAL BASE VERDICT (NO FALLBACK)
@@ -4292,22 +4304,9 @@ private void lab4MicPro() {
             // ====================================================
             // STAGE 1 — Bottom microphone CALL QUALITY check
             // ====================================================
-            runOnUiThread(() -> {
-                AlertDialog d = buildInfoDialog(
-                        gr ? "LAB 4 PRO — Έλεγχος" : "LAB 4 PRO — Test",
-                        gr ? "Έλεγχος κάτω μικροφώνου."
-                           : "Bottom microphone test.",
-                        cancelled,
-                        dialogRef
-                );
-                if (!isFinishing() && !isDestroyed()) d.show();
-            });
-
-            if (cancelled.get()) return;
-
-            SystemClock.sleep(500);
-
-// 🔊 ΟΔΗΓΙΑ ΠΑΝΤΑ ΑΠΟ SPEAKER
+            // ==========================
+// SHOW DIALOG + SPEAK (SAFE)
+// ==========================
 routeToEarpiecePlayback();
 try {
     AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
@@ -4317,25 +4316,45 @@ try {
 } catch (Throwable ignore) {}
 
 runOnUiThread(() -> {
-    // ΜΟΝΟ dialog εδώ
+
+    AlertDialog d = buildInfoDialog(
+            gr ? "LAB 4 PRO — Έλεγχος" : "LAB 4 PRO — Test",
+            gr ? "Έλεγχος κάτω μικροφώνου."
+               : "Bottom microphone test.",
+            cancelled,
+            dialogRef
+    );
+
+    if (!isFinishing() && !isDestroyed()) {
+        d.show();
+    }
+
+    // ⏱️ ΑΠΑΡΑΙΤΗΤΗ καθυστέρηση πριν το TTS
+    new Handler(Looper.getMainLooper()).postDelayed(() -> {
+        AppTTS.ensureSpeak(
+                this,
+                gr ? "Έλεγχος κάτω μικροφώνου."
+                   : "Bottom microphone test."
+        );
+    }, 500);
 });
 
-SystemClock.sleep(300); // ⏱️ κρίσιμο
+// ==========================
+// WAIT FOR SPEECH
+// ==========================
+if (cancelled.get()) return;
 
-AppTTS.ensureSpeak(
-        this,
-        gr ? "Έλεγχος κάτω μικροφώνου."
-           : "Bottom microphone test."
-);
-});
+SystemClock.sleep(2200);
 
-            SystemClock.sleep(2200);
-            dismiss(dialogRef);
+dismiss(dialogRef);
 
-            hardNormalizeAudioForMic();
+// ==========================
+// MIC CHECK
+// ==========================
+hardNormalizeAudioForMic();
 
-            MicDiagnosticEngine.Result r =
-                    MicDiagnosticEngine.run(this);
+MicDiagnosticEngine.Result r =
+        MicDiagnosticEngine.run(this);
 
             appendHtml("<br>");
 logInfo(gr
@@ -4419,28 +4438,33 @@ runOnUiThread(() -> {
 
     b.setView(root);
 
-    AlertDialog d = b.create();
-    if (d.getWindow() != null) {
-        d.getWindow().setBackgroundDrawable(
-                new ColorDrawable(Color.TRANSPARENT)
-        );
-    }
+AlertDialog d = b.create();
+if (d.getWindow() != null) {
+    d.getWindow().setBackgroundDrawable(
+            new ColorDrawable(Color.TRANSPARENT)
+    );
+}
 
-    dialogRef.set(d);
-if (!isFinishing() && !isDestroyed()) d.show();
+dialogRef.set(d);
+
+if (!isFinishing() && !isDestroyed()) {
+    d.show();
+}
+
+// 🔊 TTS ΜΕΤΑ από UI attach + μικρό delay
+runOnUiThread(() -> {
+    new Handler(Looper.getMainLooper()).postDelayed(() -> {
+        AppTTS.ensureSpeak(
+                this,
+                gr ? "Βάλε το ακουστικό στο αυτί σου."
+                   : "Place the earpiece on your ear."
+        );
+    }, 500); // ⭐ sweet spot (300–400ms)
 });
 
-// ⏱️ άσε το UI + audio να σταθεροποιηθεί
-SystemClock.sleep(500);
-
-// 🔊 TTS ΠΑΝΤΑ εκτός UI thread
-AppTTS.ensureSpeak(
-        this,
-        gr ? "Βάλε το ακουστικό στο αυτί σου."
-           : "Place the earpiece on your ear."
-);
-
+// ⏱️ χρόνος για να ακούσει ο χρήστης
 SystemClock.sleep(2200);
+
 dismiss(dialogRef);
 
 // 🔁 Επιστροφή σε call earpiece για συνέχεια LAB
@@ -4727,28 +4751,33 @@ private void showAnswerCheckConfirmation() {
             d.dismiss();
         });
 
-        if (!isFinishing() && !isDestroyed()) d.show();
+     if (!isFinishing() && !isDestroyed()) {
+    d.show();
+}
 
-// ⏱️ άσε UI + audio να «δέσουν»
-SystemClock.sleep(500);
+// 🔊 TTS ΜΟΝΟ μετά από UI attach
+runOnUiThread(() -> {
+    new Handler(Looper.getMainLooper()).postDelayed(() -> {
+        AppTTS.ensureSpeak(
+                this,
+                gr
+                        ? "Με άκουσες καθαρά; Τσέκαρε την απάντησή σου."
+                        : "Did you hear me clearly? Check your answer."
+        );
+    }, 500); // ⭐ sweet spot
+});
 
-// 🔊 TTS ΠΑΝΤΑ εκτός UI thread
-AppTTS.ensureSpeak(
-        this,
-        gr
-                ? "Με άκουσες καθαρά; Τσέκαρε την απάντησή σου."
-                : "Did you hear me clearly? Check your answer."
-);
-    });
+// ==========================
+// WAIT FOR USER ANSWER
+// ==========================
+long waitUntil = SystemClock.uptimeMillis() + 8000;
+while (!answered.get() && SystemClock.uptimeMillis() < waitUntil) {
+    SystemClock.sleep(50);
+}
 
-    long waitUntil = SystemClock.uptimeMillis() + 8000;
-    while (!answered.get() && SystemClock.uptimeMillis() < waitUntil) {
-        SystemClock.sleep(50);
-    }
-
-    if (!answered.get()) {
-        lastAnswerHeardClearly = false;
-    }
+if (!answered.get()) {
+    lastAnswerHeardClearly = false;
+}
 }
 
 /* ============================================================

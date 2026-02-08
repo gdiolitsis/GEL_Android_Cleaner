@@ -4545,18 +4545,17 @@ cancelled.set(true);
 // ============================================================
 private void playAnswerCheckWav() {
 
-    // 👂 HARD ROUTE TO EARPICE (MEDIA -> EARPICE)
-    routeToEarpiecePlayback();
-
+    // 👂 FORCE CALL PATH → EARPICE
     AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
     if (am != null) {
         try { am.stopBluetoothSco(); } catch (Throwable ignore) {}
         try { am.setBluetoothScoOn(false); } catch (Throwable ignore) {}
         try { am.setSpeakerphoneOn(false); } catch (Throwable ignore) {}
+        try { am.setMicrophoneMute(false); } catch (Throwable ignore) {}
         try { am.setMode(AudioManager.MODE_IN_COMMUNICATION); } catch (Throwable ignore) {}
     }
 
-    SystemClock.sleep(120);
+    SystemClock.sleep(150);
 
     // 🌍 AUTO LANGUAGE
     final boolean gr = AppLang.isGreek(this);
@@ -4576,7 +4575,7 @@ private void playAnswerCheckWav() {
         );
         afd.close();
 
-        // 🔒 CRITICAL: VOICE_CALL stream → earpiece
+        // 🔒 CRITICAL: VOICE_CALL → EARPICE (ΟΧΙ MUSIC)
         mp.setAudioStreamType(AudioManager.STREAM_VOICE_CALL);
 
         mp.prepare();
@@ -4584,11 +4583,7 @@ private void playAnswerCheckWav() {
 
         int dur = 0;
         try { dur = mp.getDuration(); } catch (Throwable ignore) {}
-        if (dur > 0) {
-            SystemClock.sleep(dur);
-        } else {
-            SystemClock.sleep(1800);
-        }
+        SystemClock.sleep(dur > 0 ? dur : 1800);
 
     } catch (Throwable ignore) {
 
@@ -4597,9 +4592,8 @@ private void playAnswerCheckWav() {
         try { mp.release(); } catch (Throwable ignore) {}
     }
 
-    // 🔊 Μετά το WAV, επιστροφή σε speaker για ερωτήσεις
-    routeToSpeaker();
-
+    // ❗ ΔΕΝ αλλάζουμε route εδώ
+    // συνεχίζουμε με confirmation
     showAnswerCheckConfirmation();
 }
 

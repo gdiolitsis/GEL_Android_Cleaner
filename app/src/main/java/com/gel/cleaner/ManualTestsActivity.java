@@ -1035,17 +1035,17 @@ private void askUserEarpieceConfirmation() {
             try { AppTTS.stop(); } catch (Throwable ignore) {}
         });
 
-        // ==========================
-        // BUTTON ROW
-        // ==========================
+        // ---------- BUTTON ROW ----------
         LinearLayout btnRow = new LinearLayout(this);
         btnRow.setOrientation(LinearLayout.HORIZONTAL);
         btnRow.setGravity(Gravity.CENTER);
-        btnRow.setPadding(0, dp(6), 0, 0);
 
         LinearLayout.LayoutParams btnLp =
-                new LinearLayout.LayoutParams(0, dp(52), 1f);
-        btnLp.setMargins(dp(8), 0, dp(8), 0);
+                new LinearLayout.LayoutParams(
+                        ViewGroup.LayoutParams.WRAP_CONTENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT
+                );
+        btnLp.setMargins(dp(12), dp(8), dp(12), dp(8));
 
         // ---------- NO ----------
         Button noBtn = new Button(this);
@@ -1073,6 +1073,7 @@ private void askUserEarpieceConfirmation() {
         yesBtn.setBackground(yesBg);
         yesBtn.setLayoutParams(btnLp);
 
+        // ---------- ADD (ΜΟΝΟ ΕΔΩ) ----------
         btnRow.addView(noBtn);
         btnRow.addView(yesBtn);
         root.addView(btnRow);
@@ -1103,69 +1104,69 @@ private void askUserEarpieceConfirmation() {
         // ==========================
         yesBtn.setOnClickListener(v -> {
 
-    try { AppTTS.stop(); } catch (Throwable ignore) {}
+            try { AppTTS.stop(); } catch (Throwable ignore) {}
 
-    lab3WaitingUser = false;
+            lab3WaitingUser = false;
 
-    logLabelOkValue(
-            "LAB 3 — Earpiece",
-            "User confirmed audio playback"
-    );
+            logLabelOkValue(
+                    "LAB 3 — Earpiece",
+                    "User confirmed audio playback"
+            );
 
-    appendHtml("<br>");
-    logOk("Lab 3 finished.");
-    logLine();
+            appendHtml("<br>");
+            logOk("Lab 3 finished.");
+            logLine();
 
-    restoreLab3Audio();
-    d.dismiss();
-});
+            restoreLab3Audio();
+            d.dismiss();
+        });
 
-// ==========================
-// NO ACTION (FAIL)
-// ==========================
-noBtn.setOnClickListener(v -> {
+        // ==========================
+        // NO ACTION (FAIL)
+        // ==========================
+        noBtn.setOnClickListener(v -> {
 
-    try { AppTTS.stop(); } catch (Throwable ignore) {}
+            try { AppTTS.stop(); } catch (Throwable ignore) {}
 
-    lab3WaitingUser = false;
+            lab3WaitingUser = false;
 
-    logLabelErrorValue(
-            "LAB 3 — Earpiece",
-            "User did NOT hear tones"
-    );
+            logLabelErrorValue(
+                    "LAB 3 — Earpiece",
+                    "User did NOT hear tones"
+            );
 
-    logLabelWarnValue(
-            "Possible issue",
-            "Earpiece failure or audio routing problem"
-    );
+            logLabelWarnValue(
+                    "Possible issue",
+                    "Earpiece failure or audio routing problem"
+            );
 
-    appendHtml("<br>");
-    logOk("Lab 3 finished.");
-    logLine();
+            appendHtml("<br>");
+            logOk("Lab 3 finished.");
+            logLine();
 
-    restoreLab3Audio();
-    d.dismiss();
-});
+            restoreLab3Audio();
+            d.dismiss();
+        });
 
-// ------------------------------------------------------------
-// BACK KEY — STOP TTS + RESTORE + DISMISS
-// ------------------------------------------------------------
-d.setOnKeyListener((dialog, keyCode, event) -> {
-    if (keyCode == KeyEvent.KEYCODE_BACK
-            && event.getAction() == KeyEvent.ACTION_UP) {
+        // ------------------------------------------------------------
+        // BACK KEY — STOP TTS + RESTORE + DISMISS
+        // ------------------------------------------------------------
+        d.setOnKeyListener((dialog, keyCode, event) -> {
+            if (keyCode == KeyEvent.KEYCODE_BACK
+                    && event.getAction() == KeyEvent.ACTION_UP) {
 
-        try { AppTTS.stop(); } catch (Throwable ignore) {}
+                try { AppTTS.stop(); } catch (Throwable ignore) {}
 
-        lab3WaitingUser = false;
-        restoreLab3Audio();
-        dialog.dismiss();
-        return true;
-    }
-    return false;
-});
+                lab3WaitingUser = false;
+                restoreLab3Audio();
+                dialog.dismiss();
+                return true;
+            }
+            return false;
+        });
 
-if (isFinishing() || isDestroyed()) return;
-    d.show();
+        if (isFinishing() || isDestroyed()) return;
+        d.show();
     });
 }
 
@@ -4602,6 +4603,7 @@ private void playAnswerCheckWav() {
 // ============================================================
 private void showAnswerCheckConfirmation() {
 
+    // 🔊 ΟΔΗΓΙΕΣ ΑΠΟ SPEAKER (ΣΩΣΤΟ)
     AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
     if (am != null) {
         try { am.setMode(AudioManager.MODE_NORMAL); } catch (Throwable ignore) {}
@@ -4620,6 +4622,9 @@ private void showAnswerCheckConfirmation() {
                 );
         b.setCancelable(false);
 
+        // ==========================
+        // ROOT
+        // ==========================
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
         root.setPadding(dp(26), dp(24), dp(26), dp(22));
@@ -4630,20 +4635,34 @@ private void showAnswerCheckConfirmation() {
         bg.setStroke(dp(3), 0xFFFFD700);
         root.setBackground(bg);
 
+        // ==========================
+        // MESSAGE
+        // ==========================
         TextView msg = new TextView(this);
         msg.setText(gr
-                ? "Με άκουσες καθαρά; Τσέκαρε την απάντηση σου."
-                        : "Did you hear me clearly? Check your answer.");
+                ? "Με άκουσες καθαρά; Τσέκαρε την απάντησή σου."
+                : "Did you hear me clearly? Check your answer.");
         msg.setTextColor(0xFF39FF14);
         msg.setTextSize(15f);
         msg.setGravity(Gravity.CENTER);
+        msg.setPadding(0, 0, 0, dp(18));
         root.addView(msg);
 
-        LinearLayout row = new LinearLayout(this);
-        row.setOrientation(LinearLayout.HORIZONTAL);
-        row.setGravity(Gravity.CENTER);
+        // ==========================
+        // BUTTON ROW
+        // ==========================
+        LinearLayout btnRow = new LinearLayout(this);
+        btnRow.setOrientation(LinearLayout.HORIZONTAL);
+        btnRow.setGravity(Gravity.CENTER);
 
-                // ---------- NO ----------
+        LinearLayout.LayoutParams btnLp =
+                new LinearLayout.LayoutParams(
+                        ViewGroup.LayoutParams.WRAP_CONTENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT
+                );
+        btnLp.setMargins(dp(12), dp(8), dp(12), dp(8));
+
+        // ---------- NO ----------
         Button noBtn = new Button(this);
         noBtn.setText(gr ? "ΟΧΙ" : "NO");
         noBtn.setAllCaps(false);
@@ -4669,23 +4688,30 @@ private void showAnswerCheckConfirmation() {
         yesBtn.setBackground(yesBg);
         yesBtn.setLayoutParams(btnLp);
 
+        // ---------- ADD ----------
         btnRow.addView(noBtn);
         btnRow.addView(yesBtn);
         root.addView(btnRow);
 
         b.setView(root);
-        AlertDialog d = b.create();
-        if (d.getWindow() != null)
-            d.getWindow().setBackgroundDrawable(
-                    new ColorDrawable(Color.TRANSPARENT));
 
-        no.setOnClickListener(v -> {
+        final AlertDialog d = b.create();
+        if (d.getWindow() != null) {
+            d.getWindow().setBackgroundDrawable(
+                    new ColorDrawable(Color.TRANSPARENT)
+            );
+        }
+
+        // ==========================
+        // LISTENERS
+        // ==========================
+        noBtn.setOnClickListener(v -> {
             lastAnswerHeardClearly = false;
             answered.set(true);
             d.dismiss();
         });
 
-        yes.setOnClickListener(v -> {
+        yesBtn.setOnClickListener(v -> {
             lastAnswerHeardClearly = true;
             answered.set(true);
             d.dismiss();
@@ -4693,24 +4719,25 @@ private void showAnswerCheckConfirmation() {
 
         if (!isFinishing() && !isDestroyed()) d.show();
 
+        // ==========================
+        // TTS (SPEAKER)
+        // ==========================
         AppTTS.ensureSpeak(
                 this,
                 gr
-                        ? "Με άκουσες καθαρά; Τσέκαρε την απάντηση σου."
+                        ? "Με άκουσες καθαρά; Τσέκαρε την απάντησή σου."
                         : "Did you hear me clearly? Check your answer."
         );
     });
 
     long waitUntil = SystemClock.uptimeMillis() + 8000;
+    while (!answered.get() && SystemClock.uptimeMillis() < waitUntil) {
+        SystemClock.sleep(50);
+    }
 
-while (!answered.get() && SystemClock.uptimeMillis() < waitUntil) {
-    SystemClock.sleep(50);
-}
-
-if (!answered.get()) {
-    // Timeout or dialog not answered
-    lastAnswerHeardClearly = false;
-}
+    if (!answered.get()) {
+        lastAnswerHeardClearly = false;
+    }
 }
 
 /* ============================================================

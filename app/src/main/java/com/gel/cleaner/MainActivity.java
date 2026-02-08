@@ -132,6 +132,7 @@ if (hasMissingPermissions()) {
 }
 
 log("📱 Device ready", false);
+}
 
     // =========================================================
     // PERMISSIONS — ENTRY GATE (MANDATORY)

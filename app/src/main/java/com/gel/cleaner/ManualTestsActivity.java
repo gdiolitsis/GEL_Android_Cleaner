@@ -4130,7 +4130,7 @@ private void lab4MicBase(Runnable onFinished) {
 
 // ====================================================
 // FALLBACK — HUMAN VOICE (ONLY IF BOTH = 0)
-// HUMAN VERIFIED — NO AUTO RECHECK
+// HUMAN VERIFIED — NO AUTO RECHECK (FINAL)
 // ====================================================
 if (!bottomOk && !topOk) {
 
@@ -4149,7 +4149,7 @@ if (!bottomOk && !topOk) {
     final AtomicReference<AlertDialog> dialogRef = new AtomicReference<>();
 
     // ==========================
-    // SHOW INSTRUCTION
+    // SHOW HUMAN INSTRUCTION
     // ==========================
     runOnUiThread(() -> {
 
@@ -4180,9 +4180,11 @@ if (!bottomOk && !topOk) {
         b.setView(root);
 
         AlertDialog d = b.create();
-        if (d.getWindow() != null)
+        if (d.getWindow() != null) {
             d.getWindow().setBackgroundDrawable(
-                    new ColorDrawable(Color.TRANSPARENT));
+                    new ColorDrawable(Color.TRANSPARENT)
+            );
+        }
 
         dialogRef.set(d);
         if (!isFinishing() && !isDestroyed()) d.show();
@@ -4196,23 +4198,10 @@ if (!bottomOk && !topOk) {
     hardNormalizeAudioForMic();
 
     // ==========================
-    // ⏱️ LISTEN FOR HUMAN VOICE
+    // ⏱️ HUMAN VOICE WINDOW
+    // (ΔΙΝΟΥΜΕ ΧΡΟΝΟ ΣΤΟΝ ΑΝΘΡΩΠΟ)
     // ==========================
-    long waitUntil = SystemClock.uptimeMillis() + 4000;
-    boolean spoke = false;
-
-    while (SystemClock.uptimeMillis() < waitUntil) {
-
-        MicDiagnosticEngine.Result probe =
-                MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.BOTTOM);
-
-        if (probe != null && (probe.rms > 0 || probe.peak > 0)) {
-            spoke = true;
-            break;
-        }
-
-        SystemClock.sleep(200);
-    }
+    SystemClock.sleep(4200);
 
     // ==========================
     // CLOSE INSTRUCTION
@@ -4223,9 +4212,19 @@ if (!bottomOk && !topOk) {
     });
 
     // ==========================
+    // SINGLE MEASURE — HUMAN ONLY
+    // ==========================
+    MicDiagnosticEngine.Result probe =
+            MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.BOTTOM);
+
+    boolean spoke =
+            probe != null && (probe.rms > 0 || probe.peak > 0);
+
+    // ==========================
     // FINAL VERDICT — HUMAN ONLY
     // ==========================
     if (spoke) {
+
         bottomOk = true;
         topOk = true;
 
@@ -4235,14 +4234,16 @@ if (!bottomOk && !topOk) {
                         ? "Τα μικρόφωνα λειτουργούν. (επιβεβαίωση με ανθρώπινη φωνή)"
                         : "Microphones operational. (human voice verified)"
         );
+
     } else {
+
         bottomOk = false;
         topOk = false;
 
         logLabelErrorValue(
-        gr ? "Κατάσταση" : "Status",
-        gr
-                ? "Δεν ανιχνεύθηκε ανθρώπινη φωνή. Ισχυρή ένδειξη βλάβης μικροφώνου."
+                gr ? "Κατάσταση" : "Status",
+                gr
+                        ? "Δεν ανιχνεύθηκε ανθρώπινη φωνή. Ισχυρή ένδειξη βλάβης μικροφώνου."
                         : "Human voice not detected. Strong indication of microphone hardware damage."
         );
     }

@@ -4162,7 +4162,7 @@ if (!bottomOk && !topOk) {
     basePeak = Math.max(basePeak, 120.0);
 
     // ====================================================
-    // 2️⃣ UI + TTS (UI THREAD — MUTED SAFE)
+    // 2️⃣ UI + TTS (GEL-SAFE)
     // ====================================================
     runOnUiThread(() -> {
 
@@ -4190,7 +4190,7 @@ if (!bottomOk && !topOk) {
         msg.setGravity(Gravity.CENTER);
         root.addView(msg);
 
-        // 🔇 ΥΠΑΡΧΟΝ mute checkbox
+        // 🔇 STANDARD GEL MUTE ROW
         root.addView(buildMuteRow());
 
         b.setView(root);
@@ -4207,12 +4207,10 @@ if (!bottomOk && !topOk) {
             d.show();
         }
 
-        // 🔊 TTS — ΜΟΝΟ εδώ, ΜΟΝΟ αν δεν είναι muted
-        
-            new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                AppTTS.ensureSpeak(this, text);
-            }, 500); // sweet spot
-        }
+        // 🔊 TTS — mute handled internally by GEL
+        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+            AppTTS.ensureSpeak(this, text);
+        }, 500);
     });
 
     // ====================================================

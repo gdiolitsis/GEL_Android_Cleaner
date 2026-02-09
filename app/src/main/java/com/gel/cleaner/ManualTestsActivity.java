@@ -4175,7 +4175,7 @@ if (!bottomOk && !topOk) {
         msg.setGravity(Gravity.CENTER);
         root.addView(msg);
 
-        // 🔇 STANDARD GEL mute checkbox
+        // 🔇 STANDARD GEL mute checkbox (έτοιμο)
         root.addView(buildMuteRow());
 
         b.setView(root);
@@ -4188,9 +4188,7 @@ if (!bottomOk && !topOk) {
         }
 
         ref.set(d);
-        if (!isFinishing() && !isDestroyed()) {
-            d.show();
-        }
+        if (!isFinishing() && !isDestroyed()) d.show();
     });
 
     // ====================================================
@@ -4200,47 +4198,72 @@ if (!bottomOk && !topOk) {
         AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
         if (am != null) {
             am.setMode(AudioManager.MODE_NORMAL);
-            am.setSpeakerphoneOn(true);
+            am.setSpeakerphoneOn(true); // speaker για οδηγία
         }
     } catch (Throwable ignore) {}
 
-    SystemClock.sleep(400);
+    SystemClock.sleep(350);
 
+    // ΜΙΛΑΕΙ ΟΛΟΚΛΗΡΟ (δεν το κόβουμε)
     AppTTS.ensureSpeak(this, text);
 
-    // ⛔ ΚΑΝΕΝΑ mic εδώ
-    SystemClock.sleep(2000); // όσο μιλάει το TTS
+    // Dynamic wait ώστε να μην κόβεται ποτέ η οδηγία
+    int ttsWaitMs = 2600 + (text != null ? Math.min(3400, text.length() * 55) : 0);
+    SystemClock.sleep(ttsWaitMs);
 
     // ====================================================
     // 3️⃣ HARD ANTI-ECHO GAP (CRITICAL)
     // ====================================================
-    AppTTS.stop();          // 🔥 ΣΤΑΜΑΤΑΕΙ ΤΟ SPEAKER
-    SystemClock.sleep(900); // 🔒 anti-echo / AGC decay
+    // ΜΗΝ κάνεις stop εδώ (κόβει τη φράση + κάνει artifacts)
+    try {
+        AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
+        if (am != null) {
+            am.setSpeakerphoneOn(false); // κλείσε speaker πριν το mic
+            am.setMode(AudioManager.MODE_NORMAL);
+        }
+    } catch (Throwable ignore) {}
+
+    SystemClock.sleep(900); // anti-echo / AGC decay
 
     // ====================================================
-    // 4️⃣ HUMAN SPEECH WINDOW (MIC ONLY)
+    // 4️⃣ HUMAN SPEECH WINDOW (MIC ONLY) + BASELINE RATIO
     // ====================================================
     hardNormalizeAudioForMic();
-    SystemClock.sleep(350);
+    SystemClock.sleep(250);
 
+    // BASELINE (μετά το TTS, σε ησυχία)
+    MicDiagnosticEngine.Result base =
+            MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.BOTTOM);
+
+    double baseRms  = base != null ? base.rms  : 0.0;
+    double basePeak = base != null ? base.peak : 0.0;
+
+    // μικρά floors για να μη μηδενίζει
+    baseRms  = Math.max(baseRms, 20.0);
+    basePeak = Math.max(basePeak, 120.0);
+
+    SystemClock.sleep(180);
+
+    // PROBE (εδώ πρέπει να μιλήσει ο άνθρωπος)
     MicDiagnosticEngine.Result probe =
             MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.BOTTOM);
 
     double rms  = probe != null ? probe.rms  : 0.0;
     double peak = probe != null ? probe.peak : 0.0;
 
+    // HARD + RATIO (κόβει false positives από TTS/χώρο)
     boolean spoke =
             rms  >= 120.0 &&
-            peak >= 900.0;
+            peak >= 900.0 &&
+            rms  >= baseRms  * 2.6 &&
+            peak >= basePeak * 1.9;
 
     // ====================================================
     // 5️⃣ CLOSE UI
     // ====================================================
     runOnUiThread(() -> {
         AlertDialog d = ref.get();
-        if (d != null && d.isShowing()) {
-            d.dismiss();
-        }
+        if (d != null && d.isShowing()) d.dismiss();
     });
 
     // ====================================================

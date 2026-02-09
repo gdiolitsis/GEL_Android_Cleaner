@@ -328,20 +328,9 @@ public void onRequestPermissionsResult(
 
     if (requestCode != REQ_PERMISSIONS) return;
 
-    if (grantResults.length > 0
-            && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-
-        // ✅ πήρε άδεια → επόμενη
-        permissionIndex++;
-        requestNextPermission();
-
-    } else {
-
-else {
-    // ❌ άρνηση → συνέχισε κανονικά
+    // ΕΙΤΕ ΝΑΙ ΕΙΤΕ ΟΧΙ → ΠΑΜΕ ΣΤΗΝ ΕΠΟΜΕΝΗ ΑΔΕΙΑ
     permissionIndex++;
     requestNextPermission();
-}
 }
 
     // =========================================================

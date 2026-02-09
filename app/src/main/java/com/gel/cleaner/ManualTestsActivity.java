@@ -4231,19 +4231,34 @@ if (!bottomOk && !topOk) {
 // ====================================================
 boolean spoke = false;
 
-hardNormalizeAudioForMic();
+// ⚠️ ΟΧΙ hardNormalize εδώ
+// hardNormalizeAudioForMic();  <-- ΔΕΝ ΤΟ ΘΕΛΟΥΜΕ
 
-// ⏱️ συνολικό παράθυρο ακρόασης
-final long WINDOW_MS = 4500;
-final int  STEP_MS   = 150;
+// ⏱️ παράθυρο
+final long WINDOW_MS = 5000;
+final int  STEP_MS   = 200;
 
-// 🧱 απλά, απόλυτα thresholds (δουλεύουν παντού)
-final double RMS_ABS_THRESHOLD  = 55.0;
-final double PEAK_ABS_THRESHOLD = 320.0;
-
-// ⏳ πόσο χρόνο πρέπει να "κρατήσει" η φωνή
+// ⏳ accumulation
 long voiceAccumulatedMs = 0;
 
+// ----------------------------------------------------
+// 1️⃣ BASELINE (ΣΙΩΠΗ)
+// ----------------------------------------------------
+SystemClock.sleep(300);
+
+MicDiagnosticEngine.Result base =
+        MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.BOTTOM);
+
+double baseRms  = base != null ? base.rms  : 10.0;
+double basePeak = base != null ? base.peak : 50.0;
+
+// safety floors
+baseRms  = Math.max(baseRms, 10.0);
+basePeak = Math.max(basePeak, 50.0);
+
+// ----------------------------------------------------
+// 2️⃣ LISTEN WINDOW
+// ----------------------------------------------------
 long until = SystemClock.uptimeMillis() + WINDOW_MS;
 
 while (SystemClock.uptimeMillis() < until) {
@@ -4254,13 +4269,15 @@ while (SystemClock.uptimeMillis() < until) {
     double rms  = r != null ? r.rms  : 0.0;
     double peak = r != null ? r.peak : 0.0;
 
-    // 👉 Αν υπάρχει ξεκάθαρη ανθρώπινη φωνή
-    if (rms >= RMS_ABS_THRESHOLD && peak >= PEAK_ABS_THRESHOLD) {
+    // 👉 ΑΝΕΒΗΚΕ ΣΗΜΑ ΣΧΕΤΙΚΑ ΜΕ ΣΙΩΠΗ
+    if (rms  >= baseRms  * 1.6 &&
+        peak >= basePeak * 1.6) {
+
         voiceAccumulatedMs += STEP_MS;
     }
 
-    // ✅ Αν μίλησε συνολικά αρκετά
-    if (voiceAccumulatedMs >= 1000) { // ~1.0s καθαρής φωνής
+    // ✅ ~0.8s καθαρής φωνής = άνθρωπος μίλησε
+    if (voiceAccumulatedMs >= 800) {
         spoke = true;
         break;
     }

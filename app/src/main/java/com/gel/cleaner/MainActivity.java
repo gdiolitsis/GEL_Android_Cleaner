@@ -111,7 +111,7 @@ public class MainActivity extends GELAutoActivityHook
 // ENTRY FLOW (SINGLE SOURCE OF TRUTH)
 // =========================================================
 permissionIndex = 0;
-showPermissionsGate();
+requestNextPermission();
 
 // APPLY PLATFORM UI
 if ("apple".equals(getSavedPlatform())) {

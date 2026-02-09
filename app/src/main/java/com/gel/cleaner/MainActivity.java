@@ -106,11 +106,12 @@ public class MainActivity extends GELAutoActivityHook
             ttsReady[0] = (status == TextToSpeech.SUCCESS);
             if (ttsReady[0] && welcomeShown) speakWelcomeTTS();
         });
-
-        // 🚨 PERMISSIONS ENTRY GATE — ΠΑΝΤΑ ΠΡΩΤΟ
-if (hasMissingPermissions()) {
-    showPermissionsGate();
-}
+        
+// =========================================================
+// ENTRY FLOW (SINGLE SOURCE OF TRUTH)
+// =========================================================
+permissionIndex = 0;
+showPermissionsGate();
 
 // APPLY PLATFORM UI
 if ("apple".equals(getSavedPlatform())) {
@@ -119,10 +120,6 @@ if ("apple".equals(getSavedPlatform())) {
     applyAndroidModeUI();
 }
 syncReturnButtonText();
-
-if (!consumeSkipWelcomeOnce() && !isWelcomeDisabled()) {
-    showWelcomePopup();
-}
 
 log("📱 Device ready", false);
 }
@@ -227,7 +224,8 @@ continueBtn.setOnClickListener(v -> {
 
 skipBtn.setOnClickListener(v -> {
     d.dismiss();
-    showMissingPermissionsDialog();
+    permissionIndex = REQUIRED_PERMISSIONS.length;
+requestNextPermission();
 });
 
         if (!isFinishing()) d.show();
@@ -252,11 +250,6 @@ skipBtn.setOnClickListener(v -> {
 
         permissionIndex++;
     }
-
-// ✅ ΤΕΛΟΣ PERMISSIONS FLOW → WELCOME
-if (!consumeSkipWelcomeOnce() && !isWelcomeDisabled()) {
-    showWelcomePopup();
-}
 }
 
 private void showMissingPermissionsDialog() {
@@ -266,7 +259,6 @@ private void showMissingPermissionsDialog() {
     StringBuilder missing = new StringBuilder();
 
     for (String p : REQUIRED_PERMISSIONS) {
-
         if (ContextCompat.checkSelfPermission(this, p)
                 != PackageManager.PERMISSION_GRANTED) {
 
@@ -286,35 +278,117 @@ private void showMissingPermissionsDialog() {
 
     if (missing.length() == 0) return;
 
-    String title = gr ? "Λείπουν άδειες" : "Missing permissions";
+    // ================= ROOT =================
+    AlertDialog.Builder b = new AlertDialog.Builder(this);
+    b.setCancelable(false);
 
-    String message = gr
-            ? "Η εφαρμογή δεν μπορεί να λειτουργήσει σωστά χωρίς τις παρακάτω άδειες:\n\n"
-              + missing
-              + "\n\nΜπορείς να τις ενεργοποιήσεις από τις ρυθμίσεις."
-            : "The app cannot function properly without the following permissions:\n\n"
-              + missing
-              + "\n\nYou can enable them from system settings.";
+    LinearLayout root = new LinearLayout(this);
+    root.setOrientation(LinearLayout.VERTICAL);
+    root.setPadding(dp(24), dp(20), dp(24), dp(18));
 
-    new AlertDialog.Builder(this)
-            .setTitle(title)
-            .setMessage(message)
-            .setCancelable(false)
-            .setPositiveButton(
-                    gr ? "ΡΥΘΜΙΣΕΙΣ" : "SETTINGS",
-                    (d, w) -> {
-                        Intent i = new Intent(
-                                Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-                                Uri.fromParts("package", getPackageName(), null)
-                        );
-                        startActivity(i);
-                    }
-            )
-            .setNegativeButton(
-                    gr ? "ΑΚΥΡΟ" : "CANCEL",
-                    (d, w) -> d.dismiss()
-            )
-            .show();
+    GradientDrawable bg = new GradientDrawable();
+    bg.setColor(0xFF101010);              // μαύρο
+    bg.setCornerRadius(dp(18));
+    bg.setStroke(dp(4), 0xFFFFD700);      // χρυσό
+    root.setBackground(bg);
+
+    // ================= TITLE =================
+    TextView title = new TextView(this);
+    title.setText(gr ? "ΛΕΙΠΟΥΝ ΑΔΕΙΕΣ" : "MISSING PERMISSIONS");
+    title.setTextColor(Color.WHITE);
+    title.setTextSize(18f);
+    title.setTypeface(null, Typeface.BOLD);
+    title.setGravity(Gravity.CENTER);
+    title.setPadding(0, 0, 0, dp(12));
+
+    // ================= MESSAGE =================
+    TextView msg = new TextView(this);
+    msg.setTextColor(0xFFDDDDDD);
+    msg.setTextSize(15f);
+    msg.setText(
+            gr
+                    ? "Η εφαρμογή δεν μπορεί να λειτουργήσει σωστά χωρίς τις παρακάτω άδειες:\n\n"
+                      + missing
+                      + "\n\nΜπορείς να τις ενεργοποιήσεις από τις ρυθμίσεις."
+                    : "The app cannot function properly without the following permissions:\n\n"
+                      + missing
+                      + "\n\nYou can enable them from system settings."
+    );
+
+    root.addView(title);
+    root.addView(msg);
+
+    // ================= BUTTON ROW =================
+    LinearLayout btnRow = new LinearLayout(this);
+    btnRow.setOrientation(LinearLayout.HORIZONTAL);
+    btnRow.setGravity(Gravity.CENTER);
+    btnRow.setPadding(0, dp(18), 0, 0);
+
+    LinearLayout.LayoutParams btnLp =
+            new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+            );
+    btnLp.setMargins(dp(12), dp(8), dp(12), dp(8));
+
+    // ---------- SETTINGS (GREEN) ----------
+    Button settingsBtn = new Button(this);
+    settingsBtn.setText(gr ? "ΡΥΘΜΙΣΕΙΣ" : "SETTINGS");
+    settingsBtn.setAllCaps(false);
+    settingsBtn.setTextColor(Color.WHITE);
+    settingsBtn.setMinWidth(dp(120));
+
+    GradientDrawable settingsBg = new GradientDrawable();
+    settingsBg.setColor(0xFF0B5F3B);      // GEL green
+    settingsBg.setCornerRadius(dp(14));
+    settingsBg.setStroke(dp(3), 0xFFFFD700);
+    settingsBtn.setBackground(settingsBg);
+    settingsBtn.setLayoutParams(btnLp);
+
+    // ---------- SKIP (RED) ----------
+    Button skipBtn = new Button(this);
+    skipBtn.setText(gr ? "ΠΑΡΑΛΕΙΨΗ" : "SKIP");
+    skipBtn.setAllCaps(false);
+    skipBtn.setTextColor(Color.WHITE);
+    skipBtn.setMinWidth(dp(120));
+
+    GradientDrawable skipBg = new GradientDrawable();
+    skipBg.setColor(0xFF8B0000);          // GEL red
+    skipBg.setCornerRadius(dp(14));
+    skipBg.setStroke(dp(3), 0xFFFFD700);
+    skipBtn.setBackground(skipBg);
+    skipBtn.setLayoutParams(btnLp);
+
+    btnRow.addView(skipBtn);
+    btnRow.addView(settingsBtn);
+    root.addView(btnRow);
+
+    b.setView(root);
+
+    final AlertDialog d = b.create();
+    if (d.getWindow() != null) {
+        d.getWindow().setBackgroundDrawable(
+                new ColorDrawable(Color.TRANSPARENT)
+        );
+    }
+
+    // ================= ACTIONS =================
+    settingsBtn.setOnClickListener(v -> {
+        d.dismiss();
+        Intent i = new Intent(
+                Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                Uri.fromParts("package", getPackageName(), null)
+        );
+        startActivity(i);
+    });
+
+    skipBtn.setOnClickListener(v -> {
+        d.dismiss();
+        permissionIndex = REQUIRED_PERMISSIONS.length;
+        requestNextPermission();
+    });
+
+    if (!isFinishing()) d.show();
 }
 
     @Override
@@ -330,6 +404,11 @@ public void onRequestPermissionsResult(
     // ΕΙΤΕ ΝΑΙ ΕΙΤΕ ΟΧΙ → ΠΑΜΕ ΣΤΗΝ ΕΠΟΜΕΝΗ ΑΔΕΙΑ
     permissionIndex++;
     requestNextPermission();
+}
+
+// ✅ ΤΕΛΟΣ PERMISSIONS FLOW → WELCOME
+if (!consumeSkipWelcomeOnce() && !isWelcomeDisabled()) {
+    showWelcomePopup();
 }
 
     // =========================================================
@@ -353,16 +432,6 @@ private void syncReturnButtonText() {
                     ? "RETURN TO ANDROID MODE"
                     : "RETURN TO APPLE MODE");
         }
-    }
-
-    private void savePlatform(String mode) {
-        getSharedPreferences(PREFS, MODE_PRIVATE)
-                .edit().putString(KEY_PLATFORM, mode).apply();
-    }
-
-    private String getSavedPlatform() {
-        return getSharedPreferences(PREFS, MODE_PRIVATE)
-                .getString(KEY_PLATFORM, "android");
     }
 
 private void setSkipWelcomeOnce(boolean v) {
@@ -390,6 +459,16 @@ private void disableWelcomeForever() {
             .putBoolean("welcome_disabled", true)
             .apply();
 }
+
+private void savePlatform(String mode) {
+        getSharedPreferences(PREFS, MODE_PRIVATE)
+                .edit().putString(KEY_PLATFORM, mode).apply();
+    }
+
+    private String getSavedPlatform() {
+        return getSharedPreferences(PREFS, MODE_PRIVATE)
+                .getString(KEY_PLATFORM, "android");
+    }
 
 private boolean isAppleMode() {
     return "apple".equals(getSavedPlatform());

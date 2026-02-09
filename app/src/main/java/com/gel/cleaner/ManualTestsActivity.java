@@ -4245,18 +4245,31 @@ if (!bottomOk && !topOk) {
     SystemClock.sleep(180);
 
     // PROBE (εδώ πρέπει να μιλήσει ο άνθρωπος)
+    boolean spoke = false;
+
+// ⏱️ 3.5s ανθρώπινο παράθυρο
+long listenUntil = SystemClock.uptimeMillis() + 3500;
+
+while (SystemClock.uptimeMillis() < listenUntil) {
+
     MicDiagnosticEngine.Result probe =
             MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.BOTTOM);
 
     double rms  = probe != null ? probe.rms  : 0.0;
     double peak = probe != null ? probe.peak : 0.0;
 
-    // HARD + RATIO (κόβει false positives από TTS/χώρο)
-    boolean spoke =
+    if (
             rms  >= 120.0 &&
             peak >= 900.0 &&
             rms  >= baseRms  * 2.6 &&
-            peak >= basePeak * 1.9;
+            peak >= basePeak * 1.9
+    ) {
+        spoke = true;
+        break; // ✅ μίλησε άνθρωπος
+    }
+
+    SystemClock.sleep(120); // όχι busy loop
+}
 
     // ====================================================
     // 5️⃣ CLOSE UI

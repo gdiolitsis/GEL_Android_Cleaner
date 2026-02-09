@@ -110,7 +110,6 @@ public class MainActivity extends GELAutoActivityHook
         // 🚨 PERMISSIONS ENTRY GATE — ΠΑΝΤΑ ΠΡΩΤΟ
 if (hasMissingPermissions()) {
     showPermissionsGate();
-    return;
 }
 
 // APPLY PLATFORM UI
@@ -123,12 +122,6 @@ syncReturnButtonText();
 
 if (!consumeSkipWelcomeOnce() && !isWelcomeDisabled()) {
     showWelcomePopup();
-}
-
-// 🚨 PERMISSIONS ENTRY GATE (ONLY IF NEEDED)
-if (hasMissingPermissions()) {
-    permissionIndex = 0;   // 🔒 καθαρό start
-    showPermissionsGate();
 }
 
 log("📱 Device ready", false);
@@ -172,75 +165,71 @@ log("📱 Device ready", false);
                 ? "Η εφαρμογή χρειάζεται άδειες για να λειτουργήσει σωστά.\n\nΘα ζητηθούν μία-μία."
                 : "The app requires permissions to function properly.\n\nThey will be requested one by one.");
 
-        // ================= BUTTONS (CENTERED — GEL STYLE) =================
-LinearLayout buttons = new LinearLayout(this);
-buttons.setOrientation(LinearLayout.HORIZONTAL);
-buttons.setGravity(Gravity.CENTER);
-buttons.setPadding(0, dp(18), 0, 0);
+// ---------- BUTTON ROW ----------
+LinearLayout btnRow = new LinearLayout(this);
+btnRow.setOrientation(LinearLayout.HORIZONTAL);
+btnRow.setGravity(Gravity.CENTER);
+btnRow.setPadding(0, dp(16), 0, 0);
 
-// ---------- CONTINUE (GREEN) ----------
-Button btnContinue = new Button(this);
-btnContinue.setText(gr ? "ΣΥΝΕΧΕΙΑ" : "CONTINUE");
-btnContinue.setAllCaps(false);
-btnContinue.setTextColor(Color.WHITE);
-btnContinue.setTextSize(16f);
-
-GradientDrawable bgContinue = new GradientDrawable();
-bgContinue.setColor(0xFF0F8A3B);          // GEL green
-bgContinue.setCornerRadius(dp(16));
-bgContinue.setStroke(dp(3), 0xFFFFD700);  // gold stroke
-btnContinue.setBackground(bgContinue);
-
-LinearLayout.LayoutParams lpContinue =
+LinearLayout.LayoutParams btnLp =
         new LinearLayout.LayoutParams(
-                dp(140),
-                dp(56)
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
         );
-lpContinue.setMargins(dp(10), 0, dp(10), 0);
-btnContinue.setLayoutParams(lpContinue);
+btnLp.setMargins(dp(12), dp(8), dp(12), dp(8));
 
 // ---------- SKIP (RED) ----------
-Button btnSkip = new Button(this);
-btnSkip.setText(gr ? "ΠΑΡΑΛΕΙΨΗ" : "SKIP");
-btnSkip.setAllCaps(false);
-btnSkip.setTextColor(Color.WHITE);
-btnSkip.setTextSize(16f);
+Button skipBtn = new Button(this);
+skipBtn.setText(gr ? "ΠΑΡΑΛΕΙΨΗ" : "SKIP");
+skipBtn.setAllCaps(false);
+skipBtn.setTextColor(Color.WHITE);
+skipBtn.setMinWidth(dp(120));
 
-GradientDrawable bgSkip = new GradientDrawable();
-bgSkip.setColor(0xFF8A1F1F);              // GEL red
-bgSkip.setCornerRadius(dp(16));
-bgSkip.setStroke(dp(3), 0xFFFFD700);      // gold stroke
-btnSkip.setBackground(bgSkip);
+GradientDrawable skipBg = new GradientDrawable();
+skipBg.setColor(0xFF8B0000);              // GEL red
+skipBg.setCornerRadius(dp(14));
+skipBg.setStroke(dp(3), 0xFFFFD700);      // gold stroke
+skipBtn.setBackground(skipBg);
+skipBtn.setLayoutParams(btnLp);
 
-LinearLayout.LayoutParams lpSkip =
-        new LinearLayout.LayoutParams(
-                dp(140),
-                dp(56)
-        );
-lpSkip.setMargins(dp(10), 0, dp(10), 0);
-btnSkip.setLayoutParams(lpSkip);
+// ---------- CONTINUE (GREEN) ----------
+Button continueBtn = new Button(this);
+continueBtn.setText(gr ? "ΣΥΝΕΧΕΙΑ" : "CONTINUE");
+continueBtn.setAllCaps(false);
+continueBtn.setTextColor(Color.WHITE);
+continueBtn.setMinWidth(dp(120));
 
-// ADD
-buttons.addView(btnContinue);
-buttons.addView(btnSkip);
-box.addView(buttons);
+GradientDrawable continueBg = new GradientDrawable();
+continueBg.setColor(0xFF0B5F3B);          // GEL green
+continueBg.setCornerRadius(dp(14));
+continueBg.setStroke(dp(3), 0xFFFFD700);  // gold stroke
+continueBtn.setBackground(continueBg);
+continueBtn.setLayoutParams(btnLp);
 
-        b.setView(box);
-        AlertDialog d = b.create();
-        if (d.getWindow() != null) {
-            d.getWindow().setBackgroundDrawable(
-                    new ColorDrawable(Color.TRANSPARENT));
-        }
+// ---------- ADD ----------
+btnRow.addView(skipBtn);
+btnRow.addView(continueBtn);
+root.addView(btnRow);
 
-        btnContinue.setOnClickListener(v -> {
-            d.dismiss();
-            requestNextPermission();
-        });
+b.setView(root);
 
-        btnSkip.setOnClickListener(v -> {
-            d.dismiss();
-            showMissingPermissionsDialog();
-        });
+final AlertDialog d = b.create();
+if (d.getWindow() != null) {
+    d.getWindow().setBackgroundDrawable(
+            new ColorDrawable(Color.TRANSPARENT)
+    );
+}
+
+// ---------- CLICK HANDLERS ----------
+continueBtn.setOnClickListener(v -> {
+    d.dismiss();
+    requestNextPermission();
+});
+
+skipBtn.setOnClickListener(v -> {
+    d.dismiss();
+    showMissingPermissionsDialog();
+});
 
         if (!isFinishing()) d.show();
     }
@@ -265,8 +254,10 @@ box.addView(buttons);
         permissionIndex++;
     }
 
-    // ✅ ΟΛΕΣ ΟΙ ΑΔΕΙΕΣ OK
-    // εδώ συνεχίζει κανονικά το app
+// ✅ ΤΕΛΟΣ PERMISSIONS FLOW → WELCOME
+if (!consumeSkipWelcomeOnce() && !isWelcomeDisabled()) {
+    showWelcomePopup();
+}
 }
 
 private void showMissingPermissionsDialog() {
@@ -346,10 +337,11 @@ public void onRequestPermissionsResult(
 
     } else {
 
-        // ❌ άρνηση → RESET + επιστροφή στο gate
-        permissionIndex = 0;   // 🔒 ΑΠΑΡΑΙΤΗΤΟ
-        showPermissionsGate();
-    }
+else {
+    // ❌ άρνηση → συνέχισε κανονικά
+    permissionIndex++;
+    requestNextPermission();
+}
 }
 
     // =========================================================

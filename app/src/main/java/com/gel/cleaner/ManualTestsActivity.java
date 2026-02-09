@@ -4226,63 +4226,25 @@ if (!bottomOk && !topOk) {
     SystemClock.sleep(900); // anti-echo / AGC decay
 
 // ====================================================
-// 4️⃣ HUMAN VOICE — BURST-BASED "COUNT TO 3" DETECTOR (FINAL • GLOBAL)
-// ✅ Passes ONLY if it detects 3 separate voice bursts with human-like gaps.
+// 4️⃣ SIMPLE HUMAN VOICE LAB (ISOLATED • GLOBAL • STABLE)
+// Purpose: Detect if a HUMAN actually spoke (counted 1-2-3)
 // ====================================================
 boolean spoke = false;
 
 hardNormalizeAudioForMic();
 
-// ----------------------------
-// AMBIENT BASELINE (SILENCE)
-// ----------------------------
-SystemClock.sleep(320);
+// ⏱️ συνολικό παράθυρο ακρόασης
+final long WINDOW_MS = 4500;
+final int  STEP_MS   = 150;
 
-MicDiagnosticEngine.Result base =
-        MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.BOTTOM);
+// 🧱 απλά, απόλυτα thresholds (δουλεύουν παντού)
+final double RMS_ABS_THRESHOLD  = 55.0;
+final double PEAK_ABS_THRESHOLD = 320.0;
 
-double baseRms  = base != null ? base.rms  : 0.0;
-double basePeak = base != null ? base.peak : 0.0;
+// ⏳ πόσο χρόνο πρέπει να "κρατήσει" η φωνή
+long voiceAccumulatedMs = 0;
 
-// floors (σταθερότητα)
-baseRms  = Math.max(baseRms, 20.0);
-basePeak = Math.max(basePeak, 120.0);
-
-// ----------------------------
-// BURST DETECTION PARAMS
-// ----------------------------
-// Entry (strict) vs Exit (looser) -> hysteresis to kill AGC spikes
-final double ENTER_RMS_ABS   = 60.0;
-final double ENTER_PEAK_ABS  = 360.0;
-final double ENTER_RMS_MULT  = 1.9;
-final double ENTER_PEAK_MULT = 1.6;
-
-final double EXIT_RMS_MULT   = 1.35;
-final double EXIT_PEAK_MULT  = 1.25;
-
-// Timing
-final long  WINDOW_MS     = 5200;   // overall listen window
-final int   STEP_MS       = 90;     // sampling step
-final int   MIN_BURST_MS  = 160;    // voice burst must last at least this
-final int   MIN_GAP_MS    = 160;    // gap between bursts
-final int   MAX_GAP_MS    = 1200;   // human count gaps typically < ~1.2s
-final int   NEED_BURSTS   = 3;      // "1-2-3"
-
-// Derived
-final int MIN_BURST_FRAMES = Math.max(2, MIN_BURST_MS / STEP_MS);
-final int MIN_GAP_FRAMES   = Math.max(2, MIN_GAP_MS   / STEP_MS);
-final int MAX_GAP_FRAMES   = Math.max(6, MAX_GAP_MS   / STEP_MS);
-
-// ----------------------------
-// RUN WINDOW
-// ----------------------------
 long until = SystemClock.uptimeMillis() + WINDOW_MS;
-
-int bursts = 0;
-
-boolean inBurst = false;
-int burstFrames = 0;
-int gapFrames = 9999; // large so first burst allowed
 
 while (SystemClock.uptimeMillis() < until) {
 
@@ -4292,68 +4254,19 @@ while (SystemClock.uptimeMillis() < until) {
     double rms  = r != null ? r.rms  : 0.0;
     double peak = r != null ? r.peak : 0.0;
 
-    // ---- entry condition (strict)
-    boolean enter =
-            (rms  >= ENTER_RMS_ABS)  &&
-            (peak >= ENTER_PEAK_ABS) &&
-            (rms  >= baseRms  * ENTER_RMS_MULT) &&
-            (peak >= basePeak * ENTER_PEAK_MULT);
+    // 👉 Αν υπάρχει ξεκάθαρη ανθρώπινη φωνή
+    if (rms >= RMS_ABS_THRESHOLD && peak >= PEAK_ABS_THRESHOLD) {
+        voiceAccumulatedMs += STEP_MS;
+    }
 
-    // ---- exit condition (looser)
-    boolean exit =
-            (rms  <  baseRms  * EXIT_RMS_MULT) ||
-            (peak <  basePeak * EXIT_PEAK_MULT);
-
-    if (!inBurst) {
-
-        // we are in gap
-        gapFrames++;
-
-        // start burst only if we had at least a small gap
-        if (enter && gapFrames >= MIN_GAP_FRAMES) {
-            inBurst = true;
-            burstFrames = 1;
-        }
-
-    } else {
-
-        // we are inside a burst
-        if (enter) {
-            burstFrames++;
-        } else if (exit) {
-            // burst ends
-            if (burstFrames >= MIN_BURST_FRAMES) {
-
-                // if not the first burst, gap must be human-like
-                if (bursts == 0 || (gapFrames >= MIN_GAP_FRAMES && gapFrames <= MAX_GAP_FRAMES)) {
-                    bursts++;
-                } else {
-                    // weird gap => reset sequence (kills AGC nonsense)
-                    bursts = 0;
-                }
-
-                if (bursts >= NEED_BURSTS) {
-                    spoke = true;
-                    break;
-                }
-            }
-
-            // reset to gap state
-            inBurst = false;
-            burstFrames = 0;
-            gapFrames = 0;
-        } else {
-            // neither strong enter nor exit => keep counting as burst
-            burstFrames++;
-        }
+    // ✅ Αν μίλησε συνολικά αρκετά
+    if (voiceAccumulatedMs >= 1000) { // ~1.0s καθαρής φωνής
+        spoke = true;
+        break;
     }
 
     SystemClock.sleep(STEP_MS);
 }
-
-// NOTE:
-// - This detector is intentionally "behavior-based".
-// - It will NOT pass on random noise/AGC spikes because it needs 3 bursts + human gaps.
          
     // ====================================================
     // 5️⃣ CLOSE UI

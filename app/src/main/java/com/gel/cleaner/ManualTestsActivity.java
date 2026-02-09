@@ -4158,7 +4158,7 @@ if (!bottomOk && !topOk) {
     double baseRms  = base != null ? base.rms  : 0.0;
     double basePeak = base != null ? base.peak : 0.0;
 
-    // safety floors (anti AGC / zero noise)
+    // safety floors (ANTI FAKE / AGC)
     baseRms  = Math.max(baseRms, 20.0);
     basePeak = Math.max(basePeak, 120.0);
 
@@ -4166,6 +4166,7 @@ if (!bottomOk && !topOk) {
     // 2️⃣ UI PROMPT
     // ====================================================
     runOnUiThread(() -> {
+
         AlertDialog.Builder b =
                 new AlertDialog.Builder(
                         this,
@@ -4204,10 +4205,13 @@ if (!bottomOk && !topOk) {
     });
 
     // ====================================================
-    // 3️⃣ TTS (AFTER BASELINE)
+    // 3️⃣ TTS — WARM-UP + REAL SPEAK (FIX FIRST-TIME SILENCE)
     // ====================================================
-    SystemClock.sleep(500);
-    AppTTS.ensureSpeak(this, text);
+    SystemClock.sleep(350);
+    AppTTS.ensureSpeak(this, " ");   // 🔥 WARM-UP (ΜΗΝ ΤΟ ΒΓΑΛΕΙΣ)
+
+    SystemClock.sleep(200);
+    AppTTS.ensureSpeak(this, text);  // 🎤 REAL PROMPT
 
     // ====================================================
     // 4️⃣ HUMAN SPEECH WINDOW
@@ -4233,7 +4237,7 @@ if (!bottomOk && !topOk) {
     double pPeak = probe != null ? probe.peak : 0.0;
 
     // ====================================================
-    // 7️⃣ HARD DECISION — NO FALSE POSITIVES
+    // 7️⃣ HARD DECISION — ZERO FALSE POSITIVES
     // ====================================================
     boolean spoke =
             pRms  >= 120.0 &&

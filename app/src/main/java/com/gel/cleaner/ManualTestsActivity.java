@@ -4225,51 +4225,22 @@ if (!bottomOk && !topOk) {
 
     SystemClock.sleep(900); // anti-echo / AGC decay
 
-    // ====================================================
-    // 4️⃣ HUMAN SPEECH WINDOW (MIC ONLY) + BASELINE RATIO
-    // ====================================================
-    hardNormalizeAudioForMic();
-    SystemClock.sleep(250);
+// ====================================================
+// 4️⃣ HUMAN VOICE — SINGLE BURST (FAST • STABLE)
+// ====================================================
+hardNormalizeAudioForMic();
+SystemClock.sleep(300);
 
-    // BASELINE (μετά το TTS, σε ησυχία)
-    MicDiagnosticEngine.Result base =
-            MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.BOTTOM);
+MicDiagnosticEngine.Result probe =
+        MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.BOTTOM);
 
-    double baseRms  = base != null ? base.rms  : 0.0;
-    double basePeak = base != null ? base.peak : 0.0;
+double rms  = probe != null ? probe.rms  : 0.0;
+double peak = probe != null ? probe.peak : 0.0;
 
-    // μικρά floors για να μη μηδενίζει
-    baseRms  = Math.max(baseRms, 20.0);
-    basePeak = Math.max(basePeak, 120.0);
-
-    SystemClock.sleep(180);
-
-    // PROBE (εδώ πρέπει να μιλήσει ο άνθρωπος)
-    boolean spoke = false;
-
-// ⏱️ 3.5s ανθρώπινο παράθυρο
-long listenUntil = SystemClock.uptimeMillis() + 3500;
-
-while (SystemClock.uptimeMillis() < listenUntil) {
-
-    MicDiagnosticEngine.Result probe =
-            MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.BOTTOM);
-
-    double rms  = probe != null ? probe.rms  : 0.0;
-    double peak = probe != null ? probe.peak : 0.0;
-
-    if (
-        rms  >= 65.0 &&          // πριν: 120
-        peak >= 400.0 &&         // πριν: 900
-        rms  >= baseRms  * 1.7 &&// πριν: 2.6
-        peak >= basePeak * 1.35  // πριν: 1.9
-) {
-    spoke = true;
-    break; // ✅ μίλησε άνθρωπος
-}
-
-    SystemClock.sleep(300); // όχι busy loop
-}
+// FAST HUMAN CRITERION
+boolean spoke =
+        peak >= 350.0 &&   // καθαρό ανθρώπινο transient
+        rms  >= 55.0;
 
     // ====================================================
     // 5️⃣ CLOSE UI

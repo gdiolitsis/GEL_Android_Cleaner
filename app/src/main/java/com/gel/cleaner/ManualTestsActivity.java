@@ -4226,16 +4226,28 @@ if (!bottomOk && !topOk) {
     SystemClock.sleep(900); // anti-echo / AGC decay
 
 // ====================================================
-// 4️⃣ HUMAN VOICE — DUAL SHOT (FINAL • STABLE)
+// 4️⃣ HUMAN VOICE — DUAL SHOT WITH AMBIENT GUARD (FINAL)
 // ====================================================
 hardNormalizeAudioForMic();
 
-// --- SHOT #1
+// ---- AMBIENT BASELINE (silence)
 SystemClock.sleep(250);
+MicDiagnosticEngine.Result base =
+        MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.BOTTOM);
+
+double baseRms  = base != null ? base.rms  : 0.0;
+double basePeak = base != null ? base.peak : 0.0;
+
+// floors (να μη μηδενίζει)
+baseRms  = Math.max(baseRms, 20.0);
+basePeak = Math.max(basePeak, 120.0);
+
+// ---- SHOT #1
+SystemClock.sleep(220);
 MicDiagnosticEngine.Result p1 =
         MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.BOTTOM);
 
-// --- SHOT #2 (offset για ανθρώπινο timing)
+// ---- SHOT #2
 SystemClock.sleep(220);
 MicDiagnosticEngine.Result p2 =
         MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.BOTTOM);
@@ -4246,11 +4258,16 @@ double peak1 = p1 != null ? p1.peak : 0.0;
 double rms2  = p2 != null ? p2.rms  : 0.0;
 double peak2 = p2 != null ? p2.peak : 0.0;
 
-// HUMAN VOICE CRITERION (ANY SHOT)
+// ---- HUMAN VOICE = spike + relative jump
 boolean spoke =
-        (peak1 >= 350.0 && rms1 >= 55.0) ||
-        (peak2 >= 350.0 && rms2 >= 55.0);
-
+        (peak1 >= 380.0 && rms1 >= 60.0 &&
+         rms1  >= baseRms  * 1.8 &&
+         peak1 >= basePeak * 1.5)
+     ||
+        (peak2 >= 380.0 && rms2 >= 60.0 &&
+         rms2  >= baseRms  * 1.8 &&
+         peak2 >= basePeak * 1.5);
+         
     // ====================================================
     // 5️⃣ CLOSE UI
     // ====================================================

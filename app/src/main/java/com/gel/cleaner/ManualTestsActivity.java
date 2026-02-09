@@ -4259,16 +4259,17 @@ while (SystemClock.uptimeMillis() < listenUntil) {
     double peak = probe != null ? probe.peak : 0.0;
 
     if (
-            rms  >= 120.0 &&
-            peak >= 900.0 &&
-            rms  >= baseRms  * 2.6 &&
-            peak >= basePeak * 1.9
+    rms  >= 65.0 &&          // πριν: 120
+    peak >= 400.0 &&         // πριν: 900
+    rms  >= baseRms  * 1.7 &&// πριν: 2.6
+    peak >= basePeak * 1.35  // πριν: 1.9
+)
     ) {
         spoke = true;
         break; // ✅ μίλησε άνθρωπος
     }
 
-    SystemClock.sleep(120); // όχι busy loop
+    SystemClock.sleep(300); // όχι busy loop
 }
 
     // ====================================================

@@ -4146,7 +4146,25 @@ if (!bottomOk && !topOk) {
 
     final AtomicReference<AlertDialog> ref = new AtomicReference<>();
 
-    // ---------- UI ----------
+    // ====================================================
+    // 1️⃣ BASELINE — ABSOLUTE SILENCE (ΠΡΙΝ ΤΟ TTS)
+    // ====================================================
+    hardNormalizeAudioForMic();
+    SystemClock.sleep(300);
+
+    MicDiagnosticEngine.Result base =
+            MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.BOTTOM);
+
+    float baseRms  = base != null ? base.rms  : 0f;
+    float basePeak = base != null ? base.peak : 0f;
+
+    // safety floors (anti AGC / zero)
+    baseRms  = Math.max(baseRms, 20f);
+    basePeak = Math.max(basePeak, 120f);
+
+    // ====================================================
+    // 2️⃣ UI PROMPT
+    // ====================================================
     runOnUiThread(() -> {
         AlertDialog.Builder b =
                 new AlertDialog.Builder(
@@ -4185,28 +4203,46 @@ if (!bottomOk && !topOk) {
         if (!isFinishing() && !isDestroyed()) d.show();
     });
 
-    // ---------- TTS (εκτός UI) ----------
+    // ====================================================
+    // 3️⃣ TTS (ΜΕΤΑ το baseline)
+    // ====================================================
     SystemClock.sleep(500);
     AppTTS.ensureSpeak(this, text);
 
-    // ---------- HUMAN WINDOW ----------
+    // ====================================================
+    // 4️⃣ HUMAN SPEECH WINDOW
+    // ====================================================
     hardNormalizeAudioForMic();
     SystemClock.sleep(4200);
 
-    // ---------- CLOSE UI ----------
+    // ====================================================
+    // 5️⃣ CLOSE UI
+    // ====================================================
     runOnUiThread(() -> {
         AlertDialog d = ref.get();
         if (d != null && d.isShowing()) d.dismiss();
     });
 
-    // ---------- MIC PROBE ----------
+    // ====================================================
+    // 6️⃣ SPEECH PROBE
+    // ====================================================
     MicDiagnosticEngine.Result probe =
             MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.BOTTOM);
 
+    float pRms  = probe != null ? probe.rms  : 0f;
+    float pPeak = probe != null ? probe.peak : 0f;
+
+    // ====================================================
+    // 7️⃣ HARD DECISION — NO FALSE POSITIVES
+    // ====================================================
     boolean spoke =
-            probe != null && (probe.rms > 0 || probe.peak > 0);
+            pRms  >= 120f &&
+            pPeak >= 900f &&
+            pRms  >= baseRms  * 2.8f &&
+            pPeak >= basePeak * 2.0f;
 
     if (spoke) {
+
         bottomOk = true;
         topOk = true;
 
@@ -4216,7 +4252,9 @@ if (!bottomOk && !topOk) {
                         ? "Ανιχνεύθηκε ανθρώπινη φωνή. Τα μικρόφωνα λειτουργούν σωστά."
                         : "Human voice detected. Microphones are operational."
         );
+
     } else {
+
         logLabelErrorValue(
                 gr ? "Κατάσταση" : "Status",
                 gr
@@ -4225,7 +4263,6 @@ if (!bottomOk && !topOk) {
         );
     }
 }
-
             // ====================================================
             // FINAL BASE VERDICT (NO FALLBACK)
             // ====================================================

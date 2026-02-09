@@ -4126,7 +4126,7 @@ if (FORCE_LAB4_FALLBACK) {
 }
 
 // ====================================================
-// FALLBACK — HUMAN VOICE ONLY (FINAL • SAFE)
+// FALLBACK — HUMAN VOICE ONLY (FINAL • SAFE • COMPILES)
 // ====================================================
 if (!bottomOk && !topOk) {
 
@@ -4147,7 +4147,7 @@ if (!bottomOk && !topOk) {
     final AtomicReference<AlertDialog> ref = new AtomicReference<>();
 
     // ====================================================
-    // 1️⃣ BASELINE — ABSOLUTE SILENCE (ΠΡΙΝ ΤΟ TTS)
+    // 1️⃣ BASELINE — ABSOLUTE SILENCE
     // ====================================================
     hardNormalizeAudioForMic();
     SystemClock.sleep(300);
@@ -4155,12 +4155,12 @@ if (!bottomOk && !topOk) {
     MicDiagnosticEngine.Result base =
             MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.BOTTOM);
 
-    float baseRms  = base != null ? base.rms  : 0f;
-    float basePeak = base != null ? base.peak : 0f;
+    double baseRms  = base != null ? base.rms  : 0.0;
+    double basePeak = base != null ? base.peak : 0.0;
 
-    // safety floors (anti AGC / zero)
-    baseRms  = Math.max(baseRms, 20f);
-    basePeak = Math.max(basePeak, 120f);
+    // safety floors (anti AGC / zero noise)
+    baseRms  = Math.max(baseRms, 20.0);
+    basePeak = Math.max(basePeak, 120.0);
 
     // ====================================================
     // 2️⃣ UI PROMPT
@@ -4204,7 +4204,7 @@ if (!bottomOk && !topOk) {
     });
 
     // ====================================================
-    // 3️⃣ TTS (ΜΕΤΑ το baseline)
+    // 3️⃣ TTS (AFTER BASELINE)
     // ====================================================
     SystemClock.sleep(500);
     AppTTS.ensureSpeak(this, text);
@@ -4229,17 +4229,17 @@ if (!bottomOk && !topOk) {
     MicDiagnosticEngine.Result probe =
             MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.BOTTOM);
 
-    float pRms  = probe != null ? probe.rms  : 0f;
-    float pPeak = probe != null ? probe.peak : 0f;
+    double pRms  = probe != null ? probe.rms  : 0.0;
+    double pPeak = probe != null ? probe.peak : 0.0;
 
     // ====================================================
     // 7️⃣ HARD DECISION — NO FALSE POSITIVES
     // ====================================================
     boolean spoke =
-            pRms  >= 120f &&
-            pPeak >= 900f &&
-            pRms  >= baseRms  * 2.8f &&
-            pPeak >= basePeak * 2.0f;
+            pRms  >= 120.0 &&
+            pPeak >= 900.0 &&
+            pRms  >= baseRms  * 2.8 &&
+            pPeak >= basePeak * 2.0;
 
     if (spoke) {
 
@@ -4263,6 +4263,7 @@ if (!bottomOk && !topOk) {
         );
     }
 }
+
             // ====================================================
             // FINAL BASE VERDICT (NO FALLBACK)
             // ====================================================

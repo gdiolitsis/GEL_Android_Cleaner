@@ -4242,21 +4242,31 @@ double basePeak = base != null ? base.peak : 0.0;
 baseRms  = Math.max(baseRms, 20.0);
 basePeak = Math.max(basePeak, 120.0);
 
-// ---- SHOT #1
-SystemClock.sleep(220);
-MicDiagnosticEngine.Result p1 =
-        MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.BOTTOM);
+boolean spoke = false;
 
-// ---- SHOT #2
-SystemClock.sleep(220);
-MicDiagnosticEngine.Result p2 =
-        MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.BOTTOM);
+// ⏱️ 3.5s HUMAN WINDOW
+long until = SystemClock.uptimeMillis() + 3500;
 
-double rms1  = p1 != null ? p1.rms  : 0.0;
-double peak1 = p1 != null ? p1.peak : 0.0;
+while (SystemClock.uptimeMillis() < until) {
 
-double rms2  = p2 != null ? p2.rms  : 0.0;
-double peak2 = p2 != null ? p2.peak : 0.0;
+    MicDiagnosticEngine.Result p =
+            MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.BOTTOM);
+
+    double rms  = p != null ? p.rms  : 0.0;
+    double peak = p != null ? p.peak : 0.0;
+
+    if (
+            peak >= 350.0 &&
+            rms  >= 55.0 &&
+            rms  >= baseRms  * 1.6 &&
+            peak >= basePeak * 1.4
+    ) {
+        spoke = true;
+        break; // ✅ άνθρωπος μίλησε
+    }
+
+    SystemClock.sleep(180); // ⛔ όχι busy loop
+}
 
 // ---- HUMAN VOICE = spike + relative jump
 boolean spoke =

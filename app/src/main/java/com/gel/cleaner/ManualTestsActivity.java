@@ -4226,57 +4226,29 @@ if (!bottomOk && !topOk) {
     SystemClock.sleep(900); // anti-echo / AGC decay
 
 // ====================================================
-// 4️⃣ HUMAN VOICE — DUAL SHOT WITH AMBIENT GUARD (FINAL)
+// 4️⃣ HUMAN VOICE — FALLBACK WINDOW (LOCKED FINAL)
 // ====================================================
-hardNormalizeAudioForMic();
-
-// ---- AMBIENT BASELINE (silence)
-SystemClock.sleep(250);
-MicDiagnosticEngine.Result base =
-        MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.BOTTOM);
-
-double baseRms  = base != null ? base.rms  : 0.0;
-double basePeak = base != null ? base.peak : 0.0;
-
-// floors (να μη μηδενίζει)
-baseRms  = Math.max(baseRms, 20.0);
-basePeak = Math.max(basePeak, 120.0);
-
 boolean spoke = false;
 
-// ⏱️ 3.5s HUMAN WINDOW
-long until = SystemClock.uptimeMillis() + 3500;
+// ⏱️ 4s HUMAN WINDOW
+long until = SystemClock.uptimeMillis() + 4000;
 
 while (SystemClock.uptimeMillis() < until) {
 
-    MicDiagnosticEngine.Result p =
+    MicDiagnosticEngine.Result r =
             MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.BOTTOM);
 
-    double rms  = p != null ? p.rms  : 0.0;
-    double peak = p != null ? p.peak : 0.0;
+    double rms  = r != null ? r.rms  : 0.0;
+    double peak = r != null ? r.peak : 0.0;
 
-    if (
-            peak >= 350.0 &&
-            rms  >= 55.0 &&
-            rms  >= baseRms  * 1.6 &&
-            peak >= basePeak * 1.4
-    ) {
+    // 🔥 HUMAN VOICE = ANY REAL SPIKE
+    if (peak >= 300.0 && rms >= 45.0) {
         spoke = true;
-        break; // ✅ άνθρωπος μίλησε
+        break;
     }
 
-    SystemClock.sleep(180); // ⛔ όχι busy loop
+    SystemClock.sleep(200); // ⛔ όχι busy loop
 }
-
-// ---- HUMAN VOICE = spike + relative jump
-boolean spoke =
-        (peak1 >= 380.0 && rms1 >= 60.0 &&
-         rms1  >= baseRms  * 1.8 &&
-         peak1 >= basePeak * 1.5)
-     ||
-        (peak2 >= 380.0 && rms2 >= 60.0 &&
-         rms2  >= baseRms  * 1.8 &&
-         peak2 >= basePeak * 1.5);
          
     // ====================================================
     // 5️⃣ CLOSE UI

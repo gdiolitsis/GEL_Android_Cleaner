@@ -4226,21 +4226,30 @@ if (!bottomOk && !topOk) {
     SystemClock.sleep(900); // anti-echo / AGC decay
 
 // ====================================================
-// 4️⃣ HUMAN VOICE — SINGLE BURST (FAST • STABLE)
+// 4️⃣ HUMAN VOICE — DUAL SHOT (FINAL • STABLE)
 // ====================================================
 hardNormalizeAudioForMic();
-SystemClock.sleep(300);
 
-MicDiagnosticEngine.Result probe =
+// --- SHOT #1
+SystemClock.sleep(250);
+MicDiagnosticEngine.Result p1 =
         MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.BOTTOM);
 
-double rms  = probe != null ? probe.rms  : 0.0;
-double peak = probe != null ? probe.peak : 0.0;
+// --- SHOT #2 (offset για ανθρώπινο timing)
+SystemClock.sleep(220);
+MicDiagnosticEngine.Result p2 =
+        MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.BOTTOM);
 
-// FAST HUMAN CRITERION
+double rms1  = p1 != null ? p1.rms  : 0.0;
+double peak1 = p1 != null ? p1.peak : 0.0;
+
+double rms2  = p2 != null ? p2.rms  : 0.0;
+double peak2 = p2 != null ? p2.peak : 0.0;
+
+// HUMAN VOICE CRITERION (ANY SHOT)
 boolean spoke =
-        peak >= 350.0 &&   // καθαρό ανθρώπινο transient
-        rms  >= 55.0;
+        (peak1 >= 350.0 && rms1 >= 55.0) ||
+        (peak2 >= 350.0 && rms2 >= 55.0);
 
     // ====================================================
     // 5️⃣ CLOSE UI

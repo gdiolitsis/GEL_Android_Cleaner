@@ -135,35 +135,35 @@ log("📱 Device ready", false);
         AlertDialog.Builder b = new AlertDialog.Builder(this);
         b.setCancelable(false);
 
-        LinearLayout box = new LinearLayout(this);
-        box.setOrientation(LinearLayout.VERTICAL);
-        box.setPadding(dp(24), dp(20), dp(24), dp(18));
+LinearLayout root = new LinearLayout(this);
+root.setOrientation(LinearLayout.VERTICAL);
+root.setPadding(dp(24), dp(20), dp(24), dp(18));
 
-        GradientDrawable bg = new GradientDrawable();
-        bg.setColor(0xFF101010);
-        bg.setCornerRadius(dp(18));
-        bg.setStroke(dp(4), 0xFFFFD700);
-        box.setBackground(bg);
+GradientDrawable bg = new GradientDrawable();
+bg.setColor(0xFF101010);
+bg.setCornerRadius(dp(18));
+bg.setStroke(dp(4), 0xFFFFD700);
+root.setBackground(bg);
 
-        TextView title = new TextView(this);
-        TextView msg = new TextView(this);
+TextView title = new TextView(this);
+TextView msg   = new TextView(this);
 
-        title.setTextColor(Color.WHITE);
-        title.setTextSize(18f);
-        title.setTypeface(null, Typeface.BOLD);
-        title.setGravity(Gravity.CENTER);
+title.setTextColor(Color.WHITE);
+title.setTextSize(18f);
+title.setTypeface(null, Typeface.BOLD);
+title.setGravity(Gravity.CENTER);
 
-        msg.setTextColor(0xFFDDDDDD);
-        msg.setTextSize(15f);
+msg.setTextColor(0xFFDDDDDD);
+msg.setTextSize(15f);
 
-        box.addView(title);
-        box.addView(msg);
+boolean gr = "el".equalsIgnoreCase(LocaleHelper.getLang(this));
+title.setText(gr ? "ΑΠΑΙΤΟΥΜΕΝΕΣ ΑΔΕΙΕΣ" : "REQUIRED PERMISSIONS");
+msg.setText(gr
+        ? "Η εφαρμογή χρειάζεται άδειες για να λειτουργήσει σωστά.\n\nΘα ζητηθούν μία-μία."
+        : "The app requires permissions to function properly.\n\nThey will be requested one by one.");
 
-        boolean gr = "el".equalsIgnoreCase(LocaleHelper.getLang(this));
-        title.setText(gr ? "ΑΠΑΙΤΟΥΜΕΝΕΣ ΑΔΕΙΕΣ" : "REQUIRED PERMISSIONS");
-        msg.setText(gr
-                ? "Η εφαρμογή χρειάζεται άδειες για να λειτουργήσει σωστά.\n\nΘα ζητηθούν μία-μία."
-                : "The app requires permissions to function properly.\n\nThey will be requested one by one.");
+root.addView(title);
+root.addView(msg);
 
 // ---------- BUTTON ROW ----------
 LinearLayout btnRow = new LinearLayout(this);
@@ -178,7 +178,7 @@ LinearLayout.LayoutParams btnLp =
         );
 btnLp.setMargins(dp(12), dp(8), dp(12), dp(8));
 
-// ---------- SKIP (RED) ----------
+// ---------- SKIP ----------
 Button skipBtn = new Button(this);
 skipBtn.setText(gr ? "ΠΑΡΑΛΕΙΨΗ" : "SKIP");
 skipBtn.setAllCaps(false);
@@ -186,13 +186,13 @@ skipBtn.setTextColor(Color.WHITE);
 skipBtn.setMinWidth(dp(120));
 
 GradientDrawable skipBg = new GradientDrawable();
-skipBg.setColor(0xFF8B0000);              // GEL red
+skipBg.setColor(0xFF8B0000);
 skipBg.setCornerRadius(dp(14));
-skipBg.setStroke(dp(3), 0xFFFFD700);      // gold stroke
+skipBg.setStroke(dp(3), 0xFFFFD700);
 skipBtn.setBackground(skipBg);
 skipBtn.setLayoutParams(btnLp);
 
-// ---------- CONTINUE (GREEN) ----------
+// ---------- CONTINUE ----------
 Button continueBtn = new Button(this);
 continueBtn.setText(gr ? "ΣΥΝΕΧΕΙΑ" : "CONTINUE");
 continueBtn.setAllCaps(false);
@@ -200,9 +200,9 @@ continueBtn.setTextColor(Color.WHITE);
 continueBtn.setMinWidth(dp(120));
 
 GradientDrawable continueBg = new GradientDrawable();
-continueBg.setColor(0xFF0B5F3B);          // GEL green
+continueBg.setColor(0xFF0B5F3B);
 continueBg.setCornerRadius(dp(14));
-continueBg.setStroke(dp(3), 0xFFFFD700);  // gold stroke
+continueBg.setStroke(dp(3), 0xFFFFD700);
 continueBtn.setBackground(continueBg);
 continueBtn.setLayoutParams(btnLp);
 
@@ -220,7 +220,6 @@ if (d.getWindow() != null) {
     );
 }
 
-// ---------- CLICK HANDLERS ----------
 continueBtn.setOnClickListener(v -> {
     d.dismiss();
     requestNextPermission();

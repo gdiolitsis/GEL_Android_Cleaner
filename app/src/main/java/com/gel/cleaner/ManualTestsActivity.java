@@ -4126,7 +4126,7 @@ if (FORCE_LAB4_FALLBACK) {
 }
 
 // ====================================================
-// FALLBACK — HUMAN VOICE ONLY (FINAL • SAFE • COMPILES)
+// FALLBACK — HUMAN VOICE ONLY (FINAL • SAFE • MUTED OK)
 // ====================================================
 if (!bottomOk && !topOk) {
 
@@ -4147,7 +4147,7 @@ if (!bottomOk && !topOk) {
     final AtomicReference<AlertDialog> ref = new AtomicReference<>();
 
     // ====================================================
-    // 1️⃣ BASELINE — ABSOLUTE SILENCE
+    // 1️⃣ BASELINE — SILENCE
     // ====================================================
     hardNormalizeAudioForMic();
     SystemClock.sleep(300);
@@ -4158,12 +4158,11 @@ if (!bottomOk && !topOk) {
     double baseRms  = base != null ? base.rms  : 0.0;
     double basePeak = base != null ? base.peak : 0.0;
 
-    // safety floors (ANTI FAKE / AGC)
     baseRms  = Math.max(baseRms, 20.0);
     basePeak = Math.max(basePeak, 120.0);
 
     // ====================================================
-    // 2️⃣ UI PROMPT
+    // 2️⃣ UI + TTS (UI THREAD — MUTED SAFE)
     // ====================================================
     runOnUiThread(() -> {
 
@@ -4191,6 +4190,9 @@ if (!bottomOk && !topOk) {
         msg.setGravity(Gravity.CENTER);
         root.addView(msg);
 
+        // 🔇 ΥΠΑΡΧΟΝ mute checkbox
+        root.addView(buildMuteRow());
+
         b.setView(root);
 
         AlertDialog d = b.create();
@@ -4201,45 +4203,26 @@ if (!bottomOk && !topOk) {
         }
 
         ref.set(d);
-        if (!isFinishing() && !isDestroyed()) d.show();
+        if (!isFinishing() && !isDestroyed()) {
+            d.show();
+        }
+
+        // 🔊 TTS — ΜΟΝΟ εδώ, ΜΟΝΟ αν δεν είναι muted
+        if (!isTtsMuted) {
+            new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                AppTTS.ensureSpeak(this, text);
+            }, 400); // sweet spot
+        }
     });
 
-// ====================================================
-// 3️⃣ TTS — HARD WARM-UP + REAL SPEAK (ALWAYS SPEAKS)
-// ====================================================
-
-// 🔊 FORCE AUDIO ROUTE FIRST
-try {
-    AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
-    if (am != null) {
-        am.requestAudioFocus(
-                null,
-                AudioManager.STREAM_MUSIC,
-                AudioManager.AUDIOFOCUS_GAIN_TRANSIENT
-        );
-        am.setMode(AudioManager.MODE_NORMAL);
-        am.setSpeakerphoneOn(true);
-    }
-} catch (Throwable ignore) {}
-
-SystemClock.sleep(120);
-
-// 🔥 REAL WARM-UP (AUDIBLE, NOT SILENT)
-AppTTS.ensureSpeak(this, gr ? "Ένα." : "One.");
-
-SystemClock.sleep(400);
-
-// 🎤 REAL PROMPT (GUARANTEED)
-AppTTS.ensureSpeak(this, text);
-
     // ====================================================
-    // 4️⃣ HUMAN SPEECH WINDOW
+    // 3️⃣ HUMAN WINDOW
     // ====================================================
     hardNormalizeAudioForMic();
     SystemClock.sleep(4200);
 
     // ====================================================
-    // 5️⃣ CLOSE UI
+    // 4️⃣ CLOSE UI
     // ====================================================
     runOnUiThread(() -> {
         AlertDialog d = ref.get();
@@ -4247,7 +4230,7 @@ AppTTS.ensureSpeak(this, text);
     });
 
     // ====================================================
-    // 6️⃣ SPEECH PROBE
+    // 5️⃣ SPEECH PROBE
     // ====================================================
     MicDiagnosticEngine.Result probe =
             MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.BOTTOM);
@@ -4255,9 +4238,6 @@ AppTTS.ensureSpeak(this, text);
     double pRms  = probe != null ? probe.rms  : 0.0;
     double pPeak = probe != null ? probe.peak : 0.0;
 
-    // ====================================================
-    // 7️⃣ HARD DECISION — ZERO FALSE POSITIVES
-    // ====================================================
     boolean spoke =
             pRms  >= 120.0 &&
             pPeak >= 900.0 &&
@@ -4265,7 +4245,6 @@ AppTTS.ensureSpeak(this, text);
             pPeak >= basePeak * 2.0;
 
     if (spoke) {
-
         bottomOk = true;
         topOk = true;
 
@@ -4275,9 +4254,7 @@ AppTTS.ensureSpeak(this, text);
                         ? "Ανιχνεύθηκε ανθρώπινη φωνή. Τα μικρόφωνα λειτουργούν σωστά."
                         : "Human voice detected. Microphones are operational."
         );
-
     } else {
-
         logLabelErrorValue(
                 gr ? "Κατάσταση" : "Status",
                 gr

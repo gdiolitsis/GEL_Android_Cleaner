@@ -4208,10 +4208,10 @@ if (!bottomOk && !topOk) {
         }
 
         // 🔊 TTS — ΜΟΝΟ εδώ, ΜΟΝΟ αν δεν είναι muted
-        if (!isTtsMuted) {
+        
             new Handler(Looper.getMainLooper()).postDelayed(() -> {
                 AppTTS.ensureSpeak(this, text);
-            }, 400); // sweet spot
+            }, 500); // sweet spot
         }
     });
 

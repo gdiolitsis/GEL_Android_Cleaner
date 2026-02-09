@@ -250,6 +250,11 @@ requestNextPermission();
 
         permissionIndex++;
     }
+
+    // ✅ ΤΕΛΟΣ PERMISSIONS FLOW → WELCOME
+    if (!consumeSkipWelcomeOnce() && !isWelcomeDisabled()) {
+        showWelcomePopup();
+    }
 }
 
 private void showMissingPermissionsDialog() {
@@ -405,12 +410,6 @@ public void onRequestPermissionsResult(
     permissionIndex++;
     requestNextPermission();
 }
-
-// ✅ ΤΕΛΟΣ PERMISSIONS FLOW → WELCOME
-if (!consumeSkipWelcomeOnce() && !isWelcomeDisabled()) {
-    showWelcomePopup();
-}
-
     // =========================================================
     // HELPERS
     // =========================================================

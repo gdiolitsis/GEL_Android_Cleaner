@@ -4126,7 +4126,7 @@ if (FORCE_LAB4_FALLBACK) {
 }
 
 // ====================================================
-// FALLBACK — HUMAN VOICE ONLY (FINAL • SAFE • MUTED OK)
+// FALLBACK — HUMAN VOICE ONLY (FINAL • ECHO-SAFE • STABLE)
 // ====================================================
 if (!bottomOk && !topOk) {
 
@@ -4147,22 +4147,7 @@ if (!bottomOk && !topOk) {
     final AtomicReference<AlertDialog> ref = new AtomicReference<>();
 
     // ====================================================
-    // 1️⃣ BASELINE — SILENCE
-    // ====================================================
-    hardNormalizeAudioForMic();
-    SystemClock.sleep(300);
-
-    MicDiagnosticEngine.Result base =
-            MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.BOTTOM);
-
-    double baseRms  = base != null ? base.rms  : 0.0;
-    double basePeak = base != null ? base.peak : 0.0;
-
-    baseRms  = Math.max(baseRms, 20.0);
-    basePeak = Math.max(basePeak, 120.0);
-
-    // ====================================================
-    // 2️⃣ UI + TTS (GEL-SAFE)
+    // 1️⃣ UI (MESSAGE + MUTE ROW)
     // ====================================================
     runOnUiThread(() -> {
 
@@ -4190,7 +4175,7 @@ if (!bottomOk && !topOk) {
         msg.setGravity(Gravity.CENTER);
         root.addView(msg);
 
-        // 🔇 STANDARD GEL MUTE ROW
+        // 🔇 STANDARD GEL mute checkbox
         root.addView(buildMuteRow());
 
         b.setView(root);
@@ -4206,43 +4191,63 @@ if (!bottomOk && !topOk) {
         if (!isFinishing() && !isDestroyed()) {
             d.show();
         }
-
-        // 🔊 TTS — mute handled internally by GEL
-        new Handler(Looper.getMainLooper()).postDelayed(() -> {
-            AppTTS.ensureSpeak(this, text);
-        }, 500);
     });
 
     // ====================================================
-    // 3️⃣ HUMAN WINDOW
+    // 2️⃣ TTS — INSTRUCTION ONLY (NO MIC)
+    // ====================================================
+    try {
+        AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
+        if (am != null) {
+            am.setMode(AudioManager.MODE_NORMAL);
+            am.setSpeakerphoneOn(true);
+        }
+    } catch (Throwable ignore) {}
+
+    SystemClock.sleep(400);
+
+    AppTTS.ensureSpeak(this, text);
+
+    // ⛔ ΚΑΝΕΝΑ mic εδώ
+    SystemClock.sleep(2000); // όσο μιλάει το TTS
+
+    // ====================================================
+    // 3️⃣ HARD ANTI-ECHO GAP (CRITICAL)
+    // ====================================================
+    AppTTS.stop();          // 🔥 ΣΤΑΜΑΤΑΕΙ ΤΟ SPEAKER
+    SystemClock.sleep(900); // 🔒 anti-echo / AGC decay
+
+    // ====================================================
+    // 4️⃣ HUMAN SPEECH WINDOW (MIC ONLY)
     // ====================================================
     hardNormalizeAudioForMic();
-    SystemClock.sleep(4200);
+    SystemClock.sleep(350);
 
-    // ====================================================
-    // 4️⃣ CLOSE UI
-    // ====================================================
-    runOnUiThread(() -> {
-        AlertDialog d = ref.get();
-        if (d != null && d.isShowing()) d.dismiss();
-    });
-
-    // ====================================================
-    // 5️⃣ SPEECH PROBE
-    // ====================================================
     MicDiagnosticEngine.Result probe =
             MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.BOTTOM);
 
-    double pRms  = probe != null ? probe.rms  : 0.0;
-    double pPeak = probe != null ? probe.peak : 0.0;
+    double rms  = probe != null ? probe.rms  : 0.0;
+    double peak = probe != null ? probe.peak : 0.0;
 
     boolean spoke =
-            pRms  >= 120.0 &&
-            pPeak >= 900.0 &&
-            pRms  >= baseRms  * 2.8 &&
-            pPeak >= basePeak * 2.0;
+            rms  >= 120.0 &&
+            peak >= 900.0;
 
+    // ====================================================
+    // 5️⃣ CLOSE UI
+    // ====================================================
+    runOnUiThread(() -> {
+        AlertDialog d = ref.get();
+        if (d != null && d.isShowing()) {
+            d.dismiss();
+        }
+    });
+
+    // ====================================================
+    // 6️⃣ RESULT
+    // ====================================================
     if (spoke) {
+
         bottomOk = true;
         topOk = true;
 
@@ -4252,7 +4257,9 @@ if (!bottomOk && !topOk) {
                         ? "Ανιχνεύθηκε ανθρώπινη φωνή. Τα μικρόφωνα λειτουργούν σωστά."
                         : "Human voice detected. Microphones are operational."
         );
+
     } else {
+
         logLabelErrorValue(
                 gr ? "Κατάσταση" : "Status",
                 gr

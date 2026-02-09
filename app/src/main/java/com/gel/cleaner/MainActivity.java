@@ -1515,7 +1515,7 @@ builder.setCustomTitle(title);
 }
 
     // =========================================================
-    // LOGGING
+    // LOGGING,
     // =========================================================
     @Override
     public void log(String msg, boolean isError) {
@@ -1544,4 +1544,3 @@ private void openAppInfo(String pkg) {
 }
     
 }
- 

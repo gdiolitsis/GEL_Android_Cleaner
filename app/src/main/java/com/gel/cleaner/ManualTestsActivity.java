@@ -4204,14 +4204,33 @@ if (!bottomOk && !topOk) {
         if (!isFinishing() && !isDestroyed()) d.show();
     });
 
-    // ====================================================
-    // 3️⃣ TTS — WARM-UP + REAL SPEAK (FIX FIRST-TIME SILENCE)
-    // ====================================================
-    SystemClock.sleep(350);
-    AppTTS.ensureSpeak(this, " ");   // 🔥 WARM-UP (ΜΗΝ ΤΟ ΒΓΑΛΕΙΣ)
+// ====================================================
+// 3️⃣ TTS — HARD WARM-UP + REAL SPEAK (ALWAYS SPEAKS)
+// ====================================================
 
-    SystemClock.sleep(200);
-    AppTTS.ensureSpeak(this, text);  // 🎤 REAL PROMPT
+// 🔊 FORCE AUDIO ROUTE FIRST
+try {
+    AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
+    if (am != null) {
+        am.requestAudioFocus(
+                null,
+                AudioManager.STREAM_MUSIC,
+                AudioManager.AUDIOFOCUS_GAIN_TRANSIENT
+        );
+        am.setMode(AudioManager.MODE_NORMAL);
+        am.setSpeakerphoneOn(true);
+    }
+} catch (Throwable ignore) {}
+
+SystemClock.sleep(120);
+
+// 🔥 REAL WARM-UP (AUDIBLE, NOT SILENT)
+AppTTS.ensureSpeak(this, gr ? "Ένα." : "One.");
+
+SystemClock.sleep(400);
+
+// 🎤 REAL PROMPT (GUARANTEED)
+AppTTS.ensureSpeak(this, text);
 
     // ====================================================
     // 4️⃣ HUMAN SPEECH WINDOW

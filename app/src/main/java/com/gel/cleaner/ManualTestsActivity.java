@@ -4163,8 +4163,8 @@ new Handler(Looper.getMainLooper()).postDelayed(() -> {
     }
 }, 120);
         
-    }); // end runOnUiThread
-}       // end lab3EarpieceManual
+    });
+} 
         
 /* ============================================================
    LAB 4 — Microphone Recording Check (BOTTOM + TOP)
@@ -4382,7 +4382,7 @@ boolean spoke = runGuidedVoiceDetectionBlocking(gr);
         );
     }
 }
-}
+
 
             // ====================================================
             // FINAL BASE VERDICT (NO FALLBACK)

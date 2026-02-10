@@ -1430,116 +1430,154 @@ private void dismiss(AtomicReference<AlertDialog> ref) {
     } catch (Throwable ignore) {}
 }
 
-// ====================================================
-// LAB — HUMAN VOICE DETECTION (GUIDED RETRY • FINAL)
-// Device-adaptive microphone source detection
-// ====================================================
-private boolean runGuidedVoiceDetectionBlocking(boolean gr) {
+private void showVoicePrompt(boolean gr) {
+    runOnUiThread(() -> {
 
-    boolean voiceDetected = false;
-    int workingSource = -1;
+        String title = gr
+                ? "Ανίχνευση φωνής"
+                : "Voice detection";
+
+        String msg = gr
+                ? "Μίλησε τώρα λέγοντας:\n«ένα – δύο – τρία»"
+                : "Speak now saying:\n“one – two – three”";
+
+        AtomicBoolean dummyCancel = new AtomicBoolean(false);
+        AtomicReference<AlertDialog> ref = new AtomicReference<>();
+
+        AlertDialog d =
+                buildInfoDialog(title, msg, dummyCancel, ref);
+
+        if (!isFinishing() && !isDestroyed()) {
+            d.show();
+        }
+    });
+}
+
+private int getWorkingMicSource() {
+    SharedPreferences sp = getSharedPreferences("gel_audio_profile", MODE_PRIVATE);
+    return sp.getInt("mic_source", MediaRecorder.AudioSource.VOICE_COMMUNICATION);
+}
+
+// ============================================================
+// HUMAN VOICE DETECTION — FULLY SELF-CONTAINED (NO ENGINE)
+// Adaptive AudioSource scan — WORKS ON REAL DEVICES
+// ============================================================
+
+private static final int[] AUDIO_SOURCES = new int[] {
+        MediaRecorder.AudioSource.VOICE_RECOGNITION,
+        MediaRecorder.AudioSource.VOICE_COMMUNICATION,
+        MediaRecorder.AudioSource.MIC,
+        MediaRecorder.AudioSource.DEFAULT,
+        MediaRecorder.AudioSource.CAMCORDER,
+        MediaRecorder.AudioSource.UNPROCESSED
+};
+
+private boolean detectHumanVoiceAdaptive(boolean gr) {
+
+    final int SR = 44100;
+    final int CHANNEL = AudioFormat.CHANNEL_IN_MONO;
+    final int FORMAT = AudioFormat.ENCODING_PCM_16BIT;
 
     for (int source : AUDIO_SOURCES) {
 
         showVoicePrompt(gr);
         SystemClock.sleep(400);
 
-        boolean spoke = runHumanVoiceDetection(source);
-        if (spoke) {
-            voiceDetected = true;
-            workingSource = source;
-            break;
+        AudioRecord ar = null;
+
+        try {
+            int minBuf = AudioRecord.getMinBufferSize(SR, CHANNEL, FORMAT);
+            if (minBuf <= 0) continue;
+
+            ar = new AudioRecord(
+                    source,
+                    SR,
+                    CHANNEL,
+                    FORMAT,
+                    minBuf * 2
+            );
+
+            if (ar.getState() != AudioRecord.STATE_INITIALIZED) continue;
+
+            ar.startRecording();
+            SystemClock.sleep(250); // AGC settle
+
+            long until = SystemClock.uptimeMillis() + 5000;
+            long voicedMs = 0;
+
+            short[] buf = new short[1024];
+
+            while (SystemClock.uptimeMillis() < until) {
+
+                int n = ar.read(buf, 0, buf.length);
+                if (n <= 0) continue;
+
+                long sumSq = 0;
+                int peak = 0;
+
+                for (int i = 0; i < n; i++) {
+                    int v = Math.abs(buf[i]);
+                    peak = Math.max(peak, v);
+                    sumSq += (long) v * v;
+                }
+
+                double rms = Math.sqrt((double) sumSq / n);
+
+                boolean rmsOk  = rms  > 300;   // REAL SPEECH FLOOR
+                boolean peakOk = peak > 2000;  // HARD GATE
+
+                if (rmsOk && peakOk) {
+                    voicedMs += 200;
+                }
+
+                if (voicedMs >= 800) {
+
+                    saveWorkingMicSource(source);
+
+                    logOk(gr
+                            ? "Φωνή ανιχνεύθηκε."
+                            : "Voice detected.");
+
+                    logInfo(gr
+                            ? "Πηγή ήχου: " + source
+                            : "Audio source: " + source);
+
+                    return true;
+                }
+
+                SystemClock.sleep(200);
+            }
+
+        } catch (Throwable ignore) {
+
+        } finally {
+            try {
+                if (ar != null) {
+                    ar.stop();
+                    ar.release();
+                }
+            } catch (Throwable ignore) {}
         }
-
-        SystemClock.sleep(600);
     }
 
-    if (voiceDetected && workingSource != -1) {
-        saveWorkingMicSource(workingSource);
+    logLabelErrorValue(
+            gr ? "Κατάσταση" : "Status",
+            gr
+                    ? "Δεν ανιχνεύθηκε ανθρώπινη φωνή με καμία πηγή."
+                    : "Human voice not detected with any audio source."
+    );
 
-        logOk(gr ? "Η φωνή ανιχνεύθηκε επιτυχώς." : "Voice detected successfully.");
-        logInfo(gr ? "Η ρύθμιση αποθηκεύτηκε για τη συσκευή."
-                   : "The configuration has been saved for this device.");
-        return true;
-    }
-
-    logError(gr ? "Δεν εντοπίστηκε φωνή με καμία ρύθμιση."
-                : "No voice was detected using any configuration.");
-    logError(gr ? "Πιθανή βλάβη μικροφώνου ή περιορισμός συστήματος."
-                : "Possible microphone hardware issue or system restriction.");
     return false;
 }
 
-private void showVoicePrompt(boolean gr) {
-    runOnUiThread(() -> {
-        String msg = gr
-                ? "Μίλησε τώρα λέγοντας:\n«ένα – δύο – τρία»"
-                : "Speak now saying:\n“one – two – three”";
-        showBlockingInfoDialog(
-                gr ? "Ανίχνευση φωνής" : "Voice detection",
-                msg
-        );
-    });
-}
-
-private boolean runHumanVoiceDetection(int audioSource) {
-
-    try {
-        AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
-        if (am != null) {
-            am.setSpeakerphoneOn(false);
-            am.setMode(AudioManager.MODE_IN_COMMUNICATION);
-        }
-    } catch (Throwable ignore) {}
-
-    SystemClock.sleep(900);
-
-    final long WINDOW_MS = 5000;
-    final int STEP_MS = 200;
-
-    long voiceAccumulatedMs = 0;
-
-    SystemClock.sleep(600);
-
-    MicDiagnosticEngine.Result base =
-            MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.BOTTOM, audioSource);
-
-    double baseRms  = base != null ? base.rms  : 10.0;
-    double basePeak = base != null ? base.peak : 50.0;
-
-    baseRms  = Math.max(baseRms, 10.0);
-    basePeak = Math.max(basePeak, 50.0);
-
-    long until = SystemClock.uptimeMillis() + WINDOW_MS;
-
-    while (SystemClock.uptimeMillis() < until) {
-
-        MicDiagnosticEngine.Result r =
-                MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.BOTTOM, audioSource);
-
-        double rms  = r != null ? r.rms  : 0.0;
-        double peak = r != null ? r.peak : 0.0;
-
-        boolean rmsRise  = rms  >= baseRms  * 1.4 && rms  >= 35;
-        boolean peakRise = peak >= basePeak * 1.4 && peak >= 180;
-
-        if (rmsRise && peakRise) voiceAccumulatedMs += STEP_MS;
-        if (voiceAccumulatedMs >= 800) return true;
-
-        SystemClock.sleep(STEP_MS);
-    }
-
-    return false;
-}
-
+// ============================================================
+// PERSISTENCE
+// ============================================================
 private void saveWorkingMicSource(int source) {
-    SharedPreferences sp = getSharedPreferences("gel_audio_profile", MODE_PRIVATE);
-    sp.edit().putInt("mic_source", source).apply();
-}
-
-private int getWorkingMicSource() {
-    SharedPreferences sp = getSharedPreferences("gel_audio_profile", MODE_PRIVATE);
-    return sp.getInt("mic_source", MediaRecorder.AudioSource.VOICE_COMMUNICATION);
+    getSharedPreferences("gel_audio_profile", MODE_PRIVATE)
+            .edit()
+            .putInt("mic_source", source)
+            .apply();
 }
 
 // ============================================================
@@ -4347,7 +4385,8 @@ try {
 // AGC / echo decay
 SystemClock.sleep(900);
 
-boolean spoke = runGuidedVoiceDetectionBlocking(gr);
+hardNormalizeAudioForMic();
+boolean spoke = detectHumanVoiceAdaptive(gr);
 
     // ====================================================
     // 5️⃣ CLOSE UI

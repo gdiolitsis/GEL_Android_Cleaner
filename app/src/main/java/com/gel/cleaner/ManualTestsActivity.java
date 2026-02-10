@@ -4211,28 +4211,27 @@ if (!bottomOk && !topOk) {
     int ttsWaitMs = 2600 + (text != null ? Math.min(3400, text.length() * 55) : 0);
     SystemClock.sleep(ttsWaitMs);
 
-    // ====================================================
-    // 3️⃣ HARD ANTI-ECHO GAP (CRITICAL)
-    // ====================================================
-    // ΜΗΝ κάνεις stop εδώ (κόβει τη φράση + κάνει artifacts)
-    try {
-        AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
-        if (am != null) {
-            am.setSpeakerphoneOn(false); // κλείσε speaker πριν το mic
-            am.setMode(AudioManager.MODE_NORMAL);
-        }
-    } catch (Throwable ignore) {}
+// ====================================================
+// 3️⃣ HARD ANTI-ECHO GAP (CRITICAL • FIXED)
+// ====================================================
+// ΜΗΝ κάνεις stop — μόνο routing reset
+try {
+    AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
+    if (am != null) {
+        am.setSpeakerphoneOn(false); // κλείσε speaker
+        am.setMode(AudioManager.MODE_IN_COMMUNICATION); // 👈 ΚΡΙΣΙΜΟ
+    }
+} catch (Throwable ignore) {}
 
-    SystemClock.sleep(900); // anti-echo / AGC decay
+// AGC / echo decay
+SystemClock.sleep(900);
 
 // ====================================================
-// 4️⃣ SIMPLE HUMAN VOICE LAB (ISOLATED • GLOBAL • STABLE)
-// Purpose: Detect if a HUMAN actually spoke (counted 1-2-3)
+// 4️⃣ SIMPLE HUMAN VOICE LAB
+// ISOLATED • GLOBAL • STABLE • NO LIES
+// Purpose: αν μίλησε ΑΝΘΡΩΠΟΣ (1-2-3)
 // ====================================================
 boolean spoke = false;
-
-// ⚠️ ΟΧΙ hardNormalize εδώ
-// hardNormalizeAudioForMic();  <-- ΔΕΝ ΤΟ ΘΕΛΟΥΜΕ
 
 // ⏱️ παράθυρο
 final long WINDOW_MS = 5000;
@@ -4242,9 +4241,9 @@ final int  STEP_MS   = 200;
 long voiceAccumulatedMs = 0;
 
 // ----------------------------------------------------
-// 1️⃣ BASELINE (ΣΙΩΠΗ)
+// 1️⃣ BASELINE (ΑΠΟΛΥΤΗ ΣΙΩΠΗ)
 // ----------------------------------------------------
-SystemClock.sleep(300);
+SystemClock.sleep(600); // 👈 ΟΧΙ πιο γρήγορα
 
 MicDiagnosticEngine.Result base =
         MicDiagnosticEngine.run(this, MicDiagnosticEngine.MicType.BOTTOM);
@@ -4252,12 +4251,12 @@ MicDiagnosticEngine.Result base =
 double baseRms  = base != null ? base.rms  : 10.0;
 double basePeak = base != null ? base.peak : 50.0;
 
-// safety floors
+// safety floors (device-agnostic)
 baseRms  = Math.max(baseRms, 10.0);
 basePeak = Math.max(basePeak, 50.0);
 
 // ----------------------------------------------------
-// 2️⃣ LISTEN WINDOW
+// 2️⃣ LISTEN WINDOW (HUMAN VOICE ONLY)
 // ----------------------------------------------------
 long until = SystemClock.uptimeMillis() + WINDOW_MS;
 
@@ -4269,14 +4268,15 @@ while (SystemClock.uptimeMillis() < until) {
     double rms  = r != null ? r.rms  : 0.0;
     double peak = r != null ? r.peak : 0.0;
 
-    // 👉 ΑΝΕΒΗΚΕ ΣΗΜΑ ΣΧΕΤΙΚΑ ΜΕ ΣΙΩΠΗ
-    if (rms  >= baseRms  * 1.6 &&
-        peak >= basePeak * 1.6) {
+    // ✅ RATIO + ABSOLUTE FLOOR (NO NOISE / NO AGC LIES)
+    boolean rmsRise  = rms  >= baseRms  * 1.4 && rms  >= 35;
+    boolean peakRise = peak >= basePeak * 1.4 && peak >= 180;
 
+    if (rmsRise && peakRise) {
         voiceAccumulatedMs += STEP_MS;
     }
 
-    // ✅ ~0.8s καθαρής φωνής = άνθρωπος μίλησε
+    // ~0.8s καθαρής φωνής = άνθρωπος μίλησε
     if (voiceAccumulatedMs >= 800) {
         spoke = true;
         break;
@@ -4284,6 +4284,9 @@ while (SystemClock.uptimeMillis() < until) {
 
     SystemClock.sleep(STEP_MS);
 }
+
+// 👉 αποτέλεσμα στο spoke (TRUE / FALSE)
+// ΤΕΛΟΣ — ΜΗΝ ΠΡΟΣΘΕΣΕΙΣ ΤΙΠΟΤΑ
          
     // ====================================================
     // 5️⃣ CLOSE UI

@@ -4311,7 +4311,7 @@ if (!bottomOk && !topOk) {
     final AtomicReference<TextView> msgRef = new AtomicReference<>();
 
     // ====================================================
-    // 1️⃣ UI — SINGLE POPUP
+    // 1️⃣ UI — SINGLE POPUP (SHOW + TTS IMMEDIATELY)
     // ====================================================
     runOnUiThread(() -> {
 
@@ -4352,11 +4352,15 @@ if (!bottomOk && !topOk) {
         }
 
         ref.set(d);
-        if (!isFinishing() && !isDestroyed()) d.show();
+        if (!isFinishing() && !isDestroyed()) {
+            d.show();
+            // 🔊 TTS IMMEDIATELY ON FIRST POPUP
+            AppTTS.ensureSpeak(this, baseText);
+        }
     });
 
     // ====================================================
-    // 2️⃣ HUMAN VOICE LOOP (SYNC POPUP + TTS)
+    // 2️⃣ HUMAN VOICE DETECTION (INTERRUPT-BASED)
     // ====================================================
     boolean spoke = false;
 
@@ -4364,34 +4368,28 @@ if (!bottomOk && !topOk) {
 
         final boolean firstAttempt = (attempt == 0);
 
-        // popup πρώτα
+        // UPDATE TEXT (NO DELAY)
         runOnUiThread(() -> {
             TextView m = msgRef.get();
-            if (m != null) {
+            if (m != null && !firstAttempt) {
                 m.setText(
-                        firstAttempt
-                                ? baseText
-                                : (gr
-                                    ? "Δεν ανιχνεύθηκε φωνή.\nΜέτρησε πάλι έως το τρία."
-                                    : "No voice detected.\nPlease count to three again.")
+                        gr
+                                ? "Δεν ανιχνεύθηκε φωνή.\nΜέτρησε πάλι έως το τρία."
+                                : "No voice detected.\nPlease count to three again."
                 );
             }
         });
 
-        // μετά μιλάει
-        AppTTS.ensureSpeak(
-                this,
-                firstAttempt
-                        ? baseText
-                        : (gr
+        if (!firstAttempt) {
+            AppTTS.ensureSpeak(
+                    this,
+                    gr
                             ? "Μέτρησε πάλι έως το τρία."
-                            : "Please count to three again.")
-        );
+                            : "Please count to three again."
+            );
+        }
 
-        int ttsWaitMs = 2600 + Math.min(3400, baseText.length() * 55);
-        SystemClock.sleep(ttsWaitMs);
-
-        // HARD ANTI-ECHO GAP
+        // HARD ANTI-ECHO PREP
         try {
             AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
             if (am != null) {
@@ -4400,15 +4398,24 @@ if (!bottomOk && !topOk) {
             }
         } catch (Throwable ignore) {}
 
-        SystemClock.sleep(700);
+        SystemClock.sleep(500);
         hardNormalizeAudioForMic();
 
-        // DETECTION
-        spoke = detectHumanVoiceAdaptive(gr);
+        // ⏱️ INTERRUPT LOOP (MAX 3.5s)
+        long listenUntil = SystemClock.uptimeMillis() + 3500;
+        while (SystemClock.uptimeMillis() < listenUntil && !spoke) {
+
+            if (detectHumanVoiceAdaptive(gr)) {
+                spoke = true;
+                break;
+            }
+
+            SystemClock.sleep(120);
+        }
     }
 
     // ====================================================
-    // 3️⃣ CLOSE POPUP
+    // 3️⃣ CLOSE POPUP IMMEDIATELY
     // ====================================================
     runOnUiThread(() -> {
         AlertDialog d = ref.get();
@@ -4440,6 +4447,7 @@ if (!bottomOk && !topOk) {
         );
     }
 }
+
             // ====================================================
             // FINAL BASE VERDICT (NO FALLBACK)
             // ====================================================

@@ -4275,14 +4275,15 @@ if (!bottomOk && !topOk) {
             : "No signal detected. Human voice verification.");
     logLine();
 
-    final String text = gr
-        ? "Παρακαλώ, μέτρησε αργά Και καθαρά έως το τρία, δυνατά, κοντά στο μικρόφωνο."
-        : "Please, count slowly and clearly to three, loudly, close to the microphone.";
+    final String baseText = gr
+            ? "Παρακαλώ, μέτρησε αργά και καθαρά έως το τρία,\nδυνατά, κοντά στο μικρόφωνο."
+            : "Please count slowly and clearly to three,\nloudly, close to the microphone.";
 
     final AtomicReference<AlertDialog> ref = new AtomicReference<>();
+    final AtomicReference<TextView> msgRef = new AtomicReference<>();
 
     // ====================================================
-    // 1️⃣ UI (MESSAGE + MUTE ROW)
+    // 1️⃣ UI — SINGLE POPUP (TEXT WILL UPDATE)
     // ====================================================
     runOnUiThread(() -> {
 
@@ -4304,13 +4305,15 @@ if (!bottomOk && !topOk) {
         root.setBackground(bg);
 
         TextView msg = new TextView(this);
-        msg.setText(text);
+        msg.setText(baseText);
         msg.setTextColor(0xFF39FF14);
         msg.setTextSize(15f);
         msg.setGravity(Gravity.CENTER);
         root.addView(msg);
 
-        // 🔇 STANDARD GEL mute checkbox (έτοιμο)
+        msgRef.set(msg);
+
+        // 🔇 STANDARD GEL mute checkbox
         root.addView(buildMuteRow());
 
         b.setView(root);
@@ -4327,52 +4330,55 @@ if (!bottomOk && !topOk) {
     });
 
     // ====================================================
-    // 2️⃣ TTS — INSTRUCTION ONLY (NO MIC)
+    // 2️⃣ HUMAN VOICE LOOP (REPEAT UNTIL FOUND OR MAX LOOPS)
     // ====================================================
-    try {
-        AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
-        if (am != null) {
-            am.setMode(AudioManager.MODE_NORMAL);
-            am.setSpeakerphoneOn(true); // speaker για οδηγία
+    boolean spoke = false;
+
+    for (int attempt = 0; attempt < 2 && !spoke; attempt++) {
+
+        // 🔊 ΦΩΝΗΤΙΚΗ ΟΔΗΓΙΑ (αν δεν είναι mute)
+        AppTTS.ensureSpeak(this, baseText);
+
+        int ttsWaitMs = 2600 + Math.min(3400, baseText.length() * 55);
+        SystemClock.sleep(ttsWaitMs);
+
+        // ====================================================
+        // HARD ANTI-ECHO GAP
+        // ====================================================
+        try {
+            AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
+            if (am != null) {
+                am.setSpeakerphoneOn(false);
+                am.setMode(AudioManager.MODE_IN_COMMUNICATION);
+            }
+        } catch (Throwable ignore) {}
+
+        SystemClock.sleep(900);
+        hardNormalizeAudioForMic();
+
+        // 🎙️ FULL DETECTION CYCLE
+        spoke = detectHumanVoiceAdaptive(gr);
+
+        // ❌ Αν δεν βρεθεί → άλλαξε ΜΟΝΟ το text του popup
+        if (!spoke) {
+            runOnUiThread(() -> {
+                TextView m = msgRef.get();
+                if (m != null) {
+                    m.setText(gr
+                            ? "Δεν ανιχνεύθηκε φωνή.\nΜέτρησε πάλι έως το τρία."
+                            : "No voice detected.\nPlease count to three again.");
+                }
+            });
         }
-    } catch (Throwable ignore) {}
-
-    SystemClock.sleep(350);
-
-    // ΜΙΛΑΕΙ ΟΛΟΚΛΗΡΟ (δεν το κόβουμε)
-    AppTTS.ensureSpeak(this, text);
-
-    // Dynamic wait ώστε να μην κόβεται ποτέ η οδηγία
-    int ttsWaitMs = 2600 + (text != null ? Math.min(3400, text.length() * 55) : 0);
-    SystemClock.sleep(ttsWaitMs);
-
-// ====================================================
-// 3️⃣ HARD ANTI-ECHO GAP (CRITICAL • FIXED)
-// ====================================================
-// ΜΗΝ κάνεις stop — μόνο routing reset
-try {
-    AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
-    if (am != null) {
-        am.setSpeakerphoneOn(false); // κλείσε speaker
-        am.setMode(AudioManager.MODE_IN_COMMUNICATION); // 👈 ΚΡΙΣΙΜΟ
     }
-} catch (Throwable ignore) {}
 
-// AGC / echo decay
-SystemClock.sleep(900);
-
-hardNormalizeAudioForMic();
-boolean spoke = false;
-for (int attempt = 0; attempt < 2 && !spoke; attempt++) {
-    SystemClock.sleep(400);   // δίνεις χρόνο στον χρήστη
-    spoke = detectHumanVoiceAdaptive(gr);
-}
-
-// 5️⃣ CLOSE UI
-runOnUiThread(() -> {
-    AlertDialog d = ref.get();
-    if (d != null && d.isShowing()) d.dismiss();
-});
+    // ====================================================
+    // 3️⃣ CLOSE UI — ONLY HERE
+    // ====================================================
+    runOnUiThread(() -> {
+        AlertDialog d = ref.get();
+        if (d != null && d.isShowing()) d.dismiss();
+    });
 
     // ====================================================
     // 6️⃣ RESULT

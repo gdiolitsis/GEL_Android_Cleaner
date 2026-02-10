@@ -4289,7 +4289,7 @@ if (FORCE_LAB4_FALLBACK) {
 }
 
 // ====================================================
-// FALLBACK — HUMAN VOICE ONLY (FINAL • COLD-START SAFE)
+// FALLBACK — HUMAN VOICE ONLY (ROUTE MATRIX • UNIVERSAL)
 // ====================================================
 if (!bottomOk && !topOk) {
 
@@ -4311,7 +4311,7 @@ if (!bottomOk && !topOk) {
     final AtomicBoolean spoke = new AtomicBoolean(false);
 
     // ====================================================
-    // 1️⃣ UI + AUDIO ROUTE + TTS (NO WAIT)
+    // 1️⃣ POPUP + TTS (IMMEDIATE)
     // ====================================================
     runOnUiThread(() -> {
 
@@ -4352,38 +4352,60 @@ if (!bottomOk && !topOk) {
         ref.set(d);
         if (!isFinishing() && !isDestroyed()) d.show();
 
-        // 🔊 FIRE TTS (NO BLOCK)
         AppTTS.ensureSpeak(this, baseText);
     });
 
     // ====================================================
-    // 2️⃣ START LISTENING IMMEDIATELY (PARALLEL)
+    // 2️⃣ AUDIO ROUTE MATRIX + LISTEN
     // ====================================================
-    try {
-        AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
-        if (am != null) {
-            am.setSpeakerphoneOn(false);
-            am.setMode(AudioManager.MODE_IN_COMMUNICATION);
+    AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
+
+    int[] MODES = new int[] {
+            AudioManager.MODE_NORMAL,
+            AudioManager.MODE_IN_COMMUNICATION,
+            AudioManager.MODE_IN_CALL
+    };
+
+    boolean[] SPEAKER = new boolean[] { false, true };
+
+    if (am != null) {
+
+        for (int mode : MODES) {
+            for (boolean speaker : SPEAKER) {
+
+                if (spoke.get()) break;
+
+                try {
+                    am.stopBluetoothSco();
+                    am.setBluetoothScoOn(false);
+                    am.setMicrophoneMute(false);
+                    am.setSpeakerphoneOn(speaker);
+                    am.setMode(mode);
+
+                    logInfo("Route test → mode=" + mode + " speaker=" + speaker);
+
+                    SystemClock.sleep(250);
+                    hardNormalizeAudioForMic();
+
+                    long listenUntil = SystemClock.uptimeMillis() + 3000;
+
+                    while (SystemClock.uptimeMillis() < listenUntil) {
+                        if (detectHumanVoiceAdaptive(gr)) {
+                            spoke.set(true);
+                            break;
+                        }
+                        SystemClock.sleep(120);
+                    }
+
+                } catch (Throwable t) {
+                    logWarn("Route error: " + t.getClass().getSimpleName());
+                }
+            }
         }
-    } catch (Throwable ignore) {}
-
-    SystemClock.sleep(300);
-    hardNormalizeAudioForMic();
-
-    long listenUntil = SystemClock.uptimeMillis() + 4000;
-
-    while (SystemClock.uptimeMillis() < listenUntil) {
-
-        if (detectHumanVoiceAdaptive(gr)) {
-            spoke.set(true);
-            break;
-        }
-
-        SystemClock.sleep(120);
     }
 
     // ====================================================
-    // 3️⃣ CLOSE POPUP IMMEDIATELY
+    // 3️⃣ CLOSE POPUP
     // ====================================================
     runOnUiThread(() -> {
         AlertDialog d = ref.get();

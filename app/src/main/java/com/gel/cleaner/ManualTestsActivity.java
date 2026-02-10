@@ -182,6 +182,15 @@ private static final int REQ_LAB6_COLOR = 6007;
 private static final int REQ_CORE_PERMS = 1001;
 private Runnable pendingAfterPermission = null;
 
+// ====================================================
+// AUDIO SOURCES — CLASS LEVEL (LOCKED)
+// ====================================================
+private static final int[] AUDIO_SOURCES = new int[] {
+        MediaRecorder.AudioSource.VOICE_COMMUNICATION,
+        MediaRecorder.AudioSource.MIC,
+        MediaRecorder.AudioSource.VOICE_RECOGNITION
+};
+
 private AlertDialog lab14RunningDialog;
 private static final int REQ_LAB13_BT_CONNECT = 1313;
 
@@ -4230,15 +4239,6 @@ SystemClock.sleep(900);
 // LAB — HUMAN VOICE DETECTION (GUIDED RETRY • FINAL)
 // Device-adaptive microphone source detection
 // ====================================================
-
-// ----------------------------------------------------
-// SUPPORTED AUDIO SOURCES (STRICT LIST)
-// ----------------------------------------------------
-private static final int[] AUDIO_SOURCES = new int[] {
-        MediaRecorder.AudioSource.VOICE_COMMUNICATION,
-        MediaRecorder.AudioSource.MIC,
-        MediaRecorder.AudioSource.VOICE_RECOGNITION
-};
 
 // ----------------------------------------------------
 // ENTRY POINT

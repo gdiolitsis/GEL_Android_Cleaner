@@ -4377,7 +4377,6 @@ for (int attempt = 0; attempt < 2 && !spoke; attempt++) {
         }
     });
 }
-    }
 
     // ====================================================
     // 3️⃣ CLOSE UI — ONLY HERE
@@ -4386,6 +4385,7 @@ for (int attempt = 0; attempt < 2 && !spoke; attempt++) {
         AlertDialog d = ref.get();
         if (d != null && d.isShowing()) d.dismiss();
     });
+}
 
     // ====================================================
     // 6️⃣ RESULT

@@ -4310,138 +4310,135 @@ if (!bottomOk && !topOk) {
     final AtomicReference<AlertDialog> ref = new AtomicReference<>();
     final AtomicReference<TextView> msgRef = new AtomicReference<>();
 
-// ====================================================
-// 1️⃣ UI — SINGLE POPUP (TEXT WILL UPDATE)
-// ====================================================
-runOnUiThread(() -> {
-
-    AlertDialog.Builder b =
-            new AlertDialog.Builder(
-                    this,
-                    android.R.style.Theme_Material_Dialog_NoActionBar
-            );
-    b.setCancelable(false);
-
-    LinearLayout root = new LinearLayout(this);
-    root.setOrientation(LinearLayout.VERTICAL);
-    root.setPadding(dp(26), dp(24), dp(26), dp(22));
-
-    GradientDrawable bg = new GradientDrawable();
-    bg.setColor(0xFF000000);
-    bg.setCornerRadius(dp(18));
-    bg.setStroke(dp(3), 0xFFFFD700);
-    root.setBackground(bg);
-
-    TextView msg = new TextView(this);
-    msg.setText(baseText);
-    msg.setTextColor(0xFF39FF14);
-    msg.setTextSize(15f);
-    msg.setGravity(Gravity.CENTER);
-    root.addView(msg);
-
-    msgRef.set(msg);
-
-    // 🔇 STANDARD GEL mute checkbox
-    root.addView(buildMuteRow());
-
-    b.setView(root);
-
-    AlertDialog d = b.create();
-    if (d.getWindow() != null) {
-        d.getWindow().setBackgroundDrawable(
-                new ColorDrawable(Color.TRANSPARENT)
-        );
-    }
-
-    ref.set(d);
-    if (!isFinishing() && !isDestroyed()) d.show();
-});
-
-// ====================================================
-// 2️⃣ HUMAN VOICE LOOP (SYNC POPUP + TTS)
-// ====================================================
-boolean spoke = false;
-
-for (int attempt = 0; attempt < 2 && !spoke; attempt++) {
-
-    // ✅ snapshot για lambda (ΥΠΟΧΡΕΩΤΙΚΟ)
-    final boolean firstAttempt = (attempt == 0);
-
-    // 1️⃣ ΠΡΩΤΑ αλλάζει το popup
+    // ====================================================
+    // 1️⃣ UI — SINGLE POPUP
+    // ====================================================
     runOnUiThread(() -> {
-        TextView m = msgRef.get();
-        if (m != null) {
-            m.setText(
-                firstAttempt
-                    ? baseText
-                    : (gr
-                        ? "Δεν ανιχνεύθηκε φωνή.\nΜέτρησε πάλι έως το τρία."
-                        : "No voice detected.\nPlease count to three again.")
+
+        AlertDialog.Builder b =
+                new AlertDialog.Builder(
+                        this,
+                        android.R.style.Theme_Material_Dialog_NoActionBar
+                );
+        b.setCancelable(false);
+
+        LinearLayout root = new LinearLayout(this);
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.setPadding(dp(26), dp(24), dp(26), dp(22));
+
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(0xFF000000);
+        bg.setCornerRadius(dp(18));
+        bg.setStroke(dp(3), 0xFFFFD700);
+        root.setBackground(bg);
+
+        TextView msg = new TextView(this);
+        msg.setText(baseText);
+        msg.setTextColor(0xFF39FF14);
+        msg.setTextSize(15f);
+        msg.setGravity(Gravity.CENTER);
+        root.addView(msg);
+
+        msgRef.set(msg);
+        root.addView(buildMuteRow());
+
+        b.setView(root);
+
+        AlertDialog d = b.create();
+        if (d.getWindow() != null) {
+            d.getWindow().setBackgroundDrawable(
+                    new ColorDrawable(Color.TRANSPARENT)
             );
         }
+
+        ref.set(d);
+        if (!isFinishing() && !isDestroyed()) d.show();
     });
 
-    // 2️⃣ ΜΕΤΑ μιλάει (ίδιο μήνυμα με popup)
-    AppTTS.ensureSpeak(
-        this,
-        firstAttempt
-            ? baseText
-            : (gr
-                ? "Μέτρησε πάλι έως το τρία."
-                : "Please count to three again.")
-    );
+    // ====================================================
+    // 2️⃣ HUMAN VOICE LOOP (SYNC POPUP + TTS)
+    // ====================================================
+    boolean spoke = false;
 
-    // ⏱️ άφησε το TTS να τελειώσει
-    int ttsWaitMs = 2600 + Math.min(3400, baseText.length() * 55);
-    SystemClock.sleep(ttsWaitMs);
+    for (int attempt = 0; attempt < 2 && !spoke; attempt++) {
 
-    // 3️⃣ HARD ANTI-ECHO GAP
-    try {
-        AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
-        if (am != null) {
-            am.setSpeakerphoneOn(false);
-            am.setMode(AudioManager.MODE_IN_COMMUNICATION);
-        }
-    } catch (Throwable ignore) {}
+        final boolean firstAttempt = (attempt == 0);
 
-    SystemClock.sleep(700);
-    hardNormalizeAudioForMic();
+        // popup πρώτα
+        runOnUiThread(() -> {
+            TextView m = msgRef.get();
+            if (m != null) {
+                m.setText(
+                        firstAttempt
+                                ? baseText
+                                : (gr
+                                    ? "Δεν ανιχνεύθηκε φωνή.\nΜέτρησε πάλι έως το τρία."
+                                    : "No voice detected.\nPlease count to three again.")
+                );
+            }
+        });
 
-    // 4️⃣ DETECTION (BLOCKING)
-    spoke = detectHumanVoiceAdaptive(gr);
-}
+        // μετά μιλάει
+        AppTTS.ensureSpeak(
+                this,
+                firstAttempt
+                        ? baseText
+                        : (gr
+                            ? "Μέτρησε πάλι έως το τρία."
+                            : "Please count to three again.")
+        );
 
-// ====================================================
-// 3️⃣ CLOSE POPUP — ΜΟΝΟ ΕΔΩ
-// ====================================================
-runOnUiThread(() -> {
-    AlertDialog d = ref.get();
-    if (d != null && d.isShowing()) d.dismiss();
-});
+        int ttsWaitMs = 2600 + Math.min(3400, baseText.length() * 55);
+        SystemClock.sleep(ttsWaitMs);
 
-// ====================================================
-// 6️⃣ RESULT
-// ====================================================
-if (spoke) {
+        // HARD ANTI-ECHO GAP
+        try {
+            AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
+            if (am != null) {
+                am.setSpeakerphoneOn(false);
+                am.setMode(AudioManager.MODE_IN_COMMUNICATION);
+            }
+        } catch (Throwable ignore) {}
 
-    bottomOk = true;
-    topOk = true;
+        SystemClock.sleep(700);
+        hardNormalizeAudioForMic();
 
-    logLabelOkValue(
-            gr ? "Κατάσταση" : "Status",
-            gr
-                    ? "Ανιχνεύθηκε ανθρώπινη φωνή. Τα μικρόφωνα λειτουργούν σωστά."
-                    : "Human voice detected. Microphones are operational."
-    );
+        // DETECTION
+        spoke = detectHumanVoiceAdaptive(gr);
+    }
 
-} else {
+    // ====================================================
+    // 3️⃣ CLOSE POPUP
+    // ====================================================
+    runOnUiThread(() -> {
+        AlertDialog d = ref.get();
+        if (d != null && d.isShowing()) d.dismiss();
+    });
 
-    logLabelErrorValue(
-            gr ? "Κατάσταση" : "Status",
-            gr
-                    ? "Δεν ανιχνεύθηκε ανθρώπινη φωνή. Ισχυρή ένδειξη βλάβης μικροφώνου."
-                    : "Human voice not detected. Strong indication of microphone hardware damage."
-    );
+    // ====================================================
+    // 4️⃣ FALLBACK RESULT
+    // ====================================================
+    if (spoke) {
+
+        bottomOk = true;
+        topOk = true;
+
+        logLabelOkValue(
+                gr ? "Κατάσταση" : "Status",
+                gr
+                        ? "Ανιχνεύθηκε ανθρώπινη φωνή. Τα μικρόφωνα λειτουργούν σωστά."
+                        : "Human voice detected. Microphones are operational."
+        );
+
+    } else {
+
+        logLabelErrorValue(
+                gr ? "Κατάσταση" : "Status",
+                gr
+                        ? "Δεν ανιχνεύθηκε ανθρώπινη φωνή. Ισχυρή ένδειξη βλάβης μικροφώνου."
+                        : "Human voice not detected. Strong indication of microphone hardware damage."
+        );
+    }
 }
             // ====================================================
             // FINAL BASE VERDICT (NO FALLBACK)

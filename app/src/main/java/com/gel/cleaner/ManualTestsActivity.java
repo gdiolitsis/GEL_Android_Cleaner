@@ -4310,66 +4310,69 @@ if (!bottomOk && !topOk) {
     final AtomicReference<AlertDialog> ref = new AtomicReference<>();
     final AtomicReference<TextView> msgRef = new AtomicReference<>();
 
-    // ====================================================
-    // 1️⃣ UI — SINGLE POPUP (TEXT WILL UPDATE)
-    // ====================================================
-    runOnUiThread(() -> {
+// ====================================================
+// 1️⃣ UI — SINGLE POPUP (TEXT WILL UPDATE)
+// ====================================================
+runOnUiThread(() -> {
 
-        AlertDialog.Builder b =
-                new AlertDialog.Builder(
-                        this,
-                        android.R.style.Theme_Material_Dialog_NoActionBar
-                );
-        b.setCancelable(false);
-
-        LinearLayout root = new LinearLayout(this);
-        root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(dp(26), dp(24), dp(26), dp(22));
-
-        GradientDrawable bg = new GradientDrawable();
-        bg.setColor(0xFF000000);
-        bg.setCornerRadius(dp(18));
-        bg.setStroke(dp(3), 0xFFFFD700);
-        root.setBackground(bg);
-
-        TextView msg = new TextView(this);
-        msg.setText(baseText);
-        msg.setTextColor(0xFF39FF14);
-        msg.setTextSize(15f);
-        msg.setGravity(Gravity.CENTER);
-        root.addView(msg);
-
-        msgRef.set(msg);
-
-        // 🔇 STANDARD GEL mute checkbox
-        root.addView(buildMuteRow());
-
-        b.setView(root);
-
-        AlertDialog d = b.create();
-        if (d.getWindow() != null) {
-            d.getWindow().setBackgroundDrawable(
-                    new ColorDrawable(Color.TRANSPARENT)
+    AlertDialog.Builder b =
+            new AlertDialog.Builder(
+                    this,
+                    android.R.style.Theme_Material_Dialog_NoActionBar
             );
-        }
+    b.setCancelable(false);
 
-        ref.set(d);
-        if (!isFinishing() && !isDestroyed()) d.show();
-    });
+    LinearLayout root = new LinearLayout(this);
+    root.setOrientation(LinearLayout.VERTICAL);
+    root.setPadding(dp(26), dp(24), dp(26), dp(22));
 
-    // ====================================================
-    // 2️⃣ HUMAN VOICE LOOP (REPEAT UNTIL FOUND OR MAX LOOPS)
-    // ====================================================
-    boolean spoke = false;
+    GradientDrawable bg = new GradientDrawable();
+    bg.setColor(0xFF000000);
+    bg.setCornerRadius(dp(18));
+    bg.setStroke(dp(3), 0xFFFFD700);
+    root.setBackground(bg);
+
+    TextView msg = new TextView(this);
+    msg.setText(baseText);
+    msg.setTextColor(0xFF39FF14);
+    msg.setTextSize(15f);
+    msg.setGravity(Gravity.CENTER);
+    root.addView(msg);
+
+    msgRef.set(msg);
+
+    // 🔇 STANDARD GEL mute checkbox
+    root.addView(buildMuteRow());
+
+    b.setView(root);
+
+    AlertDialog d = b.create();
+    if (d.getWindow() != null) {
+        d.getWindow().setBackgroundDrawable(
+                new ColorDrawable(Color.TRANSPARENT)
+        );
+    }
+
+    ref.set(d);
+    if (!isFinishing() && !isDestroyed()) d.show();
+});
+
+// ====================================================
+// 2️⃣ HUMAN VOICE LOOP (SYNC POPUP + TTS)
+// ====================================================
+boolean spoke = false;
 
 for (int attempt = 0; attempt < 2 && !spoke; attempt++) {
 
-    // 1️⃣ ΠΡΩΤΑ popup (sync με αυτό που θα πει)
+    // ✅ snapshot για lambda (ΥΠΟΧΡΕΩΤΙΚΟ)
+    final boolean firstAttempt = (attempt == 0);
+
+    // 1️⃣ ΠΡΩΤΑ αλλάζει το popup
     runOnUiThread(() -> {
         TextView m = msgRef.get();
         if (m != null) {
             m.setText(
-                attempt == 0
+                firstAttempt
                     ? baseText
                     : (gr
                         ? "Δεν ανιχνεύθηκε φωνή.\nΜέτρησε πάλι έως το τρία."
@@ -4378,15 +4381,21 @@ for (int attempt = 0; attempt < 2 && !spoke; attempt++) {
         }
     });
 
-    // 2️⃣ ΜΕΤΑ μιλάει
+    // 2️⃣ ΜΕΤΑ μιλάει (ίδιο μήνυμα με popup)
     AppTTS.ensureSpeak(
         this,
-        attempt == 0
+        firstAttempt
             ? baseText
-            : (gr ? "Μέτρησε πάλι έως το τρία." : "Please count to three again.")
+            : (gr
+                ? "Μέτρησε πάλι έως το τρία."
+                : "Please count to three again.")
     );
 
-    // 3️⃣ ANTI-ECHO
+    // ⏱️ άφησε το TTS να τελειώσει
+    int ttsWaitMs = 2600 + Math.min(3400, baseText.length() * 55);
+    SystemClock.sleep(ttsWaitMs);
+
+    // 3️⃣ HARD ANTI-ECHO GAP
     try {
         AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
         if (am != null) {
@@ -4398,43 +4407,42 @@ for (int attempt = 0; attempt < 2 && !spoke; attempt++) {
     SystemClock.sleep(700);
     hardNormalizeAudioForMic();
 
-    // 4️⃣ DETECTION
+    // 4️⃣ DETECTION (BLOCKING)
     spoke = detectHumanVoiceAdaptive(gr);
 }
 
-// 5️⃣ ΚΛΕΙΝΕΙ popup ΜΟΝΟ ΕΔΩ
+// ====================================================
+// 3️⃣ CLOSE POPUP — ΜΟΝΟ ΕΔΩ
+// ====================================================
 runOnUiThread(() -> {
     AlertDialog d = ref.get();
     if (d != null && d.isShowing()) d.dismiss();
 });
 
-    // ====================================================
-    // 6️⃣ RESULT
-    // ====================================================
-    if (spoke) {
+// ====================================================
+// 6️⃣ RESULT
+// ====================================================
+if (spoke) {
 
-        bottomOk = true;
-        topOk = true;
+    bottomOk = true;
+    topOk = true;
 
-        logLabelOkValue(
-                gr ? "Κατάσταση" : "Status",
-                gr
-                        ? "Ανιχνεύθηκε ανθρώπινη φωνή. Τα μικρόφωνα λειτουργούν σωστά."
-                        : "Human voice detected. Microphones are operational."
-        );
+    logLabelOkValue(
+            gr ? "Κατάσταση" : "Status",
+            gr
+                    ? "Ανιχνεύθηκε ανθρώπινη φωνή. Τα μικρόφωνα λειτουργούν σωστά."
+                    : "Human voice detected. Microphones are operational."
+    );
 
-    } else {
+} else {
 
-        logLabelErrorValue(
-                gr ? "Κατάσταση" : "Status",
-                gr
-                        ? "Δεν ανιχνεύθηκε ανθρώπινη φωνή. Ισχυρή ένδειξη βλάβης μικροφώνου."
-                        : "Human voice not detected. Strong indication of microphone hardware damage."
-        );
-    }
+    logLabelErrorValue(
+            gr ? "Κατάσταση" : "Status",
+            gr
+                    ? "Δεν ανιχνεύθηκε ανθρώπινη φωνή. Ισχυρή ένδειξη βλάβης μικροφώνου."
+                    : "Human voice not detected. Strong indication of microphone hardware damage."
+    );
 }
-
-
             // ====================================================
             // FINAL BASE VERDICT (NO FALLBACK)
             // ====================================================

@@ -4362,15 +4362,17 @@ try {
 SystemClock.sleep(900);
 
 hardNormalizeAudioForMic();
-boolean spoke = detectHumanVoiceAdaptive(gr);
+boolean spoke = false;
+for (int attempt = 0; attempt < 2 && !spoke; attempt++) {
+    SystemClock.sleep(400);   // δίνεις χρόνο στον χρήστη
+    spoke = detectHumanVoiceAdaptive(gr);
+}
 
-    // ====================================================
-    // 5️⃣ CLOSE UI
-    // ====================================================
-    runOnUiThread(() -> {
-        AlertDialog d = ref.get();
-        if (d != null && d.isShowing()) d.dismiss();
-    });
+// 5️⃣ CLOSE UI
+runOnUiThread(() -> {
+    AlertDialog d = ref.get();
+    if (d != null && d.isShowing()) d.dismiss();
+});
 
     // ====================================================
     // 6️⃣ RESULT

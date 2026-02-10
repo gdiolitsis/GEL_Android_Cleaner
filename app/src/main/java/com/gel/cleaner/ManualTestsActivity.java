@@ -1421,29 +1421,6 @@ private void dismiss(AtomicReference<AlertDialog> ref) {
     } catch (Throwable ignore) {}
 }
 
-private void showVoicePrompt(boolean gr) {
-    runOnUiThread(() -> {
-
-        String title = gr
-                ? "Ανίχνευση φωνής"
-                : "Voice detection";
-
-        String msg = gr
-                ? "Μίλησε τώρα λέγοντας:\n«ένα – δύο – τρία»"
-                : "Speak now saying:\n“one – two – three”";
-
-        AtomicBoolean dummyCancel = new AtomicBoolean(false);
-        AtomicReference<AlertDialog> ref = new AtomicReference<>();
-
-        AlertDialog d =
-                buildInfoDialog(title, msg, dummyCancel, ref);
-
-        if (!isFinishing() && !isDestroyed()) {
-            d.show();
-        }
-    });
-}
-
 private int getWorkingMicSource() {
     SharedPreferences sp = getSharedPreferences("gel_audio_profile", MODE_PRIVATE);
     return sp.getInt("mic_source", MediaRecorder.AudioSource.VOICE_COMMUNICATION);

@@ -1449,9 +1449,10 @@ private boolean detectHumanVoiceAdaptive(boolean gr) {
     final int CHANNEL = AudioFormat.CHANNEL_IN_MONO;
     final int FORMAT = AudioFormat.ENCODING_PCM_16BIT;
 
-    for (int source : AUDIO_SOURCES) {
+    final int STEP_MS = 100;
+    final long WINDOW_MS = 5000;
 
-        SystemClock.sleep(400);
+    for (int source : AUDIO_SOURCES) {
 
         AudioRecord ar = null;
 
@@ -1472,7 +1473,7 @@ private boolean detectHumanVoiceAdaptive(boolean gr) {
             ar.startRecording();
             SystemClock.sleep(250); // AGC settle
 
-            long until = SystemClock.uptimeMillis() + 5000;
+            long until = SystemClock.uptimeMillis() + WINDOW_MS;
             long voicedMs = 0;
 
             short[] buf = new short[1024];
@@ -1480,7 +1481,10 @@ private boolean detectHumanVoiceAdaptive(boolean gr) {
             while (SystemClock.uptimeMillis() < until) {
 
                 int n = ar.read(buf, 0, buf.length);
-                if (n <= 0) continue;
+                if (n <= 0) {
+                    SystemClock.sleep(STEP_MS);
+                    continue;
+                }
 
                 long sumSq = 0;
                 int peak = 0;
@@ -1493,11 +1497,13 @@ private boolean detectHumanVoiceAdaptive(boolean gr) {
 
                 double rms = Math.sqrt((double) sumSq / n);
 
-                boolean rmsOk  = rms  > 300;   // REAL SPEECH FLOOR
-                boolean peakOk = peak > 2000;  // HARD GATE
+                boolean rmsOk  = rms  > 300;   // speech floor
+                boolean peakOk = peak > 2000;  // hard gate
 
                 if (rmsOk && peakOk) {
-                    voicedMs += 200;
+                    voicedMs += STEP_MS;
+                } else {
+                    voicedMs = Math.max(0, voicedMs - STEP_MS); // decay
                 }
 
                 if (voicedMs >= 800) {
@@ -1515,7 +1521,7 @@ private boolean detectHumanVoiceAdaptive(boolean gr) {
                     return true;
                 }
 
-                SystemClock.sleep(200);
+                SystemClock.sleep(STEP_MS);
             }
 
         } catch (Throwable ignore) {

@@ -182,15 +182,6 @@ private static final int REQ_LAB6_COLOR = 6007;
 private static final int REQ_CORE_PERMS = 1001;
 private Runnable pendingAfterPermission = null;
 
-// ====================================================
-// AUDIO SOURCES — CLASS LEVEL (LOCKED)
-// ====================================================
-private static final int[] AUDIO_SOURCES = new int[] {
-        MediaRecorder.AudioSource.VOICE_COMMUNICATION,
-        MediaRecorder.AudioSource.MIC,
-        MediaRecorder.AudioSource.VOICE_RECOGNITION
-};
-
 private AlertDialog lab14RunningDialog;
 private static final int REQ_LAB13_BT_CONNECT = 1313;
 
@@ -1463,7 +1454,14 @@ private int getWorkingMicSource() {
 // Adaptive AudioSource scan — WORKS ON REAL DEVICES
 // ============================================================
 
+// ====================================================
+// AUDIO SOURCES — CLASS LEVEL (LOCKED)
+// ====================================================
 private static final int[] AUDIO_SOURCES = new int[] {
+        MediaRecorder.AudioSource.VOICE_COMMUNICATION,
+        MediaRecorder.AudioSource.MIC,
+        MediaRecorder.AudioSource.VOICE_RECOGNITION
+};ES = new int[] {
         MediaRecorder.AudioSource.VOICE_RECOGNITION,
         MediaRecorder.AudioSource.VOICE_COMMUNICATION,
         MediaRecorder.AudioSource.MIC,

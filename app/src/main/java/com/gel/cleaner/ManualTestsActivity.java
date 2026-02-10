@@ -1471,12 +1471,40 @@ private boolean detectHumanVoiceAdaptive(boolean gr) {
             if (ar.getState() != AudioRecord.STATE_INITIALIZED) continue;
 
             ar.startRecording();
-            SystemClock.sleep(250); // AGC settle
+SystemClock.sleep(250);
+
+// 👇 ΠΡΩΤΑ buffer
+short[] buf = new short[1024];
+            
+// =============================
+// BASELINE — SILENCE
+// =============================
+long noiseSum = 0;
+int noiseFrames = 0;
+
+for (int i = 0; i < 5; i++) {
+    int n = ar.read(buf, 0, buf.length);
+    if (n <= 0) continue;
+
+    long sumSq = 0;
+    for (int j = 0; j < n; j++) {
+        int v = Math.abs(buf[j]);
+        sumSq += (long) v * v;
+    }
+
+    double rms = Math.sqrt((double) sumSq / n);
+    noiseSum += rms;
+    noiseFrames++;
+
+    SystemClock.sleep(100);
+}
+
+double noiseFloor = noiseFrames > 0
+        ? noiseSum / noiseFrames
+        : 0;
 
             long until = SystemClock.uptimeMillis() + WINDOW_MS;
             long voicedMs = 0;
-
-            short[] buf = new short[1024];
 
             while (SystemClock.uptimeMillis() < until) {
 
@@ -1497,8 +1525,8 @@ private boolean detectHumanVoiceAdaptive(boolean gr) {
 
                 double rms = Math.sqrt((double) sumSq / n);
 
-                boolean rmsOk  = rms  > 300;   // speech floor
-                boolean peakOk = peak > 2000;  // hard gate
+                boolean rmsOk  = rms > noiseFloor * 2.2;
+boolean peakOk = peak > 2500;
 
                 if (rmsOk && peakOk) {
                     voicedMs += STEP_MS;
@@ -4336,13 +4364,29 @@ if (!bottomOk && !topOk) {
 
 for (int attempt = 0; attempt < 2 && !spoke; attempt++) {
 
-    // 1️⃣ ΜΙΛΑΕΙ
-    AppTTS.ensureSpeak(this, baseText);
+    // 1️⃣ ΠΡΩΤΑ popup (sync με αυτό που θα πει)
+    runOnUiThread(() -> {
+        TextView m = msgRef.get();
+        if (m != null) {
+            m.setText(
+                attempt == 0
+                    ? baseText
+                    : (gr
+                        ? "Δεν ανιχνεύθηκε φωνή.\nΜέτρησε πάλι έως το τρία."
+                        : "No voice detected.\nPlease count to three again.")
+            );
+        }
+    });
 
-    int ttsWaitMs = 2600 + Math.min(3400, baseText.length() * 55);
-    SystemClock.sleep(ttsWaitMs);
+    // 2️⃣ ΜΕΤΑ μιλάει
+    AppTTS.ensureSpeak(
+        this,
+        attempt == 0
+            ? baseText
+            : (gr ? "Μέτρησε πάλι έως το τρία." : "Please count to three again.")
+    );
 
-    // 2️⃣ ROUTING RESET
+    // 3️⃣ ANTI-ECHO
     try {
         AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
         if (am != null) {
@@ -4354,29 +4398,15 @@ for (int attempt = 0; attempt < 2 && !spoke; attempt++) {
     SystemClock.sleep(700);
     hardNormalizeAudioForMic();
 
-    // 3️⃣ DETECTION (BLOCKING)
+    // 4️⃣ DETECTION
     spoke = detectHumanVoiceAdaptive(gr);
-
-    // 4️⃣ UI SYNC
-    if (spoke) {
-        // ✅ ΚΛΕΙΣΕ ΑΜΕΣΩΣ
-        runOnUiThread(() -> {
-            AlertDialog d = ref.get();
-            if (d != null && d.isShowing()) d.dismiss();
-        });
-        break;
-    }
-
-    // ❌ Δεν βρήκε → άλλαξε text ΚΑΙ ΞΑΝΑ
-    runOnUiThread(() -> {
-        TextView m = msgRef.get();
-        if (m != null) {
-            m.setText(gr
-                    ? "Δεν ανιχνεύθηκε φωνή.\nΜέτρησε πάλι έως το τρία."
-                    : "No voice detected.\nPlease count to three again.");
-        }
-    });
 }
+
+// 5️⃣ ΚΛΕΙΝΕΙ popup ΜΟΝΟ ΕΔΩ
+runOnUiThread(() -> {
+    AlertDialog d = ref.get();
+    if (d != null && d.isShowing()) d.dismiss();
+});
 
     // ====================================================
     // 6️⃣ RESULT

@@ -4289,7 +4289,7 @@ if (FORCE_LAB4_FALLBACK) {
 }
 
 // ====================================================
-// FALLBACK — HUMAN VOICE ONLY (FINAL • ECHO-SAFE • STABLE)
+// FALLBACK — HUMAN VOICE ONLY (FINAL • COLD-START SAFE)
 // ====================================================
 if (!bottomOk && !topOk) {
 
@@ -4304,14 +4304,14 @@ if (!bottomOk && !topOk) {
     logLine();
 
     final String baseText = gr
-            ? "Παρακαλώ, μέτρησε αργά και καθαρά έως το τρία,\nδυνατά, κοντά στο μικρόφωνο."
-            : "Please count slowly and clearly to three,\nloudly, close to the microphone.";
+            ? "Παρακαλώ, μέτρησε αργά και καθαρά έως το τρία."
+            : "Please count slowly and clearly to three.";
 
     final AtomicReference<AlertDialog> ref = new AtomicReference<>();
-    final AtomicReference<TextView> msgRef = new AtomicReference<>();
+    final AtomicBoolean spoke = new AtomicBoolean(false);
 
     // ====================================================
-    // 1️⃣ UI — SINGLE POPUP (SHOW + TTS IMMEDIATELY)
+    // 1️⃣ UI + AUDIO ROUTE + TTS (NO WAIT)
     // ====================================================
     runOnUiThread(() -> {
 
@@ -4339,9 +4339,7 @@ if (!bottomOk && !topOk) {
         msg.setGravity(Gravity.CENTER);
         root.addView(msg);
 
-        msgRef.set(msg);
         root.addView(buildMuteRow());
-
         b.setView(root);
 
         AlertDialog d = b.create();
@@ -4352,66 +4350,36 @@ if (!bottomOk && !topOk) {
         }
 
         ref.set(d);
-        if (!isFinishing() && !isDestroyed()) {
-            d.show();
-            // 🔊 TTS IMMEDIATELY ON FIRST POPUP
-            AppTTS.ensureSpeak(this, baseText);
-        }
+        if (!isFinishing() && !isDestroyed()) d.show();
+
+        // 🔊 FIRE TTS (NO BLOCK)
+        AppTTS.ensureSpeak(this, baseText);
     });
 
     // ====================================================
-    // 2️⃣ HUMAN VOICE DETECTION (INTERRUPT-BASED)
+    // 2️⃣ START LISTENING IMMEDIATELY (PARALLEL)
     // ====================================================
-    boolean spoke = false;
+    try {
+        AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
+        if (am != null) {
+            am.setSpeakerphoneOn(false);
+            am.setMode(AudioManager.MODE_IN_COMMUNICATION);
+        }
+    } catch (Throwable ignore) {}
 
-    for (int attempt = 0; attempt < 2 && !spoke; attempt++) {
+    SystemClock.sleep(300);
+    hardNormalizeAudioForMic();
 
-        final boolean firstAttempt = (attempt == 0);
+    long listenUntil = SystemClock.uptimeMillis() + 4000;
 
-        // UPDATE TEXT (NO DELAY)
-        runOnUiThread(() -> {
-            TextView m = msgRef.get();
-            if (m != null && !firstAttempt) {
-                m.setText(
-                        gr
-                                ? "Δεν ανιχνεύθηκε φωνή.\nΜέτρησε πάλι έως το τρία."
-                                : "No voice detected.\nPlease count to three again."
-                );
-            }
-        });
+    while (SystemClock.uptimeMillis() < listenUntil) {
 
-        if (!firstAttempt) {
-            AppTTS.ensureSpeak(
-                    this,
-                    gr
-                            ? "Μέτρησε πάλι έως το τρία."
-                            : "Please count to three again."
-            );
+        if (detectHumanVoiceAdaptive(gr)) {
+            spoke.set(true);
+            break;
         }
 
-        // HARD ANTI-ECHO PREP
-        try {
-            AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
-            if (am != null) {
-                am.setSpeakerphoneOn(false);
-                am.setMode(AudioManager.MODE_IN_COMMUNICATION);
-            }
-        } catch (Throwable ignore) {}
-
-        SystemClock.sleep(500);
-        hardNormalizeAudioForMic();
-
-        // ⏱️ INTERRUPT LOOP (MAX 3.5s)
-        long listenUntil = SystemClock.uptimeMillis() + 3500;
-        while (SystemClock.uptimeMillis() < listenUntil && !spoke) {
-
-            if (detectHumanVoiceAdaptive(gr)) {
-                spoke = true;
-                break;
-            }
-
-            SystemClock.sleep(120);
-        }
+        SystemClock.sleep(120);
     }
 
     // ====================================================
@@ -4423,9 +4391,9 @@ if (!bottomOk && !topOk) {
     });
 
     // ====================================================
-    // 4️⃣ FALLBACK RESULT
+    // 4️⃣ RESULT
     // ====================================================
-    if (spoke) {
+    if (spoke.get()) {
 
         bottomOk = true;
         topOk = true;

@@ -4334,42 +4334,49 @@ if (!bottomOk && !topOk) {
     // ====================================================
     boolean spoke = false;
 
-    for (int attempt = 0; attempt < 2 && !spoke; attempt++) {
+for (int attempt = 0; attempt < 2 && !spoke; attempt++) {
 
-        // 🔊 ΦΩΝΗΤΙΚΗ ΟΔΗΓΙΑ (αν δεν είναι mute)
-        AppTTS.ensureSpeak(this, baseText);
+    // 1️⃣ ΜΙΛΑΕΙ
+    AppTTS.ensureSpeak(this, baseText);
 
-        int ttsWaitMs = 2600 + Math.min(3400, baseText.length() * 55);
-        SystemClock.sleep(ttsWaitMs);
+    int ttsWaitMs = 2600 + Math.min(3400, baseText.length() * 55);
+    SystemClock.sleep(ttsWaitMs);
 
-        // ====================================================
-        // HARD ANTI-ECHO GAP
-        // ====================================================
-        try {
-            AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
-            if (am != null) {
-                am.setSpeakerphoneOn(false);
-                am.setMode(AudioManager.MODE_IN_COMMUNICATION);
-            }
-        } catch (Throwable ignore) {}
-
-        SystemClock.sleep(900);
-        hardNormalizeAudioForMic();
-
-        // 🎙️ FULL DETECTION CYCLE
-        spoke = detectHumanVoiceAdaptive(gr);
-
-        // ❌ Αν δεν βρεθεί → άλλαξε ΜΟΝΟ το text του popup
-        if (!spoke) {
-            runOnUiThread(() -> {
-                TextView m = msgRef.get();
-                if (m != null) {
-                    m.setText(gr
-                            ? "Δεν ανιχνεύθηκε φωνή.\nΜέτρησε πάλι έως το τρία."
-                            : "No voice detected.\nPlease count to three again.");
-                }
-            });
+    // 2️⃣ ROUTING RESET
+    try {
+        AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
+        if (am != null) {
+            am.setSpeakerphoneOn(false);
+            am.setMode(AudioManager.MODE_IN_COMMUNICATION);
         }
+    } catch (Throwable ignore) {}
+
+    SystemClock.sleep(700);
+    hardNormalizeAudioForMic();
+
+    // 3️⃣ DETECTION (BLOCKING)
+    spoke = detectHumanVoiceAdaptive(gr);
+
+    // 4️⃣ UI SYNC
+    if (spoke) {
+        // ✅ ΚΛΕΙΣΕ ΑΜΕΣΩΣ
+        runOnUiThread(() -> {
+            AlertDialog d = ref.get();
+            if (d != null && d.isShowing()) d.dismiss();
+        });
+        break;
+    }
+
+    // ❌ Δεν βρήκε → άλλαξε text ΚΑΙ ΞΑΝΑ
+    runOnUiThread(() -> {
+        TextView m = msgRef.get();
+        if (m != null) {
+            m.setText(gr
+                    ? "Δεν ανιχνεύθηκε φωνή.\nΜέτρησε πάλι έως το τρία."
+                    : "No voice detected.\nPlease count to three again.");
+        }
+    });
+}
     }
 
     // ====================================================

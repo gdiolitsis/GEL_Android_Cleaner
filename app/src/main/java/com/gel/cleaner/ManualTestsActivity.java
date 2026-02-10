@@ -1461,7 +1461,6 @@ private static final int[] AUDIO_SOURCES = new int[] {
         MediaRecorder.AudioSource.VOICE_COMMUNICATION,
         MediaRecorder.AudioSource.MIC,
         MediaRecorder.AudioSource.VOICE_RECOGNITION
-};ES = new int[] {
         MediaRecorder.AudioSource.VOICE_RECOGNITION,
         MediaRecorder.AudioSource.VOICE_COMMUNICATION,
         MediaRecorder.AudioSource.MIC,

@@ -1451,7 +1451,6 @@ private boolean detectHumanVoiceAdaptive(boolean gr) {
 
     for (int source : AUDIO_SOURCES) {
 
-        showVoicePrompt(gr);
         SystemClock.sleep(400);
 
         AudioRecord ar = null;

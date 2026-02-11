@@ -4680,10 +4680,10 @@ logLine();
 // STAGE 2 — USER INSTRUCTION (SPEAKER)
 // ====================================================
 
-// 🔊 Προσωρινά στον speaker για οδηγία
-routeToEarpiecePlayback();
+// 🔊 Πάμε καθαρά σε speaker για οδηγία
 try {
     if (amCall != null) {
+        try { amCall.setMode(AudioManager.MODE_NORMAL); } catch (Throwable ignore) {}
         try { amCall.setSpeakerphoneOn(true); } catch (Throwable ignore) {}
     }
 } catch (Throwable ignore) {}
@@ -4850,15 +4850,14 @@ routeToCallEarpiece();
     } catch (Throwable ignore) {}
 
     try {
-        AudioManager amX = (AudioManager) getSystemService(AUDIO_SERVICE);
-        if (amX != null) {
-            try { amX.stopBluetoothSco(); } catch (Throwable ignore) {}
-            try { amX.setBluetoothScoOn(false); } catch (Throwable ignore) {}
-            try { amX.setMicrophoneMute(false); } catch (Throwable ignore) {}
-            try { amX.setSpeakerphoneOn(false); } catch (Throwable ignore) {}
-            try { amX.setMode(AudioManager.MODE_NORMAL); } catch (Throwable ignore) {}
-        }
-    } catch (Throwable ignore) {}
+    if (amCall != null) {
+        try { amCall.stopBluetoothSco(); } catch (Throwable ignore) {}
+        try { amCall.setBluetoothScoOn(false); } catch (Throwable ignore) {}
+        try { amCall.setMicrophoneMute(false); } catch (Throwable ignore) {}
+        try { amCall.setSpeakerphoneOn(false); } catch (Throwable ignore) {}
+        try { amCall.setMode(AudioManager.MODE_NORMAL); } catch (Throwable ignore) {}
+    }
+} catch (Throwable ignore) {}
 }
 
 }).start();

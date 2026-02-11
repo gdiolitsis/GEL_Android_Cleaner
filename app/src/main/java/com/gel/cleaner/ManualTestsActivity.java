@@ -4282,52 +4282,51 @@ private void lab4MicBase(Runnable onFinished) {
             topOk = topRms > 0 || topPeak > 0;
 
 // ====================================================
-// AUTO CHECK RESULT — NO HUMAN FALLBACK
+// FINAL BASE VERDICT (NO FALLBACK)
 // ====================================================
-if (!bottomOk && !topOk) {
+appendHtml("<br>");
+logInfo(gr ? "Συμπεράσματα υλικού:" : "Hardware conclusions:");
+logLine();
 
-    appendHtml("<br>");
+if (bottomOk && topOk) {
+
+    logLabelOkValue(
+            gr ? "Κατάσταση" : "Status",
+            gr ? "Και τα δύο μικρόφωνα λειτουργούν κανονικά"
+               : "Both microphones are operational"
+    );
+
+} else if (bottomOk || topOk) {
 
     logLabelWarnValue(
-        gr ? "Κατάσταση" : "Status",
-        gr
-            ? "Δεν ήταν δυνατή η αυτόματη επιβεβαίωση μικροφώνων σε αυτή τη συσκευή."
-            : "Automatic microphone verification was not possible on this device."
+            gr ? "Κατάσταση" : "Status",
+            gr ? "Μερική λειτουργία μικροφώνων"
+               : "Partial microphone operation detected"
     );
 
-    logInfo(
-        gr
-            ? "Συνιστάται έλεγχος μέσω πραγματικής κλήσης ή hands-free."
-            : "Testing via real call or hands-free is recommended."
+} else {
+
+else {
+
+    logLabelWarnValue(
+            gr ? "Κατάσταση" : "Status",
+            gr
+                    ? "Η λειτουργία μικροφώνων δεν επιβεβαιώθηκε από τον αυτόματο έλεγχο."
+                    : "Microphone operation was not confirmed by the automatic test."
+    );
+
+    logWarn(
+            gr
+                    ? "Πιθανός περιορισμός firmware ή δικαιωμάτων."
+                    : "Possible firmware or permission restriction."
+    );
+
+    logOk(
+            gr
+                    ? "Συνιστάται έλεγχος μέσω πραγματικής κλήσης."
+                    : "Testing via a real call is recommended."
     );
 }
-
-            // ====================================================
-            // FINAL BASE VERDICT (NO FALLBACK)
-            // ====================================================
-            appendHtml("<br>");
-            logInfo(gr ? "Συμπεράσματα υλικού:" : "Hardware conclusions:");
-            logLine();
-
-            if (bottomOk && topOk) {
-                logLabelOkValue(
-                        gr ? "Κατάσταση" : "Status",
-                        gr ? "Και τα δύο μικρόφωνα λειτουργούν κανονικά"
-                           : "Both microphones are operational"
-                );
-            } else if (bottomOk || topOk) {
-                logLabelWarnValue(
-                        gr ? "Κατάσταση" : "Status",
-                        gr ? "Μερική λειτουργία μικροφώνων"
-                           : "Partial microphone operation detected"
-                );
-            } else {
-                logLabelErrorValue(
-                        gr ? "Κατάσταση" : "Status",
-                        gr ? "Αποτυχία ελέγχου — Πιθανή βλάβη υλικού μικροφώνου"
-                           : "Check failed — Possible microphone hardware failure"
-                );
-            }
 
         } finally {
 
@@ -4351,19 +4350,6 @@ private volatile boolean lastAnswerHeardClearly = false;
 
 private void lab4MicPro() {
 
-    // 🔒 Αν έγινε HUMAN FALLBACK στο BASE → το PRO ΔΕΝ τρέχει
-    if (lab4HumanFallbackUsed) {
-
-        lab4HumanFallbackUsed = false; // reset για επόμενο LAB run
-
-        logInfo(
-                AppLang.isGreek(this)
-                        ? "LAB 4 PRO παραλείφθηκε (έγινε έλεγχος με ανθρώπινη φωνή στο BASE)."
-                        : "LAB 4 PRO skipped (human voice verification was performed in BASE)."
-        );
-        return;
-    }
-
     final boolean gr = AppLang.isGreek(this);
 
     new Thread(() -> {
@@ -4374,96 +4360,323 @@ private void lab4MicPro() {
 
         try {
 
-            // ====================================================
-            // STAGE 1 — Bottom microphone CALL QUALITY check
-            // ====================================================
-            // ==========================
-// SHOW DIALOG + SPEAK (SAFE)
-// ==========================
-routeToEarpiecePlayback();
-try {
-    AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
-    if (am != null) {
-        am.setSpeakerphoneOn(true);
-    }
-} catch (Throwable ignore) {}
+// ====================================================
+// STAGE 1 — Bottom microphone HUMAN ACOUSTIC check
+// ====================================================
 
+// 🔊 Force call audio path
+AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
+if (am != null) {
+    try { am.stopBluetoothSco(); } catch (Throwable ignore) {}
+    try { am.setBluetoothScoOn(false); } catch (Throwable ignore) {}
+    try { am.setSpeakerphoneOn(false); } catch (Throwable ignore) {}
+    try { am.setMicrophoneMute(false); } catch (Throwable ignore) {}
+    try { am.setMode(AudioManager.MODE_IN_COMMUNICATION); } catch (Throwable ignore) {}
+}
+
+AtomicBoolean cancelled = new AtomicBoolean(false);
+AtomicBoolean started = new AtomicBoolean(false);
+AtomicReference<AlertDialog> dialogRef = new AtomicReference<>();
+
+// ==========================
+// POPUP 1 — INSTRUCTION
+// ==========================
 runOnUiThread(() -> {
 
-    AlertDialog d = buildInfoDialog(
-            gr ? "LAB 4 PRO — Έλεγχος" : "LAB 4 PRO — Test",
-            gr ? "Έλεγχος κάτω μικροφώνου."
-               : "Bottom microphone test.",
-            cancelled,
-            dialogRef
-    );
+    AlertDialog.Builder b =
+            new AlertDialog.Builder(
+                    this,
+                    android.R.style.Theme_Material_Dialog_NoActionBar
+            );
+    b.setCancelable(false);
+
+    LinearLayout root = new LinearLayout(this);
+    root.setOrientation(LinearLayout.VERTICAL);
+    root.setPadding(dp(26), dp(24), dp(26), dp(22));
+
+    GradientDrawable bg = new GradientDrawable();
+    bg.setColor(0xFF000000);
+    bg.setCornerRadius(dp(18));
+    bg.setStroke(dp(3), 0xFFFFD700);
+    root.setBackground(bg);
+
+    TextView msg = new TextView(this);
+    msg.setText(gr
+            ? "Μίλησε στο κάτω μικρόφωνο και άκου αν η φωνή σου ακούγεται καθαρά από το ακουστικό."
+            : "Speak into the bottom microphone and check if your voice is clearly heard from the earpiece.");
+    msg.setTextColor(0xFF39FF14);
+    msg.setTextSize(15f);
+    msg.setGravity(Gravity.CENTER);
+    msg.setPadding(0, 0, 0, dp(18));
+    root.addView(msg);
+
+    root.addView(buildMuteRow());
+
+    LinearLayout btnRow = new LinearLayout(this);
+    btnRow.setOrientation(LinearLayout.HORIZONTAL);
+    btnRow.setGravity(Gravity.CENTER);
+
+    LinearLayout.LayoutParams lp =
+            new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+            );
+    lp.setMargins(dp(12), dp(8), dp(12), dp(8));
+
+    Button exitBtn = new Button(this);
+    exitBtn.setText("EXIT");
+    exitBtn.setTextColor(Color.WHITE);
+    exitBtn.setAllCaps(false);
+
+    GradientDrawable exitBg = new GradientDrawable();
+    exitBg.setColor(0xFF8B0000);
+    exitBg.setCornerRadius(dp(14));
+    exitBg.setStroke(dp(3), 0xFFFFD700);
+    exitBtn.setBackground(exitBg);
+    exitBtn.setLayoutParams(lp);
+
+    Button startBtn = new Button(this);
+    startBtn.setText("START");
+    startBtn.setTextColor(Color.WHITE);
+    startBtn.setAllCaps(false);
+
+    GradientDrawable startBg = new GradientDrawable();
+    startBg.setColor(0xFF0B5F3B);
+    startBg.setCornerRadius(dp(14));
+    startBg.setStroke(dp(3), 0xFFFFD700);
+    startBtn.setBackground(startBg);
+    startBtn.setLayoutParams(lp);
+
+    btnRow.addView(exitBtn);
+    btnRow.addView(startBtn);
+    root.addView(btnRow);
+
+    b.setView(root);
+
+    AlertDialog d = b.create();
+    if (d.getWindow() != null) {
+        d.getWindow().setBackgroundDrawable(
+                new ColorDrawable(Color.TRANSPARENT)
+        );
+    }
+
+    dialogRef.set(d);
+
+    exitBtn.setOnClickListener(v -> {
+        cancelled.set(true);
+        d.dismiss();
+    });
+
+    startBtn.setOnClickListener(v -> {
+        started.set(true);
+        d.dismiss();
+    });
 
     if (!isFinishing() && !isDestroyed()) {
         d.show();
     }
 
-    // ⏱️ ΑΠΑΡΑΙΤΗΤΗ καθυστέρηση πριν το TTS
     new Handler(Looper.getMainLooper()).postDelayed(() -> {
         AppTTS.ensureSpeak(
                 this,
-                gr ? "Έλεγχος κάτω μικροφώνου."
-                   : "Bottom microphone test."
+                gr
+                        ? "Μίλησε τώρα στο κάτω μικρόφωνο και άκου τη φωνή σου."
+                        : "Speak now into the bottom microphone and listen to your voice."
         );
     }, 500);
 });
 
 // ==========================
-// WAIT FOR SPEECH
+// WAIT FOR START
 // ==========================
+long waitStart = SystemClock.uptimeMillis() + 10000;
+while (!started.get() && !cancelled.get()
+        && SystemClock.uptimeMillis() < waitStart) {
+    SystemClock.sleep(80);
+}
+
 if (cancelled.get()) return;
 
-SystemClock.sleep(2200);
+// ==========================
+// LIVE MIC → EARPIECE LOOP (5s)
+// ==========================
+int sampleRate = 16000;
+int minBuf = AudioRecord.getMinBufferSize(
+        sampleRate,
+        AudioFormat.CHANNEL_IN_MONO,
+        AudioFormat.ENCODING_PCM_16BIT
+);
 
-dismiss(dialogRef);
+AudioRecord recorder = new AudioRecord(
+        MediaRecorder.AudioSource.VOICE_COMMUNICATION,
+        sampleRate,
+        AudioFormat.CHANNEL_IN_MONO,
+        AudioFormat.ENCODING_PCM_16BIT,
+        minBuf
+);
+
+AudioTrack track = new AudioTrack(
+        AudioManager.STREAM_VOICE_CALL,
+        sampleRate,
+        AudioFormat.CHANNEL_OUT_MONO,
+        AudioFormat.ENCODING_PCM_16BIT,
+        minBuf,
+        AudioTrack.MODE_STREAM
+);
+
+byte[] buffer = new byte[minBuf];
+
+recorder.startRecording();
+track.play();
+
+long loopUntil = SystemClock.uptimeMillis() + 5000;
+
+while (SystemClock.uptimeMillis() < loopUntil && !cancelled.get()) {
+
+    int read = recorder.read(buffer, 0, buffer.length);
+    if (read > 0) {
+        track.write(buffer, 0, read);
+    }
+}
+
+try { recorder.stop(); } catch (Throwable ignore) {}
+try { recorder.release(); } catch (Throwable ignore) {}
+try { track.stop(); } catch (Throwable ignore) {}
+try { track.release(); } catch (Throwable ignore) {}
 
 // ==========================
-// MIC CHECK
+// POPUP 2 — CONFIRMATION
 // ==========================
-hardNormalizeAudioForMic();
+AtomicBoolean heardClearly = new AtomicBoolean(false);
+AtomicBoolean answered = new AtomicBoolean(false);
 
-MicDiagnosticEngine.Result r =
-        MicDiagnosticEngine.run(this);
+runOnUiThread(() -> {
 
-            appendHtml("<br>");
+    AlertDialog.Builder b =
+            new AlertDialog.Builder(
+                    this,
+                    android.R.style.Theme_Material_Dialog_NoActionBar
+            );
+    b.setCancelable(false);
+
+    LinearLayout root = new LinearLayout(this);
+    root.setOrientation(LinearLayout.VERTICAL);
+    root.setPadding(dp(26), dp(24), dp(26), dp(22));
+
+    GradientDrawable bg = new GradientDrawable();
+    bg.setColor(0xFF000000);
+    bg.setCornerRadius(dp(18));
+    bg.setStroke(dp(3), 0xFFFFD700);
+    root.setBackground(bg);
+
+    TextView msg = new TextView(this);
+    msg.setText(gr
+            ? "Άκουσες καθαρά τη φωνή σου από το ακουστικό;"
+            : "Did you hear your voice clearly from the earpiece?");
+    msg.setTextColor(0xFF39FF14);
+    msg.setTextSize(15f);
+    msg.setGravity(Gravity.CENTER);
+    msg.setPadding(0, 0, 0, dp(18));
+    root.addView(msg);
+
+    LinearLayout btnRow = new LinearLayout(this);
+    btnRow.setOrientation(LinearLayout.HORIZONTAL);
+    btnRow.setGravity(Gravity.CENTER);
+
+    Button noBtn = new Button(this);
+    noBtn.setText(gr ? "ΟΧΙ" : "NO");
+    noBtn.setBackgroundColor(0xFF8B0000);
+    noBtn.setTextColor(Color.WHITE);
+
+    Button yesBtn = new Button(this);
+    yesBtn.setText(gr ? "ΝΑΙ" : "YES");
+    yesBtn.setBackgroundColor(0xFF0B5F3B);
+    yesBtn.setTextColor(Color.WHITE);
+
+    btnRow.addView(noBtn);
+    btnRow.addView(yesBtn);
+    root.addView(btnRow);
+
+    b.setView(root);
+
+    AlertDialog d = b.create();
+    if (d.getWindow() != null) {
+        d.getWindow().setBackgroundDrawable(
+                new ColorDrawable(Color.TRANSPARENT)
+        );
+    }
+
+    noBtn.setOnClickListener(v -> {
+        heardClearly.set(false);
+        answered.set(true);
+        d.dismiss();
+    });
+
+    yesBtn.setOnClickListener(v -> {
+        heardClearly.set(true);
+        answered.set(true);
+        d.dismiss();
+    });
+
+    if (!isFinishing() && !isDestroyed()) {
+        d.show();
+    }
+});
+
+// WAIT ANSWER
+long waitAnswer = SystemClock.uptimeMillis() + 10000;
+while (!answered.get() && SystemClock.uptimeMillis() < waitAnswer) {
+    SystemClock.sleep(80);
+}
+
+// ====================================================
+// RESULT LOGGING (USER CONFIRMATION BASED)
+// ====================================================
+appendHtml("<br>");
 logInfo(gr
         ? "LAB 4 PRO — Ποιότητα συνομιλίας (κάτω μικρόφωνο)"
         : "LAB 4 PRO — Call quality (bottom microphone)");
 logLine();
 
-if (r != null && (r.rms > 0 || r.peak > 0)) {
+if (testStarted.get()) {
 
     logLabelOkValue(
             gr ? "Συμπέρασμα" : "Conclusion",
             gr
-                    ? "Η ομιλία ήταν καθαρή. Το κάτω μικρόφωνο αποδίδει σωστά σε τοπικό τεστ συνομιλίας."
-                    : "Speech was clear. The bottom microphone performs correctly in the local call test."
+                    ? "Ο χρήστης επιβεβαίωσε καθαρή ακουστική επανάληψη. Το κάτω μικρόφωνο λειτουργεί σωστά."
+                    : "User confirmed clear acoustic loop. Bottom microphone is functioning properly."
     );
 
     logLabelOkValue(
-        gr ? "Σημείωση" : "Note",
-        gr
-                ? "Αν παρουσιαστούν προβλήματα σε πραγματικές συνομιλίες, "
-                  + "ενδέχεται να οφείλονται στο δίκτυο, στον codec ή "
-                  + "στο μικρόφωνο / ακουστικό της άλλης συσκευής."
-                : "If issues occur during real calls, they may be related to network conditions, "
-                  + "codec selection, or the microphone / earpiece of the other party."
-);
+            gr ? "Σημείωση" : "Note",
+            gr
+                    ? "Αν παρουσιαστούν προβλήματα σε πραγματικές συνομιλίες, "
+                      + "ενδέχεται να σχετίζονται με το δίκτυο, ή codec, η προβλημα στο μικρόφωνο του συνομιλητη"
+                    : "If issues occur during real calls, they may be related to network, or codec, or other's party microphone issue"
+    );
 
 } else {
 
     logLabelWarnValue(
-            gr ? "Συμπέρασμα" : "Conclusion",
-            gr
-                    ? "Η ομιλία δεν ανιχνεύθηκε καθαρά στο τοπικό τεστ — "
-                      + "ισχυρή ένδειξη προβλήματος στο κάτω μικρόφωνο της συσκευής."
-                    : "Speech was not clearly detected in the local test — "
-                      + "strong indication of an issue with the device bottom microphone."
-    );
+        gr ? "Συμπέρασμα" : "Conclusion",
+        gr
+                ? "Η ακουστική επανάληψη, δεν επιβεβαιώθηκε από τον χρήστη."
+                : "Acoustic loop, was not confirmed by the user."
+);
+
+logWarn(
+        gr
+                ? "Σε ορισμένες συσκευές, η συμπεριφορά μπορεί να επηρεάζεται, από τις ρυθμίσεις ήχου, "
+                  + "περιορισμούς firmware, ή αυτόματη καταστολή ηχούς."
+                : "On some devices, behavior may be influenced, by audio settings, "
+                  + "firmware restrictions, or echo cancellation mechanisms."
+);
+
+logOk(
+        gr
+                ? "Συνιστάται επιβεβαίωση μέσω πραγματικής τηλεφωνικής κλήσης."
+                : "Verification via a real phone call is recommended."
+);
 }
 
 logLine();
@@ -4590,13 +4803,14 @@ routeToCallEarpiece();
                                 : "According to the user's declaration, the earpiece audio was not clear."
                 );
 
-                logInfo(
-                        gr
-                                ? "Πιθανές αιτίες: χαμηλή στάθμη έντασης, βουλωμένο ακουστικό, "
-                                + "προστατευτικό οθόνης, θέση συσκευής, ή πραγματική βλάβη ακουστικού."
-                                : "Possible causes: low volume level, obstructed earpiece, "
-                                + "screen protector interference, device position, or actual earpiece hardware issue."
-                );
+                logLabelWarnValue(
+        gr ? "Πιθανές αιτίες" : "Possible causes",
+        gr
+                ? "Χαμηλή στάθμη έντασης, βουλωμένο ακουστικό, "
+                  + "προστατευτικό οθόνης, θέση συσκευής, ή πραγματική βλάβη ακουστικού."
+                : "Low volume level, obstructed earpiece, "
+                  + "screen protector interference, device position, or actual earpiece hardware issue."
+);
             }
 
             logLine();
@@ -4622,13 +4836,14 @@ routeToCallEarpiece();
                             : "LAB 4 PRO did not complete normally."
             );
 
-            logInfo(
-                    gr
-                            ? "Πιθανές αιτίες: διακοπή από τον χρήστη, "
-                            + "πρόβλημα TTS ή προσωρινό θέμα audio routing."
-                            : "Possible causes: user interruption, "
-                            + "TTS issue or temporary audio routing problem."
-            );
+            logLabelWarnValue(
+        gr ? "Πιθανές αιτίες" : "Possible causes",
+        gr
+                ? "Χαμηλή στάθμη έντασης, βουλωμένο ακουστικό, "
+                  + "προστατευτικό οθόνης, θέση συσκευής, ή πραγματική βλάβη ακουστικού."
+                : "Low volume level, obstructed earpiece, "
+                  + "screen protector interference, device position, or actual earpiece hardware issue."
+);
 
             appendHtml("<br>");
             logOk("Lab 4 finished.");
@@ -4846,51 +5061,335 @@ private void showAnswerCheckConfirmation() {
 }
 
 /* ============================================================
-LAB 5 — Vibration Motor Test (AUTO)
-============================================================ */
+   LAB 5 — Vibration Motor Test
+   FULL ENV CHECK + PRO TEST + USER CONFIRM
+   ============================================================ */
 private void lab5Vibration() {
 
-appendHtml("<br>");  
-logLine();  
-logSection("LAB 5 — Vibration Motor Test");  
-logLine();  
+    appendHtml("<br>");
+    logLine();
+    logSection("LAB 5 — Vibration Motor Test");
+    logLine();
 
-try {  
-    Vibrator v;  
+    final boolean gr = AppLang.isGreek(this);
+    final AtomicBoolean userConfirmed = new AtomicBoolean(false);
 
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {  
-        VibratorManager vm =  
-                (VibratorManager) getSystemService(Context.VIBRATOR_MANAGER_SERVICE);  
-        v = (vm != null) ? vm.getDefaultVibrator() : null;  
-    } else {  
-        v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);  
-    }  
+    new Thread(() -> {
 
-    if (v == null || !v.hasVibrator()) {  
-        logError("No vibration motor detected");  
-        return;  
-    }  
+        try {
 
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {  
-        long[] pattern = {0, 300, 150, 300, 150, 450};  
-        int[] amps = {0, 255, 0, 255, 0, 255};  
-        v.vibrate(VibrationEffect.createWaveform(pattern, amps, -1));  
-    } else {  
-        v.vibrate(new long[]{0, 300, 150, 300, 150, 450}, -1);  
-    }  
+            Vibrator vibrator;
 
-    logOk("Vibration pattern executed");  
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                VibratorManager vm =
+                        (VibratorManager) getSystemService(Context.VIBRATOR_MANAGER_SERVICE);
+                vibrator = (vm != null) ? vm.getDefaultVibrator() : null;
+            } else {
+                vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+            }
 
-} catch (Throwable t) {  
-logError("Vibration test failed");
+            if (vibrator == null || !vibrator.hasVibrator()) {
+                logError(gr ? "Δεν εντοπίστηκε μοτέρ δόνησης"
+                            : "No vibration motor detected");
+                return;
+            }
 
+            appendHtml("<br>");
+            logInfo(gr ? "Έλεγχος ρυθμίσεων συστήματος:"
+                       : "System settings check:");
+            logLine();
+
+            // =====================================================
+            // 1️⃣ DND
+            // =====================================================
+            try {
+                NotificationManager nm =
+                        (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+                if (nm != null &&
+                        nm.getCurrentInterruptionFilter()
+                                != NotificationManager.INTERRUPTION_FILTER_ALL) {
+
+                    logLabelWarnValue(
+                            gr ? "Ρύθμιση" : "Setting",
+                            gr ? "Ενεργή λειτουργία Μην Ενοχλείτε."
+                               : "Do Not Disturb mode is active."
+                    );
+                }
+            } catch (Throwable ignore) {}
+
+            // =====================================================
+            // 2️⃣ Battery Saver
+            // =====================================================
+            try {
+                PowerManager pm =
+                        (PowerManager) getSystemService(Context.POWER_SERVICE);
+
+                if (pm != null && pm.isPowerSaveMode()) {
+
+                    logLabelWarnValue(
+                            gr ? "Ρύθμιση" : "Setting",
+                            gr ? "Ενεργή λειτουργία εξοικονόμησης ενέργειας."
+                               : "Battery saver mode is active."
+                    );
+                }
+            } catch (Throwable ignore) {}
+
+            // =====================================================
+            // 3️⃣ Silent Mode
+            // =====================================================
+            try {
+                AudioManager am =
+                        (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+
+                if (am != null &&
+                        am.getRingerMode() == AudioManager.RINGER_MODE_SILENT) {
+
+                    logLabelWarnValue(
+                            gr ? "Ρύθμιση" : "Setting",
+                            gr ? "Η συσκευή βρίσκεται σε αθόρυβη λειτουργία."
+                               : "Device is in Silent mode."
+                    );
+                }
+            } catch (Throwable ignore) {}
+
+            // =====================================================
+            // 4️⃣ Haptic Feedback Enabled
+            // =====================================================
+            try {
+                int haptic = Settings.System.getInt(
+                        getContentResolver(),
+                        Settings.System.HAPTIC_FEEDBACK_ENABLED
+                );
+
+                if (haptic == 0) {
+                    logLabelWarnValue(
+                            gr ? "Ρύθμιση" : "Setting",
+                            gr ? "Η απτική ανάδραση είναι απενεργοποιημένη."
+                               : "Haptic feedback is disabled."
+                    );
+                }
+            } catch (Throwable ignore) {}
+
+            // =====================================================
+            // 5️⃣ Vibrate When Ringing
+            // =====================================================
+            try {
+                int vibrate =
+                        Settings.System.getInt(
+                                getContentResolver(),
+                                "vibrate_when_ringing"
+                        );
+
+                if (vibrate == 0) {
+                    logLabelWarnValue(
+                            gr ? "Ρύθμιση" : "Setting",
+                            gr ? "Η δόνηση κατά την κλήση είναι απενεργοποιημένη."
+                               : "Vibrate on ring is disabled."
+                    );
+                }
+            } catch (Throwable ignore) {}
+
+            logLine();
+
+            // =====================================================
+            // PRO TESTS
+            // =====================================================
+
+            logInfo(gr ? "Συνεχής δόνηση 3 δευτερολέπτων"
+                       : "Continuous vibration 3 seconds");
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                vibrator.vibrate(
+                        VibrationEffect.createOneShot(3000,
+                                VibrationEffect.DEFAULT_AMPLITUDE)
+                );
+            } else {
+                vibrator.vibrate(3000);
+            }
+
+            SystemClock.sleep(3200);
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+                    vibrator.hasAmplitudeControl()) {
+
+                logInfo(gr ? "Έλεγχος έντασης δόνησης"
+                           : "Amplitude variation test");
+
+                vibrator.vibrate(VibrationEffect.createOneShot(800, 80));
+                SystemClock.sleep(900);
+
+                vibrator.vibrate(VibrationEffect.createOneShot(800, 255));
+                SystemClock.sleep(900);
+
+            }
+
+// =====================================================
+// USER CONFIRMATION
+// =====================================================
+
+final AtomicBoolean answered = new AtomicBoolean(false);
+
+runOnUiThread(() -> {
+
+    AlertDialog.Builder b =
+            new AlertDialog.Builder(
+                    this,
+                    android.R.style.Theme_Material_Dialog_NoActionBar
+            );
+    b.setCancelable(false);
+
+    LinearLayout root = new LinearLayout(this);
+    root.setOrientation(LinearLayout.VERTICAL);
+    root.setPadding(dp(26), dp(24), dp(26), dp(22));
+
+    GradientDrawable bg = new GradientDrawable();
+    bg.setColor(0xFF000000);
+    bg.setCornerRadius(dp(18));
+    bg.setStroke(dp(3), 0xFFFFD700);
+    root.setBackground(bg);
+
+    TextView msg = new TextView(this);
+    msg.setText(gr
+            ? "Ένιωσες καθαρά τη δόνηση;"
+            : "Did you clearly feel the vibration?");
+    msg.setTextColor(0xFF39FF14);
+    msg.setTextSize(15f);
+    msg.setGravity(Gravity.CENTER);
+    msg.setPadding(0, 0, 0, dp(18));
+    root.addView(msg);
+
+    // ---------- BUTTON ROW ----------
+    LinearLayout btnRow = new LinearLayout(this);
+    btnRow.setOrientation(LinearLayout.HORIZONTAL);
+    btnRow.setGravity(Gravity.CENTER);
+
+    LinearLayout.LayoutParams btnLp =
+            new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+            );
+    btnLp.setMargins(dp(12), dp(8), dp(12), dp(8));
+
+    // ---------- NO ----------
+    Button noBtn = new Button(this);
+    noBtn.setText(gr ? "ΟΧΙ" : "NO");
+    noBtn.setAllCaps(false);
+    noBtn.setTextColor(Color.WHITE);
+
+    GradientDrawable noBg = new GradientDrawable();
+    noBg.setColor(0xFF8B0000);
+    noBg.setCornerRadius(dp(14));
+    noBg.setStroke(dp(3), 0xFFFFD700);
+    noBtn.setBackground(noBg);
+    noBtn.setLayoutParams(btnLp);
+
+    // ---------- YES ----------
+    Button yesBtn = new Button(this);
+    yesBtn.setText(gr ? "ΝΑΙ" : "YES");
+    yesBtn.setAllCaps(false);
+    yesBtn.setTextColor(Color.WHITE);
+
+    GradientDrawable yesBg = new GradientDrawable();
+    yesBg.setColor(0xFF0B5F3B);
+    yesBg.setCornerRadius(dp(14));
+    yesBg.setStroke(dp(3), 0xFFFFD700);
+    yesBtn.setBackground(yesBg);
+    yesBtn.setLayoutParams(btnLp);
+
+    // ---------- ADD ----------
+    btnRow.addView(noBtn);
+    btnRow.addView(yesBtn);
+    root.addView(btnRow);
+
+    b.setView(root);
+
+    final AlertDialog d = b.create();
+    if (d.getWindow() != null) {
+        d.getWindow().setBackgroundDrawable(
+                new ColorDrawable(Color.TRANSPARENT)
+        );
+    }
+
+    noBtn.setOnClickListener(v -> {
+        userConfirmed.set(false);
+        answered.set(true);
+        d.dismiss();
+    });
+
+    yesBtn.setOnClickListener(v -> {
+        userConfirmed.set(true);
+        answered.set(true);
+        d.dismiss();
+    });
+
+    if (!isFinishing() && !isDestroyed()) {
+        d.show();
+    }
+});
+
+// ==========================
+// WAIT FOR USER RESPONSE
+// ==========================
+long waitUntil = SystemClock.uptimeMillis() + 10000;
+
+while (!answered.get() &&
+        SystemClock.uptimeMillis() < waitUntil) {
+
+    SystemClock.sleep(80);
 }
 
 appendHtml("<br>");
-logOk("Lab 5 finished.");
 logLine();
-enableSingleExportButton();
+
+if (userConfirmed.get()) {
+
+    logLabelOkValue(
+            gr ? "Αποτέλεσμα" : "Result",
+            gr ? "Η δόνηση επιβεβαιώθηκε από τον χρήστη."
+               : "Vibration confirmed by the user."
+    );
+
+} else {
+
+    logLabelWarnValue(
+            gr ? "Αποτέλεσμα" : "Result",
+            gr ? "Η δόνηση δεν επιβεβαιώθηκε από τον χρήστη."
+               : "Vibration was not confirmed by the user."
+    );
+
+    logLabelWarnValue(
+            gr ? "Πιθανές αιτίες" : "Possible causes",
+            gr
+                    ? "Απενεργοποιημένες ρυθμίσεις δόνησης, χαμηλή ένταση απτικής ανάδρασης, "
+                      + "περιορισμός firmware ή πιθανή μηχανική φθορά."
+                    : "Disabled vibration settings, low haptic intensity, "
+                      + "firmware restriction, or possible mechanical wear."
+    );
+
+    logInfo(
+            gr
+                    ? "Συνιστάται επιβεβαίωση μέσω πραγματικής κλήσης ή δοκιμής ειδοποίησης."
+                    : "Verification via a real call or notification test is recommended."
+    );
 }
+
+} catch (Throwable t) {
+
+    logError(gr ? "Η δοκιμή δόνησης απέτυχε"
+                : "Vibration test failed");
+
+} finally {
+
+    appendHtml("<br>");
+    logOk("Lab 5 finished.");
+    logLine();
+
+    runOnUiThread(this::enableSingleExportButton);
+}
+
+}).start();
+} 
 
 // ============================================================
 // LABS 6 — 9: DISPLAY & SENSORS

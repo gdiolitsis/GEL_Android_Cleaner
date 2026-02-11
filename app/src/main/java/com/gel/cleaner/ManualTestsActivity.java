@@ -4306,8 +4306,6 @@ if (bottomOk && topOk) {
 
 } else {
 
-else {
-
     logLabelWarnValue(
             gr ? "Κατάσταση" : "Status",
             gr
@@ -4353,10 +4351,6 @@ private void lab4MicPro() {
     final boolean gr = AppLang.isGreek(this);
 
     new Thread(() -> {
-
-        boolean lab4Success = false;
-        AtomicBoolean cancelled = new AtomicBoolean(false);
-        AtomicReference<AlertDialog> dialogRef = new AtomicReference<>();
 
         try {
 
@@ -4638,7 +4632,7 @@ logInfo(gr
         : "LAB 4 PRO — Call quality (bottom microphone)");
 logLine();
 
-if (testStarted.get()) {
+if (heardClearly.get()) {
 
     logLabelOkValue(
             gr ? "Συμπέρασμα" : "Conclusion",
@@ -4870,7 +4864,6 @@ routeToCallEarpiece();
 }).start();
 }
     
-
 // ============================================================
 // 🎵 PLAY VOICE WAV — AUTO LANGUAGE (EARPIECE ONLY • LOCKED)
 // ============================================================

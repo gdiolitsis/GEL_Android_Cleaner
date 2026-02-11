@@ -300,8 +300,6 @@ private boolean lab3OldMicMute = false;
 
 private volatile boolean lab4HumanFallbackUsed = false;
 
-private static final boolean FORCE_LAB4_FALLBACK = true;
-
 // ============================================================  
 // SERVICE LOG SESSION FLAG (CRITICAL)  
 // ============================================================  
@@ -4282,160 +4280,26 @@ private void lab4MicBase(Runnable onFinished) {
             logLabelOkValue("Top Peak", String.valueOf(topPeak));
 
             topOk = topRms > 0 || topPeak > 0;
-// 🔧 FORCE FALLBACK FOR TESTING
-if (FORCE_LAB4_FALLBACK) {
-    bottomOk = false;
-    topOk = false;
-}
 
 // ====================================================
-// FALLBACK — HUMAN VOICE ONLY (ROUTE MATRIX • UNIVERSAL)
+// AUTO CHECK RESULT — NO HUMAN FALLBACK
 // ====================================================
 if (!bottomOk && !topOk) {
 
-    fallbackUsed = true;
-    lab4HumanFallbackUsed = true;
-    stopBaseHere = true;
-
     appendHtml("<br>");
-    logWarn(gr
-            ? "Δεν ανιχνεύθηκε σήμα. Έλεγχος με ανθρώπινη φωνή."
-            : "No signal detected. Human voice verification.");
-    logLine();
 
-    final String baseText = gr
-            ? "Παρακαλώ, μέτρησε αργά και καθαρά έως το τρία."
-            : "Please count slowly and clearly to three.";
+    logLabelWarnValue(
+        gr ? "Κατάσταση" : "Status",
+        gr
+            ? "Δεν ήταν δυνατή η αυτόματη επιβεβαίωση μικροφώνων σε αυτή τη συσκευή."
+            : "Automatic microphone verification was not possible on this device."
+    );
 
-    final AtomicReference<AlertDialog> ref = new AtomicReference<>();
-    final AtomicBoolean spoke = new AtomicBoolean(false);
-
-    // ====================================================
-    // 1️⃣ POPUP + TTS (IMMEDIATE)
-    // ====================================================
-    runOnUiThread(() -> {
-
-        AlertDialog.Builder b =
-                new AlertDialog.Builder(
-                        this,
-                        android.R.style.Theme_Material_Dialog_NoActionBar
-                );
-        b.setCancelable(false);
-
-        LinearLayout root = new LinearLayout(this);
-        root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(dp(26), dp(24), dp(26), dp(22));
-
-        GradientDrawable bg = new GradientDrawable();
-        bg.setColor(0xFF000000);
-        bg.setCornerRadius(dp(18));
-        bg.setStroke(dp(3), 0xFFFFD700);
-        root.setBackground(bg);
-
-        TextView msg = new TextView(this);
-        msg.setText(baseText);
-        msg.setTextColor(0xFF39FF14);
-        msg.setTextSize(15f);
-        msg.setGravity(Gravity.CENTER);
-        root.addView(msg);
-
-        root.addView(buildMuteRow());
-        b.setView(root);
-
-        AlertDialog d = b.create();
-        if (d.getWindow() != null) {
-            d.getWindow().setBackgroundDrawable(
-                    new ColorDrawable(Color.TRANSPARENT)
-            );
-        }
-
-        ref.set(d);
-        if (!isFinishing() && !isDestroyed()) d.show();
-
-        AppTTS.ensureSpeak(this, baseText);
-    });
-
-    // ====================================================
-    // 2️⃣ AUDIO ROUTE MATRIX + LISTEN
-    // ====================================================
-    AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
-
-    int[] MODES = new int[] {
-            AudioManager.MODE_NORMAL,
-            AudioManager.MODE_IN_COMMUNICATION,
-            AudioManager.MODE_IN_CALL
-    };
-
-    boolean[] SPEAKER = new boolean[] { false, true };
-
-    if (am != null) {
-
-        for (int mode : MODES) {
-            for (boolean speaker : SPEAKER) {
-
-                if (spoke.get()) break;
-
-                try {
-                    am.stopBluetoothSco();
-                    am.setBluetoothScoOn(false);
-                    am.setMicrophoneMute(false);
-                    am.setSpeakerphoneOn(speaker);
-                    am.setMode(mode);
-
-                    logInfo("Route test → mode=" + mode + " speaker=" + speaker);
-
-                    SystemClock.sleep(250);
-                    hardNormalizeAudioForMic();
-
-                    long listenUntil = SystemClock.uptimeMillis() + 3000;
-
-                    while (SystemClock.uptimeMillis() < listenUntil) {
-                        if (detectHumanVoiceAdaptive(gr)) {
-                            spoke.set(true);
-                            break;
-                        }
-                        SystemClock.sleep(120);
-                    }
-
-                } catch (Throwable t) {
-                    logWarn("Route error: " + t.getClass().getSimpleName());
-                }
-            }
-        }
-    }
-
-    // ====================================================
-    // 3️⃣ CLOSE POPUP
-    // ====================================================
-    runOnUiThread(() -> {
-        AlertDialog d = ref.get();
-        if (d != null && d.isShowing()) d.dismiss();
-    });
-
-    // ====================================================
-    // 4️⃣ RESULT
-    // ====================================================
-    if (spoke.get()) {
-
-        bottomOk = true;
-        topOk = true;
-
-        logLabelOkValue(
-                gr ? "Κατάσταση" : "Status",
-                gr
-                        ? "Ανιχνεύθηκε ανθρώπινη φωνή. Τα μικρόφωνα λειτουργούν σωστά."
-                        : "Human voice detected. Microphones are operational."
-        );
-
-    } else {
-
-        logLabelErrorValue(
-                gr ? "Κατάσταση" : "Status",
-                gr
-                        ? "Δεν ανιχνεύθηκε ανθρώπινη φωνή. Ισχυρή ένδειξη βλάβης μικροφώνου."
-                        : "Human voice not detected. Strong indication of microphone hardware damage."
-        );
-    }
+    logInfo(
+        gr
+            ? "Συνιστάται έλεγχος μέσω πραγματικής κλήσης ή hands-free."
+            : "Testing via real call or hands-free is recommended."
+    );
 }
 
             // ====================================================

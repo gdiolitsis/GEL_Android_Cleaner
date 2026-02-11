@@ -4360,13 +4360,13 @@ private void lab4MicPro() {
 // ====================================================
 
 // 🔊 Force call audio path
-AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
-if (am != null) {
-    try { am.stopBluetoothSco(); } catch (Throwable ignore) {}
-    try { am.setBluetoothScoOn(false); } catch (Throwable ignore) {}
-    try { am.setSpeakerphoneOn(false); } catch (Throwable ignore) {}
-    try { am.setMicrophoneMute(false); } catch (Throwable ignore) {}
-    try { am.setMode(AudioManager.MODE_IN_COMMUNICATION); } catch (Throwable ignore) {}
+AudioManager amCall = (AudioManager) getSystemService(AUDIO_SERVICE);
+if (amCall != null) {
+    try { amCall.stopBluetoothSco(); } catch (Throwable ignore) {}
+    try { amCall.setBluetoothScoOn(false); } catch (Throwable ignore) {}
+    try { amCall.setSpeakerphoneOn(false); } catch (Throwable ignore) {}
+    try { amCall.setMicrophoneMute(false); } catch (Throwable ignore) {}
+    try { amCall.setMode(AudioManager.MODE_IN_COMMUNICATION); } catch (Throwable ignore) {}
 }
 
 AtomicBoolean cancelled = new AtomicBoolean(false);
@@ -4840,7 +4840,14 @@ routeToCallEarpiece();
 
             // ABSOLUTE SAFETY
             try { AppTTS.stop(); } catch (Throwable ignore) {}
-            dismiss(dialogRef);
+            try {
+    if (dialogRef != null && dialogRef.get() != null) {
+        AlertDialog d = dialogRef.get();
+        runOnUiThread(() -> {
+            try { d.dismiss(); } catch (Throwable ignore) {}
+        });
+    }
+} catch (Throwable ignore) {}
 
             try {
                 AudioManager amX = (AudioManager) getSystemService(AUDIO_SERVICE);

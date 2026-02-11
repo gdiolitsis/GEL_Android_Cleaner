@@ -4684,9 +4684,9 @@ logLine();
 routeToEarpiecePlayback();
 try {
     AudioManager am2 = (AudioManager) getSystemService(AUDIO_SERVICE);
-    if (am != null) {
-        am.setSpeakerphoneOn(true);
-    }
+if (am2 != null) {
+    try { am2.setSpeakerphoneOn(true); } catch (Throwable ignore) {}
+}
 } catch (Throwable ignore) {}
 
 // ==========================
@@ -4749,11 +4749,6 @@ runOnUiThread(() -> {
 // WAIT (BACKGROUND THREAD)
 // ==========================
 SystemClock.sleep(2200);
-
-// ==========================
-// CLOSE DIALOG
-// ==========================
-dismiss(dialogRef);
 
 // 🔁 Επιστροφή σε call earpiece για συνέχεια LAB
 routeToCallEarpiece();

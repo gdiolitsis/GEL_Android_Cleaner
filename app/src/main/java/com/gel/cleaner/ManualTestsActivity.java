@@ -88,6 +88,7 @@ import android.os.DropBoxManager;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.PowerManager;
 import android.os.StatFs;
 import android.os.SystemClock;
 import android.os.VibrationEffect;
@@ -4682,7 +4683,7 @@ logLine();
 // 🔊 Προσωρινά στον speaker για οδηγία
 routeToEarpiecePlayback();
 try {
-    AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
+    AudioManager am2 = (AudioManager) getSystemService(AUDIO_SERVICE);
     if (am != null) {
         am.setSpeakerphoneOn(true);
     }
@@ -4808,9 +4809,6 @@ routeToCallEarpiece();
             }
 
             logLine();
-
-            // ✅ LAB COMPLETED
-            lab4Success = true;
 
             appendHtml("<br>");
             logOk("Lab 4 finished.");

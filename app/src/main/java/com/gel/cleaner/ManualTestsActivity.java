@@ -4353,7 +4353,7 @@ private void lab4MicPro() {
 
     new Thread(() -> {
 
-        try {
+    try {
 
 // ====================================================
 // STAGE 1 — Bottom microphone HUMAN ACOUSTIC check
@@ -4683,10 +4683,9 @@ logLine();
 // 🔊 Προσωρινά στον speaker για οδηγία
 routeToEarpiecePlayback();
 try {
-    AudioManager am2 = (AudioManager) getSystemService(AUDIO_SERVICE);
-if (am2 != null) {
-    try { am2.setSpeakerphoneOn(true); } catch (Throwable ignore) {}
-}
+    if (amCall != null) {
+        try { amCall.setSpeakerphoneOn(true); } catch (Throwable ignore) {}
+    }
 } catch (Throwable ignore) {}
 
 // ==========================
@@ -4836,30 +4835,31 @@ routeToCallEarpiece();
             logOk("Lab 4 finished.");
             logLine();
 
-        } finally {
+} finally {
 
-            // ABSOLUTE SAFETY
-            try { AppTTS.stop(); } catch (Throwable ignore) {}
-            try {
-    if (dialogRef != null && dialogRef.get() != null) {
+    // ABSOLUTE SAFETY
+    try { AppTTS.stop(); } catch (Throwable ignore) {}
+
+    try {
         AlertDialog d = dialogRef.get();
-        runOnUiThread(() -> {
-            try { d.dismiss(); } catch (Throwable ignore) {}
-        });
-    }
-} catch (Throwable ignore) {}
-
-            try {
-                AudioManager amX = (AudioManager) getSystemService(AUDIO_SERVICE);
-                if (amX != null) {
-                    try { amX.stopBluetoothSco(); } catch (Throwable ignore) {}
-                    try { amX.setBluetoothScoOn(false); } catch (Throwable ignore) {}
-                    try { amX.setMicrophoneMute(false); } catch (Throwable ignore) {}
-                    try { amX.setSpeakerphoneOn(false); } catch (Throwable ignore) {}
-                    try { amX.setMode(AudioManager.MODE_NORMAL); } catch (Throwable ignore) {}
-                }
-            } catch (Throwable ignore) {}
+        if (d != null) {
+            runOnUiThread(() -> {
+                try { d.dismiss(); } catch (Throwable ignore) {}
+            });
         }
+    } catch (Throwable ignore) {}
+
+    try {
+        AudioManager amX = (AudioManager) getSystemService(AUDIO_SERVICE);
+        if (amX != null) {
+            try { amX.stopBluetoothSco(); } catch (Throwable ignore) {}
+            try { amX.setBluetoothScoOn(false); } catch (Throwable ignore) {}
+            try { amX.setMicrophoneMute(false); } catch (Throwable ignore) {}
+            try { amX.setSpeakerphoneOn(false); } catch (Throwable ignore) {}
+            try { amX.setMode(AudioManager.MODE_NORMAL); } catch (Throwable ignore) {}
+        }
+    } catch (Throwable ignore) {}
+}
 
 }).start();
 }

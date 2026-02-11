@@ -4837,27 +4837,19 @@ routeToCallEarpiece();
 
 } finally {
 
-    // ABSOLUTE SAFETY
+    // ABSOLUTE SAFETY — COMPILE SAFE
     try { AppTTS.stop(); } catch (Throwable ignore) {}
 
     try {
-        AlertDialog d = dialogRef.get();
-        if (d != null) {
-            runOnUiThread(() -> {
-                try { d.dismiss(); } catch (Throwable ignore) {}
-            });
+        AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
+        if (am != null) {
+            try { am.stopBluetoothSco(); } catch (Throwable ignore) {}
+            try { am.setBluetoothScoOn(false); } catch (Throwable ignore) {}
+            try { am.setMicrophoneMute(false); } catch (Throwable ignore) {}
+            try { am.setSpeakerphoneOn(false); } catch (Throwable ignore) {}
+            try { am.setMode(AudioManager.MODE_NORMAL); } catch (Throwable ignore) {}
         }
     } catch (Throwable ignore) {}
-
-    try {
-    if (amCall != null) {
-        try { amCall.stopBluetoothSco(); } catch (Throwable ignore) {}
-        try { amCall.setBluetoothScoOn(false); } catch (Throwable ignore) {}
-        try { amCall.setMicrophoneMute(false); } catch (Throwable ignore) {}
-        try { amCall.setSpeakerphoneOn(false); } catch (Throwable ignore) {}
-        try { amCall.setMode(AudioManager.MODE_NORMAL); } catch (Throwable ignore) {}
-    }
-} catch (Throwable ignore) {}
 }
 
 }).start();

@@ -1947,8 +1947,6 @@ if (stabModes != null) {
     }
 }
 
-final boolean gr = AppLang.isGreek(this);
-
 h.stabilization = stab
         ? (gr ? "Υποστηρίζεται ηλεκτρονική σταθεροποίηση (EIS)"
               : "Electronic stabilization (EIS) supported")
@@ -2007,6 +2005,7 @@ if (hasRaw && maxFps >= 60) {
 }
 
 return h;
+}
 
 // ============================================================
 // TELEPHONY SNAPSHOT (SAFE / INFO ONLY)

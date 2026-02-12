@@ -4059,8 +4059,6 @@ private void lab1SpeakerTone() {
 // ------------------------------------------------------------
 if (volumeMuted || bluetoothRouted || wiredRouted) {
 
-    final boolean gr = AppLang.isGreek(this);
-
     logLine();
     logInfo(gr
             ? "Έλεγχος διαδρομής εξόδου ήχου"
@@ -4190,8 +4188,6 @@ SpeakerOutputState state = evaluateSpeakerOutput(r);
 
 if (state == SpeakerOutputState.NO_OUTPUT) {
     
-final boolean gr = AppLang.isGreek(this);
-
     logLine();
     logInfo(gr ? "Αξιολόγηση εξόδου ηχείου"
                : "Speaker output evaluation");
@@ -4234,8 +4230,6 @@ final boolean gr = AppLang.isGreek(this);
 // ------------------------------------------------------------
 // OUTPUT DETECTED — CONFIDENCE IS INFORMATIONAL ONLY
 // ------------------------------------------------------------
-
-final boolean gr = AppLang.isGreek(this);
 
 logLine();
 logInfo(gr ? "Αξιολόγηση εξόδου ηχείου"
@@ -4356,8 +4350,6 @@ tg = new ToneGenerator(AudioManager.STREAM_MUSIC, 90);
 // ----------------------------------------------------
 // MIC FEEDBACK ANALYSIS
 // ----------------------------------------------------
-
-final boolean gr = AppLang.isGreek(this);
 
 // ----------------------------------------------------
 // HARD AUDIO RESET BEFORE MIC CAPTURE (MANDATORY)
@@ -5527,7 +5519,6 @@ private void showAnswerCheckConfirmation() {
         try { am.setSpeakerphoneOn(true); } catch (Throwable ignore) {}
     }
 
-    final boolean gr = AppLang.isGreek(this);
     final AtomicBoolean answered = new AtomicBoolean(false);
 
     runOnUiThread(() -> {

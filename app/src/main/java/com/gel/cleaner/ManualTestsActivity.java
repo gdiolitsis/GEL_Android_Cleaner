@@ -215,45 +215,47 @@ private final Map<String, Integer> lab8CameraLogAnchors = new HashMap<>();
 // LAB 13 — BLUETOOTH RECEIVER (FINAL / AUTHORITATIVE)
 // ============================================================
 private final BroadcastReceiver lab13BtReceiver = new BroadcastReceiver() {
-@Override
-public void onReceive(Context c, Intent i) {
+    @Override
+    public void onReceive(Context c, Intent i) {
 
-    if (!lab13Running && !lab13MonitoringStarted) {
+        if (!lab13Running && !lab13MonitoringStarted) {
 
-        String a = i.getAction();
+            String a = i.getAction();
 
-        if (BluetoothDevice.ACTION_ACL_CONNECTED.equals(a)) {
+            if (BluetoothDevice.ACTION_ACL_CONNECTED.equals(a)) {
 
-            lab13ReceiverSawConnection = true;
-            lab13HadAnyConnection = true;
+                lab13ReceiverSawConnection = true;
+                lab13HadAnyConnection = true;
 
-            final boolean gr = AppLang.isGreek(c);
+                final boolean gr = AppLang.isGreek(c);
 
-            if (lab13StatusText != null) {
-                lab13StatusText.setText(
-                        gr
-                                ? "Συνδέθηκε εξωτερική συσκευή Bluetooth. Εκκίνηση παρακολούθησης..."
-                                : "External Bluetooth device connected. Starting monitor..."
-                );
+                if (lab13StatusText != null) {
+                    lab13StatusText.setText(
+                            gr
+                                    ? "Συνδέθηκε εξωτερική συσκευή Bluetooth. Εκκίνηση παρακολούθησης..."
+                                    : "External Bluetooth device connected. Starting monitor..."
+                    );
+                }
+
+                // 🔊 OPTIONAL TTS (once)
+                if (!lab13WaitTtsPlayed && !AppTTS.isMuted(c)) {
+                    lab13WaitTtsPlayed = true;
+                    AppTTS.ensureSpeak(
+                            c,
+                            gr
+                                    ? "Εντοπίστηκε σύνδεση Bluetooth. Ξεκινά η παρακολούθηση."
+                                    : "Bluetooth connection detected. Monitoring started."
+                    );
+                }
+
+                // 🚀 START MONITOR
+                startLab13Monitor60s();
             }
-
-            // 🔊 OPTIONAL TTS (once)
-            if (!lab13WaitTtsPlayed && !AppTTS.isMuted(c)) {
-                lab13WaitTtsPlayed = true;
-                AppTTS.ensureSpeak(
-                        c,
-                        gr
-                                ? "Εντοπίστηκε σύνδεση Bluetooth. Ξεκινά η παρακολούθηση."
-                                : "Bluetooth connection detected. Monitoring started."
-                );
-            }
-
-            // 🚀 START MONITOR
-            startLab13Monitor60s();
         }
     }
-}
+};
 
+// ✅ Activity field (NOT inside receiver)
 private boolean lab13WaitTtsPlayed = false;
 
 // ============================================================
@@ -263,36 +265,19 @@ private TextToSpeech[] tts = new TextToSpeech[1];
 private boolean[] ttsReady = { false };
 
 // ============================================================
-// GLOBAL TTS PREF
+// GLOBAL TTS PREF — WRAPPER TO AppTTS (SINGLE AUTHORITY)
 // ============================================================
-private static final String PREF_TTS_MUTED = "tts_muted_global";
 
-private boolean ttsMuted = false;
-
-// Καλείται π.χ. στο onCreate / onResume
 private void loadTtsMuted() {
-    if (prefs != null) {
-        ttsMuted = prefs.getBoolean(PREF_TTS_MUTED, false);
-    }
+    // handled centrally by AppTTS
 }
 
 private boolean isTtsMuted() {
-    return ttsMuted;
+    return AppTTS.isMuted(this);
 }
 
 private void setTtsMuted(boolean muted) {
-    ttsMuted = muted;
-
-    if (prefs != null) {
-        prefs.edit()
-                .putBoolean(PREF_TTS_MUTED, muted)
-                .apply();
-    }
-
-    // 🔇 άμεσο κόψιμο ήχου αν γίνει mute
-    if (muted && tts != null && tts[0] != null) {
-        tts[0].stop();
-    }
+    AppTTS.setMuted(this, muted);
 }
 
 // ============================================================
@@ -2858,10 +2843,14 @@ return String.format(Locale.US, "%.1f°C", temp);
 // HTML / LOG SAFE ESCAPE
 // ------------------------------------------------------------
 private String escape(String s) {
-if (s == null) return "";
-return s.replace("&", "&")
-.replace("<", "<")
-.replace(">", ">");
+    if (s == null) return "";
+
+    return s
+            .replace("&", "&amp;")
+            .replace("<", "&lt;")
+            .replace(">", "&gt;")
+            .replace("\"", "&quot;")
+            .replace("'", "&#39;");
 }
 
 // ============================================================
@@ -4127,8 +4116,6 @@ hardNormalizeAudioForMic();
 
 MicDiagnosticEngine.Result r =
         MicDiagnosticEngine.run(this);
-
-final boolean gr = AppLang.isGreek(this);
 
 if (r == null) {
     logLabelErrorValue(

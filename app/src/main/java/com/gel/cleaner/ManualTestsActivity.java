@@ -5304,6 +5304,7 @@ new Handler(Looper.getMainLooper()).postDelayed(() -> {
         );
     }
 }, 400);
+});
 
 // ==========================
 // WAIT (BACKGROUND THREAD)

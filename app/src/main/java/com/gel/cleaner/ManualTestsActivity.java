@@ -6219,6 +6219,8 @@ if (!isFinishing() && !isDestroyed()) {
     d.show();
 }
 
+}  
+
 // ============================================================
 // LAB 8 — Run next camera
 // ============================================================
@@ -6228,6 +6230,7 @@ private void lab8RunNextCamera(
         CameraManager cm,
         Lab8Overall overall
 ) {
+    
 
     // ====================================================
     // ALL CAMERAS DONE  FINAL SUMMARY + VERDICT

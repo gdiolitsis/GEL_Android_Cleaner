@@ -1081,14 +1081,39 @@ private void askUserEarpieceConfirmation() {
         btnRow.addView(yesBtn);
         root.addView(btnRow);
 
-        b.setView(root);
+b.setView(root);
+b.setCancelable(false);
 
-        final AlertDialog d = b.create();
-        if (d.getWindow() != null) {
-            d.getWindow().setBackgroundDrawable(
-                    new ColorDrawable(Color.TRANSPARENT)
-            );
-        }
+final AlertDialog d = b.create();
+
+if (d.getWindow() != null) {
+    d.getWindow().setBackgroundDrawable(
+            new ColorDrawable(Color.TRANSPARENT)
+    );
+}
+
+// Σταμάτα TTS όταν κλείσει με οποιονδήποτε τρόπο
+d.setOnDismissListener(dialog -> {
+    try { AppTTS.stop(); } catch (Throwable ignore) {}
+});
+
+// Κάλυψη back button
+d.setOnKeyListener((dialog, keyCode, event) -> {
+    if (keyCode == KeyEvent.KEYCODE_BACK &&
+        event.getAction() == KeyEvent.ACTION_UP) {
+
+        try { AppTTS.stop(); } catch (Throwable ignore) {}
+        dialog.dismiss();
+        return true;
+    }
+    return false;
+});
+
+dialogRef.set(d);
+
+if (!isFinishing() && !isDestroyed()) {
+    d.show();
+}
 
         // ==========================
         // TTS PROMPT (ONCE)
@@ -1395,10 +1420,38 @@ private AlertDialog buildInfoDialog(
 
     root.addView(exit);
 
-    b.setView(root);
-    AlertDialog d = b.create();
-    dialogRef.set(d);
-    return d;
+b.setView(root);
+b.setCancelable(false);
+
+final AlertDialog d = b.create();
+
+if (d.getWindow() != null) {
+    d.getWindow().setBackgroundDrawable(
+            new ColorDrawable(Color.TRANSPARENT)
+    );
+}
+
+// Σταματά TTS σε ΟΠΟΙΟΔΗΠΟΤΕ κλείσιμο
+d.setOnDismissListener(dialog -> {
+    try { AppTTS.stop(); } catch (Throwable ignore) {}
+});
+
+// Κάλυψη back button
+d.setOnKeyListener((dialog, keyCode, event) -> {
+    if (keyCode == KeyEvent.KEYCODE_BACK &&
+        event.getAction() == KeyEvent.ACTION_UP) {
+
+        try { AppTTS.stop(); } catch (Throwable ignore) {}
+        dialog.dismiss();
+        return true;
+    }
+    return false;
+});
+
+dialogRef.set(d);
+
+if (!isFinishing() && !isDestroyed()) {
+    d.show();
 }
 
 private void forceSpeaker(AudioManager am) {
@@ -3406,19 +3459,38 @@ private void showLab28Popup() {
         // ==========================
         // DIALOG
         // ==========================
-        b.setView(root);
-        AlertDialog d = b.create();
-
-        if (d.getWindow() != null) {
-            d.getWindow().setBackgroundDrawable(
-                    new ColorDrawable(Color.TRANSPARENT)
-            );
-        }
-
-        d.setOnDismissListener(dialog -> AppTTS.stop());
         
-       if (isFinishing() || isDestroyed()) return;
+        b.setView(root);
+b.setCancelable(false);
+
+final AlertDialog d = b.create();
+
+if (d.getWindow() != null) {
+    d.getWindow().setBackgroundDrawable(
+            new ColorDrawable(Color.TRANSPARENT)
+    );
+}
+
+d.setOnDismissListener(dialog -> {
+    try { AppTTS.stop(); } catch (Throwable ignore) {}
+});
+
+d.setOnKeyListener((dialog, keyCode, event) -> {
+    if (keyCode == KeyEvent.KEYCODE_BACK &&
+        event.getAction() == KeyEvent.ACTION_UP) {
+
+        try { AppTTS.stop(); } catch (Throwable ignore) {}
+        dialog.dismiss();
+        return true;
+    }
+    return false;
+});
+
+dialogRef.set(d);
+
+if (!isFinishing() && !isDestroyed()) {
     d.show();
+}
 
         // ==========================
         // SPEAK (ONLY IF NOT MUTED)
@@ -4138,11 +4210,25 @@ root.addView(buildMuteRow());
         root.addView(start);
 
         b.setView(root);
-        AlertDialog d = b.create();
-        
+b.setCancelable(false);
+
+final AlertDialog d = b.create();
+
+if (d.getWindow() != null) {
+    d.getWindow().setBackgroundDrawable(
+            new ColorDrawable(Color.TRANSPARENT)
+    );
+}
+
+// ΣΤΑΜΑΤΑ TTS ΟΠΟΤΕ ΚΛΕΙΣΕΙ (οποιοσδήποτε τρόπος)
+d.setOnDismissListener(dialog -> {
+    try { AppTTS.stop(); } catch (Throwable ignore) {}
+});
+
+// ΚΑΛΥΨΗ BACK
 d.setOnKeyListener((dialog, keyCode, event) -> {
-    if (keyCode == KeyEvent.KEYCODE_BACK
-            && event.getAction() == KeyEvent.ACTION_UP) {
+    if (keyCode == KeyEvent.KEYCODE_BACK &&
+        event.getAction() == KeyEvent.ACTION_UP) {
 
         try { AppTTS.stop(); } catch (Throwable ignore) {}
         dialog.dismiss();
@@ -4151,11 +4237,9 @@ d.setOnKeyListener((dialog, keyCode, event) -> {
     return false;
 });
 
-        if (d.getWindow() != null) {
-            d.getWindow().setBackgroundDrawable(
-                    new ColorDrawable(Color.TRANSPARENT)
-            );
-        }
+if (!isFinishing() && !isDestroyed()) {
+    d.show();
+}
 
         // ------------------------------------------------------------
         // START ACTION
@@ -4397,8 +4481,8 @@ runOnUiThread(() -> {
 
     TextView msg = new TextView(this);
     msg.setText(gr
-            ? "Μίλησε στο κάτω μικρόφωνο και άκου αν η φωνή σου ακούγεται καθαρά από το ακουστικό."
-            : "Speak into the bottom microphone and check if your voice is clearly heard from the earpiece.");
+            ? "Μίλησε στο κάτω μικρόφωνο, και άκου, αν η φωνή σου ακούγεται καθαρά, από το ακουστικό."
+            : "Speak into the bottom microphone, and check, if your voice is clearly heard, from the earpiece.");
     msg.setTextColor(0xFF39FF14);
     msg.setTextSize(15f);
     msg.setGravity(Gravity.CENTER);
@@ -4448,35 +4532,42 @@ runOnUiThread(() -> {
 
     b.setView(root);
 
-    AlertDialog d = b.create();
-    if (d.getWindow() != null) {
-        d.getWindow().setBackgroundDrawable(
-                new ColorDrawable(Color.TRANSPARENT)
-        );
-    }
+final AlertDialog d = b.create();
 
-    dialogRef.set(d);
+if (d.getWindow() != null) {
+    d.getWindow().setBackgroundDrawable(
+            new ColorDrawable(Color.TRANSPARENT)
+    );
+}
 
-    exitBtn.setOnClickListener(v -> {
-        cancelled.set(true);
-        d.dismiss();
-    });
+d.setOnDismissListener(dialog -> {
+    try { AppTTS.stop(); } catch (Throwable ignore) {}
+});
 
-    startBtn.setOnClickListener(v -> {
-        started.set(true);
-        d.dismiss();
-    });
+dialogRef.set(d);
 
-    if (!isFinishing() && !isDestroyed()) {
-        d.show();
-    }
+exitBtn.setOnClickListener(v -> {
+    cancelled.set(true);
+    try { AppTTS.stop(); } catch (Throwable ignore) {}
+    d.dismiss();
+});
+
+startBtn.setOnClickListener(v -> {
+    started.set(true);
+    try { AppTTS.stop(); } catch (Throwable ignore) {}
+    d.dismiss();
+});
+
+if (!isFinishing() && !isDestroyed()) {
+    d.show();
+}
 
     new Handler(Looper.getMainLooper()).postDelayed(() -> {
         AppTTS.ensureSpeak(
                 this,
                 gr
-                        ? "Μίλησε τώρα στο κάτω μικρόφωνο και άκου τη φωνή σου."
-                        : "Speak now into the bottom microphone and listen to your voice."
+                        ? "Μίλησε στο κάτω μικρόφωνο, και άκου, αν η φωνή σου ακούγεται καθαρά, από το ακουστικό."
+            : "Speak into the bottom microphone, and check, if your voice is clearly heard, from the earpiece.");
         );
     }, 500);
 });
@@ -4572,46 +4663,81 @@ runOnUiThread(() -> {
     msg.setTextSize(15f);
     msg.setGravity(Gravity.CENTER);
     msg.setPadding(0, 0, 0, dp(18));
+    
     root.addView(msg);
 
-    LinearLayout btnRow = new LinearLayout(this);
-    btnRow.setOrientation(LinearLayout.HORIZONTAL);
-    btnRow.setGravity(Gravity.CENTER);
+LinearLayout btnRow = new LinearLayout(this);
+btnRow.setOrientation(LinearLayout.HORIZONTAL);
+btnRow.setGravity(Gravity.CENTER);
 
-    Button noBtn = new Button(this);
-    noBtn.setText(gr ? "ΟΧΙ" : "NO");
-    noBtn.setBackgroundColor(0xFF8B0000);
-    noBtn.setTextColor(Color.WHITE);
+    LinearLayout.LayoutParams lp =
+                new LinearLayout.LayoutParams(
+                        ViewGroup.LayoutParams.WRAP_CONTENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT
+                );
+        lp.setMargins(dp(12), dp(8), dp(12), dp(8));
 
-    Button yesBtn = new Button(this);
-    yesBtn.setText(gr ? "ΝΑΙ" : "YES");
-    yesBtn.setBackgroundColor(0xFF0B5F3B);
-    yesBtn.setTextColor(Color.WHITE);
+        Button noBtn = new Button(this);
+        noBtn.setText(gr ? "ΟΧΙ" : "NO");
+        noBtn.setAllCaps(false);
+        noBtn.setTextColor(Color.WHITE);
 
-    btnRow.addView(noBtn);
-    btnRow.addView(yesBtn);
-    root.addView(btnRow);
+        GradientDrawable noBg = new GradientDrawable();
+        noBg.setColor(0xFF8B0000);
+        noBg.setCornerRadius(dp(14));
+        noBg.setStroke(dp(3), 0xFFFFD700);
+        noBtn.setBackground(noBg);
+        noBtn.setLayoutParams(lp);
 
-    b.setView(root);
+        Button yesBtn = new Button(this);
+        yesBtn.setText(gr ? "ΝΑΙ" : "YES");
+        yesBtn.setAllCaps(false);
+        yesBtn.setTextColor(Color.WHITE);
 
-    AlertDialog d = b.create();
-    if (d.getWindow() != null) {
-        d.getWindow().setBackgroundDrawable(
-                new ColorDrawable(Color.TRANSPARENT)
-        );
-    }
+        GradientDrawable yesBg = new GradientDrawable();
+        yesBg.setColor(0xFF0B5F3B);
+        yesBg.setCornerRadius(dp(14));
+        yesBg.setStroke(dp(3), 0xFFFFD700);
+        yesBtn.setBackground(yesBg);
+        yesBtn.setLayoutParams(lp);
+
+        btnRow.addView(noBtn);
+        btnRow.addView(yesBtn);
+        root.addView(btnRow);
+
+        b.setView(root);
+
+final AlertDialog d = b.create();
+
+if (d.getWindow() != null) {
+    d.getWindow().setBackgroundDrawable(
+            new ColorDrawable(Color.TRANSPARENT)
+    );
+}
+
+d.setOnDismissListener(dialog -> {
+    try { AppTTS.stop(); } catch (Throwable ignore) {}
+});
+
+dialogRef.set(d);
+
+if (!isFinishing() && !isDestroyed()) {
+    d.show();
+}
 
     noBtn.setOnClickListener(v -> {
-        heardClearly.set(false);
-        answered.set(true);
-        d.dismiss();
-    });
+    heardClearly.set(false);
+    answered.set(true);
+    try { AppTTS.stop(); } catch (Throwable ignore) {}
+    try { d.dismiss(); } catch (Throwable ignore) {}
+});
 
     yesBtn.setOnClickListener(v -> {
-        heardClearly.set(true);
-        answered.set(true);
-        d.dismiss();
-    });
+    heardClearly.set(true);
+    answered.set(true);
+    try { AppTTS.stop(); } catch (Throwable ignore) {}
+    try { d.dismiss(); } catch (Throwable ignore) {}
+});
 
     if (!isFinishing() && !isDestroyed()) {
         d.show();
@@ -4721,18 +4847,24 @@ runOnUiThread(() -> {
 
     b.setView(root);
 
-    AlertDialog d = b.create();
-    if (d.getWindow() != null) {
-        d.getWindow().setBackgroundDrawable(
-                new ColorDrawable(Color.TRANSPARENT)
-        );
-    }
+final AlertDialog d = b.create();
 
-    dialogRef.set(d);
+if (d.getWindow() != null) {
+    d.getWindow().setBackgroundDrawable(
+            new ColorDrawable(Color.TRANSPARENT)
+    );
+}
 
-    if (!isFinishing() && !isDestroyed()) {
-        d.show();
-    }
+// Σταματά TTS σε κάθε κλείσιμο
+d.setOnDismissListener(dialog -> {
+    try { AppTTS.stop(); } catch (Throwable ignore) {}
+});
+
+dialogRef.set(d);
+
+if (!isFinishing() && !isDestroyed()) {
+    d.show();
+}
 
     // 🔊 TTS ΜΕΤΑ από UI attach (SAFE)
     new Handler(Looper.getMainLooper()).postDelayed(() -> {
@@ -4748,6 +4880,17 @@ runOnUiThread(() -> {
 // WAIT (BACKGROUND THREAD)
 // ==========================
 SystemClock.sleep(2200);
+
+try { AppTTS.stop(); } catch (Throwable ignore) {}
+
+runOnUiThread(() -> {
+    try {
+        AlertDialog d = dialogRef.get();
+        if (d != null && d.isShowing()) {
+            d.dismiss();
+        }
+    } catch (Throwable ignore) {}
+});
 
 // 🔁 Επιστροφή σε call earpiece για συνέχεια LAB
 routeToCallEarpiece();
@@ -4996,25 +5139,40 @@ private void showAnswerCheckConfirmation() {
         root.addView(btnRow);
 
         b.setView(root);
+b.setCancelable(false);
 
-        final AlertDialog d = b.create();
-        if (d.getWindow() != null) {
-            d.getWindow().setBackgroundDrawable(
-                    new ColorDrawable(Color.TRANSPARENT)
-            );
-        }
+final AlertDialog d = b.create();
+
+if (d.getWindow() != null) {
+    d.getWindow().setBackgroundDrawable(
+            new ColorDrawable(Color.TRANSPARENT)
+    );
+}
+
+// Σταματά TTS σε ΟΠΟΙΟΔΗΠΟΤΕ κλείσιμο
+d.setOnDismissListener(dialog -> {
+    try { AppTTS.stop(); } catch (Throwable ignore) {}
+});
+
+dialogRef.set(d);
+
+if (!isFinishing() && !isDestroyed()) {
+    d.show();
+}
 
         noBtn.setOnClickListener(v -> {
-            lastAnswerHeardClearly = false;
-            answered.set(true);
-            d.dismiss();
-        });
+    lastAnswerHeardClearly = false;
+    answered.set(true);
+    try { AppTTS.stop(); } catch (Throwable ignore) {}
+    d.dismiss();
+});
 
         yesBtn.setOnClickListener(v -> {
-            lastAnswerHeardClearly = true;
-            answered.set(true);
-            d.dismiss();
-        });
+    lastAnswerHeardClearly = false;
+    answered.set(true);
+    try { AppTTS.stop(); } catch (Throwable ignore) {}
+    d.dismiss();
+});
 
         if (!isFinishing() && !isDestroyed()) {
             d.show();
@@ -5287,13 +5445,38 @@ runOnUiThread(() -> {
     root.addView(btnRow);
 
     b.setView(root);
+b.setCancelable(false);
 
-    final AlertDialog d = b.create();
-    if (d.getWindow() != null) {
-        d.getWindow().setBackgroundDrawable(
-                new ColorDrawable(Color.TRANSPARENT)
-        );
+final AlertDialog d = b.create();
+
+if (d.getWindow() != null) {
+    d.getWindow().setBackgroundDrawable(
+            new ColorDrawable(Color.TRANSPARENT)
+    );
+}
+
+// ΣΤΑΜΑΤΑ TTS ΟΤΑΝ ΚΛΕΙΣΕΙ (YES / NO / BACK / EXIT)
+d.setOnDismissListener(dialog -> {
+    try { AppTTS.stop(); } catch (Throwable ignore) {}
+});
+
+// ΚΑΛΥΨΗ BACK
+d.setOnKeyListener((dialog, keyCode, event) -> {
+    if (keyCode == KeyEvent.KEYCODE_BACK &&
+        event.getAction() == KeyEvent.ACTION_UP) {
+
+        try { AppTTS.stop(); } catch (Throwable ignore) {}
+        dialog.dismiss();
+        return true;
     }
+    return false;
+});
+
+dialogRef.set(d);
+
+if (!isFinishing() && !isDestroyed()) {
+    d.show();
+}
 
     noBtn.setOnClickListener(v -> {
         userConfirmed.set(false);
@@ -5513,25 +5696,38 @@ root.addView(muteRow);
 root.addView(startBtn);
 
 b.setView(root);
+b.setCancelable(false);
 
-// ---------------------------
-// SHOW + TTS (ΩΜΟ, ΑΜΕΣΟ)
-// ---------------------------
-AlertDialog d = b.create();
+final AlertDialog d = b.create();
+
 if (d.getWindow() != null) {
     d.getWindow().setBackgroundDrawable(
             new ColorDrawable(Color.TRANSPARENT)
     );
 }
 
-d.setOnShowListener(dialog -> {
-    if (!AppTTS.isMuted(this)) {
-        AppTTS.ensureSpeak(this, message);
-    }
+// Σταμάτα TTS όταν κλείσει
+d.setOnDismissListener(dialog -> {
+    try { AppTTS.stop(); } catch (Throwable ignore) {}
 });
 
-if (isFinishing() || isDestroyed()) return;
+// Κάλυψη BACK
+d.setOnKeyListener((dialog, keyCode, event) -> {
+    if (keyCode == KeyEvent.KEYCODE_BACK &&
+        event.getAction() == KeyEvent.ACTION_UP) {
+
+        try { AppTTS.stop(); } catch (Throwable ignore) {}
+        dialog.dismiss();
+        return true;
+    }
+    return false;
+});
+
+dialogRef.set(d);
+
+if (!isFinishing() && !isDestroyed()) {
     d.show();
+}
 
 // ---------------------------
 // ACTION
@@ -5660,15 +5856,38 @@ root.addView(msg);
         root.addView(start);
 
         b.setView(root);
+b.setCancelable(false);
 
-        AlertDialog d = b.create();
-        if (d.getWindow() != null)
-            d.getWindow().setBackgroundDrawable(
-                    new ColorDrawable(Color.TRANSPARENT)
-            );
+final AlertDialog d = b.create();
 
-        if (isFinishing() || isDestroyed()) return;
+if (d.getWindow() != null) {
+    d.getWindow().setBackgroundDrawable(
+            new ColorDrawable(Color.TRANSPARENT)
+    );
+}
+
+// ΣΤΑΜΑΤΑ TTS ΟΠΟΤΕ ΚΛΕΙΣΕΙ
+d.setOnDismissListener(dialog -> {
+    try { AppTTS.stop(); } catch (Throwable ignore) {}
+});
+
+// ΚΑΛΥΨΗ BACK BUTTON
+d.setOnKeyListener((dialog, keyCode, event) -> {
+    if (keyCode == KeyEvent.KEYCODE_BACK &&
+        event.getAction() == KeyEvent.ACTION_UP) {
+
+        try { AppTTS.stop(); } catch (Throwable ignore) {}
+        dialog.dismiss();
+        return true;
+    }
+    return false;
+});
+
+dialogRef.set(d);
+
+if (!isFinishing() && !isDestroyed()) {
     d.show();
+}
 
         // ---------------------------
         // TTS (ONLY IF NOT MUTED)
@@ -5989,26 +6208,30 @@ root.addView(msg);
 
     b.setView(root);
 
-    final AlertDialog d = b.create();
-    if (d.getWindow() != null)
-        d.getWindow().setBackgroundDrawable(
-                new ColorDrawable(Color.TRANSPARENT)
-        );
+final AlertDialog d = b.create();
 
-    d.setOnShowListener(dialog -> {
-        if (!AppTTS.isMuted(this)) {
-            AppTTS.ensureSpeak(this, messageText);
-        }
-    });
+if (d.getWindow() != null) {
+    d.getWindow().setBackgroundDrawable(
+            new ColorDrawable(Color.TRANSPARENT)
+    );
+}
 
-    if (isFinishing() || isDestroyed()) return;
+// STOP TTS όταν κλείσει
+d.setOnDismissListener(dialog -> {
+    try { AppTTS.stop(); } catch (Throwable ignore) {}
+});
+
+// START BUTTON
+start.setOnClickListener(v -> {
+    try { AppTTS.stop(); } catch (Throwable ignore) {}
+    d.dismiss();
+    lab8RunNextCamera(cams, idx, cm, overall);
+});
+
+dialogRef.set(d);
+
+if (!isFinishing() && !isDestroyed()) {
     d.show();
-
-    start.setOnClickListener(v -> {
-        AppTTS.stop();
-        d.dismiss();
-        lab8RunNextCamera(cams, idx, cm, overall);
-    });
 }
 
 // ============================================================
@@ -6317,12 +6540,38 @@ root.addView(hint);
     root.addView(row);
 
     b.setView(root);
-    final AlertDialog d = b.create();
-    if (d.getWindow() != null)
-        d.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        
-    if (isFinishing() || isDestroyed()) return;
+b.setCancelable(false);
+
+final AlertDialog d = b.create();
+
+if (d.getWindow() != null) {
+    d.getWindow().setBackgroundDrawable(
+            new ColorDrawable(Color.TRANSPARENT)
+    );
+}
+
+// Σταμάτα TTS ΟΠΟΤΕ κλείσει
+d.setOnDismissListener(dialog -> {
+    try { AppTTS.stop(); } catch (Throwable ignore) {}
+});
+
+// Κάλυψη BACK button
+d.setOnKeyListener((dialog, keyCode, event) -> {
+    if (keyCode == KeyEvent.KEYCODE_BACK &&
+        event.getAction() == KeyEvent.ACTION_UP) {
+
+        try { AppTTS.stop(); } catch (Throwable ignore) {}
+        dialog.dismiss();
+        return true;
+    }
+    return false;
+});
+
+dialogRef.set(d);
+
+if (!isFinishing() && !isDestroyed()) {
     d.show();
+}
     
 // ---------------------------
 // TTS (ONLY IF NOT MUTED)
@@ -6856,14 +7105,38 @@ root.addView(msg);
         root.addView(buttons);
 
         b.setView(root);
-        b.setCancelable(false);
+b.setCancelable(false);
 
-        AlertDialog d = b.create();
-        if (d.getWindow() != null)
-            d.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-            
-      if (isFinishing() || isDestroyed()) return;
+final AlertDialog d = b.create();
+
+if (d.getWindow() != null) {
+    d.getWindow().setBackgroundDrawable(
+            new ColorDrawable(Color.TRANSPARENT)
+    );
+}
+
+// ΣΤΑΜΑΤΑ TTS ΟΠΟΤΕ ΚΛΕΙΣΕΙ
+d.setOnDismissListener(dialog -> {
+    try { AppTTS.stop(); } catch (Throwable ignore) {}
+});
+
+// ΚΑΛΥΨΗ BACK BUTTON
+d.setOnKeyListener((dialog, keyCode, event) -> {
+    if (keyCode == KeyEvent.KEYCODE_BACK
+            && event.getAction() == KeyEvent.ACTION_UP) {
+
+        try { AppTTS.stop(); } catch (Throwable ignore) {}
+        dialog.dismiss();
+        return true;
+    }
+    return false;
+});
+
+dialogRef.set(d);
+
+if (!isFinishing() && !isDestroyed()) {
     d.show();
+}
         
         yes.setOnClickListener(v -> {
     AppTTS.stop();

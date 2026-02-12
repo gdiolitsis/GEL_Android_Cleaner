@@ -1416,16 +1416,20 @@ if (d.getWindow() != null) {
     );
 }
 
-// Σταματά TTS σε ΟΠΟΙΟΔΗΠΟΤΕ κλείσιμο
+// 🔴 ΣΗΜΑΝΤΙΚΟ — ΔΗΛΩΝΟΥΜΕ ΤΟ DIALOG ΣΤΟ REF
+dialogRef.set(d);
+
+// Stop TTS on ANY dismiss
 d.setOnDismissListener(dialog -> {
     try { AppTTS.stop(); } catch (Throwable ignore) {}
 });
 
-// Κάλυψη back button
+// Back key handling
 d.setOnKeyListener((dialog, keyCode, event) -> {
     if (keyCode == KeyEvent.KEYCODE_BACK &&
         event.getAction() == KeyEvent.ACTION_UP) {
 
+        cancelled.set(true);
         try { AppTTS.stop(); } catch (Throwable ignore) {}
         dialog.dismiss();
         return true;
@@ -1433,14 +1437,11 @@ d.setOnKeyListener((dialog, keyCode, event) -> {
     return false;
 });
 
-dialogRef.set(d);
-
 if (!isFinishing() && !isDestroyed()) {
     d.show();
 }
 
 return d;
-}
 
 private void forceSpeaker(AudioManager am) {
     if (am == null) return;
@@ -3474,8 +3475,6 @@ d.setOnKeyListener((dialog, keyCode, event) -> {
     return false;
 });
 
-dialogRef.set(d);
-
 if (!isFinishing() && !isDestroyed()) {
     d.show();
 }
@@ -4516,6 +4515,7 @@ runOnUiThread(() -> {
     root.addView(btnRow);
 
     b.setView(root);
+b.setCancelable(false);
 
 final AlertDialog d = b.create();
 
@@ -4525,10 +4525,25 @@ if (d.getWindow() != null) {
     );
 }
 
+// STOP TTS on ANY dismiss
 d.setOnDismissListener(dialog -> {
     try { AppTTS.stop(); } catch (Throwable ignore) {}
 });
 
+// BACK key protection
+d.setOnKeyListener((dialog, keyCode, event) -> {
+    if (keyCode == KeyEvent.KEYCODE_BACK &&
+        event.getAction() == KeyEvent.ACTION_UP) {
+
+        cancelled.set(true);
+        try { AppTTS.stop(); } catch (Throwable ignore) {}
+        dialog.dismiss();
+        return true;
+    }
+    return false;
+});
+
+// IMPORTANT (μόνο στο LAB4PRO που έχει dialogRef)
 dialogRef.set(d);
 
 exitBtn.setOnClickListener(v -> {
@@ -4704,8 +4719,6 @@ d.setOnDismissListener(dialog -> {
     try { AppTTS.stop(); } catch (Throwable ignore) {}
 });
 
-dialogRef.set(d);
-
 if (!isFinishing() && !isDestroyed()) {
     d.show();
 }
@@ -4844,8 +4857,6 @@ if (d.getWindow() != null) {
 d.setOnDismissListener(dialog -> {
     try { AppTTS.stop(); } catch (Throwable ignore) {}
 });
-
-dialogRef.set(d);
 
 if (!isFinishing() && !isDestroyed()) {
     d.show();
@@ -5138,8 +5149,6 @@ if (d.getWindow() != null) {
 d.setOnDismissListener(dialog -> {
     try { AppTTS.stop(); } catch (Throwable ignore) {}
 });
-
-dialogRef.set(d);
 
 if (!isFinishing() && !isDestroyed()) {
     d.show();
@@ -5457,8 +5466,6 @@ d.setOnKeyListener((dialog, keyCode, event) -> {
     return false;
 });
 
-dialogRef.set(d);
-
 if (!isFinishing() && !isDestroyed()) {
     d.show();
 }
@@ -5708,8 +5715,6 @@ d.setOnKeyListener((dialog, keyCode, event) -> {
     return false;
 });
 
-dialogRef.set(d);
-
 if (!isFinishing() && !isDestroyed()) {
     d.show();
 }
@@ -5867,8 +5872,6 @@ d.setOnKeyListener((dialog, keyCode, event) -> {
     }
     return false;
 });
-
-dialogRef.set(d);
 
 if (!isFinishing() && !isDestroyed()) {
     d.show();
@@ -6213,8 +6216,6 @@ start.setOnClickListener(v -> {
     lab8RunNextCamera(cams, idx, cm, overall);
 });
 
-dialogRef.set(d);
-
 if (!isFinishing() && !isDestroyed()) {
     d.show();
 }
@@ -6554,8 +6555,6 @@ d.setOnKeyListener((dialog, keyCode, event) -> {
     }
     return false;
 });
-
-dialogRef.set(d);
 
 if (!isFinishing() && !isDestroyed()) {
     d.show();
@@ -7119,8 +7118,6 @@ d.setOnKeyListener((dialog, keyCode, event) -> {
     }
     return false;
 });
-
-dialogRef.set(d);
 
 if (!isFinishing() && !isDestroyed()) {
     d.show();

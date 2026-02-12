@@ -915,13 +915,19 @@ private void initTTS() {
     if (tts[0] != null) return;
 
     tts[0] = new TextToSpeech(this, status -> {
-        if (status == TextToSpeech.SUCCESS) {
 
-            int res = tts[0].setLanguage(Locale.US);
-            if (res == TextToSpeech.LANG_MISSING_DATA ||
-                res == TextToSpeech.LANG_NOT_SUPPORTED) {
+        if (status == TextToSpeech.SUCCESS && tts[0] != null) {
 
-                tts[0].setLanguage(Locale.ENGLISH);
+            Locale locale = AppLang.isGreek(this)
+                    ? new Locale("el", "GR")
+                    : Locale.US;
+
+            int res = tts[0].setLanguage(locale);
+
+            if (res == TextToSpeech.LANG_MISSING_DATA
+                    || res == TextToSpeech.LANG_NOT_SUPPORTED) {
+
+                tts[0].setLanguage(Locale.US);
             }
 
             ttsReady[0] = true;
@@ -4176,10 +4182,7 @@ SpeakerOutputState state = evaluateSpeakerOutput(r);
 
 if (state == SpeakerOutputState.NO_OUTPUT) {
     
-    logLine();
-    logInfo(gr ? "Αξιολόγηση εξόδου ηχείου"
-               : "Speaker output evaluation");
-
+appendHtml("<br>");
     logLabelErrorValue(
             gr ? "Έξοδος ηχείου" : "Speaker output",
             gr ? "Δεν ανιχνεύθηκε ακουστικό σήμα"
@@ -4249,6 +4252,7 @@ if (conf.contains("LOW")) {
 
 } else {
 
+appendHtml("<br>");
     logLabelOkValue(
             gr ? "Έξοδος ηχείου" : "Speaker output",
             gr ? "Ανιχνεύθηκε ακουστικό σήμα"
@@ -4265,6 +4269,7 @@ logInfo(gr ? "LAB 1 - Δοκιμή Τόνου Ηχείου"
            : "LAB 1 - Speaker tone test");
 logLine();
 
+appendHtml("<br>");
 logLabelErrorValue(
 gr ? "Κατάσταση" : "Status",
 gr ? "Αποτυχία"
@@ -4358,6 +4363,8 @@ MicDiagnosticEngine.Result r =
         MicDiagnosticEngine.run(this);
 
 if (r == null) {
+    
+appendHtml("<br>");
     logLabelErrorValue(
             gr ? "Μικρόφωνο" : "Mic",
             gr ? "Δεν καταγράφηκαν δεδομένα" : "No data captured"
@@ -4399,6 +4406,7 @@ if (conf.contains("LOW") || conf.contains("WEAK")
 // ----------------------------------------------------
 if (rms == 0 && peak == 0) {
 
+appendHtml("<br>");
     logLabelErrorValue(
             gr ? "Έξοδος Ηχείου" : "Speaker output",
             gr ? "Δεν ανιχνεύθηκε ακουστικό σήμα"
@@ -4429,6 +4437,7 @@ if (rms == 0 && peak == 0) {
 // ----------------------------------------------------
 if (conf.contains("LOW") || conf.contains("WEAK")) {
 
+appendHtml("<br>");
     logLabelOkValue(
             gr ? "Έξοδος Ηχείου" : "Speaker output",
             gr
@@ -4445,6 +4454,7 @@ if (conf.contains("LOW") || conf.contains("WEAK")) {
 
 } else {
 
+appendHtml("<br>");
     logLabelOkValue(
             gr ? "Έξοδος Ηχείου" : "Speaker output",
             gr
@@ -5044,7 +5054,18 @@ while (!started.get() && !cancelled.get()
     SystemClock.sleep(80);
 }
 
-if (cancelled.get()) return;
+if (cancelled.get()) {
+
+    appendHtml("<br>");
+
+    logWarn(gr
+            ? "LAB 4 PRO — Διακόπηκε από τον χρήστη"
+            : "LAB 4 PRO — Interrupted by user");
+    logLine();
+
+    runOnUiThread(this::enableSingleExportButton);
+    return;
+}
 
 // ==========================
 // LIVE MIC → EARPIECE LOOP (5s)
@@ -5094,10 +5115,11 @@ try { track.stop(); } catch (Throwable ignore) {}
 try { track.release(); } catch (Throwable ignore) {}
 
 // ==========================
-// POPUP 2 — CONFIRMATION
+// POPUP 2 — CONFIRMATION (SAFE VERSION)
 // ==========================
 AtomicBoolean heardClearly = new AtomicBoolean(false);
 AtomicBoolean answered = new AtomicBoolean(false);
+AtomicBoolean cancelled = new AtomicBoolean(false);
 
 runOnUiThread(() -> {
 
@@ -5126,86 +5148,122 @@ runOnUiThread(() -> {
     msg.setTextSize(15f);
     msg.setGravity(Gravity.CENTER);
     msg.setPadding(0, 0, 0, dp(18));
-    
     root.addView(msg);
 
-LinearLayout btnRow = new LinearLayout(this);
-btnRow.setOrientation(LinearLayout.HORIZONTAL);
-btnRow.setGravity(Gravity.CENTER);
+    // ---------- BUTTON ROW ----------
+    LinearLayout btnRow = new LinearLayout(this);
+    btnRow.setOrientation(LinearLayout.HORIZONTAL);
+    btnRow.setGravity(Gravity.CENTER);
 
     LinearLayout.LayoutParams lp =
-                new LinearLayout.LayoutParams(
-                        ViewGroup.LayoutParams.WRAP_CONTENT,
-                        ViewGroup.LayoutParams.WRAP_CONTENT
+            new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+            );
+    lp.setMargins(dp(12), dp(8), dp(12), dp(8));
+
+    Button noBtn = new Button(this);
+    noBtn.setText(gr ? "ΟΧΙ" : "NO");
+    noBtn.setAllCaps(false);
+    noBtn.setTextColor(Color.WHITE);
+
+    GradientDrawable noBg = new GradientDrawable();
+    noBg.setColor(0xFF8B0000);
+    noBg.setCornerRadius(dp(14));
+    noBg.setStroke(dp(3), 0xFFFFD700);
+    noBtn.setBackground(noBg);
+    noBtn.setLayoutParams(lp);
+
+    Button yesBtn = new Button(this);
+    yesBtn.setText(gr ? "ΝΑΙ" : "YES");
+    yesBtn.setAllCaps(false);
+    yesBtn.setTextColor(Color.WHITE);
+
+    GradientDrawable yesBg = new GradientDrawable();
+    yesBg.setColor(0xFF0B5F3B);
+    yesBg.setCornerRadius(dp(14));
+    yesBg.setStroke(dp(3), 0xFFFFD700);
+    yesBtn.setBackground(yesBg);
+    yesBtn.setLayoutParams(lp);
+
+    btnRow.addView(noBtn);
+    btnRow.addView(yesBtn);
+    root.addView(btnRow);
+
+    b.setView(root);
+
+    final AlertDialog d = b.create();
+
+    if (d.getWindow() != null) {
+        d.getWindow().setBackgroundDrawable(
+                new ColorDrawable(Color.TRANSPARENT)
+        );
+    }
+
+    // STOP TTS on any dismiss
+    d.setOnDismissListener(dialog -> {
+        try { AppTTS.stop(); } catch (Throwable ignore) {}
+
+        if (!answered.get()) {
+            cancelled.set(true);
+            answered.set(true);
+        }
+    });
+
+    // BACK protection
+    d.setOnKeyListener((dialog, keyCode, event) -> {
+        if (keyCode == KeyEvent.KEYCODE_BACK &&
+            event.getAction() == KeyEvent.ACTION_UP) {
+
+            cancelled.set(true);
+            answered.set(true);
+
+            try { AppTTS.stop(); } catch (Throwable ignore) {}
+            dialog.dismiss();
+            return true;
+        }
+        return false;
+    });
+
+    if (!isFinishing() && !isDestroyed()) {
+        d.show();
+
+        // 🔊 SAFE TTS after attach
+        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+            if (d.isShowing() && !AppTTS.isMuted(this)) {
+                AppTTS.ensureSpeak(
+                        this,
+                        gr
+                                ? "Άκουσες καθαρά τη φωνή σου από το ακουστικό;"
+                                : "Did you hear your voice clearly from the earpiece?"
                 );
-        lp.setMargins(dp(12), dp(8), dp(12), dp(8));
-
-        Button noBtn = new Button(this);
-        noBtn.setText(gr ? "ΟΧΙ" : "NO");
-        noBtn.setAllCaps(false);
-        noBtn.setTextColor(Color.WHITE);
-
-        GradientDrawable noBg = new GradientDrawable();
-        noBg.setColor(0xFF8B0000);
-        noBg.setCornerRadius(dp(14));
-        noBg.setStroke(dp(3), 0xFFFFD700);
-        noBtn.setBackground(noBg);
-        noBtn.setLayoutParams(lp);
-
-        Button yesBtn = new Button(this);
-        yesBtn.setText(gr ? "ΝΑΙ" : "YES");
-        yesBtn.setAllCaps(false);
-        yesBtn.setTextColor(Color.WHITE);
-
-        GradientDrawable yesBg = new GradientDrawable();
-        yesBg.setColor(0xFF0B5F3B);
-        yesBg.setCornerRadius(dp(14));
-        yesBg.setStroke(dp(3), 0xFFFFD700);
-        yesBtn.setBackground(yesBg);
-        yesBtn.setLayoutParams(lp);
-
-        btnRow.addView(noBtn);
-        btnRow.addView(yesBtn);
-        root.addView(btnRow);
-
-        b.setView(root);
-
-final AlertDialog d = b.create();
-
-if (d.getWindow() != null) {
-    d.getWindow().setBackgroundDrawable(
-            new ColorDrawable(Color.TRANSPARENT)
-    );
-}
-
-d.setOnDismissListener(dialog -> {
-    try { AppTTS.stop(); } catch (Throwable ignore) {}
-});
-
-if (!isFinishing() && !isDestroyed()) {
-    d.show();
-}
+            }
+        }, 400);
+    }
 
     noBtn.setOnClickListener(v -> {
-    heardClearly.set(false);
-    answered.set(true);
-    try { AppTTS.stop(); } catch (Throwable ignore) {}
-    try { d.dismiss(); } catch (Throwable ignore) {}
-});
+        heardClearly.set(false);
+        answered.set(true);
+        try { AppTTS.stop(); } catch (Throwable ignore) {}
+        d.dismiss();
+    });
 
     yesBtn.setOnClickListener(v -> {
-    heardClearly.set(true);
-    answered.set(true);
-    try { AppTTS.stop(); } catch (Throwable ignore) {}
-    try { d.dismiss(); } catch (Throwable ignore) {}
-});
+        heardClearly.set(true);
+        answered.set(true);
+        try { AppTTS.stop(); } catch (Throwable ignore) {}
+        d.dismiss();
+    });
 });
 
-// WAIT ANSWER
-long waitAnswer = SystemClock.uptimeMillis() + 10000;
-while (!answered.get() && SystemClock.uptimeMillis() < waitAnswer) {
+// ==========================
+// WAIT (SAFE — NO DEADLOCK)
+// ==========================
+while (!answered.get() && !cancelled.get()) {
     SystemClock.sleep(80);
 }
+
+if (cancelled.get()) return;
 
 // ====================================================
 // RESULT LOGGING (USER CONFIRMATION BASED)
@@ -5358,7 +5416,7 @@ routeToCallEarpiece();
             // RESULT — EARPIECE
             // ====================================================
             appendHtml("<br>");
-            logInfo(gr ? "LAB 4 PRO — Ποιότητα συνομιλίας ακουστικού" : "LAB 4 PRO — Esrpiece Call quality");
+            logInfo(gr ? "LAB 4 PRO — Ποιότητα συνομιλίας ακουστικού" : "LAB 4 PRO — Earpiece Call quality");
             logLine();
 
             if (lastAnswerHeardClearly) {

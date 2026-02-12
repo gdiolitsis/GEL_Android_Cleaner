@@ -4084,11 +4084,18 @@ if (volumeMuted || bluetoothRouted || wiredRouted) {
     );
 
     appendHtml("<br>");
-    logLabelWarnValue(
-            gr ? "Αποτέλεσμα LAB 1" : "LAB 1 result",
-            gr ? "Μη οριστικό (μπλοκαρισμένη διαδρομή ήχου)"
-               : "Inconclusive (audio path blocked)"
-    );
+logLabelErrorValue(
+        gr ? "Αποτέλεσμα LAB 1" : "LAB 1 result",
+        gr ? "Δεν εντοπίστηκε έξοδος ήχου."
+           : "No acoustic output detected."
+);
+
+logLabelWarnValue(
+        gr ? "Παρατήρηση" : "Note",
+        gr ? "Η διαδρομή ήχου, ενδέχεται να είναι μπλοκαρισμένη, ή εκτός δρομολόγησης."
+           : "Audio path, may be blocked, or not properly routed."
+);
+
     logLine();
     return;
 }
@@ -4179,7 +4186,7 @@ if (state == SpeakerOutputState.NO_OUTPUT) {
                : "No acoustic output detected"
     );
 
-    logLabelWarnValue(
+    logLabelErrorValue(
             gr ? "Διάγνωση" : "Diagnosis",
             gr ? "Η διαδρομή ήχου είναι καθαρή, αλλά δεν καταγράφηκε ήχος από το μικρόφωνο"
                : "Audio path is clear, but no sound was captured by the microphone"
@@ -4198,11 +4205,21 @@ if (state == SpeakerOutputState.NO_OUTPUT) {
     );
 
     appendHtml("<br>");
-    logLabelWarnValue(
-            "LAB 1",
-            gr ? "Μη οριστικό αποτέλεσμα (καμία έξοδος ήχου)"
-               : "Inconclusive (no speaker output)"
-    );
+
+logLabelErrorValue(
+        gr ? "Αποτέλεσμα" : "Result",
+        gr ? "Δεν ανιχνεύθηκε έξοδος ήχου."
+           : "No acoustic output detected."
+);
+
+logLabelWarnValue(
+        gr ? "Παρατήρηση" : "Note",
+        gr
+                ? "Αυτό μπορεί να οφείλεται σε χαμηλή ένταση, ακουστική απομόνωση, "
+                  + "DSP φιλτράρισμα ή πιθανή βλάβη ηχείου."
+                : "This may be caused by low volume level, acoustic isolation, "
+                  + "DSP filtering, or possible speaker hardware issue."
+);
 
     logLine();
     return;
@@ -4212,23 +4229,21 @@ if (state == SpeakerOutputState.NO_OUTPUT) {
 // OUTPUT DETECTED — CONFIDENCE IS INFORMATIONAL ONLY
 // ------------------------------------------------------------
 
-logLine();
-logInfo(gr ? "Αξιολόγηση εξόδου ηχείου"
-           : "Speaker output evaluation");
+appendHtml("<br>");
 
 if (conf.contains("LOW")) {
 
     logLabelOkValue(
             gr ? "Έξοδος ηχείου" : "Speaker output",
-            gr ? "Ανιχνεύθηκε ακουστικό σήμα (ΧΑΜΗΛΗ αξιοπιστία)"
-               : "Acoustic signal detected with LOW confidence"
+            gr ? "Ανιχνεύθηκε ακουστικό σήμα, με χαμηλή αξιοπιστία"
+               : "Acoustic signal detected, with LOW confidence"
     );
 
     logLabelWarnValue(
             gr ? "Σημείωση" : "Note",
-            gr ? "Η χαμηλή αξιοπιστία μπορεί να οφείλεται σε DSP φιλτράρισμα, "
-                 + "ακύρωση θορύβου ή θέση μικροφώνου"
-               : "Low confidence may be caused by DSP filtering, noise cancellation, "
+            gr ? "Η χαμηλή αξιοπιστία μπορεί να οφείλεται, σε DSP φιλτράρισμα, "
+                 + "ακύρωση θορύβου, ή θέση μικροφώνου"
+               : "Low confidence may be caused, by DSP filtering, noise cancellation, "
                  + "microphone placement, or acoustic design"
     );
 
@@ -4240,30 +4255,33 @@ if (conf.contains("LOW")) {
                : "Acoustic signal detected"
     );
 
-    logLabelOkValue(
-            gr ? "Σημείωση" : "Note",
-            gr ? "Το ηχητικό σήμα ανιχνεύθηκε επιτυχώς"
-               : "Speaker signal detected successfully"
-    );
 }
 
 } catch (Throwable t) {
 
-    logLine();
-    logInfo(gr ? "Δοκιμή ηχείου"
-               : "Speaker tone test");
+    appendHtml("<br>");
+logLine();
+logInfo(gr ? "LAB 1 - Δοκιμή Τόνου Ηχείου"
+           : "LAB 1 - Speaker tone test");
+logLine();
 
-    logLabelErrorValue(
-            gr ? "Κατάσταση" : "Status",
-            gr ? "Αποτυχία"
-               : "Failed"
-    );
+logLabelErrorValue(
+gr ? "Κατάσταση" : "Status",
+gr ? "Αποτυχία"
+: "Failed"
+);
 
-    logLabelWarnValue(
-            gr ? "Αιτία" : "Reason",
-            gr ? "Σφάλμα κατά την εκτέλεση της δοκιμής ηχείου"
-               : "Speaker tone test execution error"
-    );
+logLabelWarnValue(
+gr ? "Παρατήρηση" : "Observation",
+gr ? "Η δοκιμή τόνου δεν ολοκληρώθηκε."
+: "The tone test did not complete."
+);
+
+logLabelWarnValue(
+gr ? "Πιθανή αιτία" : "Possible cause",
+gr ? "Αποτυχία δρομολόγησης ήχου ή περιορισμός συστήματος."
+: "Audio routing failure or system-level restriction."
+);
 
 } finally {
 
@@ -4290,9 +4308,8 @@ private void lab2SpeakerSweep() {
     final boolean gr = AppLang.isGreek(this);
 
     appendHtml("<br>");
-    logLine();
-    logSection(
-            gr ? "LAB 2 — Έλεγχος Συχνοτήτων Ηχείου"
+logLine();
+logInfo(gr ? "LAB 2 — Έλεγχος Συχνοτήτων Ηχείου"
                : "LAB 2 — Speaker Frequency Sweep"
     );
     logLine();
@@ -4415,15 +4432,15 @@ if (conf.contains("LOW") || conf.contains("WEAK")) {
     logLabelOkValue(
             gr ? "Έξοδος Ηχείου" : "Speaker output",
             gr
-                    ? "Ανιχνεύθηκε ακουστικό σήμα (χαμηλή βεβαιότητα)"
+                    ? "Ανιχνεύθηκε ακουστικό σήμα με χαμηλή βεβαιότητα"
                     : "Acoustic signal detected with LOW confidence"
     );
 
     logLabelWarnValue(
             gr ? "Σημείωση" : "Note",
             gr
-                    ? "Η χαμηλή βεβαιότητα μπορεί να οφείλεται σε DSP, ακύρωση θορύβου ή θέση μικροφώνου."
-                    : "Low confidence may be caused by DSP filtering, noise cancellation, speaker frequency limits, or microphone placement."
+                    ? "Η χαμηλή βεβαιότητα μπορεί να οφείλεται, σε DSP φιλτράρισμα, ακύρωση θορύβου, περιοσισμό απόκρισης συχνότητας, ή θέση μικροφώνου."
+                    : "Low confidence may be caused, by DSP filtering, noise cancellation, speaker frequency limits, or microphone placement."
     );
 
 } else {
@@ -4485,7 +4502,7 @@ private void lab3EarpieceManual() {
         logError(
                 gr
                         ? "Ο AudioManager δεν είναι διαθέσιμος."
-                        : "AudioManager unavailable."
+                        : "AudioManager is unavailable."
         );
         return;
     }
@@ -4674,8 +4691,15 @@ start.setOnClickListener(v -> {
         } catch (Throwable t) {
 
             logError(gr
-                    ? "Αποτυχία αναπαραγωγής τόνων ακουστικού."
-                    : "Earpiece tone playback failed.");
+        ? "Αποτυχία αναπαραγωγής τόνων ακουστικού."
+        : "Earpiece tone playback failed.");
+
+logLabelWarnValue(
+        gr ? "Πιθανή αιτία" : "Possible cause",
+        gr
+                ? "Αποτυχία δρομολόγησης ήχου, περιορισμός συστήματος, ή μη διαθέσιμη έξοδος ακουστικού."
+                : "Audio routing failure, system-level restriction, or unavailable earpiece output."
+);
 
         } finally {
 
@@ -5188,8 +5212,8 @@ while (!answered.get() && SystemClock.uptimeMillis() < waitAnswer) {
 // ====================================================
 appendHtml("<br>");
 logInfo(gr
-        ? "LAB 4 PRO — Ποιότητα συνομιλίας (κάτω μικρόφωνο)"
-        : "LAB 4 PRO — Call quality (bottom microphone)");
+        ? "LAB 4 PRO — Ποιότητα συνομιλίας κάτω μικροφώνου"
+        : "LAB 4 PRO — Bottom microphone call quality");
 logLine();
 
 if (heardClearly.get()) {
@@ -5334,7 +5358,7 @@ routeToCallEarpiece();
             // RESULT — EARPIECE
             // ====================================================
             appendHtml("<br>");
-            logInfo(gr ? "LAB 4 PRO — Ακουστικό" : "LAB 4 PRO — Earpiece");
+            logInfo(gr ? "LAB 4 PRO — Ποιότητα συνομιλίας ακουστικού" : "LAB 4 PRO — Esrpiece Call quality");
             logLine();
 
             if (lastAnswerHeardClearly) {
@@ -5965,7 +5989,7 @@ if (userConfirmed.get()) {
 
 } else {
 
-    logLabelWarnValue(
+    logLabelErrorValue(
             gr ? "Αποτέλεσμα" : "Result",
             gr ? "Η δόνηση δεν επιβεβαιώθηκε από τον χρήστη."
                : "Vibration was not confirmed by the user."
@@ -5975,7 +5999,7 @@ if (userConfirmed.get()) {
             gr ? "Πιθανές αιτίες" : "Possible causes",
             gr
                     ? "Απενεργοποιημένες ρυθμίσεις δόνησης, χαμηλή ένταση απτικής ανάδρασης, "
-                      + "περιορισμός firmware ή πιθανή μηχανική φθορά."
+                      + "περιορισμός firmware, ή πιθανή μηχανική φθορά."
                     : "Disabled vibration settings, low haptic intensity, "
                       + "firmware restriction, or possible mechanical wear."
     );
@@ -5990,7 +6014,14 @@ if (userConfirmed.get()) {
 } catch (Throwable t) {
 
     logError(gr ? "Η δοκιμή δόνησης απέτυχε"
-                : "Vibration test failed");
+            : "Vibration test failed");
+
+logLabelWarnValue(
+        gr ? "Πιθανή αιτία" : "Possible cause",
+        gr
+                ? "Απενεργοποιημένη δόνηση, περιορισμός συστήματος, ή βλάβη μηχανισμού δόνησης."
+                : "Vibration disabled, system restriction, or vibration motor malfunction."
+);
 
 } finally {
 

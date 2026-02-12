@@ -5271,7 +5271,7 @@ runOnUiThread(() -> {
 
     TextView msg = new TextView(this);
     msg.setText(gr
-            ? "(Βάλε το ακουστικό στο )αυτί σου."
+            ? "Βάλε το ακουστικό στο αυτί σου."
             : "Place the earpiece on your ear.");
     msg.setTextColor(0xFF39FF14);
     msg.setTextSize(15f);
@@ -5290,24 +5290,20 @@ if (d.getWindow() != null) {
     );
 }
 
-// Σταματά TTS σε κάθε κλείσιμο
-d.setOnDismissListener(dialog -> {
-    try { AppTTS.stop(); } catch (Throwable ignore) {}
-});
-
 if (!isFinishing() && !isDestroyed()) {
     d.show();
 }
 
-    // 🔊 TTS ΜΕΤΑ από UI attach (SAFE)
-    new Handler(Looper.getMainLooper()).postDelayed(() -> {
+// 🔊 TTS ΜΕΤΑ από UI attach (SAFE + RESPECT MUTE)
+new Handler(Looper.getMainLooper()).postDelayed(() -> {
+    if (d.isShowing() && !AppTTS.isMuted(this)) {
         AppTTS.ensureSpeak(
                 this,
                 gr ? "Βάλε το ακουστικό στο αυτί σου."
                    : "Place the earpiece on your ear."
         );
-    }, 400); // ⭐ sweet spot
-});
+    }
+}, 400);
 
 // ==========================
 // WAIT (BACKGROUND THREAD)

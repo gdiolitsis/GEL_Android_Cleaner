@@ -1264,8 +1264,6 @@ yesBtn.setOnClickListener(v -> {
 
     lab3WaitingUser = false;
 
-    final boolean gr = AppLang.isGreek(this);
-
     logLabelOkValue(
             gr ? "LAB 3 — Ακουστικό" : "LAB 3 — Earpiece",
             gr
@@ -1289,8 +1287,6 @@ noBtn.setOnClickListener(v -> {
     try { AppTTS.stop(); } catch (Throwable ignore) {}
 
     lab3WaitingUser = false;
-
-    final boolean gr = AppLang.isGreek(this);
 
     logLabelErrorValue(
             gr ? "LAB 3 — Ακουστικό" : "LAB 3 — Earpiece",

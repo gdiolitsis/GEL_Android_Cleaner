@@ -5838,6 +5838,11 @@ runOnUiThread(() -> {
     msg.setPadding(0, 0, 0, dp(18));
     root.addView(msg);
 
+    // ---------------------------
+    // MUTE ROW (HELPER)
+    // ---------------------------
+    root.addView(buildMuteRow());
+
     // ---------- BUTTON ROW ----------
     LinearLayout btnRow = new LinearLayout(this);
     btnRow.setOrientation(LinearLayout.HORIZONTAL);
@@ -5876,42 +5881,54 @@ runOnUiThread(() -> {
     yesBtn.setBackground(yesBg);
     yesBtn.setLayoutParams(btnLp);
 
-    // ---------- ADD ----------
     btnRow.addView(noBtn);
     btnRow.addView(yesBtn);
     root.addView(btnRow);
 
     b.setView(root);
-b.setCancelable(false);
 
-final AlertDialog d = b.create();
+    final AlertDialog d = b.create();
 
-if (d.getWindow() != null) {
-    d.getWindow().setBackgroundDrawable(
-            new ColorDrawable(Color.TRANSPARENT)
-    );
-}
-
-// ΣΤΑΜΑΤΑ TTS ΟΤΑΝ ΚΛΕΙΣΕΙ (YES / NO / BACK / EXIT)
-d.setOnDismissListener(dialog -> {
-    try { AppTTS.stop(); } catch (Throwable ignore) {}
-});
-
-// ΚΑΛΥΨΗ BACK
-d.setOnKeyListener((dialog, keyCode, event) -> {
-    if (keyCode == KeyEvent.KEYCODE_BACK &&
-        event.getAction() == KeyEvent.ACTION_UP) {
-
-        try { AppTTS.stop(); } catch (Throwable ignore) {}
-        dialog.dismiss();
-        return true;
+    if (d.getWindow() != null) {
+        d.getWindow().setBackgroundDrawable(
+                new ColorDrawable(Color.TRANSPARENT)
+        );
     }
-    return false;
-});
 
-if (!isFinishing() && !isDestroyed()) {
-    d.show();
-}
+    // STOP TTS on ANY dismiss
+    d.setOnDismissListener(dialog -> {
+        try { AppTTS.stop(); } catch (Throwable ignore) {}
+    });
+
+    // BACK protection
+    d.setOnKeyListener((dialog, keyCode, event) -> {
+        if (keyCode == KeyEvent.KEYCODE_BACK &&
+                event.getAction() == KeyEvent.ACTION_UP) {
+
+            try { AppTTS.stop(); } catch (Throwable ignore) {}
+            dialog.dismiss();
+            return true;
+        }
+        return false;
+    });
+
+    if (!isFinishing() && !isDestroyed()) {
+        d.show();
+    }
+
+    // ---------------------------
+    // TTS (SAFE + RESPECT MUTE)
+    // ---------------------------
+    new Handler(Looper.getMainLooper()).postDelayed(() -> {
+        if (d.isShowing() && !AppTTS.isMuted(this)) {
+            AppTTS.ensureSpeak(
+                    this,
+                    gr
+                            ? "Ένιωσες καθαρά τη δόνηση;"
+                            : "Did you clearly feel the vibration?"
+            );
+        }
+    }, 400);
 
     noBtn.setOnClickListener(v -> {
         userConfirmed.set(false);
@@ -5966,7 +5983,7 @@ if (userConfirmed.get()) {
                       + "firmware restriction, or possible mechanical wear."
     );
 
-    logInfo(
+    logOk(
             gr
                     ? "Συνιστάται επιβεβαίωση μέσω πραγματικής κλήσης ή δοκιμής ειδοποίησης."
                     : "Verification via a real call or notification test is recommended."

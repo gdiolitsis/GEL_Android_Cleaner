@@ -215,30 +215,44 @@ private final Map<String, Integer> lab8CameraLogAnchors = new HashMap<>();
 // LAB 13 — BLUETOOTH RECEIVER (FINAL / AUTHORITATIVE)
 // ============================================================
 private final BroadcastReceiver lab13BtReceiver = new BroadcastReceiver() {
-    @Override
-    public void onReceive(Context c, Intent i) {
+@Override
+public void onReceive(Context c, Intent i) {
 
-        if (!lab13Running && !lab13MonitoringStarted) {
+    if (!lab13Running && !lab13MonitoringStarted) {
 
-            String a = i.getAction();
+        String a = i.getAction();
 
-            if (BluetoothDevice.ACTION_ACL_CONNECTED.equals(a)) {
+        if (BluetoothDevice.ACTION_ACL_CONNECTED.equals(a)) {
 
-                lab13ReceiverSawConnection = true;
-                lab13HadAnyConnection = true;
+            lab13ReceiverSawConnection = true;
+            lab13HadAnyConnection = true;
 
-                if (lab13StatusText != null) {
-                    lab13StatusText.setText(
-                        "External Bluetooth device connected. Starting monitor..."
-                    );
-                }
+            final boolean gr = AppLang.isGreek(c);
 
-                //  CRITICAL: start monitor NOW
-                startLab13Monitor60s();
+            if (lab13StatusText != null) {
+                lab13StatusText.setText(
+                        gr
+                                ? "Συνδέθηκε εξωτερική συσκευή Bluetooth. Εκκίνηση παρακολούθησης..."
+                                : "External Bluetooth device connected. Starting monitor..."
+                );
             }
+
+            // 🔊 OPTIONAL TTS (once)
+            if (!lab13WaitTtsPlayed && !AppTTS.isMuted(c)) {
+                lab13WaitTtsPlayed = true;
+                AppTTS.ensureSpeak(
+                        c,
+                        gr
+                                ? "Εντοπίστηκε σύνδεση Bluetooth. Ξεκινά η παρακολούθηση."
+                                : "Bluetooth connection detected. Monitoring started."
+                );
+            }
+
+            // 🚀 START MONITOR
+            startLab13Monitor60s();
         }
     }
-};
+}
 
 private boolean lab13WaitTtsPlayed = false;
 
@@ -568,6 +582,8 @@ protected void onCreate(@Nullable Bundle savedInstanceState) {
     lab14DotsView.setPadding(0, dp(6), 0, dp(10));
     lab14DotsView.setGravity(Gravity.CENTER_HORIZONTAL);
     root.addView(lab14DotsView);
+    
+final boolean gr = AppLang.isGreek(this);
 
     // ============================================================  
     // SECTION 1: AUDIO & VIBRATION — LABS 1-5  
@@ -577,11 +593,30 @@ protected void onCreate(@Nullable Bundle savedInstanceState) {
     root.addView(header1);  
     root.addView(body1);  
 
-    body1.addView(makeTestButton("1. Speaker Tone Test", this::lab1SpeakerTone));  
-    body1.addView(makeTestButton("2. Speaker Frequency Sweep Test", this::lab2SpeakerSweep));  
-    body1.addView(makeTestButton("3. Earpiece Call Check", this::lab3EarpieceManual));  
-    body1.addView(makeTestButton("4. Microphone / esrpiarpiece call quality  Check", this::lab4MicManual));  
-    body1.addView(makeTestButton("5. Vibration Motor Test", this::lab5Vibration));  
+    body1.addView(makeTestButton(
+        gr ? "1. Δοκιμή Τόνου Ηχείου"
+           : "1. Speaker Tone Test",
+        this::lab1SpeakerTone));
+
+body1.addView(makeTestButton(
+        gr ? "2. Έλεγχος Συχνοτήτων Ηχείου"
+           : "2. Speaker Frequency Sweep Test",
+        this::lab2SpeakerSweep));
+
+body1.addView(makeTestButton(
+        gr ? "3. Έλεγχος Ακουστικού Κλήσης"
+           : "3. Earpiece Call Check",
+        this::lab3EarpieceManual));
+
+body1.addView(makeTestButton(
+        gr ? "4. Έλεγχος Ποιότητας Κλήσης Μικροφώνου / Ακουστικού"
+           : "4. Microphone / Earpiece Call Quality Check",
+        this::lab4MicManual));
+
+body1.addView(makeTestButton(
+        gr ? "5. Δοκιμή Δόνησης"
+           : "5. Vibration Motor Test",
+        this::lab5Vibration));
 
     // ============================================================  
     // SECTION 2: DISPLAY & SENSORS — LABS 6 - 9  
@@ -591,10 +626,25 @@ protected void onCreate(@Nullable Bundle savedInstanceState) {
     root.addView(header2);  
     root.addView(body2);  
 
-    body2.addView(makeTestButton("6. Display / Touch Basic Inspection", this::lab6DisplayTouch));  
-    body2.addView(makeTestButton("7. Rotation & Proximity Sensors Check",this::lab7RotationAndProximityManual));
-    body2.addView(makeTestButton("8. Camera Hardware & Preview Path Check",this::lab8CameraHardwareCheck));
-    body2.addView(makeTestButton("9. Sensors Check", this::lab9SensorsCheck));  
+    body2.addView(makeTestButton(
+        gr ? "6. Έλεγχος Οθόνης / Αφής"
+           : "6. Display / Touch Inspection",
+        this::lab6DisplayTouch));
+
+body2.addView(makeTestButton(
+        gr ? "7. Ελεγχος Περιστροφής & Αισθητήρα Εγγύτητας"
+           : "7. Rotation & Proximity Sensors Check",
+        this::lab7RotationAndProximityManual));
+
+body2.addView(makeTestButton(
+        gr ? "8. Ελεγχος Hardware Καμερας & Preview Path"
+           : "8. Camera Hardware & Preview Path Check",
+        this::lab8CameraHardwareCheck));
+
+body2.addView(makeTestButton(
+        gr ? "9. Έλεγχος Αισθητήρων"
+           : "9. Sensors Check",
+        this::lab9SensorsCheck));
 
     // ============================================================  
     // SECTION 3: WIRELESS & CONNECTIVITY — LABS 10 - 13  
@@ -604,10 +654,25 @@ protected void onCreate(@Nullable Bundle savedInstanceState) {
     root.addView(header3);  
     root.addView(body3);  
 
-    body3.addView(makeTestButton("10. Wi-Fi Connection Check", this::lab10WifiConnectivityCheck));  
-    body3.addView(makeTestButton("11. Mobile Network Diagnostic", this::lab11MobileDataDiagnostic));  
-    body3.addView(makeTestButton("12. Call Function Interpretation", this::lab12CallFunctionInterpretation));  
-    body3.addView(makeTestButton("13. Bluetooth Connectivity Check",this::lab13BluetoothConnectivityCheck));
+    body3.addView(makeTestButton(
+        gr ? "10. Έλεγχος Wi-Fi"
+           : "10. Wi-Fi Connection Check",
+        this::lab10WifiConnectivityCheck));
+
+body3.addView(makeTestButton(
+        gr ? "11. Διάγνωση Δικτύου Κινητού"
+           : "11. Mobile Network Diagnostic",
+        this::lab11MobileDataDiagnostic));
+
+body3.addView(makeTestButton(
+        gr ? "12. Ανάλυση Τηλεφωνικής Λειτουργίας"
+           : "12. Telephony Function Analysis",
+        this::lab12CallFunctionInterpretation));
+
+body3.addView(makeTestButton(
+        gr ? "13. Έλεγχος Σύνδεσης Bluetooth"
+           : "13. Bluetooth Connectivity Check",
+        this::lab13BluetoothConnectivityCheck));
     
     // ============================================================  
     // SECTION 4: BATTERY & THERMAL — LABS 14 - 17  
@@ -617,11 +682,29 @@ protected void onCreate(@Nullable Bundle savedInstanceState) {
     root.addView(header4);  
     root.addView(body4);  
 
-    body4.addView(makeTestButtonRedGold("14. Battery Health Stress Test",  
-    () -> showLab14PreTestAdvisory(this::lab14BatteryHealthStressTest)));    
-    body4.addView(makeTestButton("15. Charging System Diagnostic (Smart)", this::lab15ChargingSystemSmart));  
-    body4.addView(makeTestButton("16. Thermal Snapshot", this::lab16ThermalSnapshot));  
-    body4.addView(makeTestButtonGreenGold("17. Intelligent System Health Analysis",this::lab17RunAuto));  
+    body4.addView(makeTestButtonRedGold(
+        gr ? "14. Δοκιμή Καταπόνησης Υγείας Μπαταρίας"
+           : "14. Battery Health Stress Test",
+        () -> showLab14PreTestAdvisory(this::lab14BatteryHealthStressTest)
+));
+
+body4.addView(makeTestButton(
+        gr ? "15. Διαγνωστικός Έλεγχος Συστήματος Φόρτισης (Smart)"
+           : "15. Charging System Diagnostic (Smart)",
+        this::lab15ChargingSystemSmart
+));
+
+body4.addView(makeTestButton(
+        gr ? "16. Στιγμιότυπο Θερμικών Αισθητήρων"
+           : "16. Thermal Sensors Snapshot",
+        this::lab16ThermalSnapshot
+));
+
+body4.addView(makeTestButtonGreenGold(
+        gr ? "17. Ευφυής Ανάλυση Υγείας Συστήματος"
+           : "17. Intelligent System Health Analysis",
+        this::lab17RunAuto
+));
 
     // ============================================================  
     // SECTION 5: STORAGE & PERFORMANCE — LABS 18 - 20  
@@ -631,10 +714,21 @@ protected void onCreate(@Nullable Bundle savedInstanceState) {
     root.addView(header5);  
     root.addView(body5);  
       
-    body5.addView(makeTestButton("18. Storage Health Inspection", this::lab18StorageSnapshot));  
-    body5.addView(makeTestButton("19. Memory Pressure & Stability Analysis", this::lab19RamSnapshot));  
-    body5.addView(makeTestButton("20. Uptime & Reboot Pattern Analysis", this::lab20UptimeHints));  
+    body5.addView(makeTestButton(
+        gr ? "18. Έλεγχος Υγείας Αποθηκευτικού Χώρου"
+           : "18. Storage Health Inspection",
+        this::lab18StorageSnapshot));
 
+body5.addView(makeTestButton(
+        gr ? "19. Ανάλυση Πίεσης Μνήμης & Σταθερότητας"
+           : "19. Memory Pressure & Stability Analysis",
+        this::lab19RamSnapshot));
+
+body5.addView(makeTestButton(
+        gr ? "20. Ανάλυση Uptime & Προτύπων Επανεκκίνησης"
+           : "20. Uptime & Reboot Pattern Analysis",
+        this::lab20UptimeHints)); 
+ 
     // ============================================================  
     // SECTION 6: SECURITY & SYSTEM HEALTH — LABS 21 - 24  
     // ============================================================  
@@ -643,10 +737,25 @@ protected void onCreate(@Nullable Bundle savedInstanceState) {
     root.addView(header6);  
     root.addView(body6);  
 
-    body6.addView(makeTestButton("21. Screen Lock / Biometrics", this::lab21ScreenLock));  
-    body6.addView(makeTestButton("22. Security Patch Check", this::lab22SecurityPatchManual));  
-    body6.addView(makeTestButton("23. Developer Options Risk", this::lab23DevOptions));  
-    body6.addView(makeTestButton("24. Root / Bootloader Suspicion", this::lab24RootSuspicion));  
+    body6.addView(makeTestButton(
+        gr ? "21. Κλείδωμα Οθόνης / Βιομετρικά"
+           : "21. Screen Lock / Biometrics",
+        this::lab21ScreenLock));
+
+body6.addView(makeTestButton(
+        gr ? "22. Έλεγχος Ενημέρωσης Ασφαλείας"
+           : "22. Security Patch Check",
+        this::lab22SecurityPatchManual));
+
+body6.addView(makeTestButton(
+        gr ? "23. Κίνδυνος από Επιλογές Προγραμματιστή"
+           : "23. Developer Options Risk",
+        this::lab23DevOptions));
+
+body6.addView(makeTestButton(
+        gr ? "24. Ένδειξη Root / Ξεκλείδωτου Bootloader"
+           : "24. Root / Bootloader Suspicion",
+        this::lab24RootSuspicion));
 
     // ============================================================  
     // SECTION 7: ADVANCED / LOGS — LABS 25 - 30 
@@ -656,13 +765,35 @@ protected void onCreate(@Nullable Bundle savedInstanceState) {
     root.addView(header7);  
     root.addView(body7);  
 
-        body7.addView(makeTestButton("25. Crash / Freeze History", this::lab25CrashHistory));
-        body7.addView(makeTestButton("26. Installed Applications Impact Analysis", this::lab26AppsFootprint));
-        body7.addView(makeTestButton("27. App Permissions & Privacy", this::lab27PermissionsPrivacy));
-        body7.addView(makeTestButton("28. Hardware Stability & Interconnect Integrity\nSolder / Contact Suspicion (SYMPTOM-BASED)",this::lab28HardwareStability));
-        body7.addView(makeTestButton("29. DEVICE SCORES Summary", this::lab28CombineFindings));
-        body7.addView(makeTestButton("30. FINAL TECH SUMMARY", this::lab29FinalSummary));
+        body7.addView(makeTestButton(
+        gr ? "25. Ιστορικό Κρασαρισμάτων / Παγώματος"
+           : "25. Crash / Freeze History",
+        this::lab25CrashHistory));
 
+body7.addView(makeTestButton(
+        gr ? "26. Ανάλυση Επιπτώσεων Εγκατεστημένων Εφαρμογών"
+           : "26. Installed Applications Impact Analysis",
+        this::lab26AppsFootprint));
+
+body7.addView(makeTestButton(
+        gr ? "27. Δικαιώματα Εφαρμογών & Απόρρητο"
+           : "27. App Permissions & Privacy",
+        this::lab27PermissionsPrivacy));
+
+body7.addView(makeTestButton(
+        gr ? "28. Σταθερότητα Υλικού & Ακεραιότητα Διασυνδέσεων\nΥποψία Κόλλησης / Επαφής (Βάσει Συμπτωμάτων)"
+           : "28. Hardware Stability & Interconnect Integrity\nSolder / Contact Suspicion (SYMPTOM-BASED)",
+        this::lab28HardwareStability));
+
+body7.addView(makeTestButton(
+        gr ? "29. Σύνοψη Βαθμολογιών Συσκευής"
+           : "29. DEVICE SCORES Summary",
+        this::lab28CombineFindings));
+
+body7.addView(makeTestButton(
+        gr ? "30. Τελική Τεχνική Αναφορά"
+           : "30. FINAL TECH SUMMARY",
+        this::lab29FinalSummary));
 
     // ============================================================  
     // LOG AREA  
@@ -709,13 +840,23 @@ root.addView(btnExport);
 
 if (!serviceLogInit) {
 
-GELServiceLog.section("Android Manual Tests — Hardware Diagnostics");  
+    final boolean gr = AppLang.isGreek(this);
 
-logLine();  
-logInfo(getString(R.string.manual_log_desc));  
+    GELServiceLog.section(
+            gr
+                    ? "Χειροκίνητοι Έλεγχοι Android — Διαγνωστικά Υλικού"
+                    : "Android Manual Tests — Hardware Diagnostics"
+    );
 
-serviceLogInit = true;
+    logLine();
 
+    logInfo(
+            gr
+                    ? "Έναρξη χειροκίνητων διαγνωστικών ελέγχων συσκευής."
+                    : getString(R.string.manual_log_desc)
+    );
+
+    serviceLogInit = true;
 }
 
 }  // onCreate ENDS HERE
@@ -1140,9 +1281,13 @@ yesBtn.setOnClickListener(v -> {
 
     lab3WaitingUser = false;
 
+    final boolean gr = AppLang.isGreek(this);
+
     logLabelOkValue(
-            "LAB 3 — Earpiece",
-            "User confirmed audio playback"
+            gr ? "LAB 3 — Ακουστικό" : "LAB 3 — Earpiece",
+            gr
+                    ? "Ο χρήστης επιβεβαίωσε καθαρή αναπαραγωγή ήχου"
+                    : "User confirmed audio playback"
     );
 
     appendHtml("<br>");
@@ -1162,14 +1307,20 @@ noBtn.setOnClickListener(v -> {
 
     lab3WaitingUser = false;
 
+    final boolean gr = AppLang.isGreek(this);
+
     logLabelErrorValue(
-            "LAB 3 — Earpiece",
-            "User did NOT hear tones"
+            gr ? "LAB 3 — Ακουστικό" : "LAB 3 — Earpiece",
+            gr
+                    ? "Ο χρήστης ΔΕΝ άκουσε τους ήχους"
+                    : "User did NOT hear tones"
     );
 
     logLabelWarnValue(
-            "Possible issue",
-            "Earpiece failure or audio routing problem"
+            gr ? "Πιθανό πρόβλημα" : "Possible issue",
+            gr
+                    ? "Πιθανή βλάβη ακουστικού ή πρόβλημα δρομολόγησης ήχου"
+                    : "Earpiece failure or audio routing problem"
     );
 
     appendHtml("<br>");
@@ -1691,12 +1842,18 @@ private CameraHumanSummary buildHumanSummary(CameraCharacteristics cc) {
         h.photoQuality = "Standard photos";
     }
 
-    // ------------------------------------------------------------
-    // PROFESSIONAL PHOTOS (RAW)
-    // ------------------------------------------------------------
-    h.professionalPhotos = hasRaw
-            ? "RAW uncompressed photos supported"
-            : "RAW uncompressed photos not supported (JPEG only)";
+// ------------------------------------------------------------
+// PROFESSIONAL PHOTOS (RAW)
+// ------------------------------------------------------------
+final boolean gr = AppLang.isGreek(this);
+
+h.professionalPhotos = hasRaw
+        ? (gr
+            ? "Υποστηρίζεται λήψη RAW (ασυμπίεστων) φωτογραφιών"
+            : "RAW (uncompressed) photo capture supported")
+        : (gr
+            ? "Δεν υποστηρίζεται RAW (μόνο JPEG)"
+            : "RAW not supported (JPEG only)");
 
     // ------------------------------------------------------------
     // VIDEO QUALITY
@@ -1717,80 +1874,139 @@ private CameraHumanSummary buildHumanSummary(CameraCharacteristics cc) {
     else
         h.videoQuality = "HD (basic)";
 
-    // ------------------------------------------------------------
-    // FPS / SMOOTHNESS / SLOW MOTION
-    // ------------------------------------------------------------
-    int maxFps = 0;
-    Range<Integer>[] fpsRanges =
-            cc.get(CameraCharacteristics.CONTROL_AE_AVAILABLE_TARGET_FPS_RANGES);
+// ------------------------------------------------------------
+// FPS / SMOOTHNESS / SLOW MOTION
+// ------------------------------------------------------------
+int maxFps = 0;
+Range<Integer>[] fpsRanges =
+        cc.get(CameraCharacteristics.CONTROL_AE_AVAILABLE_TARGET_FPS_RANGES);
 
-    if (fpsRanges != null) {
-        for (Range<Integer> r : fpsRanges) {
-            if (r != null && r.getUpper() != null)
-                maxFps = Math.max(maxFps, r.getUpper());
-        }
+if (fpsRanges != null) {
+    for (Range<Integer> r : fpsRanges) {
+        if (r != null && r.getUpper() != null)
+            maxFps = Math.max(maxFps, r.getUpper());
     }
-
-    if (maxFps >= 120) {
-        h.videoSmoothness = "Very smooth";
-        h.slowMotion = "Supported";
-    } else if (maxFps >= 60) {
-        h.videoSmoothness = "Very smooth";
-        h.slowMotion = "Limited";
-    } else if (maxFps >= 30) {
-        h.videoSmoothness = "Normal smooth video";
-        h.slowMotion = "Not supported";
-    } else {
-        h.videoSmoothness = "Basic";
-        h.slowMotion = "Not supported";
-    }
-
-    // ------------------------------------------------------------
-    // STABILIZATION
-    // ------------------------------------------------------------
-    boolean stab = false;
-    int[] stabModes =
-            cc.get(CameraCharacteristics.CONTROL_AVAILABLE_VIDEO_STABILIZATION_MODES);
-
-    if (stabModes != null) {
-        for (int m : stabModes) {
-            if (m == CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE_ON) {
-                stab = true;
-                break;
-            }
-        }
-    }
-
-    h.stabilization = stab ? "Supported" : "Not supported";
-
-    // ------------------------------------------------------------
-    // FLASH
-    // ------------------------------------------------------------
-    Boolean flashAvail = cc.get(CameraCharacteristics.FLASH_INFO_AVAILABLE);
-    h.flash = Boolean.TRUE.equals(flashAvail) ? "Available" : "Not available";
-
-    // ------------------------------------------------------------
-    // REAL LIFE USE
-    // ------------------------------------------------------------
-    if (maxFps >= 60 && stab)
-        h.realLifeUse = "Good for everyday use and action scenes";
-    else if (maxFps >= 30)
-        h.realLifeUse = "Good for everyday use and social media";
-    else
-        h.realLifeUse = "Basic usage only";
-
-    // ------------------------------------------------------------
-    // FINAL VERDICT
-    // ------------------------------------------------------------
-    if (hasRaw && maxFps >= 60)
-        h.verdict =
-                "Good camera for daily use and professional photos. Not designed for professional video.";
-    else
-        h.verdict =
-                "Decent camera for basic daily usage.";
-
-    return h;
 }
+
+final boolean gr = AppLang.isGreek(this);
+
+if (maxFps >= 120) {
+
+    h.videoSmoothness = gr
+            ? "Πολύ ομαλή κίνηση (έως " + maxFps + " FPS)"
+            : "Very smooth motion (up to " + maxFps + " FPS)";
+
+    h.slowMotion = gr
+            ? "Υποστηρίζεται αργή κίνηση (Slow Motion)"
+            : "Slow motion supported";
+
+} else if (maxFps >= 60) {
+
+    h.videoSmoothness = gr
+            ? "Ομαλή κίνηση (έως " + maxFps + " FPS)"
+            : "Smooth motion (up to " + maxFps + " FPS)";
+
+    h.slowMotion = gr
+            ? "Περιορισμένη υποστήριξη slow motion"
+            : "Limited slow motion support";
+
+} else if (maxFps >= 30) {
+
+    h.videoSmoothness = gr
+            ? "Κανονική ομαλότητα βίντεο (30 FPS)"
+            : "Standard smoothness (30 FPS)";
+
+    h.slowMotion = gr
+            ? "Δεν υποστηρίζεται slow motion"
+            : "Slow motion not supported";
+
+} else {
+
+    h.videoSmoothness = gr
+            ? "Βασική απόδοση βίντεο"
+            : "Basic video performance";
+
+    h.slowMotion = gr
+            ? "Δεν υποστηρίζεται slow motion"
+            : "Slow motion not supported";
+}
+
+// ------------------------------------------------------------
+// STABILIZATION
+// ------------------------------------------------------------
+boolean stab = false;
+int[] stabModes =
+        cc.get(CameraCharacteristics.CONTROL_AVAILABLE_VIDEO_STABILIZATION_MODES);
+
+if (stabModes != null) {
+    for (int m : stabModes) {
+        if (m == CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE_ON) {
+            stab = true;
+            break;
+        }
+    }
+}
+
+final boolean gr = AppLang.isGreek(this);
+
+h.stabilization = stab
+        ? (gr ? "Υποστηρίζεται ηλεκτρονική σταθεροποίηση (EIS)"
+              : "Electronic stabilization (EIS) supported")
+        : (gr ? "Δεν υποστηρίζεται σταθεροποίηση βίντεο"
+              : "Video stabilization not supported");
+
+// ------------------------------------------------------------
+// FLASH
+// ------------------------------------------------------------
+Boolean flashAvail = cc.get(CameraCharacteristics.FLASH_INFO_AVAILABLE);
+
+h.flash = Boolean.TRUE.equals(flashAvail)
+        ? (gr ? "Διαθέσιμο φλας"
+              : "Flash available")
+        : (gr ? "Δεν υπάρχει φλας"
+              : "Flash not available");
+
+// ------------------------------------------------------------
+// REAL LIFE USE
+// ------------------------------------------------------------
+if (maxFps >= 60 && stab) {
+
+    h.realLifeUse = gr
+            ? "Κατάλληλη για καθημερινή χρήση και σκηνές με κίνηση."
+            : "Suitable for everyday use and moving scenes.";
+
+} else if (maxFps >= 30) {
+
+    h.realLifeUse = gr
+            ? "Κατάλληλη για καθημερινή χρήση και κοινωνικά δίκτυα."
+            : "Suitable for daily use and social media.";
+
+} else {
+
+    h.realLifeUse = gr
+            ? "Βασική χρήση χωρίς απαιτήσεις."
+            : "Basic usage only.";
+}
+
+// ------------------------------------------------------------
+// FINAL VERDICT
+// ------------------------------------------------------------
+if (hasRaw && maxFps >= 60) {
+
+    h.verdict = gr
+            ? "Καλή κάμερα για καθημερινή χρήση και λήψεις RAW. "
+              + "Δεν προορίζεται για επαγγελματική παραγωγή βίντεο."
+            : "Good camera for daily use and RAW photography. "
+              + "Not intended for professional video production.";
+
+} else {
+
+    h.verdict = gr
+            ? "Επαρκής κάμερα για βασική καθημερινή χρήση."
+            : "Decent camera for basic daily use.";
+}
+
+return h;
 
 // ============================================================
 // TELEPHONY SNAPSHOT (SAFE / INFO ONLY)
@@ -2171,7 +2387,7 @@ try { if (br != null) br.close(); } catch (Throwable ignore) {}
 }
 
 // ------------------------------------------------------------
-// LAB 15 thermal correlation — FIXED (LABEL WHITE, VALUES GREEN)
+// LAB 15 thermal correlation — BILINGUAL (LABEL WHITE, VALUES GREEN)
 // ------------------------------------------------------------
 private void logLab15ThermalCorrelation(
         float battTempStart,
@@ -2179,11 +2395,17 @@ private void logLab15ThermalCorrelation(
         float battTempEnd
 ) {
 
-    String label = "Thermal correlation (charging): ";
+    final boolean gr = AppLang.isGreek(this);
+
+    String label = gr
+            ? "Θερμική συσχέτιση (κατά τη φόρτιση): "
+            : "Thermal correlation (during charging): ";
 
     String values = String.format(
             Locale.US,
-            "start %.1f°C -> peak %.1f°C -> end %.1f°C",
+            gr
+                    ? "αρχή %.1f°C → μέγιστο %.1f°C → τέλος %.1f°C"
+                    : "start %.1f°C → peak %.1f°C → end %.1f°C",
             battTempStart,
             (Float.isNaN(battTempPeak) ? battTempEnd : battTempPeak),
             battTempEnd
@@ -2219,27 +2441,42 @@ private void logLab15ThermalCorrelation(
 }
 
 // ------------------------------------------------------------
-// Health checkbox map — REQUIRED (LAB 14/17 use)
+// Health checkbox map — BILINGUAL (LAB 14/17 use)
 // ------------------------------------------------------------
 private void printHealthCheckboxMap(String decision) {
 
-String d = (decision == null) ? "" : decision.trim();  
+    final boolean gr = AppLang.isGreek(this);
 
-logLine();  
+    String d = (decision == null) ? "" : decision.trim();
 
-boolean strong = "Strong".equalsIgnoreCase(d);  
-boolean normal = "Normal".equalsIgnoreCase(d);  
-boolean weak   = "Weak".equalsIgnoreCase(d);  
+    logLine();
 
-appendHtml((strong ? "✔ " : "• ") + "<font color='#FFFFFF'>Strong</font>");
-appendHtml((normal ? "✔ " : "• ") + "<font color='#FFFFFF'>Normal</font>");
-appendHtml((weak   ? "✔ " : "• ") + "<font color='#FFFFFF'>Weak</font>");
+    boolean strong = "Strong".equalsIgnoreCase(d);
+    boolean normal = "Normal".equalsIgnoreCase(d);
+    boolean weak   = "Weak".equalsIgnoreCase(d);
 
-if (strong) logOk("Health Map: Strong");  
-else if (normal) logWarn("Health Map: Normal");  
-else if (weak) logError("Health Map: Weak");  
-else logInfo("Health Map: Informational");
+    String strongTxt = gr ? "Ισχυρή" : "Strong";
+    String normalTxt = gr ? "Κανονική" : "Normal";
+    String weakTxt   = gr ? "Αδύναμη"  : "Weak";
 
+    appendHtml((strong ? "✔ " : "• ") +
+            "<font color='#FFFFFF'>" + strongTxt + "</font>");
+
+    appendHtml((normal ? "✔ " : "• ") +
+            "<font color='#FFFFFF'>" + normalTxt + "</font>");
+
+    appendHtml((weak ? "✔ " : "• ") +
+            "<font color='#FFFFFF'>" + weakTxt + "</font>");
+
+    if (strong)
+        logOk(gr ? "Χάρτης Υγείας: Ισχυρή" : "Health Map: Strong");
+    else if (normal)
+        logWarn(gr ? "Χάρτης Υγείας: Κανονική" : "Health Map: Normal");
+    else if (weak)
+        logError(gr ? "Χάρτης Υγείας: Αδύναμη" : "Health Map: Weak");
+    else
+        logInfo(gr ? "Χάρτης Υγείας: Πληροφοριακό"
+                   : "Health Map: Informational");
 }
 
 // ============================================================
@@ -2435,72 +2672,101 @@ private static final String KEY_LAB14_LAST_DRAIN_2 = "lab14_drain_2";
 private static final String KEY_LAB14_LAST_DRAIN_3 = "lab14_drain_3";
 
 private void logLab14VarianceInfo() {
-int runs = getLab14RunCount();
-if (runs < 2) return;
 
-try {  
-    SharedPreferences sp = getSharedPreferences(LAB14_PREFS, MODE_PRIVATE);  
+    final boolean gr = AppLang.isGreek(this);
 
-    double[] vals = new double[]{  
-            Double.longBitsToDouble(sp.getLong(KEY_LAB14_LAST_DRAIN_1, Double.doubleToLongBits(-1))),  
-            Double.longBitsToDouble(sp.getLong(KEY_LAB14_LAST_DRAIN_2, Double.doubleToLongBits(-1))),  
-            Double.longBitsToDouble(sp.getLong(KEY_LAB14_LAST_DRAIN_3, Double.doubleToLongBits(-1)))  
-    };  
+    int runs = getLab14RunCount();
+    if (runs < 2) return;
 
-    double sum = 0;  
-    int n = 0;  
-    for (double v : vals) {  
-        if (v > 0) {  
-            sum += v;  
-            n++;  
-        }  
-    }  
-    if (n < 2) return;  
+    try {
+        SharedPreferences sp = getSharedPreferences(LAB14_PREFS, MODE_PRIVATE);
 
-    double mean = sum / n;  
-    double var = 0;  
-    for (double v : vals) {  
-        if (v > 0)  
-            var += (v - mean) * (v - mean);  
-    }  
-    var /= n;  
+        double[] vals = new double[]{
+                Double.longBitsToDouble(sp.getLong(KEY_LAB14_LAST_DRAIN_1, Double.doubleToLongBits(-1))),
+                Double.longBitsToDouble(sp.getLong(KEY_LAB14_LAST_DRAIN_2, Double.doubleToLongBits(-1))),
+                Double.longBitsToDouble(sp.getLong(KEY_LAB14_LAST_DRAIN_3, Double.doubleToLongBits(-1)))
+        };
 
-    double relVar = Math.sqrt(var) / mean;  
+        double sum = 0;
+        int n = 0;
+        for (double v : vals) {
+            if (v > 0) {
+                sum += v;
+                n++;
+            }
+        }
+        if (n < 2) return;
 
-    logInfo("Measurement consistency:");  
+        double mean = sum / n;
+        double var = 0;
+        for (double v : vals) {
+            if (v > 0)
+                var += (v - mean) * (v - mean);
+        }
+        var /= n;
 
-    if (relVar < 0.08) {  
-        logOk("Results are consistent across runs.");  
-    }  
-    else if (relVar < 0.15) {  
-        logOk("Minor variability detected. Results are generally reliable.");  
-    }  
-    else {  
-        logWarn("High variability detected. Repeat the test after a system restart to improve reliability.");  
-    }  
+        double relVar = Math.sqrt(var) / mean;
 
-} catch (Throwable ignore) {}
+        logInfo(gr ? "Συνέπεια μετρήσεων:" : "Measurement consistency:");
 
+        if (relVar < 0.08) {
+            logOk(gr
+                    ? "Τα αποτελέσματα είναι συνεπή μεταξύ των εκτελέσεων."
+                    : "Results are consistent across runs.");
+        }
+        else if (relVar < 0.15) {
+            logOk(gr
+                    ? "Μικρή μεταβλητότητα ανιχνεύθηκε. Τα αποτελέσματα είναι γενικά αξιόπιστα."
+                    : "Minor variability detected. Results are generally reliable.");
+        }
+        else {
+            logWarn(gr
+                    ? "Υψηλή μεταβλητότητα ανιχνεύθηκε. Επανεκτέλεσε το τεστ μετά από επανεκκίνηση για μεγαλύτερη αξιοπιστία."
+                    : "High variability detected. Repeat the test after a system restart to improve reliability.");
+        }
+
+    } catch (Throwable ignore) {}
 }
 
 private void logLab14Confidence() {
 
-int runs = getLab14RunCount();  
-logLine();  
+    final boolean gr = AppLang.isGreek(this);
 
-if (runs <= 1) {  
-    logWarn("Confidence: Preliminary (1 run)");  
-    logWarn("For Higher Diagnostic Accuracy, Run This Test 2 More Times, Any Other Day, Under Similar Conditions.");  
-}  
-else if (runs == 2) {  
-    logWarn("Confidence: Medium (2 runs)");  
-    logWarn("One Additional Run Is Recommended, To Confirm Battery Aging Trend.");  
-}  
-else {  
-    logOk("Confidence: High (3+ consistent runs)");  
-    logInfo("Battery diagnostic confidence is high.");  
-}
+    int runs = getLab14RunCount();
+    logLine();
 
+    if (runs <= 1) {
+
+        logWarn(gr
+                ? "Εμπιστοσύνη: Προκαταρκτική (1 εκτέλεση)"
+                : "Confidence: Preliminary (1 run)");
+
+        logWarn(gr
+                ? "Για υψηλότερη διαγνωστική ακρίβεια, εκτέλεσε το τεστ 2 ακόμη φορές, σε διαφορετική ημέρα, υπό παρόμοιες συνθήκες."
+                : "For higher diagnostic accuracy, run this test 2 more times, on a different day, under similar conditions.");
+
+    }
+    else if (runs == 2) {
+
+        logWarn(gr
+                ? "Εμπιστοσύνη: Μεσαία (2 εκτελέσεις)"
+                : "Confidence: Medium (2 runs)");
+
+        logWarn(gr
+                ? "Συνιστάται μία επιπλέον εκτέλεση για επιβεβαίωση της τάσης φθοράς της μπαταρίας."
+                : "One additional run is recommended to confirm battery aging trend.");
+
+    }
+    else {
+
+        logOk(gr
+                ? "Εμπιστοσύνη: Υψηλή (3+ συνεπείς εκτελέσεις)"
+                : "Confidence: High (3+ consistent runs)");
+
+        logInfo(gr
+                ? "Η διαγνωστική αξιοπιστία της μπαταρίας είναι υψηλή."
+                : "Battery diagnostic confidence is high.");
+    }
 }
 
 private int getLab14RunCount() {
@@ -2693,24 +2959,35 @@ return out;
 }
 
 // ------------------------------------------------------------
-// GEL STYLE OUTPUT — ONE LINE PER SENSOR
+// GEL STYLE OUTPUT — ONE LINE PER SENSOR (BILINGUAL)
 // Label = white (log channel)
 // Value = colored by severity
 // ------------------------------------------------------------
 private void logTempInline(String label, float c) {
 
-String base = String.format(Locale.US, "%s: %.1f°C", label, c);  
+    final boolean gr = AppLang.isGreek(this);
 
-if (c < 45f) {  
-    logOk(base + " (NORMAL)");  
-}  
-else if (c < 55f) {  
-    logWarn(base + " (WARM)");  
-}  
-else {  
-    logError(base + " (HOT)");  
-}
+    String base = String.format(
+            Locale.US,
+            "%s: %.1f°C",
+            label,
+            c
+    );
 
+    if (c < 45f) {
+
+        logOk(base + (gr ? " (ΦΥΣΙΟΛΟΓΙΚΗ)" : " (NORMAL)"));
+
+    }
+    else if (c < 55f) {
+
+        logWarn(base + (gr ? " (ΑΥΞΗΜΕΝΗ)" : " (WARM)"));
+
+    }
+    else {
+
+        logError(base + (gr ? " (ΥΠΕΡΘΕΡΜΑΝΣΗ)" : " (HOT)"));
+    }
 }
 
 // ------------------------------------------------------------
@@ -2842,12 +3119,17 @@ return getLastLab16ThermalScore() >= 0;
 
 // ---------------- COOLING (SAFE DEFAULTS) ----------------
 private boolean hasHardwareCoolingDevices() {
-// Most phones are passive-cooled
-return false;
+    // Most smartphones use passive thermal dissipation (no active cooling)
+    return false;
 }
 
 private String buildHardwareCoolingReport() {
-return "No hardware cooling devices found. This device uses passive cooling only.";
+
+    final boolean gr = AppLang.isGreek(this);
+
+    return gr
+            ? "Δεν εντοπίστηκαν ενεργά συστήματα ψύξης. Η συσκευή χρησιμοποιεί παθητική θερμική απαγωγή."
+            : "No active hardware cooling devices detected. The device relies on passive thermal dissipation.";
 }
 
 // ============================================================
@@ -3065,12 +3347,21 @@ private String zramDependency(long swapUsedKb, long totalMemBytes) {
 }
 
 // ------------------------------------------------------------
-// HUMAN LABEL
+// HUMAN LABEL (BILINGUAL)
 // ------------------------------------------------------------
 private String humanPressureLabel(String level) {
-    if ("High".equals(level))   return "High";
-    if ("Medium".equals(level)) return "Moderate";
-    return "Low";
+
+    final boolean gr = AppLang.isGreek(this);
+
+    if ("High".equalsIgnoreCase(level)) {
+        return gr ? "Υψηλή" : "High";
+    }
+
+    if ("Medium".equalsIgnoreCase(level)) {
+        return gr ? "Μέτρια" : "Moderate";
+    }
+
+    return gr ? "Χαμηλή" : "Low";
 }
 
 // ============================================================
@@ -3342,22 +3633,40 @@ private LinearLayout buildGELPopupRoot(Context ctx) {
 // LAB 22 — Security Patch Check (MANUAL) — STUB
 // ============================================================
 private void lab22SecurityPatchManual() {
-appendHtml("<br>");
-logLine();
-logInfo("LAB 22 — Security Patch Check");
-logWarn("Not implemented in this build.");
-logLine();
+
+    final boolean gr = AppLang.isGreek(this);
+
+    appendHtml("<br>");
+    logLine();
+    logInfo(gr
+            ? "LAB 22 — Έλεγχος Ενημέρωσης Ασφαλείας"
+            : "LAB 22 — Security Patch Check");
+
+    logWarn(gr
+            ? "Δεν έχει υλοποιηθεί σε αυτή την έκδοση."
+            : "Not implemented in this build.");
+
+    logLine();
 }
 
 // ============================================================
 // LAB 23 — Developer Options Risk — STUB
 // ============================================================
 private void lab23DevOptions() {
-appendHtml("<br>");
-logLine();
-logInfo("LAB 23 — Developer Options Risk");
-logWarn("Not implemented in this build.");
-logLine();
+
+    final boolean gr = AppLang.isGreek(this);
+
+    appendHtml("<br>");
+    logLine();
+    logInfo(gr
+            ? "LAB 23 — Κίνδυνος Επιλογών Προγραμματιστή"
+            : "LAB 23 — Developer Options Risk");
+
+    logWarn(gr
+            ? "Δεν έχει υλοποιηθεί σε αυτή την έκδοση."
+            : "Not implemented in this build.");
+
+    logLine();
 }
 
 // ============================================================
@@ -3502,22 +3811,22 @@ if (!isFinishing() && !isDestroyed()) {
 
 private String getLab28TextEN() {
     return
-        "For better diagnostic accuracy, please run all labs before this test. " +
-        "This lab performs symptom-based analysis only. " +
-        "It does not diagnose hardware faults and does not confirm solder defects. " +
-        "Results may indicate behavior patterns consistent with intermittent contact issues, " +
-        "such as unstable operation, random reboots, or signal drops. " +
-        "Use this lab strictly as a triage tool, not as a final diagnosis.";
+        "For improved diagnostic accuracy, it is recommended to run all labs, before this test. " +
+        "This lab, performs symptom-based analysis only. " +
+        "It does not diagnose hardware faults, and does not confirm solder or interconnect defects. " +
+        "Results, may indicate behavioral patterns, consistent with intermittent contact issues, " +
+        "such as, unstable operation, random reboots, or signal drops. " +
+        "Use this lab, strictly as a triage tool, and not as a final hardware diagnosis.";
 }
 
 private String getLab28TextGR() {
     return
-        "Για μεγαλύτερη διαγνωστική ακρίβεια, εκτέλεσε όλα τα labs πριν από αυτό το τεστ. " +
-        "Το lab αυτό πραγματοποιεί ανάλυση βασισμένη αποκλειστικά σε συμπτώματα. " +
-        "Δεν διαγιγνώσκει βλάβες υλικού και δεν επιβεβαιώνει προβλήματα κόλλησης. " +
-        "Τα αποτελέσματα μπορεί να υποδεικνύουν συμπεριφορές συμβατές με διακοπτόμενη επαφή, " +
-        "όπως ασταθή λειτουργία, τυχαίες επανεκκινήσεις ή απώλειες σήματος. " +
-        "Χρησιμοποίησε το lab αυστηρά ως εργαλείο προελέγχου και όχι ως τελική διάγνωση.";
+        "Για βελτιωμένη διαγνωστική ακρίβεια, συνιστάται η εκτέλεση όλων των labs, πριν από αυτό το τεστ. " +
+        "Το lab αυτό, πραγματοποιεί αποκλειστικά ανάλυση, βασισμένη σε συμπτώματα. " +
+        "Δεν διαγιγνώσκει βλάβες υλικού, και δεν επιβεβαιώνει προβλήματα κόλλησης ή διασύνδεσης. " +
+        "Τα αποτελέσματα, μπορεί να υποδεικνύουν πρότυπα συμπεριφοράς, συμβατά με διακοπτόμενη επαφή. " +
+        "όπως, ασταθή λειτουργία, τυχαίες επανεκκινήσεις, ή απώλειες σήματος. " +
+        "Χρησιμοποίησε το lab, αυστηρά ως εργαλείο προελέγχου, και όχι ως τελική διάγνωση υλικού.";
 }
 
 // ============================================================
@@ -3547,7 +3856,7 @@ private SpeakerOutputState evaluateSpeakerOutput(
 }
 
 // ============================================================
-// AUDIO OUTPUT CONTEXT — LAB 1 SUPPORT
+// AUDIO OUTPUT CONTEXT — LAB 1 SUPPORT (BILINGUAL)
 // ============================================================
 private static class AudioOutputContext {
 
@@ -3560,25 +3869,35 @@ private static class AudioOutputContext {
     int volume;
     int maxVolume;
 
-    String explain() {
+    String explain(boolean gr) {
 
         if (volumeMuted) {
-            return "Media volume is muted (0%).";
+            return gr
+                    ? "Η ένταση πολυμέσων είναι στο μηδέν (0%)."
+                    : "Media volume is muted (0%).";
         }
 
         if (bluetoothRouted) {
-            return "Audio is routed to a Bluetooth device.";
+            return gr
+                    ? "Ο ήχος δρομολογείται σε συσκευή Bluetooth."
+                    : "Audio is routed to a Bluetooth device.";
         }
 
         if (wiredRouted) {
-            return "Audio is routed to a wired headset or USB audio device.";
+            return gr
+                    ? "Ο ήχος δρομολογείται σε ενσύρματα ακουστικά ή USB audio."
+                    : "Audio is routed to a wired headset or USB audio device.";
         }
 
         if (volumeLow) {
-            return "Media volume is very low.";
+            return gr
+                    ? "Η ένταση πολυμέσων είναι πολύ χαμηλή."
+                    : "Media volume is very low.";
         }
 
-        return "Audio output routing and volume appear normal.";
+        return gr
+                ? "Η δρομολόγηση ήχου και η ένταση φαίνονται φυσιολογικές."
+                : "Audio output routing and volume appear normal.";
     }
 }
 
@@ -3693,9 +4012,13 @@ private MicQuickResult micCaptureOnceMs(int ms) {
 // ============================================================
 private void lab1SpeakerTone() {
 
+    final boolean gr = AppLang.isGreek(this);
+
     appendHtml("<br>");
     logLine();
-    logSection("LAB 1 — Speaker Tone Test");
+    logSection(gr
+            ? "LAB 1 — Δοκιμή Τόνου Ηχείου"
+            : "LAB 1 — Speaker Tone Test");
     logLine();
 
     new Thread(() -> {
@@ -3732,56 +4055,76 @@ private void lab1SpeakerTone() {
                         am.isWiredHeadsetOn();
             } catch (Throwable ignore) {}
 
-            // ------------------------------------------------------------
-            // BLOCKED AUDIO PATH — STOP & ASK RE-RUN
-            // ------------------------------------------------------------
-            if (volumeMuted || bluetoothRouted || wiredRouted) {
+// ------------------------------------------------------------
+// BLOCKED AUDIO PATH — STOP & ASK RE-RUN
+// ------------------------------------------------------------
+if (volumeMuted || bluetoothRouted || wiredRouted) {
 
-                logLine();
-                logInfo("Audio output path check");
+    final boolean gr = AppLang.isGreek(this);
 
-                logLabelWarnValue("Status", "Not clear (blocked)");
+    logLine();
+    logInfo(gr
+            ? "Έλεγχος διαδρομής εξόδου ήχου"
+            : "Audio output path check");
 
-                if (volumeMuted) {
-                    logLabelWarnValue(
-                            "Detected",
-                            "Media volume is muted (volume = 0)"
-                    );
-                }
+    logLabelWarnValue(
+            gr ? "Κατάσταση" : "Status",
+            gr ? "Μη καθαρή (μπλοκαρισμένη)"
+               : "Not clear (blocked)"
+    );
 
-                if (bluetoothRouted) {
-                    logLabelWarnValue(
-                            "Detected",
-                            "Audio routed to Bluetooth device"
-                    );
-                }
+    if (volumeMuted) {
+        logLabelWarnValue(
+                gr ? "Εντοπίστηκε" : "Detected",
+                gr ? "Η ένταση πολυμέσων είναι στο μηδέν (0%)."
+                   : "Media volume is muted (volume = 0)"
+        );
+    }
 
-                if (wiredRouted) {
-                    logLabelWarnValue(
-                            "Detected",
-                            "Audio routed to wired or USB device"
-                    );
-                }
+    if (bluetoothRouted) {
+        logLabelWarnValue(
+                gr ? "Εντοπίστηκε" : "Detected",
+                gr ? "Ο ήχος δρομολογείται σε συσκευή Bluetooth."
+                   : "Audio routed to Bluetooth device"
+        );
+    }
 
-                logLabelOkValue(
-                        "Action required",
-                        "Fix the condition(s) above and re-run LAB 1"
-                );
+    if (wiredRouted) {
+        logLabelWarnValue(
+                gr ? "Εντοπίστηκε" : "Detected",
+                gr ? "Ο ήχος δρομολογείται σε ενσύρματη ή USB συσκευή."
+                   : "Audio routed to wired or USB device"
+        );
+    }
 
-                appendHtml("<br>");
-                logLabelWarnValue(
-                        "LAB 1 result",
-                        "Inconclusive (audio path blocked)"
-                );
-                logLine();
-                return;
-            }
+    logLabelOkValue(
+            gr ? "Απαιτούμενη ενέργεια" : "Action required",
+            gr ? "Διόρθωσε τα παραπάνω και εκτέλεσε ξανά το LAB 1."
+               : "Fix the condition(s) above and re-run LAB 1"
+    );
 
-            // ------------------------------------------------------------
-            // PLAY TEST TONE
-            // ------------------------------------------------------------
-            tg = new ToneGenerator(AudioManager.STREAM_MUSIC, 90);
-            tg.startTone(ToneGenerator.TONE_DTMF_1, 1200);
+    appendHtml("<br>");
+    logLabelWarnValue(
+            gr ? "Αποτέλεσμα LAB 1" : "LAB 1 result",
+            gr ? "Μη οριστικό (μπλοκαρισμένη διαδρομή ήχου)"
+               : "Inconclusive (audio path blocked)"
+    );
+    logLine();
+    return;
+}
+
+// ------------------------------------------------------------
+// PLAY TEST TONE
+// ------------------------------------------------------------
+
+// FORCE MEDIA SPEAKER PATH
+if (am != null) {
+    try { am.setMode(AudioManager.MODE_NORMAL); } catch (Throwable ignore) {}
+    try { am.setSpeakerphoneOn(true); } catch (Throwable ignore) {}
+}
+
+tg = new ToneGenerator(AudioManager.STREAM_MUSIC, 90);
+tg.startTone(ToneGenerator.TONE_DTMF_1, 1200);
             SystemClock.sleep(1400);
 
             // ------------------------------------------------------------
@@ -3791,22 +4134,34 @@ private void lab1SpeakerTone() {
 // ------------------------------------------------------------
 // HARD AUDIO RESET BEFORE MIC CAPTURE (MANDATORY)
 // ------------------------------------------------------------
-
 hardNormalizeAudioForMic();
 
 MicDiagnosticEngine.Result r =
         MicDiagnosticEngine.run(this);
 
+final boolean gr = AppLang.isGreek(this);
+
 if (r == null) {
-    logLabelErrorValue("Mic", "No data captured");
+    logLabelErrorValue(
+            gr ? "Μικρόφωνο" : "Mic",
+            gr ? "Δεν καταγράφηκαν δεδομένα"
+               : "No data captured"
+    );
     return;
 }
 
 int rms  = (int) r.rms;
 int peak = (int) r.peak;
 
-logLabelOkValue("Mic RMS",  String.valueOf(rms));
-logLabelOkValue("Mic Peak", String.valueOf(peak));
+logLabelOkValue(
+        gr ? "RMS Μικροφώνου" : "Mic RMS",
+        String.valueOf(rms)
+);
+
+logLabelOkValue(
+        gr ? "Peak Μικροφώνου" : "Mic Peak",
+        String.valueOf(peak)
+);
 
 String conf = (r.confidence == null)
         ? ""
@@ -3816,110 +4171,134 @@ String conf = (r.confidence == null)
 if (conf.contains("LOW") || conf.contains("WEAK")
         || conf.contains("FAIL") || conf.contains("NONE") || conf.contains("NO")) {
 
-    logLabelWarnValue("Confidence", r.confidence);
+    logLabelWarnValue(
+            gr ? "Ποιότητα Ανίχνευσης" : "Confidence",
+            r.confidence
+    );
 
 } else {
 
-    logLabelOkValue("Confidence", r.confidence);
+    logLabelOkValue(
+            gr ? "Ποιότητα Ανίχνευσης" : "Confidence",
+            r.confidence
+    );
 }
 
-            // ------------------------------------------------------------
-            // SPEAKER OUTPUT EVALUATION (UNIFIED)
-            // ------------------------------------------------------------
-            SpeakerOutputState state = evaluateSpeakerOutput(r);
+// ------------------------------------------------------------
+// SPEAKER OUTPUT EVALUATION (UNIFIED)
+// ------------------------------------------------------------
+SpeakerOutputState state = evaluateSpeakerOutput(r);
 
-            if (state == SpeakerOutputState.NO_OUTPUT) {
+if (state == SpeakerOutputState.NO_OUTPUT) {
+    
+final boolean gr = AppLang.isGreek(this);
 
-                logLine();
-                logInfo("Speaker output evaluation");
+    logLine();
+    logInfo(gr ? "Αξιολόγηση εξόδου ηχείου"
+               : "Speaker output evaluation");
 
-                logLabelErrorValue(
-                        "Speaker output",
-                        "No acoustic output detected"
-                );
+    logLabelErrorValue(
+            gr ? "Έξοδος ηχείου" : "Speaker output",
+            gr ? "Δεν ανιχνεύθηκε ακουστικό σήμα"
+               : "No acoustic output detected"
+    );
 
-                logLabelWarnValue(
-                        "Diagnosis",
-                        "Audio path is clear, but no sound was captured by the microphone"
-                );
+    logLabelWarnValue(
+            gr ? "Διάγνωση" : "Diagnosis",
+            gr ? "Η διαδρομή ήχου είναι καθαρή, αλλά δεν καταγράφηκε ήχος από το μικρόφωνο"
+               : "Audio path is clear, but no sound was captured by the microphone"
+    );
 
-                logLabelWarnValue(
-                        "Possible cause",
-                        "Speaker hardware failure or severe acoustic isolation"
-                );
+    logLabelWarnValue(
+            gr ? "Πιθανή αιτία" : "Possible cause",
+            gr ? "Πιθανή βλάβη ηχείου ή έντονη ακουστική απομόνωση"
+               : "Speaker hardware failure or severe acoustic isolation"
+    );
 
-                logLabelOkValue(
-                        "Recommended action",
-                        "Re-run the test once more. If silence persists, hardware inspection is advised"
-                );
+    logLabelOkValue(
+            gr ? "Προτεινόμενη ενέργεια" : "Recommended action",
+            gr ? "Επανεκτέλεσε το τεστ. Αν η σιωπή επιμένει, συνιστάται έλεγχος υλικού"
+               : "Re-run the test once more. If silence persists, hardware inspection is advised"
+    );
 
-                appendHtml("<br>");
-                logLabelWarnValue(
-                        "LAB 1 result",
-                        "Inconclusive (no speaker output)"
-                );
-                logLine();
-                return;
-            }
+    appendHtml("<br>");
+    logLabelWarnValue(
+            "LAB 1",
+            gr ? "Μη οριστικό αποτέλεσμα (καμία έξοδος ήχου)"
+               : "Inconclusive (no speaker output)"
+    );
 
-            // ------------------------------------------------------------
-            // OUTPUT DETECTED — CONFIDENCE IS INFORMATIONAL ONLY
-            // ------------------------------------------------------------
-            logLine();
-logInfo("Speaker output evaluation");
+    logLine();
+    return;
+}
+
+// ------------------------------------------------------------
+// OUTPUT DETECTED — CONFIDENCE IS INFORMATIONAL ONLY
+// ------------------------------------------------------------
+
+final boolean gr = AppLang.isGreek(this);
+
+logLine();
+logInfo(gr ? "Αξιολόγηση εξόδου ηχείου"
+           : "Speaker output evaluation");
 
 if (conf.contains("LOW")) {
 
     logLabelOkValue(
-            "Speaker output",
-            "Acoustic signal detected with LOW confidence"
+            gr ? "Έξοδος ηχείου" : "Speaker output",
+            gr ? "Ανιχνεύθηκε ακουστικό σήμα (ΧΑΜΗΛΗ αξιοπιστία)"
+               : "Acoustic signal detected with LOW confidence"
     );
 
     logLabelWarnValue(
-            "Note",
-            "Low confidence may be caused by DSP filtering, noise cancellation, " +
-            "microphone placement, or acoustic design"
+            gr ? "Σημείωση" : "Note",
+            gr ? "Η χαμηλή αξιοπιστία μπορεί να οφείλεται σε DSP φιλτράρισμα, "
+                 + "ακύρωση θορύβου ή θέση μικροφώνου"
+               : "Low confidence may be caused by DSP filtering, noise cancellation, "
+                 + "microphone placement, or acoustic design"
     );
 
 } else {
 
     logLabelOkValue(
-            "Speaker output",
-            "Acoustic signal detected"
+            gr ? "Έξοδος ηχείου" : "Speaker output",
+            gr ? "Ανιχνεύθηκε ακουστικό σήμα"
+               : "Acoustic signal detected"
     );
 
     logLabelOkValue(
-            "Note",
-            "Speaker signal detected successfully"
+            gr ? "Σημείωση" : "Note",
+            gr ? "Το ηχητικό σήμα ανιχνεύθηκε επιτυχώς"
+               : "Speaker signal detected successfully"
     );
 }
 
-        } catch (Throwable t) {
+} catch (Throwable t) {
 
-            logLine();
-            logInfo("Speaker tone test");
+    logLine();
+    logInfo(gr ? "Δοκιμή ηχείου"
+               : "Speaker tone test");
 
-            logLabelErrorValue(
-                    "Status",
-                    "Failed"
-            );
+    logLabelErrorValue(
+            gr ? "Κατάσταση" : "Status",
+            gr ? "Αποτυχία"
+               : "Failed"
+    );
 
-            logLabelWarnValue(
-                    "Reason",
-                    "Speaker tone test execution error"
-            );
+    logLabelWarnValue(
+            gr ? "Αιτία" : "Reason",
+            gr ? "Σφάλμα κατά την εκτέλεση της δοκιμής ηχείου"
+               : "Speaker tone test execution error"
+    );
 
-        } finally {
+} finally {
 
-            if (tg != null) {
-                tg.release();
-            }
+    if (tg != null) {
+        tg.release();
+    }
 
             appendHtml("<br>");
-            logLabelOkValue(
-                    "LAB 1",
-                    "Finished"
-            );
+            logOk("Lab 1 finished.");
             logLine();
         }
 
@@ -3934,9 +4313,14 @@ if (conf.contains("LOW")) {
 // ============================================================
 private void lab2SpeakerSweep() {
 
+    final boolean gr = AppLang.isGreek(this);
+
     appendHtml("<br>");
     logLine();
-    logSection("LAB 2 — Speaker Frequency Sweep");
+    logSection(
+            gr ? "LAB 2 — Έλεγχος Συχνοτήτων Ηχείου"
+               : "LAB 2 — Speaker Frequency Sweep"
+    );
     logLine();
 
     new Thread(() -> {
@@ -3945,7 +4329,15 @@ private void lab2SpeakerSweep() {
 
         try {
 
-            tg = new ToneGenerator(AudioManager.STREAM_MUSIC, 90);
+            AudioManager am =
+        (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+
+if (am != null) {
+    try { am.setMode(AudioManager.MODE_NORMAL); } catch (Throwable ignore) {}
+    try { am.setSpeakerphoneOn(true); } catch (Throwable ignore) {}
+}
+
+tg = new ToneGenerator(AudioManager.STREAM_MUSIC, 90);
 
             // ----------------------------------------------------
             // PLAY MULTI-TONE SWEEP
@@ -3966,17 +4358,21 @@ private void lab2SpeakerSweep() {
 // MIC FEEDBACK ANALYSIS
 // ----------------------------------------------------
 
-// ------------------------------------------------------------
-// HARD AUDIO RESET BEFORE MIC CAPTURE (MANDATORY)
-// ------------------------------------------------------------
+final boolean gr = AppLang.isGreek(this);
 
+// ----------------------------------------------------
+// HARD AUDIO RESET BEFORE MIC CAPTURE (MANDATORY)
+// ----------------------------------------------------
 hardNormalizeAudioForMic();
 
 MicDiagnosticEngine.Result r =
         MicDiagnosticEngine.run(this);
 
 if (r == null) {
-    logLabelErrorValue("Mic", "No data captured");
+    logLabelErrorValue(
+            gr ? "Μικρόφωνο" : "Mic",
+            gr ? "Δεν καταγράφηκαν δεδομένα" : "No data captured"
+    );
     return;
 }
 
@@ -3996,72 +4392,94 @@ String conf = (r.confidence == null)
 if (conf.contains("LOW") || conf.contains("WEAK")
         || conf.contains("FAIL") || conf.contains("NONE")) {
 
-    logLabelWarnValue("Confidence", r.confidence);
+    logLabelWarnValue(
+            gr ? "Ποιότητα" : "Confidence",
+            r.confidence
+    );
 
 } else {
 
-    logLabelOkValue("Confidence", r.confidence);
+    logLabelOkValue(
+            gr ? "Ποιότητα" : "Confidence",
+            r.confidence
+    );
 }
 
-            // ----------------------------------------------------
-            // HARD GATE — ABSOLUTE SILENCE ONLY
-            // ----------------------------------------------------
-            if (rms == 0 && peak == 0) {
+// ----------------------------------------------------
+// HARD GATE — ABSOLUTE SILENCE ONLY
+// ----------------------------------------------------
+if (rms == 0 && peak == 0) {
 
-                logLabelErrorValue(
-                        "Speaker output",
-                        "No acoustic output detected"
-                );
+    logLabelErrorValue(
+            gr ? "Έξοδος Ηχείου" : "Speaker output",
+            gr ? "Δεν ανιχνεύθηκε ακουστικό σήμα"
+               : "No acoustic output detected"
+    );
 
-                logLabelWarnValue(
-                        "Possible cause",
-                        "Speaker hardware failure, muted output path, or extreme isolation"
-                );
+    logLabelWarnValue(
+            gr ? "Πιθανή αιτία" : "Possible cause",
+            gr
+                    ? "Βλάβη ηχείου, σίγαση εξόδου ή πλήρης ακουστική απομόνωση"
+                    : "Speaker hardware failure, muted output path, or extreme isolation"
+    );
 
-                logLabelOkValue(
-                        "Recommended",
-                        "Re-run LAB 1 to verify speaker operation and routing"
-                );
+    logLabelOkValue(
+            gr ? "Σύσταση" : "Recommended",
+            gr
+                    ? "Επανεκτέλεσε το LAB 1 για έλεγχο διαδρομής ήχου"
+                    : "Re-run LAB 1 to verify speaker operation and routing"
+    );
 
-                appendHtml("<br>");
-                logLine();
-                return;
-            }
+    appendHtml("<br>");
+    logLine();
+    return;
+}
 
-            // ----------------------------------------------------
-            // OUTPUT CONFIRMED (EVEN WITH LOW CONFIDENCE)
-            // ----------------------------------------------------
-            if (conf.contains("LOW") || conf.contains("WEAK")) {
+// ----------------------------------------------------
+// OUTPUT CONFIRMED (EVEN WITH LOW CONFIDENCE)
+// ----------------------------------------------------
+if (conf.contains("LOW") || conf.contains("WEAK")) {
 
-                logLabelOkValue(
-                        "Speaker output",
-                        "Acoustic signal detected with LOW confidence"
-                );
+    logLabelOkValue(
+            gr ? "Έξοδος Ηχείου" : "Speaker output",
+            gr
+                    ? "Ανιχνεύθηκε ακουστικό σήμα (χαμηλή βεβαιότητα)"
+                    : "Acoustic signal detected with LOW confidence"
+    );
 
-                logLabelWarnValue(
-                        "Note",
-                        "Low confidence may be caused by DSP filtering, noise cancellation, " +
-                        "speaker frequency limits, or microphone placement."
-                );
+    logLabelWarnValue(
+            gr ? "Σημείωση" : "Note",
+            gr
+                    ? "Η χαμηλή βεβαιότητα μπορεί να οφείλεται σε DSP, ακύρωση θορύβου ή θέση μικροφώνου."
+                    : "Low confidence may be caused by DSP filtering, noise cancellation, speaker frequency limits, or microphone placement."
+    );
 
-            } else {
+} else {
 
-                logLabelOkValue(
-                        "Speaker output",
-                        "Acoustic signal detected"
-                );
+    logLabelOkValue(
+            gr ? "Έξοδος Ηχείου" : "Speaker output",
+            gr
+                    ? "Ανιχνεύθηκε ακουστικό σήμα"
+                    : "Acoustic signal detected"
+    );
 
-                logLabelOkValue(
-                        "Note",
-                        "Frequency sweep detected successfully across multiple tones."
-                );
-            }
+    logLabelOkValue(
+            gr ? "Σημείωση" : "Note",
+            gr
+                    ? "Η σάρωση συχνοτήτων ολοκληρώθηκε επιτυχώς."
+                    : "Frequency sweep detected successfully across multiple tones."
+    );
+}
 
-        } catch (Throwable t) {
+} catch (Throwable t) {
 
-            logError("Speaker frequency sweep failed");
+    logError(
+            gr
+                    ? "Αποτυχία δοκιμής σάρωσης συχνοτήτων ηχείου"
+                    : "Speaker frequency sweep failed"
+    );
 
-        } finally {
+} finally {
 
             if (tg != null) tg.release();
 
@@ -4079,44 +4497,68 @@ if (conf.contains("LOW") || conf.contains("WEAK")
    ============================================================ */
 private void lab3EarpieceManual() {
 
+    final boolean gr = AppLang.isGreek(this);
+
     appendHtml("<br>");
     logLine();
-    logSection("LAB 3 — Earpiece Audio Path Check");
+    logSection(
+            gr
+                    ? "LAB 3 — Έλεγχος Διαδρομής Ήχου Ακουστικού"
+                    : "LAB 3 — Earpiece Audio Path Check"
+    );
     logLine();
 
     AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
     if (am == null) {
-        logError("AudioManager unavailable.");
+        logError(
+                gr
+                        ? "Ο AudioManager δεν είναι διαθέσιμος."
+                        : "AudioManager unavailable."
+        );
         return;
     }
 
-// ------------------------------------------------------------
-// SAVE AUDIO STATE
-// ------------------------------------------------------------
-lab3OldMode = am.getMode();
-lab3OldSpeaker = am.isSpeakerphoneOn();
-lab3OldMicMute = am.isMicrophoneMute();
+    // ------------------------------------------------------------
+    // SAVE AUDIO STATE
+    // ------------------------------------------------------------
+    lab3OldMode = am.getMode();
+    lab3OldSpeaker = am.isSpeakerphoneOn();
+    lab3OldMicMute = am.isMicrophoneMute();
 
-logInfo("Saving audio state.");
-logInfo("Preparing earpiece routing.");
+    logInfo(
+            gr
+                    ? "Αποθήκευση τρέχουσας κατάστασης ήχου."
+                    : "Saving audio state."
+    );
 
-try {
-    am.stopBluetoothSco();
-    am.setBluetoothScoOn(false);
-    am.setSpeakerphoneOn(false);
-    am.setMicrophoneMute(false);              // 🔴 ΑΠΑΡΑΙΤΗΤΟ
-    am.setMode(AudioManager.MODE_IN_COMMUNICATION);
-} catch (Throwable t) {
-    logError("Audio routing failed.");
-    restoreLab3Audio();                        // 🔒 FAIL-SAFE
-    return;
-}
+    logInfo(
+            gr
+                    ? "Προετοιμασία δρομολόγησης προς το ακουστικό."
+                    : "Preparing earpiece routing."
+    );
+
+    try {
+        am.stopBluetoothSco();
+        am.setBluetoothScoOn(false);
+        am.setSpeakerphoneOn(false);
+        am.setMicrophoneMute(false); // 🔴 ΑΠΑΡΑΙΤΗΤΟ
+        am.setMode(AudioManager.MODE_IN_COMMUNICATION);
+
+    } catch (Throwable t) {
+
+        logError(
+                gr
+                        ? "Αποτυχία δρομολόγησης ήχου."
+                        : "Audio routing failed."
+        );
+
+        restoreLab3Audio(); // 🔒 FAIL-SAFE
+        return;
+    }
 
     SystemClock.sleep(250);
 
     runOnUiThread(() -> {
-
-        final boolean gr = AppLang.isGreek(this);
 
         final String titleText = gr
                 ? "LAB 3 — Έλεγχος ακουστικού"
@@ -4229,38 +4671,51 @@ if (!isFinishing() && !isDestroyed()) {
     d.show();
 }
 
-        // ------------------------------------------------------------
-        // START ACTION
-        // ------------------------------------------------------------
-        start.setOnClickListener(v -> {
+// ------------------------------------------------------------
+// START ACTION
+// ------------------------------------------------------------
+start.setOnClickListener(v -> {
 
     try { AppTTS.stop(); } catch (Throwable ignore) {}
 
     new Thread(() -> {
         try {
-            logInfo("Playing earpiece test tones.");
+
+            logInfo(gr
+                    ? "Αναπαραγωγή δοκιμαστικών τόνων ακουστικού."
+                    : "Playing earpiece test tones.");
 
             for (int i = 1; i <= 3; i++) {
-                logInfo("Tone " + i + " / 3");
+
+                logInfo(gr
+                        ? "Τόνος " + i + " / 3"
+                        : "Tone " + i + " / 3");
+
                 playEarpieceBeep();
                 SystemClock.sleep(650);
             }
 
-            logOk("Earpiece tone playback completed.");
+            logOk(gr
+                    ? "Η αναπαραγωγή τόνων ολοκληρώθηκε."
+                    : "Earpiece tone playback completed.");
 
         } catch (Throwable t) {
-            logError("Earpiece tone playback failed.");
-} finally {
 
-    // 🔒 HARD AUDIO RESET (LAB 3)
-    resetAudioAfterLab3(am, lab3OldMode, lab3OldSpeaker, lab3OldMicMute);
+            logError(gr
+                    ? "Αποτυχία αναπαραγωγής τόνων ακουστικού."
+                    : "Earpiece tone playback failed.");
 
-    runOnUiThread(() -> {
-        try { d.dismiss(); } catch (Throwable ignore) {}
-        askUserEarpieceConfirmation();
-    });
+        } finally {
 
-}
+            // 🔒 HARD AUDIO RESET (LAB 3)
+            resetAudioAfterLab3(am, lab3OldMode, lab3OldSpeaker, lab3OldMicMute);
+
+            runOnUiThread(() -> {
+                try { d.dismiss(); } catch (Throwable ignore) {}
+                askUserEarpieceConfirmation();
+            });
+        }
+
     }).start();
 });
 
@@ -4287,9 +4742,15 @@ private void lab4MicManual() {
 
 private void lab4MicBase(Runnable onFinished) {
 
+    final boolean gr = AppLang.isGreek(this);
+
     appendHtml("<br>");
     logLine();
-    logSection("LAB 4 — Microphone Hardware Check");
+    logSection(
+            gr
+                    ? "LAB 4 — Έλεγχος Υλικού Μικροφώνων"
+                    : "LAB 4 — Microphone Hardware Check"
+    );
     logLine();
 
     final boolean gr = AppLang.isGreek(this);
@@ -4346,8 +4807,15 @@ private void lab4MicBase(Runnable onFinished) {
                 topPeak = (int) top.peak;
             }
 
-            logLabelOkValue("Top RMS",  String.valueOf(topRms));
-            logLabelOkValue("Top Peak", String.valueOf(topPeak));
+            logLabelOkValue(
+        gr ? "RMS (Άνω Μικρόφωνο)" : "Top RMS",
+        String.valueOf(topRms)
+);
+
+logLabelOkValue(
+        gr ? "Peak (Άνω Μικρόφωνο)" : "Top Peak",
+        String.valueOf(topPeak)
+);
 
             topOk = topRms > 0 || topPeak > 0;
 
@@ -5204,9 +5672,15 @@ new Handler(Looper.getMainLooper()).postDelayed(() -> {
    ============================================================ */
 private void lab5Vibration() {
 
+    final boolean gr = AppLang.isGreek(this);
+
     appendHtml("<br>");
     logLine();
-    logSection("LAB 5 — Vibration Motor Test");
+    logSection(
+            gr
+                    ? "LAB 5 — Διαγνωστικός Έλεγχος Μηχανισμού Δόνησης"
+                    : "LAB 5 — Vibration Motor Test"
+    );
     logLine();
 
     final boolean gr = AppLang.isGreek(this);
@@ -5267,7 +5741,7 @@ private void lab5Vibration() {
 
                     logLabelWarnValue(
                             gr ? "Ρύθμιση" : "Setting",
-                            gr ? "Ενεργή λειτουργία εξοικονόμησης ενέργειας."
+                            gr ? "Ενεργή λειτουργία εξοικονόμησης ενέργειας μπαταρίας."
                                : "Battery saver mode is active."
                     );
                 }

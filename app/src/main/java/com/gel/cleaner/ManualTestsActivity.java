@@ -5119,7 +5119,6 @@ try { track.release(); } catch (Throwable ignore) {}
 // ==========================
 AtomicBoolean heardClearly = new AtomicBoolean(false);
 AtomicBoolean answered = new AtomicBoolean(false);
-AtomicBoolean cancelled = new AtomicBoolean(false);
 
 runOnUiThread(() -> {
 

@@ -4269,10 +4269,9 @@ new Handler(Looper.getMainLooper()).postDelayed(() -> {
         AppTTS.ensureSpeak(this, ttsText);
     }
 }, 120);
-        
-    });
-} 
-        
+
+});   // <-- ΚΛΕΙΝΕΙ ΤΟ runOnUiThread
+}      
 /* ============================================================
    LAB 4 — Microphone Recording Check (BOTTOM + TOP)
    BASE — FINAL • CLEAN • ISOLATED

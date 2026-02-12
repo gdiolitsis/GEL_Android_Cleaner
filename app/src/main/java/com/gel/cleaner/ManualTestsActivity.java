@@ -825,8 +825,6 @@ root.addView(btnExport);
 
 if (!serviceLogInit) {
 
-    final boolean gr = AppLang.isGreek(this);
-
     GELServiceLog.section(
             gr
                     ? "Χειροκίνητοι Έλεγχοι Android — Διαγνωστικά Υλικού"
@@ -2062,22 +2060,22 @@ private void appendHtml(String html) {
 }
 
 private void logInfo(String msg) {
-    appendHtml("• " + safe(msg));
+    appendHtml("• " + escape(msg));
     GELServiceLog.logInfo(msg);
 }
 
 private void logOk(String msg) {
-    appendHtml("<font color='#39FF14'>✔ " + safe(msg) + "</font>");
+    appendHtml("<font color='#39FF14'>✔ " + escape(msg) + "</font>");
     GELServiceLog.logOk(msg);
 }
 
 private void logWarn(String msg) {
-    appendHtml("<font color='#FFD966'>⚠ " + safe(msg) + "</font>");
+    appendHtml("<font color='#FFD966'>⚠ " + escape(msg) + "</font>");
     GELServiceLog.logWarn(msg);
 }
 
 private void logError(String msg) {
-    appendHtml("<font color='#FF5555'>✖ " + safe(msg) + "</font>");
+    appendHtml("<font color='#FF5555'>✖ " + escape(msg) + "</font>");
     GELServiceLog.logError(msg);
 }
 

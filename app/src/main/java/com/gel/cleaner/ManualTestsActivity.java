@@ -4271,7 +4271,8 @@ new Handler(Looper.getMainLooper()).postDelayed(() -> {
 }, 120);
 
 });   // <-- ΚΛΕΙΝΕΙ ΤΟ runOnUiThread
-}      
+}   
+
 /* ============================================================
    LAB 4 — Microphone Recording Check (BOTTOM + TOP)
    BASE — FINAL • CLEAN • ISOLATED
@@ -4549,7 +4550,7 @@ if (!isFinishing() && !isDestroyed()) {
                 gr
                         ? "Μίλησε στο κάτω μικρόφωνο, και άκου, αν η φωνή σου ακούγεται καθαρά, από το ακουστικό."
             : "Speak into the bottom microphone, and check, if your voice is clearly heard, from the earpiece.");
-        );
+            
     }, 500);
 });
 

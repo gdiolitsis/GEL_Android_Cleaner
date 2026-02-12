@@ -4752,8 +4752,6 @@ private void lab4MicBase(Runnable onFinished) {
     );
     logLine();
 
-    final boolean gr = AppLang.isGreek(this);
-
     new Thread(() -> {
 
         boolean bottomOk = false;
@@ -5204,10 +5202,6 @@ if (!isFinishing() && !isDestroyed()) {
     try { AppTTS.stop(); } catch (Throwable ignore) {}
     try { d.dismiss(); } catch (Throwable ignore) {}
 });
-
-    if (!isFinishing() && !isDestroyed()) {
-        d.show();
-    }
 });
 
 // WAIT ANSWER
@@ -5683,7 +5677,6 @@ private void lab5Vibration() {
     );
     logLine();
 
-    final boolean gr = AppLang.isGreek(this);
     final AtomicBoolean userConfirmed = new AtomicBoolean(false);
 
     new Thread(() -> {
@@ -5958,9 +5951,6 @@ if (!isFinishing() && !isDestroyed()) {
         d.dismiss();
     });
 
-    if (!isFinishing() && !isDestroyed()) {
-        d.show();
-    }
 });
 
 // ==========================

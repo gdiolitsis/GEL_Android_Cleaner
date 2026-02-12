@@ -4837,7 +4837,7 @@ runOnUiThread(() -> {
 
     TextView msg = new TextView(this);
     msg.setText(gr
-            ? "Βάλε το ακουστικό στο αυτί σου."
+            ? "(Βάλε το ακουστικό στο )αυτί σου."
             : "Place the earpiece on your ear.");
     msg.setTextColor(0xFF39FF14);
     msg.setTextSize(15f);
@@ -4847,6 +4847,8 @@ runOnUiThread(() -> {
     b.setView(root);
 
 final AlertDialog d = b.create();
+
+dialogRef.set(d);
 
 if (d.getWindow() != null) {
     d.getWindow().setBackgroundDrawable(
@@ -5155,34 +5157,33 @@ if (!isFinishing() && !isDestroyed()) {
     d.show();
 }
 
-        noBtn.setOnClickListener(v -> {
+// NO
+noBtn.setOnClickListener(v -> {
     lastAnswerHeardClearly = false;
     answered.set(true);
     try { AppTTS.stop(); } catch (Throwable ignore) {}
     d.dismiss();
 });
 
-        yesBtn.setOnClickListener(v -> {
-    lastAnswerHeardClearly = false;
+// YES
+yesBtn.setOnClickListener(v -> {
+    lastAnswerHeardClearly = true;   // ✅ ΣΩΣΤΟ
     answered.set(true);
     try { AppTTS.stop(); } catch (Throwable ignore) {}
     d.dismiss();
 });
 
-        if (!isFinishing() && !isDestroyed()) {
-            d.show();
-        }
-
-        // 🔊 TTS ΜΕΤΑ από UI attach
-        new Handler(Looper.getMainLooper()).postDelayed(() -> {
-            AppTTS.ensureSpeak(
-                    this,
-                    gr
-                            ? "Με άκουσες καθαρά; Τσέκαρε την απάντησή σου."
-                            : "Did you hear me clearly? Check your answer."
-            );
-        }, 500);
-    });
+// 🔊 TTS μετά το show
+new Handler(Looper.getMainLooper()).postDelayed(() -> {
+    if (d.isShowing() && !AppTTS.isMuted(this)) {
+        AppTTS.ensureSpeak(
+                this,
+                gr
+                        ? "Με άκουσες καθαρά; Τσέκαρε την απάντησή σου."
+                        : "Did you hear me clearly? Check your answer."
+        );
+    }
+}, 500);
 
     // ==========================
     // WAIT FOR USER ANSWER (BACKGROUND)

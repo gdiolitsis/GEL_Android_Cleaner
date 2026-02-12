@@ -1454,6 +1454,9 @@ if (!isFinishing() && !isDestroyed()) {
     d.show();
 }
 
+return d;
+}
+
 private void forceSpeaker(AudioManager am) {
     if (am == null) return;
     try {

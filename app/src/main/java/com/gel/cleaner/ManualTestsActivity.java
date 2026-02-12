@@ -6096,8 +6096,6 @@ LinearLayout.LayoutParams lpStart =
         );
 startBtn.setLayoutParams(lpStart);
 
-root.addView(muteRow);
-
 root.addView(startBtn);
 
 b.setView(root);

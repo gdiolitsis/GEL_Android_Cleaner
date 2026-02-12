@@ -1076,10 +1076,10 @@ private void askUserEarpieceConfirmation() {
         yesBtn.setBackground(yesBg);
         yesBtn.setLayoutParams(btnLp);
 
-        // ---------- ADD (ΜΟΝΟ ΕΔΩ) ----------
-        btnRow.addView(noBtn);
-        btnRow.addView(yesBtn);
-        root.addView(btnRow);
+// ---------- ADD ----------
+btnRow.addView(noBtn);
+btnRow.addView(yesBtn);
+root.addView(btnRow);
 
 b.setView(root);
 b.setCancelable(false);
@@ -1092,111 +1092,93 @@ if (d.getWindow() != null) {
     );
 }
 
-// Σταμάτα TTS όταν κλείσει με οποιονδήποτε τρόπο
+// ------------------------------------------------------------
+// STOP TTS ON ANY DISMISS
+// ------------------------------------------------------------
 d.setOnDismissListener(dialog -> {
     try { AppTTS.stop(); } catch (Throwable ignore) {}
 });
 
-// Κάλυψη back button
+// ------------------------------------------------------------
+// BACK KEY — STOP TTS + RESTORE AUDIO
+// ------------------------------------------------------------
 d.setOnKeyListener((dialog, keyCode, event) -> {
-    if (keyCode == KeyEvent.KEYCODE_BACK &&
-        event.getAction() == KeyEvent.ACTION_UP) {
+    if (keyCode == KeyEvent.KEYCODE_BACK
+            && event.getAction() == KeyEvent.ACTION_UP) {
 
         try { AppTTS.stop(); } catch (Throwable ignore) {}
+
+        lab3WaitingUser = false;
+        restoreLab3Audio();
         dialog.dismiss();
         return true;
     }
     return false;
 });
 
-dialogRef.set(d);
+if (isFinishing() || isDestroyed()) return;
+d.show();
 
-if (!isFinishing() && !isDestroyed()) {
-    d.show();
+// ------------------------------------------------------------
+// TTS PROMPT (AFTER SHOW)
+// ------------------------------------------------------------
+if (!AppTTS.isMuted(this)) {
+    AppTTS.ensureSpeak(
+            this,
+            gr
+                    ? "Άκουσες καθαρά τους ήχους από το ακουστικό;"
+                    : "Did you hear the tones clearly from the earpiece?"
+    );
 }
 
-        // ==========================
-        // TTS PROMPT (ONCE)
-        // ==========================
-        if (!AppTTS.isMuted(this)) {
-            AppTTS.ensureSpeak(
-                    this,
-                    gr
-                            ? "Άκουσες καθαρά τους ήχους από το ακουστικό;"
-                            : "Did you hear the tones clearly from the earpiece?"
-            );
-        }
+// ------------------------------------------------------------
+// YES ACTION (PASS)
+// ------------------------------------------------------------
+yesBtn.setOnClickListener(v -> {
 
-        // ==========================
-        // YES ACTION (PASS)
-        // ==========================
-        yesBtn.setOnClickListener(v -> {
+    try { AppTTS.stop(); } catch (Throwable ignore) {}
 
-            try { AppTTS.stop(); } catch (Throwable ignore) {}
+    lab3WaitingUser = false;
 
-            lab3WaitingUser = false;
+    logLabelOkValue(
+            "LAB 3 — Earpiece",
+            "User confirmed audio playback"
+    );
 
-            logLabelOkValue(
-                    "LAB 3 — Earpiece",
-                    "User confirmed audio playback"
-            );
+    appendHtml("<br>");
+    logOk("Lab 3 finished.");
+    logLine();
 
-            appendHtml("<br>");
-            logOk("Lab 3 finished.");
-            logLine();
+    restoreLab3Audio();
+    d.dismiss();
+});
 
-            restoreLab3Audio();
-            d.dismiss();
-        });
+// ------------------------------------------------------------
+// NO ACTION (FAIL)
+// ------------------------------------------------------------
+noBtn.setOnClickListener(v -> {
 
-        // ==========================
-        // NO ACTION (FAIL)
-        // ==========================
-        noBtn.setOnClickListener(v -> {
+    try { AppTTS.stop(); } catch (Throwable ignore) {}
 
-            try { AppTTS.stop(); } catch (Throwable ignore) {}
+    lab3WaitingUser = false;
 
-            lab3WaitingUser = false;
+    logLabelErrorValue(
+            "LAB 3 — Earpiece",
+            "User did NOT hear tones"
+    );
 
-            logLabelErrorValue(
-                    "LAB 3 — Earpiece",
-                    "User did NOT hear tones"
-            );
+    logLabelWarnValue(
+            "Possible issue",
+            "Earpiece failure or audio routing problem"
+    );
 
-            logLabelWarnValue(
-                    "Possible issue",
-                    "Earpiece failure or audio routing problem"
-            );
+    appendHtml("<br>");
+    logOk("Lab 3 finished.");
+    logLine();
 
-            appendHtml("<br>");
-            logOk("Lab 3 finished.");
-            logLine();
-
-            restoreLab3Audio();
-            d.dismiss();
-        });
-
-        // ------------------------------------------------------------
-        // BACK KEY — STOP TTS + RESTORE + DISMISS
-        // ------------------------------------------------------------
-        d.setOnKeyListener((dialog, keyCode, event) -> {
-            if (keyCode == KeyEvent.KEYCODE_BACK
-                    && event.getAction() == KeyEvent.ACTION_UP) {
-
-                try { AppTTS.stop(); } catch (Throwable ignore) {}
-
-                lab3WaitingUser = false;
-                restoreLab3Audio();
-                dialog.dismiss();
-                return true;
-            }
-            return false;
-        });
-
-        if (isFinishing() || isDestroyed()) return;
-        d.show();
-    });
-}
+    restoreLab3Audio();
+    d.dismiss();
+});
 
 // ============================================================
 // LAB 3 — STATE / HELPERS (LOCKED)
@@ -4278,9 +4260,6 @@ if (!isFinishing() && !isDestroyed()) {
 }
     }).start();
 });
-
-        if (isFinishing() || isDestroyed()) return;
-d.show();
 
 // ------------------------------------------------------------
 // TTS INTRO — DIALOG BOUND (GLOBAL MUTE SAFE)

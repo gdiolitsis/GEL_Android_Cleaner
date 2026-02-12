@@ -5651,6 +5651,7 @@ new Handler(Looper.getMainLooper()).postDelayed(() -> {
         );
     }
 }, 500);
+});
 
     // ==========================
     // WAIT FOR USER ANSWER (BACKGROUND)

@@ -1146,21 +1146,10 @@ private void askUserEarpieceConfirmation() {
         msg.setPadding(0, 0, 0, dp(18));
         root.addView(msg);
 
-        // ==========================
-        // MUTE CHECKBOX (GLOBAL TTS)
-        // ==========================
-        CheckBox muteBox = new CheckBox(this);
-        muteBox.setChecked(AppTTS.isMuted(this));
-        muteBox.setText(gr ? "Σίγαση φωνητικών οδηγιών" : "Mute voice instructions");
-        muteBox.setTextColor(0xFFDDDDDD);
-        muteBox.setGravity(Gravity.CENTER);
-        muteBox.setPadding(0, 0, 0, dp(14));
-        root.addView(muteBox);
-
-        muteBox.setOnCheckedChangeListener((v, checked) -> {
-            AppTTS.setMuted(this, checked);
-            try { AppTTS.stop(); } catch (Throwable ignore) {}
-        });
+// ==========================
+// MUTE ROW (UNIFIED — AppTTS HELPER)
+// ==========================
+root.addView(buildMuteRow());
 
         // ---------- BUTTON ROW ----------
         LinearLayout btnRow = new LinearLayout(this);
@@ -3478,7 +3467,7 @@ private boolean detectPowerInstability() {
 }
 
 // ------------------------------------------------------------
-// MUTE ROW (CHECKBOX + LABEL — ABOVE BUTTONS)
+// MUTE ROW (UNIFIED — AppTTS HELPER)
 // ------------------------------------------------------------
 private LinearLayout buildMuteRow() {
 
@@ -3495,23 +3484,42 @@ private LinearLayout buildMuteRow() {
 
     TextView label = new TextView(this);
     label.setText(
-            gr ? "Σίγαση φωνητικών οδηγιών" : "Mute voice instructions"
+            gr ? "Σίγαση φωνητικών οδηγιών"
+               : "Mute voice instructions"
     );
     label.setTextColor(0xFFAAAAAA);
     label.setTextSize(14f);
 
+    // --------------------------------------------------------
+    // TOGGLE (ROW + LABEL CLICK)
+    // --------------------------------------------------------
     View.OnClickListener toggle = v -> {
+
         boolean newState = !AppTTS.isMuted(this);
+
         AppTTS.setMuted(this, newState);
         muteCheck.setChecked(newState);
+
+        // 🔇 Immediate hard stop when muting
+        if (newState) {
+            try { AppTTS.stop(); } catch (Throwable ignore) {}
+        }
     };
 
     row.setOnClickListener(toggle);
     label.setOnClickListener(toggle);
 
-    muteCheck.setOnCheckedChangeListener((b, checked) -> {
-        if (checked != AppTTS.isMuted(this)) {
-            AppTTS.setMuted(this, checked);
+    // --------------------------------------------------------
+    // CHECKBOX DIRECT CHANGE
+    // --------------------------------------------------------
+    muteCheck.setOnCheckedChangeListener((button, checked) -> {
+
+        if (checked == AppTTS.isMuted(this)) return;
+
+        AppTTS.setMuted(this, checked);
+
+        if (checked) {
+            try { AppTTS.stop(); } catch (Throwable ignore) {}
         }
     });
 
@@ -6038,49 +6046,9 @@ titleView.setPadding(0, 0, 0, dp(14));
 root.addView(titleView);
 
 // ---------------------------
-// MUTE ROW (ABOVE BUTTONS)
+// MUTE ROW (CHECKBOX)
 // ---------------------------
-LinearLayout muteRow = new LinearLayout(this);
-muteRow.setOrientation(LinearLayout.HORIZONTAL);
-muteRow.setGravity(Gravity.CENTER_VERTICAL);
-muteRow.setPadding(0, dp(8), 0, dp(16));
-
-// CheckBox
-CheckBox muteCheck = new CheckBox(this);
-muteCheck.setChecked(AppTTS.isMuted(this));
-
-muteCheck.setOnCheckedChangeListener((buttonView, isChecked) -> {
-    if (isChecked != AppTTS.isMuted(this)) {
-        AppTTS.setMuted(this, isChecked);
-    }
-});
-
-muteCheck.setPadding(0, 0, dp(6), 0);
-
-// Label δίπλα στο checkbox
-TextView muteLabel = new TextView(this);
-muteLabel.setText(
-        gr
-                ? "Σίγαση φωνητικών οδηγιών"
-                : "Mute voice instructions"
-);
-muteLabel.setTextColor(0xFFAAAAAA);
-muteLabel.setTextSize(14f);
-muteLabel.setPadding(0, 0, 0, 0);
-
-// ΕΝΑ toggle point (για να μη γίνεται διπλό fire)
-View.OnClickListener toggleMute = v -> {
-    boolean newState = !AppTTS.isMuted(this);
-    AppTTS.setMuted(this, newState);
-    muteCheck.setChecked(newState);
-};
-
-// μόνο το row & label κάνουν toggle
-muteRow.setOnClickListener(toggleMute);
-muteLabel.setOnClickListener(toggleMute);
-
-muteRow.addView(muteCheck);
-muteRow.addView(muteLabel);
+root.addView(buildMuteRow());
 
 // ---------------------------
 // MESSAGE

@@ -1888,8 +1888,6 @@ if (fpsRanges != null) {
     }
 }
 
-final boolean gr = AppLang.isGreek(this);
-
 if (maxFps >= 120) {
 
     h.videoSmoothness = gr
@@ -2106,12 +2104,6 @@ private void logLine() {
 // ------------------------------------------------------------
 // SAFE ESCAPE FOR UI ONLY (SERVICE LOG STORES RAW TEXT)
 // ------------------------------------------------------------
-private String safe(String s) {
-if (s == null) return "";
-return s.replace("&", "&")
-.replace("<", "<")
-.replace(">", ">");
-}
 
 private int dp(int v) {
 float d = getResources().getDisplayMetrics().density;
@@ -5511,6 +5503,8 @@ private void playAnswerCheckWav() {
 // STAGE 4 — HUMAN CONFIRMATION (FINAL • COMPILE SAFE)
 // ============================================================
 private void showAnswerCheckConfirmation() {
+    
+final boolean gr = AppLang.isGreek(this);
 
     // 🔊 ΟΔΗΓΙΕΣ ΑΠΟ SPEAKER
     AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);

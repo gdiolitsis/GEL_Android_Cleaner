@@ -1442,6 +1442,7 @@ if (!isFinishing() && !isDestroyed()) {
 }
 
 return d;
+}
 
 private void forceSpeaker(AudioManager am) {
     if (am == null) return;

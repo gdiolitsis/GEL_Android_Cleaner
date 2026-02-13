@@ -5449,53 +5449,53 @@ runOnUiThread(() -> {
     }
 
     if (!isFinishing() && !isDestroyed()) {
-    d.show();
 
-    new Handler(Looper.getMainLooper()).postDelayed(() -> {
+        d.show();
 
-        if (!isFinishing() && !isDestroyed()
-                && !AppTTS.isMuted(this)) {
+        new Handler(Looper.getMainLooper()).postDelayed(() -> {
 
-            AppTTS.ensureSpeak(
-                    this,
-                    gr
-                            ? "Βάλε το ακουστικό στο αυτί σου."
-                            : "Place the earpiece on your ear."
-            );
-        }
+            if (!isFinishing() && !isDestroyed()
+                    && !AppTTS.isMuted(this)) {
 
-        // Περιμένουμε να ξεκινήσει
-        new Thread(() -> {
-
-            long startWait = SystemClock.uptimeMillis() + 1500;
-            while (!AppTTS.isSpeaking()
-                    && SystemClock.uptimeMillis() < startWait) {
-                SystemClock.sleep(50);
+                AppTTS.ensureSpeak(
+                        this,
+                        gr
+                                ? "Βάλε το ακουστικό στο αυτί σου."
+                                : "Place the earpiece on your ear."
+                );
             }
 
-            long maxWait = SystemClock.uptimeMillis() + 4000;
-            while (AppTTS.isSpeaking()
-                    && SystemClock.uptimeMillis() < maxWait) {
-                SystemClock.sleep(80);
-            }
+            // Περιμένουμε να ξεκινήσει
+            new Thread(() -> {
 
-            SystemClock.sleep(250);
+                long startWait = SystemClock.uptimeMillis() + 1500;
+                while (!AppTTS.isSpeaking()
+                        && SystemClock.uptimeMillis() < startWait) {
+                    SystemClock.sleep(50);
+                }
 
-            runOnUiThread(() -> {
-                try {
-                    if (d.isShowing()) d.dismiss();
-                } catch (Throwable ignore) {}
-            });
+                long maxWait = SystemClock.uptimeMillis() + 4000;
+                while (AppTTS.isSpeaking()
+                        && SystemClock.uptimeMillis() < maxWait) {
+                    SystemClock.sleep(80);
+                }
 
-            routeToCallEarpiece();
-            playAnswerCheckWav();
+                SystemClock.sleep(250);
 
-}).start();
+                runOnUiThread(() -> {
+                    try {
+                        if (d.isShowing()) d.dismiss();
+                    } catch (Throwable ignore) {}
+                });
 
-}, 500);
+                routeToCallEarpiece();
+                playAnswerCheckWav();
+
+            }).start();
+
+        }, 500);
+    }
 });
-
-});  
 
 // ==========================
 // WAIT WITH TIMEOUT (MAX 4s)

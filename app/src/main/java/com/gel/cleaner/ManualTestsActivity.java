@@ -1264,7 +1264,7 @@ yesBtn.setOnClickListener(v -> {
     lab3WaitingUser = false;
 
     logLabelOkValue(
-            gr ? "LAB 3 — Ακουστικό" : "LAB 3 — Earpiece",
+            gr ? "Αποτέλεσμα" : "Result",
             gr
                     ? "Ο χρήστης επιβεβαίωσε καθαρή αναπαραγωγή ήχου"
                     : "User confirmed audio playback"
@@ -4445,14 +4445,14 @@ appendHtml("<br>");
     logLabelOkValue(
             gr ? "Έξοδος Ηχείου" : "Speaker output",
             gr
-                    ? "Ανιχνεύθηκε ακουστικό σήμα με χαμηλή βεβαιότητα"
+                    ? "Ανιχνεύθηκε ακουστικό σήμα με χαμηλή αξιοπιστία."
                     : "Acoustic signal detected with LOW confidence"
     );
 
     logLabelWarnValue(
             gr ? "Σημείωση" : "Note",
             gr
-                    ? "Η χαμηλή βεβαιότητα μπορεί να οφείλεται, σε DSP φιλτράρισμα, ακύρωση θορύβου, περιοσισμό απόκρισης συχνότητας, ή θέση μικροφώνου."
+                    ? "Η χαμηλή αξιοπιστία μπορεί να οφείλεται, σε DSP φιλτράρισμα, ακύρωση θορύβου, περιοσισμό απόκρισης συχνότητας, ή θέση μικροφώνου."
                     : "Low confidence may be caused, by DSP filtering, noise cancellation, speaker frequency limits, or microphone placement."
     );
 
@@ -5269,6 +5269,7 @@ runOnUiThread(() -> {
 
     // STOP TTS on any dismiss
     d.setOnDismissListener(dialog -> {
+dialogRef.set(null);
         try { AppTTS.stop(); } catch (Throwable ignore) {}
 
         if (!answered.get()) {
@@ -5331,6 +5332,13 @@ while (!answered.get() && !cancelled.get()) {
 }
 
 if (cancelled.get()) return;
+
+// -----------------------------------------
+// UI STABILIZATION BEFORE STAGE 2
+// -----------------------------------------
+try { AppTTS.stop(); } catch (Throwable ignore) {}
+
+SystemClock.sleep(350);   // αφήνουμε το UI να "κάτσει"
 
 // ====================================================
 // RESULT LOGGING (USER CONFIRMATION BASED)

@@ -129,6 +129,17 @@ public final class AppTTS {
         }
     }
 
+// ============================================================
+// SPEAKING STATE (SAFE CHECK)
+// ============================================================
+public static boolean isSpeaking() {
+    try {
+        return tts != null && tts.isSpeaking();
+    } catch (Throwable ignore) {
+        return false;
+    }
+}
+ 
     // ============================================================
     // APP LANGUAGE (NOT SYSTEM)
     // ============================================================

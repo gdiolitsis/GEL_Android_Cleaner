@@ -302,28 +302,10 @@ public void onItemSelected(
                     : getPermissionsTextEN()
     );
 
-    // 🔥 UPDATE MUTE LABEL LIVE
-    for (int i = 0; i < box.getChildCount(); i++) {
-        View v = box.getChildAt(i);
-        if (v instanceof LinearLayout) {
-            LinearLayout row = (LinearLayout) v;
-            for (int j = 0; j < row.getChildCount(); j++) {
-                View c = row.getChildAt(j);
-                if (c instanceof TextView) {
-                    ((TextView) c).setText(
-                            "GR".equals(permissionsLang)
-                                    ? "Σίγαση φωνητικών οδηγιών"
-                                    : "Mute voice instructions"
-                    );
-                }
-            }
-        }
-    }
-
-    if (!AppTTS.isMuted(MainActivity.this)) {
-        speakPermissionsTTS();
-    }
-}
+// ==========================
+// MUTE ROW (UNIFIED — AppTTS HELPER)
+// ==========================
+root.addView(buildMuteRow());
 
                 @Override
                 public void onNothingSelected(AdapterView<?> parent) {}
@@ -342,12 +324,13 @@ public void onItemSelected(
     langBox.addView(langSpinner);
 
     LinearLayout.LayoutParams lpLang =
-            new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
-            );
-    lpLang.setMargins(0, 0, 0, dp(18));
-    langBox.setLayoutParams(lpLang);
+        new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+lpLang.gravity = Gravity.CENTER;   // 🔥 κεντραρισμένο
+lpLang.setMargins(0, 0, 0, dp(18));
+langBox.setLayoutParams(lpLang);
 
     box.addView(langBox);
 
@@ -790,8 +773,10 @@ boolean gr = "GR".equals(lang);
     msg.setText(gr ? getWelcomeTextGR() : getWelcomeTextEN());
     box.addView(msg);
 
-    // 🔕 GLOBAL MUTE
-    box.addView(buildMuteRow());
+// ==========================
+// MUTE ROW (UNIFIED — AppTTS HELPER)
+// ==========================
+root.addView(buildMuteRow());
 
     // ================= LANGUAGE SPINNER =================
     Spinner langSpinner = new Spinner(MainActivity.this);
@@ -847,12 +832,13 @@ boolean gr = "GR".equals(lang);
     langBox.addView(langSpinner);
 
     LinearLayout.LayoutParams lpLang =
-            new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
-            );
-    lpLang.setMargins(0, 0, 0, dp(18));
-    langBox.setLayoutParams(lpLang);
+        new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+lpLang.gravity = Gravity.CENTER;   // 🔥 κεντραρισμένο
+lpLang.setMargins(0, 0, 0, dp(18));
+langBox.setLayoutParams(lpLang);
 
     box.addView(langBox);
 

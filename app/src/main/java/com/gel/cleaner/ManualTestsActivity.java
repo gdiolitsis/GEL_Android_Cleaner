@@ -5490,10 +5490,12 @@ runOnUiThread(() -> {
             routeToCallEarpiece();
             playAnswerCheckWav();
 
-        }).start();
+}).start();
 
 }, 500);
 });
+
+});  
 
 // ==========================
 // WAIT WITH TIMEOUT (MAX 4s)

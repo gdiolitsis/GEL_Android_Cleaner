@@ -5468,11 +5468,8 @@ if (!AppTTS.isMuted(this)) {
 // ==========================
 long maxWait = SystemClock.uptimeMillis() + 4000;
 
-while (SystemClock.uptimeMillis() < maxWait) {
-
-    if (!AppTTS.isSpeaking()) {
-        break;
-    }
+while (AppTTS.isSpeaking()
+        && SystemClock.uptimeMillis() < maxWait) {
 
     SystemClock.sleep(80);
 }

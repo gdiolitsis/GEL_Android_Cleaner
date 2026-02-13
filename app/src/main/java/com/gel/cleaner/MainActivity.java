@@ -599,250 +599,174 @@ private String getWelcomeTextGR() {
 // SHOW POPUP
 // ------------------------------------------------------------
 private void showWelcomePopup() {
-	
-	String lang = getPopupLang();
-boolean gr = "GR".equals(lang);
 
-        AlertDialog.Builder b =
-        new AlertDialog.Builder(MainActivity.this);
-        
-        b.setCancelable(true);
+    String lang = getPopupLang();
+    boolean gr = "GR".equals(lang);
 
-        // ================= ROOT =================
-        LinearLayout box = new LinearLayout(MainActivity.this);
-        box.setOrientation(LinearLayout.VERTICAL);
-        box.setPadding(dp(24), dp(20), dp(24), dp(18));
+    AlertDialog.Builder b =
+            new AlertDialog.Builder(MainActivity.this);
 
-        GradientDrawable bg = new GradientDrawable();
-        bg.setColor(0xFF101010);
-        bg.setCornerRadius(dp(18));
-        bg.setStroke(dp(4), 0xFFFFD700);
-        box.setBackground(bg);
+    b.setCancelable(true);
 
-        // ================= TITLE =================
-        TextView title = new TextView(MainActivity.this);
-        title.setText("WELCOME");
-        title.setTextColor(0xFFFFFFFF);
-        title.setTextSize(18f);
-        title.setTypeface(null, Typeface.BOLD);
-        title.setGravity(Gravity.CENTER);
-        title.setPadding(0, 0, 0, dp(12));
-        box.addView(title);
+    // ================= ROOT =================
+    LinearLayout box = new LinearLayout(MainActivity.this);
+    box.setOrientation(LinearLayout.VERTICAL);
+    box.setPadding(dp(24), dp(20), dp(24), dp(18));
 
-        // ================= MESSAGE =================
-        TextView msg = new TextView(MainActivity.this);
-        msg.setTextColor(0xFFDDDDDD);
-        msg.setTextSize(15f);
-        msg.setGravity(Gravity.START);
+    GradientDrawable bg = new GradientDrawable();
+    bg.setColor(0xFF101010);
+    bg.setCornerRadius(dp(18));
+    bg.setStroke(dp(4), 0xFFFFD700);
+    box.setBackground(bg);
 
-        // αρχική γλώσσα από σύστημα
-        String sys = LocaleHelper.getLang(MainActivity.this); // "el" | "en"
-        welcomeLang = getPopupLang();
-        msg.setText("GR".equals(welcomeLang) ? getWelcomeTextGR() : getWelcomeTextEN());
+    // ================= TITLE =================
+    TextView title = new TextView(MainActivity.this);
+    title.setText(gr ? "ΚΑΛΩΣ ΗΡΘΑΤΕ" : "WELCOME");
+    title.setTextColor(Color.WHITE);
+    title.setTextSize(18f);
+    title.setTypeface(null, Typeface.BOLD);
+    title.setGravity(Gravity.CENTER);
+    title.setPadding(0, 0, 0, dp(12));
+    box.addView(title);
 
-        msg.setPadding(0, 0, 0, dp(12));   // λίγο αέρα πριν τα controls
-box.addView(msg);
+    // ================= MESSAGE =================
+    TextView msg = new TextView(MainActivity.this);
+    msg.setTextColor(0xFFDDDDDD);
+    msg.setTextSize(15f);
+    msg.setGravity(Gravity.START);
+    msg.setPadding(0, 0, 0, dp(12));
+    msg.setText(gr ? getWelcomeTextGR() : getWelcomeTextEN());
+    box.addView(msg);
 
-// ==========================
-// 🔕 GLOBAL MUTE (AppTTS)
-// ==========================
-box.addView(buildMuteRow());
+    // 🔕 GLOBAL MUTE
+    box.addView(buildMuteRow());
 
-        // ==========================
-        // 🌐 LANGUAGE SPINNER
-        // ==========================
-        Spinner langSpinner = new Spinner(MainActivity.this);
-        
-        langSpinner.setMinimumHeight(dp(48));
-langSpinner.setPadding(dp(12), dp(8), dp(12), dp(8));
+    // ================= LANGUAGE SPINNER =================
+    Spinner langSpinner = new Spinner(MainActivity.this);
 
-        ArrayAdapter<String> langAdapter =
-                new ArrayAdapter<>(
-                        MainActivity.this,
-                        android.R.layout.simple_spinner_item,
-                        new String[]{"EN", "GR"}
-                );
-        langAdapter.setDropDownViewResource(
-                android.R.layout.simple_spinner_dropdown_item);
-        langSpinner.setAdapter(langAdapter);
+    ArrayAdapter<String> adapter =
+            new ArrayAdapter<>(
+                    MainActivity.this,
+                    android.R.layout.simple_spinner_item,
+                    new String[]{"EN", "GR"}
+            );
+    adapter.setDropDownViewResource(
+            android.R.layout.simple_spinner_dropdown_item
+    );
+    langSpinner.setAdapter(adapter);
+    langSpinner.setSelection(gr ? 1 : 0);
 
-        // αρχική επιλογή
-        if ("GR".equals(welcomeLang)) {
-            langSpinner.setSelection(1);
-            msg.setText(getWelcomeTextGR());
-        } else {
-            langSpinner.setSelection(0);
-            msg.setText(getWelcomeTextEN());
+    langSpinner.setOnItemSelectedListener(
+            new AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(
+                        AdapterView<?> parent,
+                        View view,
+                        int position,
+                        long id
+                ) {
+
+                    String newLang = (position == 0) ? "EN" : "GR";
+                    savePopupLang(newLang);
+
+                    msg.setText(
+                            "GR".equals(newLang)
+                                    ? getWelcomeTextGR()
+                                    : getWelcomeTextEN()
+                    );
+
+                    speakWelcomeTTS();
+                }
+
+                @Override
+                public void onNothingSelected(AdapterView<?> parent) {}
+            }
+    );
+
+    LinearLayout langBox = new LinearLayout(MainActivity.this);
+    langBox.setPadding(dp(12), dp(12), dp(12), dp(12));
+
+    GradientDrawable langBg = new GradientDrawable();
+    langBg.setColor(0xFF1A1A1A);
+    langBg.setCornerRadius(dp(12));
+    langBg.setStroke(dp(2), 0xFFFFD700);
+    langBox.setBackground(langBg);
+
+    langBox.addView(langSpinner);
+
+    LinearLayout.LayoutParams lpLang =
+            new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+            );
+    lpLang.setMargins(0, 0, 0, dp(18));
+    langBox.setLayoutParams(lpLang);
+
+    box.addView(langBox);
+
+    // ================= CHECKBOX =================
+    CheckBox cb = new CheckBox(this);
+    cb.setText(gr ? "Να μην εμφανιστεί ξανά"
+                  : "Do not show again");
+    cb.setTextColor(Color.WHITE);
+    cb.setPadding(0, dp(8), 0, dp(8));
+    box.addView(cb);
+
+    // ================= OK BUTTON =================
+    Button okBtn = new Button(MainActivity.this);
+    okBtn.setText("OK");
+    okBtn.setAllCaps(false);
+    okBtn.setTextColor(Color.WHITE);
+    okBtn.setTextSize(18f);
+    okBtn.setGravity(Gravity.CENTER);
+    okBtn.setPadding(dp(24), dp(18), dp(24), dp(18));
+
+    GradientDrawable okBg = new GradientDrawable();
+    okBg.setColor(0xFF0F8A3B);
+    okBg.setCornerRadius(dp(18));
+    okBg.setStroke(dp(3), 0xFFFFD700);
+    okBtn.setBackground(okBg);
+
+    box.addView(okBtn);
+
+    b.setView(box);
+    final AlertDialog d = b.create();
+
+    if (d.getWindow() != null) {
+        d.getWindow().setBackgroundDrawable(
+                new ColorDrawable(Color.TRANSPARENT)
+        );
+    }
+
+    d.show();
+    welcomeShown = true;
+
+    new Handler(Looper.getMainLooper()).postDelayed(() -> {
+        if (!AppTTS.isMuted(MainActivity.this)
+                && ttsReady[0]
+                && welcomeShown) {
+            speakWelcomeTTS();
+        }
+    }, 120);
+
+    okBtn.setOnClickListener(v -> {
+
+        if (cb.isChecked()) {
+            disableWelcomeForever();
         }
 
-        langSpinner.setOnItemSelectedListener(
-                new AdapterView.OnItemSelectedListener() {
-                    @Override
-                    public void onItemSelected(AdapterView<?> p, View v, int pos, long id) {
-
-                        welcomeLang = (pos == 0) ? "EN" : "GR";
-savePopupLang(welcomeLang);
-
-                        if ("GR".equals(welcomeLang)) {
-                            msg.setText(getWelcomeTextGR());
-                        } else {
-                            msg.setText(getWelcomeTextEN());
-                        }
-
-                        speakWelcomeTTS();
-                    }
-
-                    @Override
-                    public void onNothingSelected(AdapterView<?> p) { }
-                });
-
-// ==========================
-// 🌐 LANGUAGE BOX — FINAL
-// ==========================
-LinearLayout langBox = new LinearLayout(MainActivity.this);
-langBox.setOrientation(LinearLayout.HORIZONTAL);
-langBox.setGravity(Gravity.CENTER);
-langBox.setPadding(dp(12), 0, dp(12), 0);
-
-GradientDrawable langBg = new GradientDrawable();
-langBg.setColor(0xFF1A1A1A);
-langBg.setCornerRadius(dp(12));
-langBg.setStroke(dp(2), 0xFFFFD700);
-langBox.setBackground(langBg);
-
-LinearLayout.LayoutParams lpLangBox =
-        new LinearLayout.LayoutParams(
-                0,
-                dp(88),      // ⬆️ ΑΠΟ 50 → 88
-                1f
-        );
-lpLangBox.setMargins(dp(12), 0, 0, 0);
-langBox.setLayoutParams(lpLangBox);
-
-// spinner μέσα
-LinearLayout.LayoutParams lpSpin =
-        new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.MATCH_PARENT
-        );
-langSpinner.setLayoutParams(lpSpin);
-langSpinner.setMinimumHeight(0);
-langSpinner.setGravity(Gravity.CENTER_VERTICAL);
-langSpinner.setPadding(dp(20), 0, dp(20), 0);
-
-        langBox.addView(langSpinner);
-
-        controls.addView(muteBtn);
-        controls.addView(langBox);
-        box.addView(controls);
-        
-CheckBox cb = new CheckBox(this);
-cb.setText("Να μην εμφανιστεί ξανά");
-cb.setTextColor(Color.WHITE);
-cb.setPadding(0, dp(8), 0, dp(8));
-box.addView(cb);
-
-// ==========================
-// OK BUTTON — FINAL (DOUBLE HEIGHT)
-// ==========================
-Button okBtn = new Button(MainActivity.this);
-okBtn.setText("OK");
-okBtn.setAllCaps(false);
-okBtn.setTextColor(0xFFFFFFFF);
-okBtn.setTextSize(20f);              
-okBtn.setIncludeFontPadding(false); 
-okBtn.setGravity(Gravity.CENTER);
-
-// 🔓 ΞΕΚΛΕΙΔΩΜΑ ANDROID LIMITS
-okBtn.setMinimumHeight(0);
-okBtn.setMinHeight(0);
-okBtn.setMinimumWidth(0);
-okBtn.setMinWidth(0);
-
-// ✅ ΟΠΤΙΚΟ ΥΨΟΣ ΑΠΟ PADDING (ΔΙΠΛΑΣΙΟ)
-okBtn.setPadding(
-        dp(24),   // left
-        dp(18),   // top   ⬆️ ΔΙΠΛΑΣΙΟ
-        dp(24),   // right
-        dp(18)    // bottom ⬆️ ΔΙΠΛΑΣΙΟ
-);
-
-GradientDrawable okBg = new GradientDrawable();
-okBg.setColor(0xFF0F8A3B);
-okBg.setCornerRadius(dp(18));        // ⬆️ λίγο πιο “βαρύ”
-okBg.setStroke(dp(3), 0xFFFFD700);
-okBtn.setBackground(okBg);
-
-// ✅ PRIMARY ACTION HEIGHT — ΔΙΠΛΑΣΙΟ
-LinearLayout.LayoutParams lpOk =
-        new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                dp(96)               // ⬅️ ΔΙΠΛΑΣΙΟ, ΤΕΛΟΣ
-        );
-lpOk.setMargins(0, dp(20), 0, 0);
-okBtn.setLayoutParams(lpOk);
-
-box.addView(okBtn);
-
-// ==========================
-// DIALOG
-// ==========================
-b.setView(box);
-final AlertDialog d = b.create();
-
-d.setOnDismissListener(dialog -> {
-    welcomeShown = false;
-    try {
-        if (tts != null && tts[0] != null) tts[0].stop();
-    } catch (Throwable ignore) {}
-});
-
-if (d.getWindow() != null) {
-    d.getWindow().setBackgroundDrawable(
-            new ColorDrawable(Color.TRANSPARENT));
-}
-
-// ▶️ force TTS retry μόλις ανοίξει το dialog
-d.show();
-
-// 👇 το popup ΕΙΝΑΙ τώρα ορατό
-welcomeShown = true;
-
-// 🔒 φέρε το μπροστά
-if (d.getWindow() != null) {
-    d.getWindow().clearFlags(
-            android.view.WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
-    );
-    d.getWindow().addFlags(
-            android.view.WindowManager.LayoutParams.FLAG_DIM_BEHIND
-    );
-}
-
-// ▶️ force TTS retry μόλις ανοίξει το dialog
-new Handler(Looper.getMainLooper()).postDelayed(() -> {
-    if (!AppTTS.isMuted(MainActivity.this) && ttsReady[0] && welcomeShown)
-        speakWelcomeTTS();
-    }
-}, 120);
-
-okBtn.setOnClickListener(v -> {
-
-    if (cb.isChecked()) {
-        disableWelcomeForever();
-    }
-
-    d.dismiss();
-    showPlatformSelectPopup();
-});
+        d.dismiss();
+        showPlatformSelectPopup();
+    });
 }
 
 // =========================================================
 // PLATFORM SELECT — FINAL, CLEAN
 // =========================================================
 private void showPlatformSelectPopup() {
-	
-	String lang = getPopupLang();
-boolean gr = "GR".equals(lang);
+
+    String lang = getPopupLang();
+    boolean gr = "GR".equals(lang);
 
     AlertDialog.Builder b =
             new AlertDialog.Builder(
@@ -851,104 +775,75 @@ boolean gr = "GR".equals(lang);
             );
 
     LinearLayout box = new LinearLayout(this);
-box.setOrientation(LinearLayout.VERTICAL);
-box.setPadding(dp(24), dp(20), dp(24), dp(18));
+    box.setOrientation(LinearLayout.VERTICAL);
+    box.setPadding(dp(24), dp(20), dp(24), dp(18));
 
-box.setLayoutParams(
-        new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-        )
-);
+    GradientDrawable bg = new GradientDrawable();
+    bg.setColor(0xFF101010);
+    bg.setCornerRadius(dp(18));
+    bg.setStroke(dp(4), 0xFFFFD700);
+    box.setBackground(bg);
 
-        GradientDrawable bg = new GradientDrawable();
-        bg.setColor(0xFF101010);
-        bg.setCornerRadius(dp(18));
-        bg.setStroke(dp(4), 0xFFFFD700);
-        box.setBackground(bg);
+    // TITLE
+    TextView t = new TextView(this);
+    t.setText(gr ? "ΕΠΙΛΟΓΗ ΣΥΣΚΕΥΗΣ" : "SELECT DEVICE");
+    t.setTextColor(Color.WHITE);
+    t.setTextSize(18f);
+    t.setTypeface(null, Typeface.BOLD);
+    t.setGravity(Gravity.CENTER);
+    t.setPadding(0, dp(4), 0, dp(16));
+    box.addView(t);
 
-        // ---------------- TITLE ----------------
-TextView t = new TextView(this);
-t.setText("SELECT DEVICE");
-t.setTextColor(Color.WHITE);
-t.setTextSize(18f);
-t.setTypeface(null, Typeface.BOLD);
-t.setGravity(Gravity.CENTER);
-t.setPadding(
-        0,
-        dp(4),    // top
-        0,
-        dp(16)    // bottom
-);
-box.addView(t);
+    // ANDROID BUTTON
+    TextView androidBtn = new TextView(this);
+    androidBtn.setText(gr
+            ? "🤖  Η ANDROID ΣΥΣΚΕΥΗ ΜΟΥ"
+            : "🤖  MY ANDROID DEVICE");
+    androidBtn.setTextColor(0xFF000000);
+    androidBtn.setTextSize(17f);
+    androidBtn.setTypeface(Typeface.DEFAULT_BOLD);
+    androidBtn.setGravity(Gravity.CENTER);
+    androidBtn.setPadding(dp(18), dp(20), dp(18), dp(20));
 
-// =================================================
-// 🤖 ANDROID "BUTTON" (TextView)
-// =================================================
+    GradientDrawable bgAndroid = new GradientDrawable();
+    bgAndroid.setColor(0xFF3DDC84);
+    bgAndroid.setCornerRadius(dp(6));
+    bgAndroid.setStroke(dp(3), 0xFFFFD700);
+    androidBtn.setBackground(bgAndroid);
 
-TextView androidBtn = new TextView(this);
-androidBtn.setText(gr
-        ? "🤖  Η ANDROID ΣΥΣΚΕΥΗ ΜΟΥ"
-        : "🤖  MY ANDROID DEVICE");
+    LinearLayout.LayoutParams lpBtn =
+            new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    dp(92)
+            );
+    lpBtn.setMargins(dp(8), dp(18), dp(8), 0);
+    androidBtn.setLayoutParams(lpBtn);
 
-androidBtn.setTextColor(0xFF000000); // black text on green
-androidBtn.setTextSize(17f);
-androidBtn.setTypeface(Typeface.DEFAULT_BOLD);
-androidBtn.setGravity(Gravity.CENTER);
-androidBtn.setClickable(true);
-androidBtn.setFocusable(true);
-androidBtn.setLetterSpacing(0.04f);
+    // APPLE BUTTON
+    TextView appleBtn = new TextView(this);
+    appleBtn.setText(gr
+            ? "🍎  ΑΛΛΗ ΣΥΣΚΕΥΗ APPLE"
+            : "🍎  OTHER APPLE DEVICE");
+    appleBtn.setTextColor(Color.WHITE);
+    appleBtn.setTextSize(17f);
+    appleBtn.setTypeface(Typeface.DEFAULT_BOLD);
+    appleBtn.setGravity(Gravity.CENTER);
+    appleBtn.setPadding(dp(18), dp(20), dp(18), dp(20));
 
-// badge padding
-androidBtn.setPadding(dp(18), dp(20), dp(18), dp(20));
+    GradientDrawable bgApple = new GradientDrawable();
+    bgApple.setColor(0xFF1C1C1E);
+    bgApple.setCornerRadius(dp(6));
+    bgApple.setStroke(dp(3), 0xFFFFD700);
+    appleBtn.setBackground(bgApple);
 
-GradientDrawable bgAndroid = new GradientDrawable();
-bgAndroid.setColor(0xFF3DDC84);   // official Android green
-bgAndroid.setCornerRadius(dp(6)); // badge look
-bgAndroid.setStroke(dp(3), 0xFFFFD700); // GEL gold
-androidBtn.setBackground(bgAndroid);
+    LinearLayout.LayoutParams lpBtn2 =
+            new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    dp(92)
+            );
+    lpBtn2.setMargins(dp(8), dp(18), dp(8), 0);
+    appleBtn.setLayoutParams(lpBtn2);
 
-LinearLayout.LayoutParams lpBtn =
-        new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                dp(92)
-        );
-lpBtn.setMargins(dp(8), dp(18), dp(8), 0);
-androidBtn.setLayoutParams(lpBtn);
-
-// =================================================
-// 🍎 APPLE "BUTTON" (TextView)
-// =================================================
-TextView appleBtn = new TextView(this);
-appleBtn.setText(gr
-        ? "🍎  ΑΛΛΗ ΣΥΣΚΕΥΗ APPLE"
-        : "🍎  OTHER APPLE DEVICE");
-
-appleBtn.setTextColor(Color.WHITE);
-appleBtn.setTextSize(17f);
-appleBtn.setTypeface(Typeface.DEFAULT_BOLD);
-appleBtn.setGravity(Gravity.CENTER);
-appleBtn.setClickable(true);
-appleBtn.setFocusable(true);
-appleBtn.setLetterSpacing(0.04f);
-
-appleBtn.setPadding(dp(18), dp(20), dp(18), dp(20));
-
-GradientDrawable bgApple = new GradientDrawable();
-bgApple.setColor(0xFF1C1C1E);     // Apple system graphite
-bgApple.setCornerRadius(dp(6));  // badge style
-bgApple.setStroke(dp(3), 0xFFFFD700); // GEL gold
-appleBtn.setBackground(bgApple);
-
-LinearLayout.LayoutParams lpBtn2 =
-        new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                dp(92)
-        );
-lpBtn2.setMargins(dp(8), dp(18), dp(8), 0);
-appleBtn.setLayoutParams(lpBtn2);
-
-    // ---------------- ADD ----------------
     box.addView(androidBtn);
     box.addView(appleBtn);
 
@@ -960,37 +855,29 @@ appleBtn.setLayoutParams(lpBtn2);
                 new ColorDrawable(Color.TRANSPARENT));
 
     d.show();
-    
+
     Window w = d.getWindow();
-if (w != null) {
-    w.setLayout(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-    );
+    if (w != null) {
+        w.setLayout(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+        w.getDecorView().setPadding(dp(16),0,dp(16),0);
+    }
 
-    // ίδιο margin με τα μεγάλα κουμπιά
-    w.getDecorView().setPadding(
-            dp(16),  // left
-            0,
-            dp(16),  // right
-            0
-    );
-}
+    androidBtn.setOnClickListener(v -> {
+        savePlatform("android");
+        setSkipWelcomeOnce(true);
+        d.dismiss();
+        recreate();
+    });
 
-// ---------------- ACTIONS ----------------
-androidBtn.setOnClickListener(v -> {
-    savePlatform("android");
-    setSkipWelcomeOnce(true);
-    d.dismiss();
-    recreate();
-});
-
-appleBtn.setOnClickListener(v -> {
-    savePlatform("apple");
-    setSkipWelcomeOnce(true);
-    d.dismiss();
-    recreate();
-});
+    appleBtn.setOnClickListener(v -> {
+        savePlatform("apple");
+        setSkipWelcomeOnce(true);
+        d.dismiss();
+        recreate();
+    });
 }
 
     // =========================================================

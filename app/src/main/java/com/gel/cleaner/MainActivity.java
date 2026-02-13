@@ -39,10 +39,8 @@ public class MainActivity extends GELAutoActivityHook
     // =========================================================
     private boolean welcomeShown = false;
     private int permissionIndex = 0;
-    private static final String PREF_POPUP_LANG = "popup_lang"; // "EN" | "GR"
 
     private static final int REQ_PERMISSIONS = 1001;
-    private String permissionsLang = "EN";
     private static final String PREF_PERMISSIONS_DISABLED = "permissions_disabled";
 
     private final String[] REQUIRED_PERMISSIONS = new String[]{
@@ -221,8 +219,7 @@ private void disablePermissionsForever() {
 // ============================================================
 private void showPermissionsPopup() {
 
-    permissionsLang = getPopupLang();
-boolean gr = "GR".equals(permissionsLang);
+    boolean gr = AppLang.isGreek(this);
 
     AlertDialog.Builder b =
             new AlertDialog.Builder(
@@ -263,15 +260,17 @@ boolean gr = "GR".equals(permissionsLang);
                    : getPermissionsTextEN());
     box.addView(msg);
 
-    // ================= GLOBAL MUTE ROW =================
-    box.addView(buildMuteRow());
+// ==========================
+// MUTE ROW (UNIFIED — AppTTS HELPER)
+// ==========================
+root.addView(buildMuteRow());
 
-    // ================= LANGUAGE SPINNER =================
-    Spinner langSpinner = new Spinner(this);
+// ================= LANGUAGE SPINNER =================
+    Spinner langSpinner = new Spinner(MainActivity.this);
 
     ArrayAdapter<String> adapter =
             new ArrayAdapter<>(
-                    this,
+                    MainActivity.this,
                     android.R.layout.simple_spinner_item,
                     new String[]{"EN", "GR"}
             );
@@ -279,13 +278,12 @@ boolean gr = "GR".equals(permissionsLang);
             android.R.layout.simple_spinner_dropdown_item
     );
     langSpinner.setAdapter(adapter);
-
     langSpinner.setSelection(gr ? 1 : 0);
 
     langSpinner.setOnItemSelectedListener(
-            new AdapterView.OnItemSelectedListener() {
-            
-    @Override
+        new AdapterView.OnItemSelectedListener() {
+
+            @Override
 public void onItemSelected(
         AdapterView<?> parent,
         View view,
@@ -293,24 +291,31 @@ public void onItemSelected(
         long id
 ) {
 
-    permissionsLang = (position == 0) ? "EN" : "GR";
-    savePopupLang(permissionsLang);
+    String code = (position == 0) ? "en" : "el";
+
+    AppLang.setLang(MainActivity.this, code);
 
     msg.setText(
-            "GR".equals(permissionsLang)
+            AppLang.isGreek(MainActivity.this)
                     ? getPermissionsTextGR()
                     : getPermissionsTextEN()
     );
 
+    if (!AppTTS.isMuted(MainActivity.this)) {
+        speakPermissionsTTS();
+    }
+}
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        }
+);
+    
 // ==========================
 // MUTE ROW (UNIFIED — AppTTS HELPER)
 // ==========================
 root.addView(buildMuteRow());
-
-                @Override
-                public void onNothingSelected(AdapterView<?> parent) {}
-            }
-    );
 
     LinearLayout langBox = new LinearLayout(this);
     langBox.setPadding(dp(12), dp(12), dp(12), dp(12));
@@ -359,7 +364,7 @@ box.addView(cb);
 
 // ================= SKIP =================
 Button skipBtn = new Button(this);
-skipBtn.setText(gr ? "ΠΑΡΑΛΕΙΨΗ" : "SKIP");
+skipBtn.setText(AppLang.isGreek(this) ? "ΠΑΡΑΛΕΙΨΗ" : "SKIP");
 skipBtn.setAllCaps(false);
 skipBtn.setTextColor(Color.WHITE);
 skipBtn.setTextSize(16f);
@@ -375,7 +380,7 @@ skipBtn.setLayoutParams(btnLp);
 
 // ================= CONTINUE =================
 Button continueBtn = new Button(this);
-continueBtn.setText(gr ? "ΣΥΝΕΧΕΙΑ" : "CONTINUE");
+continueBtn.setText(AppLang.isGreek(this) ? "ΣΥΝΕΧΕΙΑ" : "CONTINUE");
 continueBtn.setAllCaps(false);
 continueBtn.setTextColor(Color.WHITE);
 continueBtn.setTextSize(16f);
@@ -458,30 +463,6 @@ private String getPermissionsTextEN() {
          + "• Phone,\n"
          + "• Microphone.\n\n"
          + "No personal data is recorded or stored.";
-}
-
-private void savePopupLang(String lang) {
-    getSharedPreferences(PREFS, MODE_PRIVATE)
-            .edit()
-            .putString(PREF_POPUP_LANG, lang)
-            .apply();
-}
-
-private String getPopupLang() {
-
-    SharedPreferences sp =
-            getSharedPreferences(PREFS, MODE_PRIVATE);
-
-    String saved = sp.getString(PREF_POPUP_LANG, null);
-
-    if (saved != null) return saved;
-
-    boolean gr = "el".equalsIgnoreCase(LocaleHelper.getLang(this));
-    String def = gr ? "GR" : "EN";
-
-    sp.edit().putString(PREF_POPUP_LANG, def).apply();
-
-    return def;
 }
 
 // =========================================================
@@ -619,7 +600,7 @@ private void speakPermissionsTTS() {
 
         try { tts[0].stop(); } catch (Throwable ignore) {}
 
-        if ("GR".equals(permissionsLang)) {
+        if (AppLang.isGreek(this)) {
             try { tts[0].setLanguage(new Locale("el", "GR")); } catch (Throwable ignore) {}
 
             tts[0].speak(
@@ -657,7 +638,7 @@ private void speakPermissionsTTS() {
 
         tts[0].stop();
 
-        if ("GR".equals(permissionsLang)) {
+        if (AppLang.isGreek(this)) {
 
             tts[0].setLanguage(new Locale("el", "GR"));
             tts[0].speak(
@@ -734,10 +715,8 @@ private String getWelcomeTextGR() {
 // ------------------------------------------------------------
 private void showWelcomePopup() {
 
-    String lang = getPopupLang();
-permissionsLang = lang;   // 🔥 SYNC
-boolean gr = "GR".equals(lang);
-
+    boolean gr = AppLang.isGreek(this);
+    
     AlertDialog.Builder b =
             new AlertDialog.Builder(MainActivity.this);
 
@@ -794,31 +773,35 @@ root.addView(buildMuteRow());
     langSpinner.setSelection(gr ? 1 : 0);
 
     langSpinner.setOnItemSelectedListener(
-            new AdapterView.OnItemSelectedListener() {
-                @Override
-                public void onItemSelected(
-                        AdapterView<?> parent,
-                        View view,
-                        int position,
-                        long id
-                ) {
+        new AdapterView.OnItemSelectedListener() {
 
-                    String newLang = (position == 0) ? "EN" : "GR";
-                    savePopupLang(newLang);
+            @Override
+public void onItemSelected(
+        AdapterView<?> parent,
+        View view,
+        int position,
+        long id
+) {
 
-                    msg.setText(
-                            "GR".equals(newLang)
-                                    ? getWelcomeTextGR()
-                                    : getWelcomeTextEN()
-                    );
+    String code = (position == 0) ? "en" : "el";
+    AppLang.setLang(MainActivity.this, code);
 
-                    speakWelcomeTTS();
-                }
-
-                @Override
-                public void onNothingSelected(AdapterView<?> parent) {}
-            }
+    msg.setText(
+            AppLang.isGreek(MainActivity.this)
+                    ? getWelcomeTextGR()
+                    : getWelcomeTextEN()
     );
+
+    if (!AppTTS.isMuted(MainActivity.this)) {
+        speakWelcomeTTS();
+    }
+}
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        }
+);
 
     LinearLayout langBox = new LinearLayout(MainActivity.this);
     langBox.setPadding(dp(12), dp(12), dp(12), dp(12));
@@ -915,9 +898,6 @@ d.show();
 // PLATFORM SELECT — FINAL, CLEAN
 // =========================================================
 private void showPlatformSelectPopup() {
-
-    String lang = getPopupLang();
-    boolean gr = "GR".equals(lang);
 
     AlertDialog.Builder b =
             new AlertDialog.Builder(

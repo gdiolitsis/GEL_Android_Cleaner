@@ -5344,7 +5344,7 @@ logLine();
 if (heardClearly.get()) {
 
     logLabelOkValue(
-            gr ? "Συμπέρασμα" : "Conclusion",
+            gr ? "Αποτέλεσμα" : "Result",
             gr
                     ? "Ο χρήστης επιβεβαίωσε καθαρή ακουστική επανάληψη. Το κάτω μικρόφωνο λειτουργεί σωστά."
                     : "User confirmed clear acoustic loop. Bottom microphone is functioning properly."
@@ -5396,6 +5396,8 @@ try {
     }
 } catch (Throwable ignore) {}
 
+AtomicBoolean ttsFinished = new AtomicBoolean(false);
+
 // ==========================
 // SHOW DIALOG (UI THREAD)
 // ==========================
@@ -5429,39 +5431,73 @@ runOnUiThread(() -> {
 
     b.setView(root);
 
-final AlertDialog d = b.create();
+    final AlertDialog d = b.create();
+    dialogRef.set(d);
 
-dialogRef.set(d);
-
-if (d.getWindow() != null) {
-    d.getWindow().setBackgroundDrawable(
-            new ColorDrawable(Color.TRANSPARENT)
-    );
-}
-
-if (!isFinishing() && !isDestroyed()) {
-    d.show();
-}
-
-// 🔊 TTS ΜΕΤΑ από UI attach (SAFE + RESPECT MUTE)
-new Handler(Looper.getMainLooper()).postDelayed(() -> {
-    if (d.isShowing() && !AppTTS.isMuted(this)) {
-        AppTTS.ensureSpeak(
-                this,
-                gr ? "Βάλε το ακουστικό στο αυτί σου."
-                   : "Place the earpiece on your ear."
+    if (d.getWindow() != null) {
+        d.getWindow().setBackgroundDrawable(
+                new ColorDrawable(Color.TRANSPARENT)
         );
     }
-}, 400);
+
+    if (!isFinishing() && !isDestroyed()) {
+        d.show();
+    }
+
+    // 🔊 TTS ΜΕ LISTENER (ΔΕΝ ΚΟΒΕΤΑΙ ΠΟΤΕ)
+    if (!AppTTS.isMuted(this)) {
+
+        TextToSpeech tts = AppTTS.getTTS();
+        if (tts != null) {
+
+            tts.setOnUtteranceProgressListener(
+                    new UtteranceProgressListener() {
+
+                        @Override
+                        public void onStart(String utteranceId) { }
+
+                        @Override
+                        public void onDone(String utteranceId) {
+                            ttsFinished.set(true);
+                        }
+
+                        @Override
+                        public void onError(String utteranceId) {
+                            ttsFinished.set(true);
+                        }
+                    }
+            );
+
+            Bundle params = new Bundle();
+            params.putString(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, "LAB4_STAGE2");
+
+            tts.speak(
+                    gr ? "Βάλε το ακουστικό στο αυτί σου."
+                       : "Place the earpiece on your ear.",
+                    TextToSpeech.QUEUE_FLUSH,
+                    params,
+                    "LAB4_STAGE2"
+            );
+        } else {
+            ttsFinished.set(true);
+        }
+
+    } else {
+        ttsFinished.set(true);
+    }
 });
 
 // ==========================
-// WAIT (BACKGROUND THREAD)
+// WAIT UNTIL TTS FINISHES
 // ==========================
-SystemClock.sleep(2200);
+while (!ttsFinished.get()) {
+    SystemClock.sleep(50);
+}
 
-try { AppTTS.stop(); } catch (Throwable ignore) {}
+// Μικρό grace delay
+SystemClock.sleep(300);
 
+// Κλείσιμο dialog
 runOnUiThread(() -> {
     try {
         AlertDialog d = dialogRef.get();
@@ -5471,7 +5507,7 @@ runOnUiThread(() -> {
     } catch (Throwable ignore) {}
 });
 
-// 🔁 Επιστροφή σε call earpiece για συνέχεια LAB
+// 🔁 Επιστροφή σε call earpiece
 routeToCallEarpiece();
 
 // ====================================================

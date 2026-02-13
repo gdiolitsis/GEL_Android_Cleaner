@@ -68,170 +68,189 @@ public class MainActivity extends GELAutoActivityHook
         super.attachBaseContext(LocaleHelper.apply(base));
     }
 
-    // =========================================================
-    // ON CREATE
-    // =========================================================
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+// =========================================================
+// ON CREATE
+// =========================================================
+@Override
+protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    setContentView(R.layout.activity_main);
 
-        // BASIC BINDS
-        txtLogs = findViewById(R.id.txtLogs);
-        scroll = findViewById(R.id.scrollRoot);
+    // BASIC BINDS
+    txtLogs = findViewById(R.id.txtLogs);
+    scroll  = findViewById(R.id.scrollRoot);
 
-        applySavedLanguage();
-        setupLangButtons();
-        setupDonate();
-        setupButtons();
+    applySavedLanguage();
+    setupLangButtons();
+    setupDonate();
+    setupButtons();
 
-        // RETURN BUTTON
-        Button btnReturnAndroid = findViewById(R.id.btnReturnAndroid);
-        if (btnReturnAndroid != null) {
-            btnReturnAndroid.setSaveEnabled(false);
-            btnReturnAndroid.setOnClickListener(v -> {
-                if ("apple".equals(getSavedPlatform())) {
-                    savePlatform("android");
-                    applyAndroidModeUI();
-                } else {
-                    savePlatform("apple");
-                    applyAppleModeUI();
-                }
-                syncReturnButtonText();
-            });
-        }
-
-        // TTS
-        tts[0] = new TextToSpeech(this, status -> {
-            ttsReady[0] = (status == TextToSpeech.SUCCESS);
-            if (ttsReady[0] && welcomeShown) speakWelcomeTTS();
+    // RETURN BUTTON
+    Button btnReturnAndroid = findViewById(R.id.btnReturnAndroid);
+    if (btnReturnAndroid != null) {
+        btnReturnAndroid.setSaveEnabled(false);
+        btnReturnAndroid.setOnClickListener(v -> {
+            if ("apple".equals(getSavedPlatform())) {
+                savePlatform("android");
+                applyAndroidModeUI();
+            } else {
+                savePlatform("apple");
+                applyAppleModeUI();
+            }
+            syncReturnButtonText();
         });
-        
-// =========================================================
-// ENTRY FLOW (SINGLE SOURCE OF TRUTH)
-// =========================================================
-permissionIndex = 0;
-requestNextPermission();
-
-// APPLY PLATFORM UI
-if ("apple".equals(getSavedPlatform())) {
-    applyAppleModeUI();
-} else {
-    applyAndroidModeUI();
-}
-syncReturnButtonText();
-
-log("📱 Device ready", false);
-}
-
-    // =========================================================
-    // PERMISSIONS — ENTRY GATE (MANDATORY)
-    // =========================================================
-    private void showPermissionsGate() {
-
-        AlertDialog.Builder b = new AlertDialog.Builder(this);
-        b.setCancelable(false);
-
-LinearLayout root = new LinearLayout(this);
-root.setOrientation(LinearLayout.VERTICAL);
-root.setPadding(dp(24), dp(20), dp(24), dp(18));
-
-GradientDrawable bg = new GradientDrawable();
-bg.setColor(0xFF101010);
-bg.setCornerRadius(dp(18));
-bg.setStroke(dp(4), 0xFFFFD700);
-root.setBackground(bg);
-
-TextView title = new TextView(this);
-TextView msg   = new TextView(this);
-
-title.setTextColor(Color.WHITE);
-title.setTextSize(18f);
-title.setTypeface(null, Typeface.BOLD);
-title.setGravity(Gravity.CENTER);
-
-msg.setTextColor(0xFFDDDDDD);
-msg.setTextSize(15f);
-
-boolean gr = "el".equalsIgnoreCase(LocaleHelper.getLang(this));
-title.setText(gr ? "ΑΠΑΙΤΟΥΜΕΝΕΣ ΑΔΕΙΕΣ" : "REQUIRED PERMISSIONS");
-msg.setText(gr
-        ? "Η εφαρμογή χρειάζεται άδειες για να λειτουργήσει σωστά.\n\nΘα ζητηθούν μία-μία."
-        : "The app requires permissions to function properly.\n\nThey will be requested one by one.");
-
-root.addView(title);
-root.addView(msg);
-
-// ---------- BUTTON ROW ----------
-LinearLayout btnRow = new LinearLayout(this);
-btnRow.setOrientation(LinearLayout.HORIZONTAL);
-btnRow.setGravity(Gravity.CENTER);
-btnRow.setPadding(0, dp(16), 0, 0);
-
-LinearLayout.LayoutParams btnLp =
-        new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-        );
-btnLp.setMargins(dp(12), dp(8), dp(12), dp(8));
-
-// ---------- SKIP ----------
-Button skipBtn = new Button(this);
-skipBtn.setText(gr ? "ΠΑΡΑΛΕΙΨΗ" : "SKIP");
-skipBtn.setAllCaps(false);
-skipBtn.setTextColor(Color.WHITE);
-skipBtn.setMinWidth(dp(120));
-
-GradientDrawable skipBg = new GradientDrawable();
-skipBg.setColor(0xFF8B0000);
-skipBg.setCornerRadius(dp(14));
-skipBg.setStroke(dp(3), 0xFFFFD700);
-skipBtn.setBackground(skipBg);
-skipBtn.setLayoutParams(btnLp);
-
-// ---------- CONTINUE ----------
-Button continueBtn = new Button(this);
-continueBtn.setText(gr ? "ΣΥΝΕΧΕΙΑ" : "CONTINUE");
-continueBtn.setAllCaps(false);
-continueBtn.setTextColor(Color.WHITE);
-continueBtn.setMinWidth(dp(120));
-
-GradientDrawable continueBg = new GradientDrawable();
-continueBg.setColor(0xFF0B5F3B);
-continueBg.setCornerRadius(dp(14));
-continueBg.setStroke(dp(3), 0xFFFFD700);
-continueBtn.setBackground(continueBg);
-continueBtn.setLayoutParams(btnLp);
-
-// ---------- ADD ----------
-btnRow.addView(skipBtn);
-btnRow.addView(continueBtn);
-root.addView(btnRow);
-
-b.setView(root);
-
-final AlertDialog d = b.create();
-if (d.getWindow() != null) {
-    d.getWindow().setBackgroundDrawable(
-            new ColorDrawable(Color.TRANSPARENT)
-    );
-}
-
-continueBtn.setOnClickListener(v -> {
-    d.dismiss();
-    requestNextPermission();
-});
-
-skipBtn.setOnClickListener(v -> {
-    d.dismiss();
-    permissionIndex = REQUIRED_PERMISSIONS.length;
-requestNextPermission();
-});
-
-        if (!isFinishing()) d.show();
     }
 
-    private void requestNextPermission() {
+    // ---------------------------------------------------------
+    // TTS INIT
+    // ---------------------------------------------------------
+    tts[0] = new TextToSpeech(this, status -> {
+        ttsReady[0] = (status == TextToSpeech.SUCCESS);
+        if (ttsReady[0] && welcomeShown) {
+            speakWelcomeTTS();
+        }
+    });
+
+    // =========================================================
+    // ENTRY FLOW (FIXED)
+    // =========================================================
+    permissionIndex = 0;
+
+    if (hasMissingPermissions()) {
+        showPermissionsGate();   // ✅ ΠΡΩΤΑ ΔΙΚΟ ΜΑΣ POPUP
+    } else {
+        requestNextPermission(); // fallback safety
+    }
+
+    // APPLY PLATFORM UI
+    if ("apple".equals(getSavedPlatform())) {
+        applyAppleModeUI();
+    } else {
+        applyAndroidModeUI();
+    }
+    syncReturnButtonText();
+
+    log("📱 Device ready", false);
+}
+
+// =========================================================
+// PERMISSIONS — ENTRY GATE (MANDATORY)
+// =========================================================
+private void showPermissionsGate() {
+
+    boolean gr = "el".equalsIgnoreCase(LocaleHelper.getLang(this));
+
+    AlertDialog.Builder b =
+            new AlertDialog.Builder(
+                    this,
+                    android.R.style.Theme_Material_Dialog_NoActionBar
+            );
+    b.setCancelable(false);
+
+    LinearLayout root = new LinearLayout(this);
+    root.setOrientation(LinearLayout.VERTICAL);
+    root.setPadding(dp(24), dp(20), dp(24), dp(18));
+
+    GradientDrawable bg = new GradientDrawable();
+    bg.setColor(0xFF101010);
+    bg.setCornerRadius(dp(18));
+    bg.setStroke(dp(4), 0xFFFFD700);
+    root.setBackground(bg);
+
+    TextView title = new TextView(this);
+    TextView msg   = new TextView(this);
+
+    title.setTextColor(Color.WHITE);
+    title.setTextSize(18f);
+    title.setTypeface(null, Typeface.BOLD);
+    title.setGravity(Gravity.CENTER);
+
+    msg.setTextColor(0xFFDDDDDD);
+    msg.setTextSize(15f);
+
+    title.setText(gr ? "ΑΠΑΙΤΟΥΜΕΝΕΣ ΑΔΕΙΕΣ"
+                     : "REQUIRED PERMISSIONS");
+
+    msg.setText(gr
+            ? "Η εφαρμογή χρειάζεται άδειες για να λειτουργήσει σωστά.\n\nΘα ζητηθούν μία-μία."
+            : "The app requires permissions to function properly.\n\nThey will be requested one by one.");
+
+    root.addView(title);
+    root.addView(msg);
+
+    // BUTTON ROW
+    LinearLayout btnRow = new LinearLayout(this);
+    btnRow.setOrientation(LinearLayout.HORIZONTAL);
+    btnRow.setGravity(Gravity.CENTER);
+    btnRow.setPadding(0, dp(16), 0, 0);
+
+    LinearLayout.LayoutParams btnLp =
+            new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+            );
+    btnLp.setMargins(dp(12), dp(8), dp(12), dp(8));
+
+    // SKIP
+    Button skipBtn = new Button(this);
+    skipBtn.setText(gr ? "ΠΑΡΑΛΕΙΨΗ" : "SKIP");
+    skipBtn.setAllCaps(false);
+    skipBtn.setTextColor(Color.WHITE);
+
+    GradientDrawable skipBg = new GradientDrawable();
+    skipBg.setColor(0xFF8B0000);
+    skipBg.setCornerRadius(dp(14));
+    skipBg.setStroke(dp(3), 0xFFFFD700);
+    skipBtn.setBackground(skipBg);
+    skipBtn.setLayoutParams(btnLp);
+
+    // CONTINUE
+    Button continueBtn = new Button(this);
+    continueBtn.setText(gr ? "ΣΥΝΕΧΕΙΑ" : "CONTINUE");
+    continueBtn.setAllCaps(false);
+    continueBtn.setTextColor(Color.WHITE);
+
+    GradientDrawable continueBg = new GradientDrawable();
+    continueBg.setColor(0xFF0B5F3B);
+    continueBg.setCornerRadius(dp(14));
+    continueBg.setStroke(dp(3), 0xFFFFD700);
+    continueBtn.setBackground(continueBg);
+    continueBtn.setLayoutParams(btnLp);
+
+    btnRow.addView(skipBtn);
+    btnRow.addView(continueBtn);
+    root.addView(btnRow);
+
+    b.setView(root);
+
+    final AlertDialog d = b.create();
+
+    if (d.getWindow() != null) {
+        d.getWindow().setBackgroundDrawable(
+                new ColorDrawable(Color.TRANSPARENT)
+        );
+    }
+
+    continueBtn.setOnClickListener(v -> {
+        d.dismiss();
+        requestNextPermission(); // ✅ ΤΩΡΑ ξεκινά Android
+    });
+
+    skipBtn.setOnClickListener(v -> {
+        d.dismiss();
+        permissionIndex = REQUIRED_PERMISSIONS.length;
+        requestNextPermission();
+    });
+
+    if (!isFinishing() && !isDestroyed()) {
+        d.show();
+    }
+}
+
+// =========================================================
+// REQUEST FLOW
+// =========================================================
+private void requestNextPermission() {
 
     while (permissionIndex < REQUIRED_PERMISSIONS.length) {
 
@@ -251,169 +270,33 @@ requestNextPermission();
         permissionIndex++;
     }
 
-    // ✅ ΤΕΛΟΣ PERMISSIONS FLOW → WELCOME
+    // END FLOW → WELCOME
     if (!consumeSkipWelcomeOnce() && !isWelcomeDisabled()) {
         showWelcomePopup();
     }
 }
 
-private void showMissingPermissionsDialog() {
-
-    boolean gr = "el".equalsIgnoreCase(LocaleHelper.getLang(this));
-
-    StringBuilder missing = new StringBuilder();
-
-    for (String p : REQUIRED_PERMISSIONS) {
-        if (ContextCompat.checkSelfPermission(this, p)
-                != PackageManager.PERMISSION_GRANTED) {
-
-            if (missing.length() > 0) missing.append("\n");
-
-            if (Manifest.permission.RECORD_AUDIO.equals(p)) {
-                missing.append(gr ? "• Μικρόφωνο" : "• Microphone");
-            } else if (Manifest.permission.ACCESS_FINE_LOCATION.equals(p)) {
-                missing.append(gr ? "• Τοποθεσία" : "• Location");
-            } else if (Manifest.permission.BLUETOOTH_CONNECT.equals(p)) {
-                missing.append(gr ? "• Bluetooth" : "• Bluetooth");
-            } else {
-                missing.append("• ").append(p);
-            }
-        }
-    }
-
-    if (missing.length() == 0) return;
-
-    // ================= ROOT =================
-    AlertDialog.Builder b = new AlertDialog.Builder(this);
-    b.setCancelable(false);
-
-    LinearLayout root = new LinearLayout(this);
-    root.setOrientation(LinearLayout.VERTICAL);
-    root.setPadding(dp(24), dp(20), dp(24), dp(18));
-
-    GradientDrawable bg = new GradientDrawable();
-    bg.setColor(0xFF101010);              // μαύρο
-    bg.setCornerRadius(dp(18));
-    bg.setStroke(dp(4), 0xFFFFD700);      // χρυσό
-    root.setBackground(bg);
-
-    // ================= TITLE =================
-    TextView title = new TextView(this);
-    title.setText(gr ? "ΛΕΙΠΟΥΝ ΑΔΕΙΕΣ" : "MISSING PERMISSIONS");
-    title.setTextColor(Color.WHITE);
-    title.setTextSize(18f);
-    title.setTypeface(null, Typeface.BOLD);
-    title.setGravity(Gravity.CENTER);
-    title.setPadding(0, 0, 0, dp(12));
-
-    // ================= MESSAGE =================
-    TextView msg = new TextView(this);
-    msg.setTextColor(0xFFDDDDDD);
-    msg.setTextSize(15f);
-    msg.setText(
-            gr
-                    ? "Η εφαρμογή δεν μπορεί να λειτουργήσει σωστά χωρίς τις παρακάτω άδειες:\n\n"
-                      + missing
-                      + "\n\nΜπορείς να τις ενεργοποιήσεις από τις ρυθμίσεις."
-                    : "The app cannot function properly without the following permissions:\n\n"
-                      + missing
-                      + "\n\nYou can enable them from system settings."
-    );
-
-    root.addView(title);
-    root.addView(msg);
-
-    // ================= BUTTON ROW =================
-    LinearLayout btnRow = new LinearLayout(this);
-    btnRow.setOrientation(LinearLayout.HORIZONTAL);
-    btnRow.setGravity(Gravity.CENTER);
-    btnRow.setPadding(0, dp(18), 0, 0);
-
-    LinearLayout.LayoutParams btnLp =
-            new LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.WRAP_CONTENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT
-            );
-    btnLp.setMargins(dp(12), dp(8), dp(12), dp(8));
-
-    // ---------- SETTINGS (GREEN) ----------
-    Button settingsBtn = new Button(this);
-    settingsBtn.setText(gr ? "ΡΥΘΜΙΣΕΙΣ" : "SETTINGS");
-    settingsBtn.setAllCaps(false);
-    settingsBtn.setTextColor(Color.WHITE);
-    settingsBtn.setMinWidth(dp(120));
-
-    GradientDrawable settingsBg = new GradientDrawable();
-    settingsBg.setColor(0xFF0B5F3B);      // GEL green
-    settingsBg.setCornerRadius(dp(14));
-    settingsBg.setStroke(dp(3), 0xFFFFD700);
-    settingsBtn.setBackground(settingsBg);
-    settingsBtn.setLayoutParams(btnLp);
-
-    // ---------- SKIP (RED) ----------
-    Button skipBtn = new Button(this);
-    skipBtn.setText(gr ? "ΠΑΡΑΛΕΙΨΗ" : "SKIP");
-    skipBtn.setAllCaps(false);
-    skipBtn.setTextColor(Color.WHITE);
-    skipBtn.setMinWidth(dp(120));
-
-    GradientDrawable skipBg = new GradientDrawable();
-    skipBg.setColor(0xFF8B0000);          // GEL red
-    skipBg.setCornerRadius(dp(14));
-    skipBg.setStroke(dp(3), 0xFFFFD700);
-    skipBtn.setBackground(skipBg);
-    skipBtn.setLayoutParams(btnLp);
-
-    btnRow.addView(skipBtn);
-    btnRow.addView(settingsBtn);
-    root.addView(btnRow);
-
-    b.setView(root);
-
-    final AlertDialog d = b.create();
-    if (d.getWindow() != null) {
-        d.getWindow().setBackgroundDrawable(
-                new ColorDrawable(Color.TRANSPARENT)
-        );
-    }
-
-    // ================= ACTIONS =================
-    settingsBtn.setOnClickListener(v -> {
-        d.dismiss();
-        Intent i = new Intent(
-                Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-                Uri.fromParts("package", getPackageName(), null)
-        );
-        startActivity(i);
-    });
-
-    skipBtn.setOnClickListener(v -> {
-        d.dismiss();
-        permissionIndex = REQUIRED_PERMISSIONS.length;
-        requestNextPermission();
-    });
-
-    if (!isFinishing()) d.show();
-}
-
-    @Override
+@Override
 public void onRequestPermissionsResult(
         int requestCode,
         String[] permissions,
         int[] grantResults
 ) {
-    super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    super.onRequestPermissionsResult(
+            requestCode,
+            permissions,
+            grantResults
+    );
 
     if (requestCode != REQ_PERMISSIONS) return;
 
-    // ΕΙΤΕ ΝΑΙ ΕΙΤΕ ΟΧΙ → ΠΑΜΕ ΣΤΗΝ ΕΠΟΜΕΝΗ ΑΔΕΙΑ
     permissionIndex++;
     requestNextPermission();
 }
-    // =========================================================
-    // HELPERS
-    // =========================================================
-    
+
+// =========================================================
+// HELPERS
+// =========================================================
 private boolean hasMissingPermissions() {
     for (String p : REQUIRED_PERMISSIONS) {
         if (ContextCompat.checkSelfPermission(this, p)

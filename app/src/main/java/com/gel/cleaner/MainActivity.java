@@ -119,7 +119,7 @@ protected void onCreate(Bundle savedInstanceState) {
     // =========================================================
     permissionIndex = 0;
 
-    if (hasMissingPermissions()) {
+    if (hasMissingPermissions() && !isPermissionsDisabled()) {
     showPermissionsPopup();
 } else {
     requestNextPermission();
@@ -215,10 +215,6 @@ private void disablePermissionsForever() {
             .edit()
             .putBoolean(PREF_PERMISSIONS_DISABLED, true)
             .apply();
-}
-
-if (!isPermissionsDisabled()) {
-    showPermissionsPopup();
 }
 
 // ============================================================
@@ -877,7 +873,8 @@ private void showWelcomePopup() {
         );
     }
 
-    d.show();
+    welcomeShown = true;
+d.show();
     
     d.setOnDismissListener(dialog -> {
     try {
@@ -885,8 +882,6 @@ private void showWelcomePopup() {
     } catch (Throwable ignore) {}
     welcomeShown = false;
 });
-
-    welcomeShown = true;
 
     new Handler(Looper.getMainLooper()).postDelayed(() -> {
         if (!AppTTS.isMuted(MainActivity.this)

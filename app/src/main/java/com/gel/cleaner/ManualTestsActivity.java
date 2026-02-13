@@ -5450,14 +5450,11 @@ runOnUiThread(() -> {
 
     if (!isFinishing() && !isDestroyed()) {
     d.show();
-}
-
-// 🔊 TTS (SAFE + GUARDED WAIT)
-if (!AppTTS.isMuted(this)) {
 
     new Handler(Looper.getMainLooper()).postDelayed(() -> {
 
-        if (!isFinishing() && !isDestroyed()) {
+        if (!isFinishing() && !isDestroyed()
+                && !AppTTS.isMuted(this)) {
 
             AppTTS.ensureSpeak(
                     this,
@@ -5465,11 +5462,38 @@ if (!AppTTS.isMuted(this)) {
                             ? "Βάλε το ακουστικό στο αυτί σου."
                             : "Place the earpiece on your ear."
             );
-}
-        }, 500);
-    }
+        }
 
-});
+        // Περιμένουμε να ξεκινήσει
+        new Thread(() -> {
+
+            long startWait = SystemClock.uptimeMillis() + 1500;
+            while (!AppTTS.isSpeaking()
+                    && SystemClock.uptimeMillis() < startWait) {
+                SystemClock.sleep(50);
+            }
+
+            long maxWait = SystemClock.uptimeMillis() + 4000;
+            while (AppTTS.isSpeaking()
+                    && SystemClock.uptimeMillis() < maxWait) {
+                SystemClock.sleep(80);
+            }
+
+            SystemClock.sleep(250);
+
+            runOnUiThread(() -> {
+                try {
+                    if (d.isShowing()) d.dismiss();
+                } catch (Throwable ignore) {}
+            });
+
+            routeToCallEarpiece();
+            playAnswerCheckWav();
+
+        }).start();
+
+    }, 500);
+}
 
 // ==========================
 // WAIT WITH TIMEOUT (MAX 4s)

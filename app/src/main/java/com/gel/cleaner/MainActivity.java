@@ -136,20 +136,20 @@ protected void onCreate(Bundle savedInstanceState) {
     log("📱 Device ready", false);
 }
 
+@Override
+protected void onPause() {
+    super.onPause();
+    try {
+        if (tts[0] != null) tts[0].stop();
+    } catch (Throwable ignore) {}
+}
+
 // ------------------------------------------------------------
-
 // MUTE ROW (UNIFIED — AppTTS HELPER)
-
 // ------------------------------------------------------------
 
 private LinearLayout buildMuteRow() {
-
-
-
     final boolean gr = AppLang.isGreek(this);
-
-
-
     LinearLayout row = new LinearLayout(this);
 
     row.setOrientation(LinearLayout.HORIZONTAL);
@@ -157,107 +157,52 @@ private LinearLayout buildMuteRow() {
     row.setGravity(Gravity.CENTER_VERTICAL);
 
     row.setPadding(0, dp(8), 0, dp(16));
-
-
-
+    
     CheckBox muteCheck = new CheckBox(this);
-
-    muteCheck.setChecked(AppTTS.isMuted(this));
-
+   muteCheck.setChecked(AppTTS.isMuted(this));
     muteCheck.setPadding(0, 0, dp(6), 0);
-
-
-
-    TextView label = new TextView(this);
-
+   TextView label = new TextView(this);
     label.setText(
-
-            gr ? "Σίγαση φωνητικών οδηγιών"
-
+           gr ? "Σίγαση φωνητικών οδηγιών"
                : "Mute voice instructions"
-
     );
 
     label.setTextColor(0xFFAAAAAA);
-
     label.setTextSize(14f);
 
-
-
     // --------------------------------------------------------
-
     // TOGGLE (ROW + LABEL CLICK)
-
     // --------------------------------------------------------
 
-    View.OnClickListener toggle = v -> {
-
-
-
+       View.OnClickListener toggle = v -> {
         boolean newState = !AppTTS.isMuted(this);
-
-
-
         AppTTS.setMuted(this, newState);
-
         muteCheck.setChecked(newState);
 
-
-
         // 🔇 Immediate hard stop when muting
-
         if (newState) {
-
             try { AppTTS.stop(); } catch (Throwable ignore) {}
-
         }
-
     };
 
-
-
     row.setOnClickListener(toggle);
-
     label.setOnClickListener(toggle);
 
-
-
-    // --------------------------------------------------------
-
+   // --------------------------------------------------------
     // CHECKBOX DIRECT CHANGE
-
     // --------------------------------------------------------
 
     muteCheck.setOnCheckedChangeListener((button, checked) -> {
-
-
-
         if (checked == AppTTS.isMuted(this)) return;
-
-
-
         AppTTS.setMuted(this, checked);
-
-
-
         if (checked) {
-
             try { AppTTS.stop(); } catch (Throwable ignore) {}
-
         }
-
     });
 
-
-
     row.addView(muteCheck);
-
     row.addView(label);
-
-
-
     return row;
-
 }
 
 private boolean isPermissionsDisabled() {
@@ -710,6 +655,8 @@ private void speakPermissionsTTS() {
   private void speakWelcomeTTS() {
 
     try {
+
+        if (!welcomeShown) return;  // 🔥
         if (tts[0] == null || !ttsReady[0]) return;
         if (AppTTS.isMuted(MainActivity.this)) return;
 
@@ -931,6 +878,14 @@ private void showWelcomePopup() {
     }
 
     d.show();
+    
+    d.setOnDismissListener(dialog -> {
+    try {
+        if (tts[0] != null) tts[0].stop();
+    } catch (Throwable ignore) {}
+    welcomeShown = false;
+});
+
     welcomeShown = true;
 
     new Handler(Looper.getMainLooper()).postDelayed(() -> {
@@ -943,13 +898,19 @@ private void showWelcomePopup() {
 
     okBtn.setOnClickListener(v -> {
 
-        if (cb.isChecked()) {
-            disableWelcomeForever();
-        }
+    try { 
+        if (tts[0] != null) tts[0].stop(); 
+    } catch (Throwable ignore) {}
 
-        d.dismiss();
-        showPlatformSelectPopup();
-    });
+    welcomeShown = false;   // 🔥 ΚΛΕΙΔΙ
+
+    if (cb.isChecked()) {
+        disableWelcomeForever();
+    }
+
+    d.dismiss();
+    showPlatformSelectPopup();
+});
 }
 
 // =========================================================
@@ -1047,6 +1008,13 @@ private void showPlatformSelectPopup() {
                 new ColorDrawable(Color.TRANSPARENT));
 
     d.show();
+    
+    d.setOnDismissListener(dialog -> {
+    try {
+        if (tts[0] != null) tts[0].stop();
+    } catch (Throwable ignore) {}
+    welcomeShown = false;
+});
 
     Window w = d.getWindow();
     if (w != null) {

@@ -4614,6 +4614,11 @@ private void lab3EarpieceManual() {
         msg.setLineSpacing(1.1f, 1.15f);
         msg.setPadding(0, 0, 0, dp(18));
         root.addView(msg);
+        
+// ---------------------------
+// MUTE ROW
+// ---------------------------
+root.addView(buildMuteRow());
 
 // ---------------------------
 // BUTTON ROW (EXIT + START)
@@ -4628,7 +4633,7 @@ LinearLayout.LayoutParams btnLp =
                 dp(48),
                 1f
         );
-btnLp.setMargins(dp(6), dp(6), dp(6), 0);
+btnLp.setMargins(dp(6), dp(6), dp(6), dp(6));
 
 // ---------- EXIT ----------
 Button exitBtn = new Button(this);
@@ -4697,6 +4702,16 @@ d.setOnKeyListener((dialog, keyCode, event) -> {
 
 if (!isFinishing() && !isDestroyed()) {
     d.show();
+
+    new Handler(Looper.getMainLooper()).postDelayed(() -> {
+        if (d.isShowing()
+                && !isFinishing()
+                && !isDestroyed()
+                && !AppTTS.isMuted(this)) {
+
+            AppTTS.ensureSpeak(this, bodyText);
+        }
+    }, 500);
 }
 
 // ---------------------------

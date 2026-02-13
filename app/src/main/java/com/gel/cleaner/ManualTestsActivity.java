@@ -5441,68 +5441,50 @@ runOnUiThread(() -> {
     }
 
     if (!isFinishing() && !isDestroyed()) {
-        d.show();
-    }
-
-    // 🔊 TTS ΜΕ LISTENER (ΔΕΝ ΚΟΒΕΤΑΙ ΠΟΤΕ)
-    if (!AppTTS.isMuted(this)) {
-
-        TextToSpeech tts = AppTTS.getTTS();
-        if (tts != null) {
-
-            tts.setOnUtteranceProgressListener(
-                    new UtteranceProgressListener() {
-
-                        @Override
-                        public void onStart(String utteranceId) { }
-
-                        @Override
-                        public void onDone(String utteranceId) {
-                            ttsFinished.set(true);
-                        }
-
-                        @Override
-                        public void onError(String utteranceId) {
-                            ttsFinished.set(true);
-                        }
-                    }
-            );
-
-            Bundle params = new Bundle();
-            params.putString(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, "LAB4_STAGE2");
-
-            tts.speak(
-                    gr ? "Βάλε το ακουστικό στο αυτί σου."
-                       : "Place the earpiece on your ear.",
-                    TextToSpeech.QUEUE_FLUSH,
-                    params,
-                    "LAB4_STAGE2"
-            );
-        } else {
-            ttsFinished.set(true);
-        }
-
-    } else {
-        ttsFinished.set(true);
-    }
-});
-
-// ==========================
-// WAIT UNTIL TTS FINISHES
-// ==========================
-while (!ttsFinished.get()) {
-    SystemClock.sleep(50);
+    d.show();
 }
 
-// Μικρό grace delay
-SystemClock.sleep(300);
+// 🔊 TTS (SAFE + GUARDED WAIT)
+if (!AppTTS.isMuted(this)) {
+
+    new Handler(Looper.getMainLooper()).postDelayed(() -> {
+
+        if (!isFinishing() && !isDestroyed()) {
+
+            AppTTS.ensureSpeak(
+                    this,
+                    gr
+                            ? "Βάλε το ακουστικό στο αυτί σου."
+                            : "Place the earpiece on your ear."
+            );
+        }
+
+    }, 500);
+}
+
+// ==========================
+// WAIT WITH TIMEOUT (MAX 4s)
+// ==========================
+long maxWait = SystemClock.uptimeMillis() + 4000;
+
+while (SystemClock.uptimeMillis() < maxWait) {
+
+    if (!AppTTS.isSpeaking()) {
+        break;
+    }
+
+    SystemClock.sleep(80);
+}
+
+// μικρό grace delay
+SystemClock.sleep(250);
 
 // Κλείσιμο dialog
 runOnUiThread(() -> {
     try {
-        AlertDialog d = dialogRef.get();
-        if (d != null && d.isShowing()) {
-            d.dismiss();
+        AlertDialog dlg = dialogRef.get();
+        if (dlg != null && dlg.isShowing()) {
+            dlg.dismiss();
         }
     } catch (Throwable ignore) {}
 });

@@ -185,7 +185,6 @@ private LinearLayout buildMuteRow() {
         }
     };
 
-    row.setOnClickListener(toggle);
     label.setOnClickListener(toggle);
 
    // --------------------------------------------------------
@@ -285,27 +284,46 @@ boolean gr = "GR".equals(permissionsLang);
 
     langSpinner.setOnItemSelectedListener(
             new AdapterView.OnItemSelectedListener() {
-                @Override
-                public void onItemSelected(
-                        AdapterView<?> parent,
-                        View view,
-                        int position,
-                        long id
-                ) {
+            
+    @Override
+public void onItemSelected(
+        AdapterView<?> parent,
+        View view,
+        int position,
+        long id
+) {
 
-                    permissionsLang = (position == 0) ? "EN" : "GR";
-savePopupLang(permissionsLang);
+    permissionsLang = (position == 0) ? "EN" : "GR";
+    savePopupLang(permissionsLang);
 
-                    msg.setText(
+    msg.setText(
+            "GR".equals(permissionsLang)
+                    ? getPermissionsTextGR()
+                    : getPermissionsTextEN()
+    );
+
+    // 🔥 UPDATE MUTE LABEL LIVE
+    for (int i = 0; i < box.getChildCount(); i++) {
+        View v = box.getChildAt(i);
+        if (v instanceof LinearLayout) {
+            LinearLayout row = (LinearLayout) v;
+            for (int j = 0; j < row.getChildCount(); j++) {
+                View c = row.getChildAt(j);
+                if (c instanceof TextView) {
+                    ((TextView) c).setText(
                             "GR".equals(permissionsLang)
-                                    ? getPermissionsTextGR()
-                                    : getPermissionsTextEN()
+                                    ? "Σίγαση φωνητικών οδηγιών"
+                                    : "Mute voice instructions"
                     );
-
-                    if (!AppTTS.isMuted(MainActivity.this)) {
-                        speakPermissionsTTS();
-                    }
                 }
+            }
+        }
+    }
+
+    if (!AppTTS.isMuted(MainActivity.this)) {
+        speakPermissionsTTS();
+    }
+}
 
                 @Override
                 public void onNothingSelected(AdapterView<?> parent) {}
@@ -423,11 +441,9 @@ box.addView(btnRow);
         d.show();
 
         // 🔊 INITIAL TTS
-        new Handler(Looper.getMainLooper()).postDelayed(() -> {
-            if (!AppTTS.isMuted(this)) {
-                speakPermissionsTTS();
-            }
-        }, 150);
+        if (ttsReady[0] && !AppTTS.isMuted(this)) {
+    speakPermissionsTTS();
+}
     }
 }
 
@@ -658,7 +674,7 @@ private void speakPermissionsTTS() {
 
         tts[0].stop();
 
-        if ("GR".equals(getPopupLang())) {
+        if ("GR".equals(permissionsLang)) {
 
             tts[0].setLanguage(new Locale("el", "GR"));
             tts[0].speak(
@@ -736,7 +752,8 @@ private String getWelcomeTextGR() {
 private void showWelcomePopup() {
 
     String lang = getPopupLang();
-    boolean gr = "GR".equals(lang);
+permissionsLang = lang;   // 🔥 SYNC
+boolean gr = "GR".equals(lang);
 
     AlertDialog.Builder b =
             new AlertDialog.Builder(MainActivity.this);

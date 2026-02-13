@@ -5457,10 +5457,11 @@ if (!AppTTS.isMuted(this)) {
                             ? "Βάλε το ακουστικό στο αυτί σου."
                             : "Place the earpiece on your ear."
             );
-        }
-
-    }, 500);
 }
+        }, 500);
+    }
+
+});
 
 // ==========================
 // WAIT WITH TIMEOUT (MAX 4s)

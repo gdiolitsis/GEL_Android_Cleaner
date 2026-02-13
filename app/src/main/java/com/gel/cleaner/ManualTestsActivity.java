@@ -5361,7 +5361,7 @@ if (heardClearly.get()) {
 } else {
 
     logLabelWarnValue(
-        gr ? "Συμπέρασμα" : "Conclusion",
+        gr ? "Αποτέλεσμα" : "Result",
         gr
                 ? "Η ακουστική επανάληψη, δεν επιβεβαιώθηκε από τον χρήστη."
                 : "Acoustic loop, was not confirmed by the user."

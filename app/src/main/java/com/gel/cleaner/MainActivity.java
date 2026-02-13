@@ -43,6 +43,7 @@ public class MainActivity extends GELAutoActivityHook
 
     private static final int REQ_PERMISSIONS = 1001;
     private String permissionsLang = "EN";
+    private static final String PREF_PERMISSIONS_DISABLED = "permissions_disabled";
 
     private final String[] REQUIRED_PERMISSIONS = new String[]{
             Manifest.permission.RECORD_AUDIO,
@@ -133,6 +134,146 @@ protected void onCreate(Bundle savedInstanceState) {
     syncReturnButtonText();
 
     log("📱 Device ready", false);
+}
+
+// ------------------------------------------------------------
+
+// MUTE ROW (UNIFIED — AppTTS HELPER)
+
+// ------------------------------------------------------------
+
+private LinearLayout buildMuteRow() {
+
+
+
+    final boolean gr = AppLang.isGreek(this);
+
+
+
+    LinearLayout row = new LinearLayout(this);
+
+    row.setOrientation(LinearLayout.HORIZONTAL);
+
+    row.setGravity(Gravity.CENTER_VERTICAL);
+
+    row.setPadding(0, dp(8), 0, dp(16));
+
+
+
+    CheckBox muteCheck = new CheckBox(this);
+
+    muteCheck.setChecked(AppTTS.isMuted(this));
+
+    muteCheck.setPadding(0, 0, dp(6), 0);
+
+
+
+    TextView label = new TextView(this);
+
+    label.setText(
+
+            gr ? "Σίγαση φωνητικών οδηγιών"
+
+               : "Mute voice instructions"
+
+    );
+
+    label.setTextColor(0xFFAAAAAA);
+
+    label.setTextSize(14f);
+
+
+
+    // --------------------------------------------------------
+
+    // TOGGLE (ROW + LABEL CLICK)
+
+    // --------------------------------------------------------
+
+    View.OnClickListener toggle = v -> {
+
+
+
+        boolean newState = !AppTTS.isMuted(this);
+
+
+
+        AppTTS.setMuted(this, newState);
+
+        muteCheck.setChecked(newState);
+
+
+
+        // 🔇 Immediate hard stop when muting
+
+        if (newState) {
+
+            try { AppTTS.stop(); } catch (Throwable ignore) {}
+
+        }
+
+    };
+
+
+
+    row.setOnClickListener(toggle);
+
+    label.setOnClickListener(toggle);
+
+
+
+    // --------------------------------------------------------
+
+    // CHECKBOX DIRECT CHANGE
+
+    // --------------------------------------------------------
+
+    muteCheck.setOnCheckedChangeListener((button, checked) -> {
+
+
+
+        if (checked == AppTTS.isMuted(this)) return;
+
+
+
+        AppTTS.setMuted(this, checked);
+
+
+
+        if (checked) {
+
+            try { AppTTS.stop(); } catch (Throwable ignore) {}
+
+        }
+
+    });
+
+
+
+    row.addView(muteCheck);
+
+    row.addView(label);
+
+
+
+    return row;
+
+}
+
+private boolean isPermissionsDisabled() {
+    return getSharedPreferences(PREFS, MODE_PRIVATE)
+            .getBoolean(PREF_PERMISSIONS_DISABLED, false);
+}
+
+private void disablePermissionsForever() {
+    getSharedPreferences(PREFS, MODE_PRIVATE)
+            .edit()
+            .putBoolean(PREF_PERMISSIONS_DISABLED, true)
+            .apply();
+}
+
+if (!isPermissionsDisabled()) {
+    showPermissionsPopup();
 }
 
 // ============================================================
@@ -252,47 +393,63 @@ savePopupLang(permissionsLang);
     box.addView(langBox);
 
     // ================= BUTTON ROW =================
-    LinearLayout btnRow = new LinearLayout(this);
-    btnRow.setOrientation(LinearLayout.HORIZONTAL);
-    btnRow.setGravity(Gravity.CENTER);
+LinearLayout btnRow = new LinearLayout(this);
+btnRow.setOrientation(LinearLayout.HORIZONTAL);
+btnRow.setGravity(Gravity.CENTER);
+btnRow.setPadding(0, dp(10), 0, 0);
 
-    LinearLayout.LayoutParams btnLp =
-            new LinearLayout.LayoutParams(
-                    0,
-                    dp(60),
-                    1f
-            );
-    btnLp.setMargins(dp(8), 0, dp(8), 0);
+LinearLayout.LayoutParams btnLp =
+        new LinearLayout.LayoutParams(
+                0,
+                dp(72),   // πιο ψηλά
+                1f
+        );
+btnLp.setMargins(dp(10), 0, dp(10), 0);
 
-    // SKIP
-    Button skipBtn = new Button(this);
-    skipBtn.setText(gr ? "ΠΑΡΑΛΕΙΨΗ" : "SKIP");
-    skipBtn.setAllCaps(false);
-    skipBtn.setTextColor(Color.WHITE);
+// ================= CHECKBOX =================
+CheckBox cb = new CheckBox(this);
+cb.setText(gr ? "Να μην εμφανιστεί ξανά"
+              : "Do not show again");
+cb.setTextColor(Color.WHITE);
+cb.setTextSize(14f);
+cb.setPadding(0, dp(8), 0, dp(12));
+box.addView(cb);
 
-    GradientDrawable skipBg = new GradientDrawable();
-    skipBg.setColor(0xFF8B0000);
-    skipBg.setCornerRadius(dp(14));
-    skipBg.setStroke(dp(3), 0xFFFFD700);
-    skipBtn.setBackground(skipBg);
-    skipBtn.setLayoutParams(btnLp);
+// ================= SKIP =================
+Button skipBtn = new Button(this);
+skipBtn.setText(gr ? "ΠΑΡΑΛΕΙΨΗ" : "SKIP");
+skipBtn.setAllCaps(false);
+skipBtn.setTextColor(Color.WHITE);
+skipBtn.setTextSize(16f);
+skipBtn.setTypeface(null, Typeface.BOLD);
+skipBtn.setPadding(dp(12), dp(14), dp(12), dp(14));
 
-    // CONTINUE
-    Button continueBtn = new Button(this);
-    continueBtn.setText(gr ? "ΣΥΝΕΧΕΙΑ" : "CONTINUE");
-    continueBtn.setAllCaps(false);
-    continueBtn.setTextColor(Color.WHITE);
+GradientDrawable skipBg = new GradientDrawable();
+skipBg.setColor(0xFF8B0000);
+skipBg.setCornerRadius(dp(16));
+skipBg.setStroke(dp(3), 0xFFFFD700);
+skipBtn.setBackground(skipBg);
+skipBtn.setLayoutParams(btnLp);
 
-    GradientDrawable contBg = new GradientDrawable();
-    contBg.setColor(0xFF0B5F3B);
-    contBg.setCornerRadius(dp(14));
-    contBg.setStroke(dp(3), 0xFFFFD700);
-    continueBtn.setBackground(contBg);
-    continueBtn.setLayoutParams(btnLp);
+// ================= CONTINUE =================
+Button continueBtn = new Button(this);
+continueBtn.setText(gr ? "ΣΥΝΕΧΕΙΑ" : "CONTINUE");
+continueBtn.setAllCaps(false);
+continueBtn.setTextColor(Color.WHITE);
+continueBtn.setTextSize(16f);
+continueBtn.setTypeface(null, Typeface.BOLD);
+continueBtn.setPadding(dp(12), dp(14), dp(12), dp(14));
 
-    btnRow.addView(skipBtn);
-    btnRow.addView(continueBtn);
-    box.addView(btnRow);
+GradientDrawable contBg = new GradientDrawable();
+contBg.setColor(0xFF0B5F3B);
+contBg.setCornerRadius(dp(16));
+contBg.setStroke(dp(3), 0xFFFFD700);
+continueBtn.setBackground(contBg);
+continueBtn.setLayoutParams(btnLp);
+
+btnRow.addView(skipBtn);
+btnRow.addView(continueBtn);
+box.addView(btnRow);
 
     b.setView(box);
 
@@ -306,9 +463,14 @@ savePopupLang(permissionsLang);
 
     // ================= ACTIONS =================
     continueBtn.setOnClickListener(v -> {
-        d.dismiss();
-        requestNextPermission();
-    });
+
+    if (cb.isChecked()) {
+        disablePermissionsForever();
+    }
+
+    d.dismiss();
+    requestNextPermission();
+});
 
     skipBtn.setOnClickListener(v -> {
         d.dismiss();
@@ -332,45 +494,30 @@ savePopupLang(permissionsLang);
 // PERMISSIONS TEXT — GR
 // ============================================================
 private String getPermissionsTextGR() {
-    return "Η εφαρμογή χρειάζεται άδεια μικροφώνου και τηλεφώνου "
-         + "για να πραγματοποιήσει ελέγχους υλικού.\n\n"
-         + "Δεν γίνεται καταγραφή ή αποθήκευση ήχου.";
+    return "Η εφαρμογή χρειάζεται άδειες, για να πραγματοποιήσει "
+         + "ελέγχους στην συσκευή σου.\n\n"
+         + "Οι άδειες, θα σου ζητηθούν μία μία από το σύστημα Android.\n\n"
+         + "Το σύστημα, ενδέχεται να ζητήσει πρόσβαση σε:\n"
+         + "• Τοποθεσία,\n"
+         + "• Αποθήκευση,\n"
+         + "• Τηλέφωνο,\n"
+         + "• Μικρόφωνο.\n\n"
+         + "Δεν γίνεται καταγραφή, ή αποθήκευση προσωπικών δεδομένων.";
 }
 
 // ============================================================
 // PERMISSIONS TEXT — EN
 // ============================================================
 private String getPermissionsTextEN() {
-    return "The application requires microphone and phone permissions "
-         + "to perform hardware diagnostics.\n\n"
-         + "No audio is recorded or stored.";
-}
-
-// ============================================================
-// SIMPLE MUTE ROW (SAFE VERSION FOR MAIN ACTIVITY)
-// ============================================================
-private View buildMuteRow() {
-
-    LinearLayout row = new LinearLayout(this);
-    row.setOrientation(LinearLayout.HORIZONTAL);
-    row.setGravity(Gravity.CENTER);
-
-    TextView txt = new TextView(this);
-    txt.setText("TTS");
-    txt.setTextColor(Color.WHITE);
-    txt.setPadding(0, 0, dp(8), 0);
-
-    Switch sw = new Switch(this);
-    sw.setChecked(!AppTTS.isMuted(this));
-
-    sw.setOnCheckedChangeListener((buttonView, isChecked) ->
-            AppTTS.setMuted(this, !isChecked)
-    );
-
-    row.addView(txt);
-    row.addView(sw);
-
-    return row;
+    return "The application requires permissions, to perform "
+         + "diagnostic checks on your device.\n\n"
+         + "Permissions, will be requested one by one by the Android system.\n\n"
+         + "The system may request access to:\n"
+         + "• Location,\n"
+         + "• Storage,\n"
+         + "• Phone,\n"
+         + "• Microphone.\n\n"
+         + "No personal data is recorded or stored.";
 }
 
 private void savePopupLang(String lang) {

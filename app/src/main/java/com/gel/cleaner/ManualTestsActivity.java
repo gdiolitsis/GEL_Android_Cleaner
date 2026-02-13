@@ -1235,19 +1235,23 @@ d.setOnKeyListener((dialog, keyCode, event) -> {
     return false;
 });
 
-if (isFinishing() || isDestroyed()) return;
-d.show();
+if (!isFinishing() && !isDestroyed()) {
+    d.show();
 
-// ------------------------------------------------------------
-// TTS PROMPT (AFTER SHOW)
-// ------------------------------------------------------------
-if (!AppTTS.isMuted(this)) {
-    AppTTS.ensureSpeak(
-            this,
-            gr
-                    ? "Άκουσες καθαρά τους ήχους από το ακουστικό;"
-                    : "Did you hear the tones clearly from the earpiece?"
-    );
+    new Handler(Looper.getMainLooper()).postDelayed(() -> {
+        if (d.isShowing()
+                && !isFinishing()
+                && !isDestroyed()
+                && !AppTTS.isMuted(this)) {
+
+            AppTTS.ensureSpeak(
+                    this,
+                    gr
+                            ? "Άκουσες καθαρά τους ήχους από το ακουστικό;"
+                            : "Did you hear the tones clearly from the earpiece?"
+            );
+        }
+    }, 400);
 }
 
 // ------------------------------------------------------------
@@ -4612,33 +4616,53 @@ private void lab3EarpieceManual() {
         root.addView(msg);
 
 // ---------------------------
-// MUTE ROW (GLOBAL APP TTS)
+// BUTTON ROW (EXIT + START)
 // ---------------------------
-root.addView(buildMuteRow());
+LinearLayout btnRow = new LinearLayout(this);
+btnRow.setOrientation(LinearLayout.HORIZONTAL);
+btnRow.setGravity(Gravity.CENTER);
 
-        // START BUTTON
-        Button start = new Button(this);
-        start.setText(gr ? "ΕΝΑΡΞΗ ΕΛΕΓΧΟΥ" : "START TEST");
-        start.setAllCaps(false);
-        start.setTextSize(15f);
-        start.setTextColor(Color.BLACK);
+LinearLayout.LayoutParams btnLp =
+        new LinearLayout.LayoutParams(
+                0,
+                dp(48),
+                1f
+        );
+btnLp.setMargins(dp(6), dp(6), dp(6), 0);
 
-        GradientDrawable startBg = new GradientDrawable();
-        startBg.setColor(0xFF39FF14);
-        startBg.setCornerRadius(dp(16));
-        startBg.setStroke(dp(3), 0xFFFFD700);
-        start.setBackground(startBg);
+// ---------- EXIT ----------
+Button exitBtn = new Button(this);
+exitBtn.setText(gr ? "ΕΞΟΔΟΣ" : "EXIT");
+exitBtn.setAllCaps(false);
+exitBtn.setTextSize(14f);
+exitBtn.setTextColor(Color.WHITE);
 
-        LinearLayout.LayoutParams lp =
-                new LinearLayout.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT,
-                        dp(52)
-                );
-        lp.setMargins(0, dp(6), 0, 0);
-        start.setLayoutParams(lp);
-        root.addView(start);
+GradientDrawable exitBg = new GradientDrawable();
+exitBg.setColor(0xFF8B0000);
+exitBg.setCornerRadius(dp(14));
+exitBg.setStroke(dp(3), 0xFFFFD700);
+exitBtn.setBackground(exitBg);
+exitBtn.setLayoutParams(btnLp);
 
-        b.setView(root);
+// ---------- START ----------
+Button start = new Button(this);
+start.setText(gr ? "ΕΝΑΡΞΗ" : "START");
+start.setAllCaps(false);
+start.setTextSize(14f);
+start.setTextColor(Color.BLACK);
+
+GradientDrawable startBg = new GradientDrawable();
+startBg.setColor(0xFF39FF14);
+startBg.setCornerRadius(dp(14));
+startBg.setStroke(dp(3), 0xFFFFD700);
+start.setBackground(startBg);
+start.setLayoutParams(btnLp);
+
+btnRow.addView(exitBtn);
+btnRow.addView(start);
+root.addView(btnRow);
+
+b.setView(root);
 b.setCancelable(false);
 
 final AlertDialog d = b.create();
@@ -4649,15 +4673,20 @@ if (d.getWindow() != null) {
     );
 }
 
-// ΣΤΑΜΑΤΑ TTS ΟΠΟΤΕ ΚΛΕΙΣΕΙ (οποιοσδήποτε τρόπος)
+// STOP TTS
 d.setOnDismissListener(dialog -> {
     try { AppTTS.stop(); } catch (Throwable ignore) {}
 });
 
-// ΚΑΛΥΨΗ BACK
+// BACK
 d.setOnKeyListener((dialog, keyCode, event) -> {
     if (keyCode == KeyEvent.KEYCODE_BACK &&
         event.getAction() == KeyEvent.ACTION_UP) {
+
+        appendHtml("<br>");
+        logWarn(gr ? "Η δοκιμή ακυρώθηκε από τον χρήστη."
+                   : "Test canceled by user.");
+        logLine();
 
         try { AppTTS.stop(); } catch (Throwable ignore) {}
         dialog.dismiss();
@@ -4669,6 +4698,30 @@ d.setOnKeyListener((dialog, keyCode, event) -> {
 if (!isFinishing() && !isDestroyed()) {
     d.show();
 }
+
+// ---------------------------
+// ACTIONS
+// ---------------------------
+
+exitBtn.setOnClickListener(v -> {
+
+    appendHtml("<br>");
+    logWarn(gr ? "Η δοκιμή ακυρώθηκε από τον χρήστη."
+               : "Test canceled by user.");
+    logLine();
+
+    try { AppTTS.stop(); } catch (Throwable ignore) {}
+    d.dismiss();
+
+    runOnUiThread(this::enableSingleExportButton);
+});
+
+start.setOnClickListener(v -> {
+    try { AppTTS.stop(); } catch (Throwable ignore) {}
+    d.dismiss();
+
+    // 👉 εδώ συνεχίζεις το test
+});
 
 // ------------------------------------------------------------
 // START ACTION
@@ -4701,19 +4754,19 @@ start.setOnClickListener(v -> {
         } catch (Throwable t) {
 
             logError(gr
-        ? "Αποτυχία αναπαραγωγής τόνων ακουστικού."
-        : "Earpiece tone playback failed.");
+                    ? "Αποτυχία αναπαραγωγής τόνων ακουστικού."
+                    : "Earpiece tone playback failed.");
 
-logLabelWarnValue(
-        gr ? "Πιθανή αιτία" : "Possible cause",
-        gr
-                ? "Αποτυχία δρομολόγησης ήχου, περιορισμός συστήματος, ή μη διαθέσιμη έξοδος ακουστικού."
-                : "Audio routing failure, system-level restriction, or unavailable earpiece output."
-);
+            logLabelWarnValue(
+                    gr ? "Πιθανή αιτία" : "Possible cause",
+                    gr
+                            ? "Αποτυχία δρομολόγησης ήχου, περιορισμός συστήματος ή μη διαθέσιμη έξοδος ακουστικού."
+                            : "Audio routing failure, system-level restriction or unavailable earpiece output."
+            );
 
         } finally {
 
-            // 🔒 HARD AUDIO RESET (LAB 3)
+            // 🔒 HARD AUDIO RESET
             resetAudioAfterLab3(am, lab3OldMode, lab3OldSpeaker, lab3OldMicMute);
 
             runOnUiThread(() -> {

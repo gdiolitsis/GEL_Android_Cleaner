@@ -328,6 +328,51 @@ savePopupLang(permissionsLang);
     }
 }
 
+// ============================================================
+// PERMISSIONS TEXT — GR
+// ============================================================
+private String getPermissionsTextGR() {
+    return "Η εφαρμογή χρειάζεται άδεια μικροφώνου και τηλεφώνου "
+         + "για να πραγματοποιήσει ελέγχους υλικού.\n\n"
+         + "Δεν γίνεται καταγραφή ή αποθήκευση ήχου.";
+}
+
+// ============================================================
+// PERMISSIONS TEXT — EN
+// ============================================================
+private String getPermissionsTextEN() {
+    return "The application requires microphone and phone permissions "
+         + "to perform hardware diagnostics.\n\n"
+         + "No audio is recorded or stored.";
+}
+
+// ============================================================
+// SIMPLE MUTE ROW (SAFE VERSION FOR MAIN ACTIVITY)
+// ============================================================
+private View buildMuteRow() {
+
+    LinearLayout row = new LinearLayout(this);
+    row.setOrientation(LinearLayout.HORIZONTAL);
+    row.setGravity(Gravity.CENTER);
+
+    TextView txt = new TextView(this);
+    txt.setText("TTS");
+    txt.setTextColor(Color.WHITE);
+    txt.setPadding(0, 0, dp(8), 0);
+
+    Switch sw = new Switch(this);
+    sw.setChecked(!AppTTS.isMuted(this));
+
+    sw.setOnCheckedChangeListener((buttonView, isChecked) ->
+            AppTTS.setMuted(this, !isChecked)
+    );
+
+    row.addView(txt);
+    row.addView(sw);
+
+    return row;
+}
+
 private void savePopupLang(String lang) {
     getSharedPreferences(PREFS, MODE_PRIVATE)
             .edit()

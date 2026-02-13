@@ -5492,8 +5492,8 @@ runOnUiThread(() -> {
 
         }).start();
 
-    }, 500);
-}
+}, 500);
+});
 
 // ==========================
 // WAIT WITH TIMEOUT (MAX 4s)

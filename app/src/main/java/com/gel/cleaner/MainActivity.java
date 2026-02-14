@@ -936,14 +936,6 @@ d.show();
 // --------------------------------------------
 okBtn.setOnClickListener(v -> {
 
-    if (cb.isChecked()) {
-        disableWelcomeForever();
-    }
-
-    d.dismiss();
-    showPlatformSelectPopup();
-});
-
     try {
         if (tts[0] != null) tts[0].stop();
     } catch (Throwable ignore) {}

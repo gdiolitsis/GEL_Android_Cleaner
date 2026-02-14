@@ -4,8 +4,10 @@ import android.content.Context;
 import java.util.Locale;
 
 // ============================================================
-// APP LANGUAGE HELPER — GEL (LOCKED)
-// Source of truth: LocaleHelper (app language)
+// APP LANGUAGE HELPER — GEL (LOCKED FINAL)
+// Source of truth: LocaleHelper
+// This class NEVER changes language.
+// It only reads the active app locale.
 // ============================================================
 public final class AppLang {
 
@@ -15,20 +17,24 @@ public final class AppLang {
     // TRUE = Greek, FALSE = English
     // ------------------------------------------------------------
     public static boolean isGreek(Context c) {
-        if (c == null) return false;
-
-        try {
-            Locale l = LocaleHelper.getLocale(c);
-            return l != null && "el".equalsIgnoreCase(l.getLanguage());
-        } catch (Throwable t) {
-            return false;
-        }
+        return "el".equals(lang(c));
     }
 
     // ------------------------------------------------------------
-    // Canonical language
+    // Canonical language code ("el" or "en")
     // ------------------------------------------------------------
     public static String lang(Context c) {
-        return isGreek(c) ? "el" : "en";
+        if (c == null) return "en";
+
+        try {
+            Locale l = LocaleHelper.getLocale(c);
+            if (l == null) return "en";
+
+            String code = l.getLanguage();
+            return "el".equalsIgnoreCase(code) ? "el" : "en";
+
+        } catch (Throwable ignore) {
+            return "en";
+        }
     }
 }

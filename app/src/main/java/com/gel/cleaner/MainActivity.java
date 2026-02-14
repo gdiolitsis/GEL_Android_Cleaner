@@ -447,7 +447,7 @@ skipBtn.setOnClickListener(v -> {
 if (!isFinishing() && !isDestroyed()) {
 
     d.setOnShowListener(dialog -> {
-        if (!AppTTS.isMuted(MainActivity.this){
+        if (!AppTTS.isMuted(MainActivity.this)) {
             speakPermissionsTTS();
         }
     });
@@ -655,7 +655,7 @@ private void speakPermissionsTTS() {
 
         AppTTS.speak(
                 this,
-                getWelcomeTextGR(),
+                getWelcomeTextGR()
         );
 
     } else {

@@ -9,12 +9,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 /*
  ============================================================
- AppTTS — GLOBAL Text-to-Speech (FINAL STABLE)
+ AppTTS — GLOBAL Text-to-Speech (FINAL STABLE + WARMUP FIX)
  ------------------------------------------------------------
  • One single global TTS instance
  • Shared mute state across whole app
  • Respects App language (app_lang)
  • Safe init (idempotent)
+ • Warm-up fix (prevents first silent speak)
  • No routing tricks
  • No side effects
  ============================================================
@@ -27,6 +28,7 @@ public final class AppTTS {
 
     private static TextToSpeech tts;
     private static final AtomicBoolean ready = new AtomicBoolean(false);
+    private static final AtomicBoolean warmedUp = new AtomicBoolean(false);
     private static boolean muted = false;
 
     private AppTTS() {}
@@ -54,6 +56,17 @@ public final class AppTTS {
 
             applyLanguage(appCtx);
             ready.set(true);
+
+            // 🔥 WARM-UP (fix first silent speak)
+            try {
+                tts.speak(
+                        " ",
+                        TextToSpeech.QUEUE_FLUSH,
+                        null,
+                        "WARMUP"
+                );
+                warmedUp.set(true);
+            } catch (Throwable ignore) {}
         });
     }
 
@@ -92,6 +105,14 @@ public final class AppTTS {
         if (!ready.get() || tts == null) return;
 
         try {
+
+            // If not warmed up yet, force small delay logic
+            if (!warmedUp.get()) {
+                applyLanguage(ctx);
+                tts.speak(" ", TextToSpeech.QUEUE_FLUSH, null, "WARMUP2");
+                warmedUp.set(true);
+            }
+
             tts.stop();
             applyLanguage(ctx);
 
@@ -106,7 +127,7 @@ public final class AppTTS {
     }
 
     // ============================================================
-    // LEGACY SAFE ALIAS (LAB COMPATIBILITY)
+    // LEGACY SAFE ALIAS
     // ============================================================
     public static void ensureSpeak(Context ctx, String text) {
         speak(ctx, text);
@@ -145,7 +166,7 @@ public final class AppTTS {
     }
 
     // ============================================================
-    // SHUTDOWN (OPTIONAL)
+    // SHUTDOWN
     // ============================================================
     public static void shutdown() {
 
@@ -158,6 +179,7 @@ public final class AppTTS {
         }
 
         ready.set(false);
+        warmedUp.set(false);
     }
 
     // ============================================================

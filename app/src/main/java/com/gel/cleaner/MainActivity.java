@@ -291,7 +291,7 @@ private void showPermissionsPopup() {
 
                     String code = (position == 0) ? "en" : "el";
 
-                    AppLang.setLang(MainActivity.this, code);
+                    changeLang(code);
 
                     msg.setText(
                             AppLang.isGreek(MainActivity.this)
@@ -1110,22 +1110,16 @@ private void applyAppleModeUI() {
 
 private void changeLang(String code) {
 
-    // Αν είναι ήδη η ίδια γλώσσα → μην κάνεις τίποτα
+    // Αν είναι ήδη ίδια → exit
     if (code.equals(LocaleHelper.getLang(this))) return;
 
-    // Αποθήκευση app language
-    getSharedPreferences("gel_prefs", MODE_PRIVATE)
-            .edit()
-            .putString("app_lang", code)
-            .apply();
-
-    // Εφαρμογή locale
+    // Apply locale
     LocaleHelper.set(this, code);
 
-    // Αποφυγή welcome re-trigger
+    // Μην ξαναπετάξει welcome
     setSkipWelcomeOnce(true);
 
-    // Refresh activity
+    // Refresh
     recreate();
 }
 

@@ -9,61 +9,81 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 /*
  ============================================================
- AppTTS — GLOBAL Text-to-Speech (LEGACY STABLE + ADAPTER)
+ AppTTS — GLOBAL Text-to-Speech (FINAL STABLE)
  ------------------------------------------------------------
- • Keeps OLD stable behavior (LAB 1–2 safe)
- • Adds legacy API expected by newer LABs
- • NO audio routing
- • NO DSP tricks
- • NO side effects
+ • One single global TTS instance
+ • Shared mute state across whole app
+ • Respects App language (app_lang)
+ • Safe init (idempotent)
+ • No routing tricks
+ • No side effects
  ============================================================
 */
 public final class AppTTS {
 
     private static final String PREFS_NAME = "gel_prefs";
     private static final String PREF_TTS_MUTED = "tts_muted_global";
+    private static final String PREF_APP_LANG = "app_lang";
 
     private static TextToSpeech tts;
     private static final AtomicBoolean ready = new AtomicBoolean(false);
-
     private static boolean muted = false;
 
     private AppTTS() {}
 
     // ============================================================
-    // INIT — SAFE, IDPOTENT
+    // INIT (SAFE / IDEMPOTENT)
     // ============================================================
     public static void init(Context ctx) {
+
         if (tts != null) return;
 
         Context appCtx = ctx.getApplicationContext();
 
-        // load mute state (legacy compatibility)
         SharedPreferences prefs =
                 appCtx.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+
         muted = prefs.getBoolean(PREF_TTS_MUTED, false);
 
         tts = new TextToSpeech(appCtx, status -> {
-            if (status != TextToSpeech.SUCCESS) return;
 
-            boolean gr = isGreek(appCtx);
+            if (status != TextToSpeech.SUCCESS) {
+                ready.set(false);
+                return;
+            }
 
-            Locale locale = gr
-                    ? new Locale("el", "GR")
-                    : Locale.US;
-
-            int res = tts.setLanguage(locale);
-            ready.set(
-                    res != TextToSpeech.LANG_MISSING_DATA &&
-                    res != TextToSpeech.LANG_NOT_SUPPORTED
-            );
+            applyLanguage(appCtx);
+            ready.set(true);
         });
     }
 
     // ============================================================
-    // CORE SPEAK (OLD BEHAVIOR)
+    // APPLY LANGUAGE FROM APP SETTINGS
+    // ============================================================
+    private static void applyLanguage(Context ctx) {
+
+        if (tts == null) return;
+
+        SharedPreferences prefs =
+                ctx.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+
+        String code = prefs.getString(PREF_APP_LANG, "en");
+
+        Locale locale =
+                "el".equalsIgnoreCase(code)
+                        ? new Locale("el", "GR")
+                        : Locale.US;
+
+        try {
+            tts.setLanguage(locale);
+        } catch (Throwable ignore) {}
+    }
+
+    // ============================================================
+    // SPEAK
     // ============================================================
     public static void speak(Context ctx, String text) {
+
         if (text == null || text.trim().isEmpty()) return;
 
         init(ctx);
@@ -72,30 +92,36 @@ public final class AppTTS {
         if (!ready.get() || tts == null) return;
 
         try {
+            tts.stop();
+            applyLanguage(ctx);
+
             tts.speak(
                     text,
                     TextToSpeech.QUEUE_FLUSH,
                     null,
                     "APP_TTS"
             );
+
         } catch (Throwable ignore) {}
     }
 
     // ============================================================
-    // LEGACY API — REQUIRED BY LABs
+    // LEGACY SAFE ALIAS (LAB COMPATIBILITY)
     // ============================================================
-
-    /** alias for speak() — DO NOT CHANGE LAB CALLS */
     public static void ensureSpeak(Context ctx, String text) {
         speak(ctx, text);
     }
 
+    // ============================================================
+    // MUTE CONTROL (GLOBAL)
+    // ============================================================
     public static boolean isMuted(Context ctx) {
         init(ctx);
         return muted;
     }
 
     public static void setMuted(Context ctx, boolean m) {
+
         muted = m;
 
         Context appCtx = ctx.getApplicationContext();
@@ -110,7 +136,7 @@ public final class AppTTS {
     }
 
     // ============================================================
-    // STOP / SHUTDOWN
+    // STOP
     // ============================================================
     public static void stop() {
         if (tts != null) {
@@ -118,35 +144,30 @@ public final class AppTTS {
         }
     }
 
+    // ============================================================
+    // SHUTDOWN (OPTIONAL)
+    // ============================================================
     public static void shutdown() {
+
         if (tts != null) {
             try {
                 tts.stop();
                 tts.shutdown();
             } catch (Throwable ignore) {}
             tts = null;
-            ready.set(false);
         }
+
+        ready.set(false);
     }
 
-// ============================================================
-// SPEAKING STATE (SAFE CHECK)
-// ============================================================
-public static boolean isSpeaking() {
-    try {
-        return tts != null && tts.isSpeaking();
-    } catch (Throwable ignore) {
-        return false;
-    }
-}
- 
     // ============================================================
-    // APP LANGUAGE (NOT SYSTEM)
+    // STATE CHECK
     // ============================================================
-    private static boolean isGreek(Context ctx) {
-        return "gr".equalsIgnoreCase(
-                ctx.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-                        .getString("app_lang", "en")
-        );
+    public static boolean isSpeaking() {
+        try {
+            return tts != null && tts.isSpeaking();
+        } catch (Throwable ignore) {
+            return false;
+        }
     }
 }

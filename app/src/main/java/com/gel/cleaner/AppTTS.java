@@ -3,23 +3,25 @@ package com.gel.cleaner;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.speech.tts.TextToSpeech;
+import android.os.Handler;
+import android.os.Looper;
 
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /*
  ============================================================
- AppTTS — GLOBAL Text-to-Speech (FINAL STABLE + WARMUP FIX)
+ AppTTS — GLOBAL Text-to-Speech (CLEAN STABLE)
  ------------------------------------------------------------
- • One single global TTS instance
- • Shared mute state across whole app
- • Respects App language (app_lang)
+ • Single global TTS instance
+ • Shared mute state
+ • Respects app language (app_lang)
  • Safe init (idempotent)
- • Warm-up fix (prevents first silent speak)
- • No routing tricks
- • No side effects
+ • Proper warm-up (no first silent speak)
+ • No recursion loops
  ============================================================
 */
+
 public final class AppTTS {
 
     private static final String PREFS_NAME = "gel_prefs";
@@ -28,7 +30,6 @@ public final class AppTTS {
 
     private static TextToSpeech tts;
     private static final AtomicBoolean ready = new AtomicBoolean(false);
-    private static final AtomicBoolean warmedUp = new AtomicBoolean(false);
     private static boolean muted = false;
 
     private AppTTS() {}
@@ -57,21 +58,20 @@ public final class AppTTS {
             applyLanguage(appCtx);
             ready.set(true);
 
-            // 🔥 WARM-UP (fix first silent speak)
+            // Proper warm-up (silent utterance)
             try {
                 tts.speak(
-                        " ",
+                        "",
                         TextToSpeech.QUEUE_FLUSH,
                         null,
                         "WARMUP"
                 );
-                warmedUp.set(true);
             } catch (Throwable ignore) {}
         });
     }
 
     // ============================================================
-    // APPLY LANGUAGE FROM APP SETTINGS
+    // APPLY LANGUAGE
     // ============================================================
     private static void applyLanguage(Context ctx) {
 
@@ -102,17 +102,16 @@ public final class AppTTS {
         init(ctx);
 
         if (muted) return;
-        if (!ready.get() || tts == null) return;
+        if (tts == null) return;
+
+        if (!ready.get()) {
+            // Retry once shortly after init
+            new Handler(Looper.getMainLooper())
+                    .postDelayed(() -> speak(ctx, text), 200);
+            return;
+        }
 
         try {
-
-            // If not warmed up yet, force small delay logic
-            if (!warmedUp.get()) {
-                applyLanguage(ctx);
-                tts.speak(" ", TextToSpeech.QUEUE_FLUSH, null, "WARMUP2");
-                warmedUp.set(true);
-            }
-
             tts.stop();
             applyLanguage(ctx);
 
@@ -127,14 +126,14 @@ public final class AppTTS {
     }
 
     // ============================================================
-    // LEGACY SAFE ALIAS
+    // LEGACY ALIAS
     // ============================================================
     public static void ensureSpeak(Context ctx, String text) {
         speak(ctx, text);
     }
 
     // ============================================================
-    // MUTE CONTROL (GLOBAL)
+    // MUTE CONTROL
     // ============================================================
     public static boolean isMuted(Context ctx) {
         init(ctx);
@@ -179,7 +178,6 @@ public final class AppTTS {
         }
 
         ready.set(false);
-        warmedUp.set(false);
     }
 
     // ============================================================

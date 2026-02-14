@@ -400,10 +400,8 @@ if (d.getWindow() != null) {
 // -------------------------------------------------
 d.setOnDismissListener(dialog -> {
     try {
-        try {
     AppTTS.stop();
 } catch (Throwable ignore) {}
-    } catch (Throwable ignore) {}
 });
 
 // -------------------------------------------------
@@ -885,10 +883,8 @@ welcomeShown = true;
 // --------------------------------------------
 d.setOnDismissListener(dialog -> {
     try {
-        try {
     AppTTS.stop();
 } catch (Throwable ignore) {}
-    } catch (Throwable ignore) {}
     welcomeShown = false;
 });
 
@@ -1046,10 +1042,8 @@ welcomeShown = true;
 // --------------------------------------------
 d.setOnDismissListener(dialog -> {
     try {
-        try {
     AppTTS.stop();
-} catch (Throwable ignore) {}
-    } catch (Throwable ignore) {}
+ } catch (Throwable ignore) {}
     welcomeShown = false;
 });
 

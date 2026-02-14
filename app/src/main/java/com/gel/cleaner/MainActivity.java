@@ -42,6 +42,7 @@ public class MainActivity extends GELAutoActivityHook
 
     private static final int REQ_PERMISSIONS = 1001;
     private static final String PREF_PERMISSIONS_DISABLED = "permissions_disabled";
+    private boolean permissionsSkippedThisLaunch = false;
 
     private final String[] REQUIRED_PERMISSIONS = new String[]{
             Manifest.permission.RECORD_AUDIO,
@@ -99,14 +100,19 @@ protected void onCreate(Bundle savedInstanceState) {
         });
     }
 
-    // =========================================================
-    // ENTRY FLOW (FIXED)
-    // =========================================================
-    permissionIndex = 0;
+// =========================================================
+// ENTRY FLOW (FIXED)
+// =========================================================
+permissionIndex = 0;
 
-    if (hasMissingPermissions() && !isPermissionsDisabled()) {
+if (hasMissingPermissions()
+        && !isPermissionsDisabled()
+        && !permissionsSkippedThisLaunch) {
+
     showPermissionsPopup();
+
 } else {
+
     requestNextPermission();
 }
 
@@ -430,6 +436,13 @@ continueBtn.setOnClickListener(v -> {
 
 skipBtn.setOnClickListener(v -> {
 
+    permissionsSkippedThisLaunch = true;
+
+    d.dismiss();
+    permissionIndex = REQUIRED_PERMISSIONS.length;
+    requestNextPermission();
+});
+
     try {
         try {
     AppTTS.stop();
@@ -522,9 +535,9 @@ private void requestNextPermission() {
     }
 
     // ================= END FLOW → WELCOME =================
-    if (!isWelcomeDisabled() && !welcomeShown) {
-        showWelcomePopup();
-    }
+    if (!isWelcomeDisabled() && !consumeSkipWelcomeOnce()) {
+    showWelcomePopup();
+}
 }
 
 @Override

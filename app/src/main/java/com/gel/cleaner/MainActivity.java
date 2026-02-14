@@ -447,8 +447,7 @@ skipBtn.setOnClickListener(v -> {
 if (!isFinishing() && !isDestroyed()) {
 
     d.setOnShowListener(dialog -> {
-        if (!AppTTS.isMuted(MainActivity.this)
-                && ttsReady[0]) {
+        if (!AppTTS.isMuted(MainActivity.this){
             speakPermissionsTTS();
         }
     });
@@ -633,17 +632,13 @@ private void speakPermissionsTTS() {
         AppTTS.speak(
                 this,
                 getPermissionsTextGR(),
-                new Locale("el", "GR"),
-                "PERMISSIONS_GR"
         );
 
     } else {
 
         AppTTS.speak(
                 this,
-                getPermissionsTextEN(),
-                Locale.US,
-                "PERMISSIONS_EN"
+                getPermissionsTextEN(),              
         );
     }
 }
@@ -661,8 +656,6 @@ private void speakPermissionsTTS() {
         AppTTS.speak(
                 this,
                 getWelcomeTextGR(),
-                new Locale("el", "GR"),
-                "WELCOME_GR"
         );
 
     } else {
@@ -670,8 +663,6 @@ private void speakPermissionsTTS() {
         AppTTS.speak(
                 this,
                 getWelcomeTextEN(),
-                Locale.US,
-                "WELCOME_EN"
         );
     }
 }
@@ -904,8 +895,7 @@ d.setOnCancelListener(dialog -> {
 // SPEAK ONLY WHEN DIALOG IS ACTUALLY SHOWN
 // --------------------------------------------
 d.setOnShowListener(dialog -> {
-    if (ttsReady[0]
-            && !AppTTS.isMuted(MainActivity.this)
+    if (!AppTTS.isMuted(MainActivity.this)
             && welcomeShown) {
         speakWelcomeTTS();
     }

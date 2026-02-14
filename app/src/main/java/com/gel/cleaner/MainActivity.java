@@ -631,22 +631,22 @@ private void speakPermissionsTTS() {
 
         AppTTS.speak(
                 this,
-                getPermissionsTextGR(),
+                getPermissionsTextGR()
         );
 
     } else {
 
         AppTTS.speak(
                 this,
-                getPermissionsTextEN(),              
+                getPermissionsTextEN()
         );
     }
 }
 
-    // =========================================================
-    // TTS — WELCOME
-    // =========================================================
-    private void speakWelcomeTTS() {
+// =========================================================
+// TTS — WELCOME
+// =========================================================
+private void speakWelcomeTTS() {
 
     if (!welcomeShown) return;
     if (AppTTS.isMuted(this)) return;
@@ -662,7 +662,7 @@ private void speakPermissionsTTS() {
 
         AppTTS.speak(
                 this,
-                getWelcomeTextEN(),
+                getWelcomeTextEN()
         );
     }
 }

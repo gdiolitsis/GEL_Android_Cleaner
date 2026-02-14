@@ -428,6 +428,15 @@ private void showPermissionsPopup() {
 
         d.show();
 
+Window w = d.getWindow();
+if (w != null) {
+    w.setLayout(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+    );
+    w.getDecorView().setPadding(dp(16), 0, dp(16), 0);
+}
+
         if (ttsReady[0] && !AppTTS.isMuted(this)) {
             speakPermissionsTTS();
         }

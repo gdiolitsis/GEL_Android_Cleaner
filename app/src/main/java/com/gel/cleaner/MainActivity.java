@@ -1063,7 +1063,8 @@ androidBtn.setOnClickListener(v -> {
 
     savePlatform("android");
 
-    setSkipWelcomeOnce(true);   // ✅ ΜΠΗΚΕ ΕΔΩ
+    setSkipWelcomeOnce(true);
+    permissionsSkippedThisLaunch = true;   // ✅ ΠΡΟΣΘΗΚΗ
 
     d.dismiss();
     recreate();
@@ -1080,7 +1081,8 @@ appleBtn.setOnClickListener(v -> {
 
     savePlatform("apple");
 
-    setSkipWelcomeOnce(true);   // ✅ ΜΠΗΚΕ ΕΔΩ
+    setSkipWelcomeOnce(true);
+    permissionsSkippedThisLaunch = true;   // ✅ ΠΡΟΣΘΗΚΗ
 
     d.dismiss();
     recreate();

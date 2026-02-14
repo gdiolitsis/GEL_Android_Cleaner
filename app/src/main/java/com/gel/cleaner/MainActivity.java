@@ -230,15 +230,12 @@ private void showPermissionsPopup() {
     b.setCancelable(false);
 
     // ================= ROOT =================
-    LinearLayout root = new LinearLayout(this);
-    root.setOrientation(LinearLayout.VERTICAL);
-    root.setPadding(dp(24), dp(20), dp(24), dp(18));
-
+    
     GradientDrawable bg = new GradientDrawable();
     bg.setColor(0xFF101010);
     bg.setCornerRadius(dp(18));
     bg.setStroke(dp(4), 0xFFFFD700);
-    box.setBackground(bg);
+    root.setBackground(bg);
 
     // ================= TITLE =================
     TextView title = new TextView(this);
@@ -259,11 +256,6 @@ private void showPermissionsPopup() {
     msg.setText(gr ? getPermissionsTextGR()
                    : getPermissionsTextEN());
     root.addView(msg);
-
-// ==========================
-// MUTE ROW (UNIFIED — AppTTS HELPER)
-// ==========================
-root.addView(buildMuteRow());
 
 // ================= LANGUAGE SPINNER =================
     Spinner langSpinner = new Spinner(MainActivity.this);
@@ -313,9 +305,6 @@ public void onItemSelected(
 );
     
 // ================= ROOT =================
-LinearLayout root = new LinearLayout(this);
-root.setOrientation(LinearLayout.VERTICAL);
-root.setPadding(dp(24), dp(20), dp(24), dp(18));
 
 GradientDrawable bg = new GradientDrawable();
 bg.setColor(0xFF101010);
@@ -921,7 +910,7 @@ private void showPlatformSelectPopup() {
     bg.setColor(0xFF101010);
     bg.setCornerRadius(dp(18));
     bg.setStroke(dp(4), 0xFFFFD700);
-    box.setBackground(bg);
+    root.setBackground(bg);
 
     // TITLE
     TextView t = new TextView(this);
@@ -1259,7 +1248,7 @@ private void showAppleDeviceDeclarationPopup() {
     bg.setColor(0xFF000000);
     bg.setCornerRadius(dp(18));
     bg.setStroke(dp(3), 0xFFFFD700);
-    box.setBackground(bg);
+    root.setBackground(bg);
 
     TextView title = new TextView(this);
     title.setText("Select your Apple device");

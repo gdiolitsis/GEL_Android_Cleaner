@@ -1057,13 +1057,13 @@ if (w != null) {
 // --------------------------------------------
 androidBtn.setOnClickListener(v -> {
 
-    try {
-    AppTTS.stop();
-} catch (Throwable ignore) {}
+    try { AppTTS.stop(); } catch (Throwable ignore) {}
 
     welcomeShown = false;
 
     savePlatform("android");
+
+    setSkipWelcomeOnce(true);   // ✅ ΜΠΗΚΕ ΕΔΩ
 
     d.dismiss();
     recreate();
@@ -1074,13 +1074,13 @@ androidBtn.setOnClickListener(v -> {
 // --------------------------------------------
 appleBtn.setOnClickListener(v -> {
 
-    try {
-    AppTTS.stop();
-} catch (Throwable ignore) {}
+    try { AppTTS.stop(); } catch (Throwable ignore) {}
 
     welcomeShown = false;
 
     savePlatform("apple");
+
+    setSkipWelcomeOnce(true);   // ✅ ΜΠΗΚΕ ΕΔΩ
 
     d.dismiss();
     recreate();

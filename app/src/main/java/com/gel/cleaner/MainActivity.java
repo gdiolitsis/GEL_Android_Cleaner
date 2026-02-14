@@ -103,14 +103,11 @@ protected void onCreate(Bundle savedInstanceState) {
     }
 
     // ---------------------------------------------------------
-    // TTS INIT
-    // ---------------------------------------------------------
-    tts[0] = new TextToSpeech(this, status -> {
-        ttsReady[0] = (status == TextToSpeech.SUCCESS);
-        if (ttsReady[0] && welcomeShown) {
-            speakWelcomeTTS();
-        }
-    });
+// TTS INIT (CLEAN)
+// ---------------------------------------------------------
+tts[0] = new TextToSpeech(this, status -> {
+    ttsReady[0] = (status == TextToSpeech.SUCCESS);
+});
 
     // =========================================================
     // ENTRY FLOW (FIXED)
@@ -165,7 +162,7 @@ private LinearLayout buildMuteRow() {
                : "Mute voice instructions"
     );
 
-    label.setTextColor(0xFFAAAAAA);
+    label.setTextColor(Color.WHITE);
     label.setTextSize(14f);
 
     // --------------------------------------------------------
@@ -252,7 +249,7 @@ private void showPermissionsPopup() {
 
     // ================= MESSAGE =================
     TextView msg = new TextView(this);
-    msg.setTextColor(0xFFDDDDDD);
+    msg.setTextColor(0xFF39FF14);
     msg.setTextSize(15f);
     msg.setGravity(Gravity.START);
     msg.setPadding(0, 0, 0, dp(16));
@@ -392,55 +389,81 @@ private void showPermissionsPopup() {
 
     b.setView(root);
 
-    final AlertDialog d = b.create();
+final AlertDialog d = b.create();
 
-    if (d.getWindow() != null) {
-        d.getWindow().setBackgroundDrawable(
-                new ColorDrawable(Color.TRANSPARENT)
-        );
-    }
-
-    // ================= ACTIONS =================
-    continueBtn.setOnClickListener(v -> {
-
-        if (cb.isChecked()) {
-            disablePermissionsForever();
-        }
-
-        d.dismiss();
-        requestNextPermission();
-    });
-
-    skipBtn.setOnClickListener(v -> {
-        d.dismiss();
-        permissionIndex = REQUIRED_PERMISSIONS.length;
-        requestNextPermission();
-    });
-
-    if (!isFinishing() && !isDestroyed()) {
-
-        d.setOnShowListener(dialog -> {
-            if (!AppTTS.isMuted(MainActivity.this)
-                    && ttsReady[0]) {
-                speakPermissionsTTS();
-            }
-        });
-
-        d.show();
-
-Window w = d.getWindow();
-if (w != null) {
-    w.setLayout(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
+if (d.getWindow() != null) {
+    d.getWindow().setBackgroundDrawable(
+            new ColorDrawable(Color.TRANSPARENT)
     );
-    w.getDecorView().setPadding(dp(16), 0, dp(16), 0);
 }
 
-        if (ttsReady[0] && !AppTTS.isMuted(this)) {
+// -------------------------------------------------
+// STOP TTS ON DISMISS
+// -------------------------------------------------
+d.setOnDismissListener(dialog -> {
+    try {
+        if (tts[0] != null) tts[0].stop();
+    } catch (Throwable ignore) {}
+});
+
+// -------------------------------------------------
+// STOP TTS ON BACK / CANCEL
+// -------------------------------------------------
+d.setOnCancelListener(dialog -> {
+    try {
+        if (tts[0] != null) tts[0].stop();
+    } catch (Throwable ignore) {}
+});
+
+// ================= ACTIONS =================
+continueBtn.setOnClickListener(v -> {
+
+    try {
+        if (tts[0] != null) tts[0].stop();
+    } catch (Throwable ignore) {}
+
+    if (cb.isChecked()) {
+        disablePermissionsForever();
+    }
+
+    d.dismiss();
+    requestNextPermission();
+});
+
+skipBtn.setOnClickListener(v -> {
+
+    try {
+        if (tts[0] != null) tts[0].stop();
+    } catch (Throwable ignore) {}
+
+    d.dismiss();
+    permissionIndex = REQUIRED_PERMISSIONS.length;
+    requestNextPermission();
+});
+
+// -------------------------------------------------
+// SHOW
+// -------------------------------------------------
+if (!isFinishing() && !isDestroyed()) {
+
+    d.setOnShowListener(dialog -> {
+        if (!AppTTS.isMuted(MainActivity.this)
+                && ttsReady[0]) {
             speakPermissionsTTS();
         }
+    });
+
+    d.show();
+
+    Window w = d.getWindow();
+    if (w != null) {
+        w.setLayout(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+        w.getDecorView().setPadding(dp(16), 0, dp(16), 0);
     }
+}
 }
 
 // ============================================================
@@ -476,6 +499,9 @@ private String getPermissionsTextEN() {
 // =========================================================
 // REQUEST FLOW
 // =========================================================
+// =========================================================
+// REQUEST FLOW
+// =========================================================
 private void requestNextPermission() {
 
     while (permissionIndex < REQUIRED_PERMISSIONS.length) {
@@ -496,8 +522,8 @@ private void requestNextPermission() {
         permissionIndex++;
     }
 
-    // END FLOW → WELCOME
-    if (!consumeSkipWelcomeOnce() && !isWelcomeDisabled()) {
+    // ================= END FLOW → WELCOME =================
+    if (!isWelcomeDisabled() && !welcomeShown) {
         showWelcomePopup();
     }
 }
@@ -600,40 +626,33 @@ private ArrayAdapter<String> neonAdapter(String[] names) {
 // =========================================================
 private void speakPermissionsTTS() {
 
+    if (tts[0] == null || !ttsReady[0]) return;
+    if (AppTTS.isMuted(this)) return;
+
     try {
-        if (tts[0] == null || !ttsReady[0]) return;
 
-        // respect GLOBAL mute
-        if (AppTTS.isMuted(MainActivity.this)) return;
+        tts[0].stop();
 
-        try { tts[0].stop(); } catch (Throwable ignore) {}
+        if (AppLang.isGreek(this)) {
 
-       if (AppLang.isGreek(MainActivity.this)) {
+            tts[0].setLanguage(new Locale("el", "GR"));
+            tts[0].speak(
+                    getPermissionsTextGR(),
+                    TextToSpeech.QUEUE_FLUSH,
+                    null,
+                    "PERMISSIONS_GR"
+            );
 
-    try { 
-        tts[0].setLanguage(new Locale("el", "GR")); 
-    } catch (Throwable ignore) {}
+        } else {
 
-    tts[0].speak(
-            getPermissionsTextGR(),
-            TextToSpeech.QUEUE_FLUSH,
-            null,
-            "PERMISSIONS_GR"
-    );
-
-} else {
-
-    try { 
-        tts[0].setLanguage(Locale.US); 
-    } catch (Throwable ignore) {}
-
-    tts[0].speak(
-            getPermissionsTextEN(),
-            TextToSpeech.QUEUE_FLUSH,
-            null,
-            "PERMISSIONS_EN"
-    );
-}
+            tts[0].setLanguage(Locale.US);
+            tts[0].speak(
+                    getPermissionsTextEN(),
+                    TextToSpeech.QUEUE_FLUSH,
+                    null,
+                    "PERMISSIONS_EN"
+            );
+        }
 
     } catch (Throwable ignore) {}
 }
@@ -759,7 +778,7 @@ root.addView(title);
 
 // ================= MESSAGE =================
 TextView msg = new TextView(MainActivity.this);
-msg.setTextColor(0xFFDDDDDD);
+msg.setTextColor(0xFF39FF14);
 msg.setTextSize(15f);
 msg.setGravity(Gravity.START);
 msg.setPadding(0, 0, 0, dp(12));
@@ -835,13 +854,13 @@ langBox.setLayoutParams(lpLang);
 root.addView(langBox);
 
 // ================= CHECKBOX =================
-CheckBox cb = new CheckBox(MainActivity.this);
-cb.setText(AppLang.isGreek(this)
-        ? "Να μην εμφανιστεί ξανά"
-        : "Do not show again");
-cb.setTextColor(Color.WHITE);
-cb.setPadding(0, dp(8), 0, dp(8));
-root.addView(cb);
+    CheckBox cb = new CheckBox(this);
+    cb.setText(AppLang.isGreek(this)
+            ? "Να μην εμφανιστεί ξανά"
+            : "Do not show again");
+    cb.setTextColor(Color.WHITE);
+    cb.setPadding(0, dp(8), 0, dp(8));
+    root.addView(cb);
 
 // ================= OK BUTTON =================
 Button okBtn = new Button(MainActivity.this);
@@ -871,10 +890,14 @@ if (d.getWindow() != null) {
     );
 }
 
+// --------------------------------------------
+// STATE BEFORE SHOW
+// --------------------------------------------
 welcomeShown = true;
 
-d.show();
-
+// --------------------------------------------
+// STOP ALWAYS ON DISMISS
+// --------------------------------------------
 d.setOnDismissListener(dialog -> {
     try {
         if (tts[0] != null) tts[0].stop();
@@ -882,7 +905,44 @@ d.setOnDismissListener(dialog -> {
     welcomeShown = false;
 });
 
+// --------------------------------------------
+// STOP ALSO ON CANCEL (BACK BUTTON)
+// --------------------------------------------
+d.setOnCancelListener(dialog -> {
+    try {
+        if (tts[0] != null) tts[0].stop();
+    } catch (Throwable ignore) {}
+    welcomeShown = false;
+});
+
+// --------------------------------------------
+// SPEAK ONLY WHEN DIALOG IS ACTUALLY SHOWN
+// --------------------------------------------
+d.setOnShowListener(dialog -> {
+    if (ttsReady[0]
+            && !AppTTS.isMuted(MainActivity.this)
+            && welcomeShown) {
+        speakWelcomeTTS();
+    }
+});
+
+// --------------------------------------------
+// SHOW
+// --------------------------------------------
+d.show();
+
+// --------------------------------------------
+// OK BUTTON
+// --------------------------------------------
 okBtn.setOnClickListener(v -> {
+
+    if (cb.isChecked()) {
+        disableWelcomeForever();
+    }
+
+    d.dismiss();
+    showPlatformSelectPopup();
+});
 
     try {
         if (tts[0] != null) tts[0].stop();
@@ -986,43 +1046,89 @@ private void showPlatformSelectPopup() {
     root.addView(appleBtn);
 
     b.setView(root);
-    final AlertDialog d = b.create();
+final AlertDialog d = b.create();
 
-    if (d.getWindow()!=null)
-        d.getWindow().setBackgroundDrawable(
-                new ColorDrawable(Color.TRANSPARENT));
+if (d.getWindow() != null) {
+    d.getWindow().setBackgroundDrawable(
+            new ColorDrawable(Color.TRANSPARENT)
+    );
+}
 
-    d.show();
-    
-    d.setOnDismissListener(dialog -> {
+// --------------------------------------------
+// STATE
+// --------------------------------------------
+welcomeShown = true;
+
+// --------------------------------------------
+// STOP ON DISMISS
+// --------------------------------------------
+d.setOnDismissListener(dialog -> {
     try {
         if (tts[0] != null) tts[0].stop();
     } catch (Throwable ignore) {}
     welcomeShown = false;
 });
 
-    Window w = d.getWindow();
-    if (w != null) {
-        w.setLayout(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-        );
-        w.getDecorView().setPadding(dp(16),0,dp(16),0);
-    }
+// --------------------------------------------
+// STOP ON BACK (CANCEL)
+// --------------------------------------------
+d.setOnCancelListener(dialog -> {
+    try {
+        if (tts[0] != null) tts[0].stop();
+    } catch (Throwable ignore) {}
+    welcomeShown = false;
+});
 
-    androidBtn.setOnClickListener(v -> {
-        savePlatform("android");
-       
-        d.dismiss();
-        recreate();
-    });
+// --------------------------------------------
+// SHOW
+// --------------------------------------------
+d.show();
 
-    appleBtn.setOnClickListener(v -> {
-        savePlatform("apple");
-        
-        d.dismiss();
-        recreate();
-    });
+// --------------------------------------------
+// WINDOW LAYOUT AFTER SHOW
+// --------------------------------------------
+Window w = d.getWindow();
+if (w != null) {
+    w.setLayout(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+    );
+    w.getDecorView().setPadding(dp(16), 0, dp(16), 0);
+}
+
+// --------------------------------------------
+// ANDROID BUTTON
+// --------------------------------------------
+androidBtn.setOnClickListener(v -> {
+
+    try {
+        if (tts[0] != null) tts[0].stop();
+    } catch (Throwable ignore) {}
+
+    welcomeShown = false;
+
+    savePlatform("android");
+
+    d.dismiss();
+    recreate();
+});
+
+// --------------------------------------------
+// APPLE BUTTON
+// --------------------------------------------
+appleBtn.setOnClickListener(v -> {
+
+    try {
+        if (tts[0] != null) tts[0].stop();
+    } catch (Throwable ignore) {}
+
+    welcomeShown = false;
+
+    savePlatform("apple");
+
+    d.dismiss();
+    recreate();
+});
 }
 
     // =========================================================

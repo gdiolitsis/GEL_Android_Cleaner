@@ -599,26 +599,32 @@ private void speakPermissionsTTS() {
 
         try { tts[0].stop(); } catch (Throwable ignore) {}
 
-        if (AppLang.isGreek(MainActivity.this))
-            try { tts[0].setLanguage(new Locale("el", "GR")); } catch (Throwable ignore) {}
+       if (AppLang.isGreek(MainActivity.this)) {
 
-            tts[0].speak(
-                    getPermissionsTextGR(),
-                    TextToSpeech.QUEUE_FLUSH,
-                    null,
-                    "PERMISSIONS_GR"
-            );
+    try { 
+        tts[0].setLanguage(new Locale("el", "GR")); 
+    } catch (Throwable ignore) {}
 
-        } else {
-            try { tts[0].setLanguage(Locale.US); } catch (Throwable ignore) {}
+    tts[0].speak(
+            getPermissionsTextGR(),
+            TextToSpeech.QUEUE_FLUSH,
+            null,
+            "PERMISSIONS_GR"
+    );
 
-            tts[0].speak(
-                    getPermissionsTextEN(),
-                    TextToSpeech.QUEUE_FLUSH,
-                    null,
-                    "PERMISSIONS_EN"
-            );
-        }
+} else {
+
+    try { 
+        tts[0].setLanguage(Locale.US); 
+    } catch (Throwable ignore) {}
+
+    tts[0].speak(
+            getPermissionsTextEN(),
+            TextToSpeech.QUEUE_FLUSH,
+            null,
+            "PERMISSIONS_EN"
+    );
+}
 
     } catch (Throwable ignore) {}
 }
@@ -847,40 +853,33 @@ root.addView(okBtn);
 
 // ================= SET VIEW =================
 b.setView(root);
-    
-    final AlertDialog d = b.create();
 
-    if (d.getWindow() != null) {
-        d.getWindow().setBackgroundDrawable(
-                new ColorDrawable(Color.TRANSPARENT)
-        );
-    }
+final AlertDialog d = b.create();
 
-    welcomeShown = true;
+if (d.getWindow() != null) {
+    d.getWindow().setBackgroundDrawable(
+            new ColorDrawable(Color.TRANSPARENT)
+    );
+}
+
+welcomeShown = true;
+
 d.show();
-    
-    d.setOnDismissListener(dialog -> {
+
+d.setOnDismissListener(dialog -> {
     try {
         if (tts[0] != null) tts[0].stop();
     } catch (Throwable ignore) {}
     welcomeShown = false;
 });
 
-    new Handler(Looper.getMainLooper()).postDelayed(() -> {
-        if (!AppTTS.isMuted(MainActivity.this)
-                && ttsReady[0]
-                && welcomeShown) {
-            speakWelcomeTTS();
-        }
-    }, 120);
+okBtn.setOnClickListener(v -> {
 
-    okBtn.setOnClickListener(v -> {
-
-    try { 
-        if (tts[0] != null) tts[0].stop(); 
+    try {
+        if (tts[0] != null) tts[0].stop();
     } catch (Throwable ignore) {}
 
-    welcomeShown = false;   // 🔥 ΚΛΕΙΔΙ
+    welcomeShown = false;
 
     if (cb.isChecked()) {
         disableWelcomeForever();
@@ -904,9 +903,9 @@ private void showPlatformSelectPopup() {
                     android.R.style.Theme_Material_Dialog_NoActionBar
             );
 
-    LinearLayout box = new LinearLayout(this);
-    box.setOrientation(LinearLayout.VERTICAL);
-    box.setPadding(dp(24), dp(20), dp(24), dp(18));
+    LinearLayout root = new LinearLayout(this);
+    root.setOrientation(LinearLayout.VERTICAL);
+    root.setPadding(dp(24), dp(20), dp(24), dp(18));
 
     GradientDrawable bg = new GradientDrawable();
     bg.setColor(0xFF101010);
@@ -922,7 +921,7 @@ private void showPlatformSelectPopup() {
     t.setTypeface(null, Typeface.BOLD);
     t.setGravity(Gravity.CENTER);
     t.setPadding(0, dp(4), 0, dp(16));
-    box.addView(t);
+    root.addView(t);
 
     // ANDROID BUTTON
     TextView androidBtn = new TextView(this);
@@ -974,10 +973,10 @@ private void showPlatformSelectPopup() {
     lpBtn2.setMargins(dp(8), dp(18), dp(8), 0);
     appleBtn.setLayoutParams(lpBtn2);
 
-    box.addView(androidBtn);
-    box.addView(appleBtn);
+    root.addView(androidBtn);
+    root.addView(appleBtn);
 
-    b.setView(box);
+    b.setView(root);
     final AlertDialog d = b.create();
 
     if (d.getWindow()!=null)
@@ -1111,12 +1110,22 @@ private void applyAppleModeUI() {
 
 private void changeLang(String code) {
 
+    // Αν είναι ήδη η ίδια γλώσσα → μην κάνεις τίποτα
+    if (code.equals(LocaleHelper.getLang(this))) return;
+
+    // Αποθήκευση app language
     getSharedPreferences("gel_prefs", MODE_PRIVATE)
             .edit()
             .putString("app_lang", code)
             .apply();
 
+    // Εφαρμογή locale
     LocaleHelper.set(this, code);
+
+    // Αποφυγή welcome re-trigger
+    setSkipWelcomeOnce(true);
+
+    // Refresh activity
     recreate();
 }
 
@@ -1242,9 +1251,9 @@ private void showAppleDeviceDeclarationPopup() {
             new AlertDialog.Builder(this,
                     android.R.style.Theme_Material_Dialog_Alert);
 
-    LinearLayout box = new LinearLayout(this);
-    box.setOrientation(LinearLayout.VERTICAL);
-    box.setPadding(dp(20), dp(20), dp(20), dp(20));
+    LinearLayout root = new LinearLayout(this);
+    root.setOrientation(LinearLayout.VERTICAL);
+    root.setPadding(dp(20), dp(20), dp(20), dp(20));
 
     GradientDrawable bg = new GradientDrawable();
     bg.setColor(0xFF000000);
@@ -1259,7 +1268,7 @@ private void showAppleDeviceDeclarationPopup() {
     title.setTypeface(null, Typeface.BOLD);
     title.setGravity(Gravity.CENTER);
     title.setPadding(0, 0, 0, dp(16));
-    box.addView(title);
+    root.addView(title);
 
     // ==========================
     // 📱 iPHONE BUTTON
@@ -1314,10 +1323,10 @@ private void showAppleDeviceDeclarationPopup() {
     // ==========================
     // ADD TO BOX
     // ==========================
-    box.addView(iphoneBtn);
-    box.addView(ipadBtn);
+    root.addView(iphoneBtn);
+    root.addView(ipadBtn);
 
-    b.setView(box);
+    b.setView(root);
     AlertDialog d = b.create();
     if (d.getWindow() != null)
         d.getWindow().setBackgroundDrawable(

@@ -116,15 +116,16 @@ if (hasMissingPermissions()
     requestNextPermission();
 }
 
-    // APPLY PLATFORM UI
-    if ("apple".equals(getSavedPlatform())) {
-        applyAppleModeUI();
-    } else {
-        applyAndroidModeUI();
-    }
-    syncReturnButtonText();
+// APPLY PLATFORM UI
+if ("apple".equals(getSavedPlatform())) {
+    applyAppleModeUI();
+} else {
+    applyAndroidModeUI();
+}
 
-    log("📱 Device ready", false);
+syncReturnButtonText();
+
+log("📱 Device ready", false);
 }
 
 @Override

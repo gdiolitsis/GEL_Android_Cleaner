@@ -230,7 +230,10 @@ private void showPermissionsPopup() {
     b.setCancelable(false);
 
     // ================= ROOT =================
-    
+    LinearLayout root = new LinearLayout(this);
+    root.setOrientation(LinearLayout.VERTICAL);
+    root.setPadding(dp(24), dp(20), dp(24), dp(18));
+
     GradientDrawable bg = new GradientDrawable();
     bg.setColor(0xFF101010);
     bg.setCornerRadius(dp(18));
@@ -245,7 +248,7 @@ private void showPermissionsPopup() {
     title.setTypeface(null, Typeface.BOLD);
     title.setGravity(Gravity.CENTER);
     title.setPadding(0, 0, 0, dp(12));
-    box.addView(title);
+    root.addView(title);
 
     // ================= MESSAGE =================
     TextView msg = new TextView(this);
@@ -257,12 +260,15 @@ private void showPermissionsPopup() {
                    : getPermissionsTextEN());
     root.addView(msg);
 
-// ================= LANGUAGE SPINNER =================
-    Spinner langSpinner = new Spinner(MainActivity.this);
+    // ================= MUTE ROW =================
+    root.addView(buildMuteRow());
+
+    // ================= LANGUAGE SPINNER =================
+    Spinner langSpinner = new Spinner(this);
 
     ArrayAdapter<String> adapter =
             new ArrayAdapter<>(
-                    MainActivity.this,
+                    this,
                     android.R.layout.simple_spinner_item,
                     new String[]{"EN", "GR"}
             );
@@ -273,122 +279,118 @@ private void showPermissionsPopup() {
     langSpinner.setSelection(gr ? 1 : 0);
 
     langSpinner.setOnItemSelectedListener(
-        new AdapterView.OnItemSelectedListener() {
+            new AdapterView.OnItemSelectedListener() {
 
-            @Override
-public void onItemSelected(
-        AdapterView<?> parent,
-        View view,
-        int position,
-        long id
-) {
+                @Override
+                public void onItemSelected(
+                        AdapterView<?> parent,
+                        View view,
+                        int position,
+                        long id
+                ) {
 
-    String code = (position == 0) ? "en" : "el";
+                    String code = (position == 0) ? "en" : "el";
 
-    AppLang.setLang(MainActivity.this, code);
+                    AppLang.setLang(MainActivity.this, code);
 
-    msg.setText(
-            AppLang.isGreek(MainActivity.this)
-                    ? getPermissionsTextGR()
-                    : getPermissionsTextEN()
+                    msg.setText(
+                            AppLang.isGreek(MainActivity.this)
+                                    ? getPermissionsTextGR()
+                                    : getPermissionsTextEN()
+                    );
+
+                    if (!AppTTS.isMuted(MainActivity.this)) {
+                        speakPermissionsTTS();
+                    }
+                }
+
+                @Override
+                public void onNothingSelected(AdapterView<?> parent) {}
+            }
     );
 
-    if (!AppTTS.isMuted(MainActivity.this)) {
-        speakPermissionsTTS();
-    }
-}
+    // ================= LANGUAGE BOX =================
+    LinearLayout langBox = new LinearLayout(this);
+    langBox.setOrientation(LinearLayout.VERTICAL);
+    langBox.setPadding(dp(12), dp(12), dp(12), dp(12));
 
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-            }
-        }
-);
-    
-// ================= ROOT =================
+    GradientDrawable langBg = new GradientDrawable();
+    langBg.setColor(0xFF1A1A1A);
+    langBg.setCornerRadius(dp(12));
+    langBg.setStroke(dp(2), 0xFFFFD700);
+    langBox.setBackground(langBg);
 
-GradientDrawable bg = new GradientDrawable();
-bg.setColor(0xFF101010);
-bg.setCornerRadius(dp(18));
-bg.setStroke(dp(4), 0xFFFFD700);
-root.setBackground(bg);
+    langBox.addView(langSpinner);
 
-// ================= MUTE ROW =================
-root.addView(buildMuteRow());
+    LinearLayout.LayoutParams lpLang =
+            new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+            );
+    lpLang.gravity = Gravity.CENTER;
+    lpLang.setMargins(0, 0, 0, dp(18));
+    langBox.setLayoutParams(lpLang);
 
-// ================= LANGUAGE BOX =================
-LinearLayout langBox = new LinearLayout(this);
-langBox.setOrientation(LinearLayout.VERTICAL);
-langBox.setPadding(dp(12), dp(12), dp(12), dp(12));
+    root.addView(langBox);
 
-GradientDrawable langBg = new GradientDrawable();
-langBg.setColor(0xFF1A1A1A);
-langBg.setCornerRadius(dp(12));
-langBg.setStroke(dp(2), 0xFFFFD700);
-langBox.setBackground(langBg);
+    // ================= CHECKBOX =================
+    CheckBox cb = new CheckBox(this);
+    cb.setText(AppLang.isGreek(this)
+            ? "Να μην εμφανιστεί ξανά"
+            : "Do not show again");
+    cb.setTextColor(Color.WHITE);
+    cb.setPadding(0, dp(8), 0, dp(8));
+    root.addView(cb);
 
-langBox.addView(langSpinner);
+    // ================= BUTTON ROW =================
+    LinearLayout btnRow = new LinearLayout(this);
+    btnRow.setOrientation(LinearLayout.HORIZONTAL);
+    btnRow.setGravity(Gravity.CENTER);
+    btnRow.setPadding(0, dp(10), 0, 0);
 
-LinearLayout.LayoutParams lpLang =
-        new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-        );
-lpLang.gravity = Gravity.CENTER;
-lpLang.setMargins(0, 0, 0, dp(18));
-langBox.setLayoutParams(lpLang);
+    LinearLayout.LayoutParams btnLp =
+            new LinearLayout.LayoutParams(
+                    0,
+                    dp(72),
+                    1f
+            );
+    btnLp.setMargins(dp(10), 0, dp(10), 0);
 
-root.addView(langBox);
+    Button skipBtn = new Button(this);
+    skipBtn.setText(AppLang.isGreek(this) ? "ΠΑΡΑΛΕΙΨΗ" : "SKIP");
+    skipBtn.setAllCaps(false);
+    skipBtn.setTextColor(Color.WHITE);
+    skipBtn.setTextSize(16f);
+    skipBtn.setTypeface(null, Typeface.BOLD);
+    skipBtn.setPadding(dp(12), dp(14), dp(12), dp(14));
 
-// ================= BUTTON ROW =================
-LinearLayout btnRow = new LinearLayout(this);
-btnRow.setOrientation(LinearLayout.HORIZONTAL);
-btnRow.setGravity(Gravity.CENTER);
-btnRow.setPadding(0, dp(10), 0, 0);
+    GradientDrawable skipBg = new GradientDrawable();
+    skipBg.setColor(0xFF8B0000);
+    skipBg.setCornerRadius(dp(16));
+    skipBg.setStroke(dp(3), 0xFFFFD700);
+    skipBtn.setBackground(skipBg);
+    skipBtn.setLayoutParams(btnLp);
 
-LinearLayout.LayoutParams btnLp =
-        new LinearLayout.LayoutParams(
-                0,
-                dp(72),
-                1f
-        );
-btnLp.setMargins(dp(10), 0, dp(10), 0);
+    Button continueBtn = new Button(this);
+    continueBtn.setText(AppLang.isGreek(this) ? "ΣΥΝΕΧΕΙΑ" : "CONTINUE");
+    continueBtn.setAllCaps(false);
+    continueBtn.setTextColor(Color.WHITE);
+    continueBtn.setTextSize(16f);
+    continueBtn.setTypeface(null, Typeface.BOLD);
+    continueBtn.setPadding(dp(12), dp(14), dp(12), dp(14));
 
-Button skipBtn = new Button(this);
-skipBtn.setText(AppLang.isGreek(this) ? "ΠΑΡΑΛΕΙΨΗ" : "SKIP");
-skipBtn.setAllCaps(false);
-skipBtn.setTextColor(Color.WHITE);
-skipBtn.setTextSize(16f);
-skipBtn.setTypeface(null, Typeface.BOLD);
-skipBtn.setPadding(dp(12), dp(14), dp(12), dp(14));
+    GradientDrawable contBg = new GradientDrawable();
+    contBg.setColor(0xFF0B5F3B);
+    contBg.setCornerRadius(dp(16));
+    contBg.setStroke(dp(3), 0xFFFFD700);
+    continueBtn.setBackground(contBg);
+    continueBtn.setLayoutParams(btnLp);
 
-GradientDrawable skipBg = new GradientDrawable();
-skipBg.setColor(0xFF8B0000);
-skipBg.setCornerRadius(dp(16));
-skipBg.setStroke(dp(3), 0xFFFFD700);
-skipBtn.setBackground(skipBg);
-skipBtn.setLayoutParams(btnLp);
+    btnRow.addView(skipBtn);
+    btnRow.addView(continueBtn);
+    root.addView(btnRow);
 
-Button continueBtn = new Button(this);
-continueBtn.setText(AppLang.isGreek(this) ? "ΣΥΝΕΧΕΙΑ" : "CONTINUE");
-continueBtn.setAllCaps(false);
-continueBtn.setTextColor(Color.WHITE);
-continueBtn.setTextSize(16f);
-continueBtn.setTypeface(null, Typeface.BOLD);
-continueBtn.setPadding(dp(12), dp(14), dp(12), dp(14));
-
-GradientDrawable contBg = new GradientDrawable();
-contBg.setColor(0xFF0B5F3B);
-contBg.setCornerRadius(dp(16));
-contBg.setStroke(dp(3), 0xFFFFD700);
-continueBtn.setBackground(contBg);
-continueBtn.setLayoutParams(btnLp);
-
-btnRow.addView(skipBtn);
-btnRow.addView(continueBtn);
-
-root.addView(btnRow);
-
-b.setView(root);
+    b.setView(root);
 
     final AlertDialog d = b.create();
 
@@ -401,13 +403,13 @@ b.setView(root);
     // ================= ACTIONS =================
     continueBtn.setOnClickListener(v -> {
 
-    if (cb.isChecked()) {
-        disablePermissionsForever();
-    }
+        if (cb.isChecked()) {
+            disablePermissionsForever();
+        }
 
-    d.dismiss();
-    requestNextPermission();
-});
+        d.dismiss();
+        requestNextPermission();
+    });
 
     skipBtn.setOnClickListener(v -> {
         d.dismiss();
@@ -416,19 +418,19 @@ b.setView(root);
     });
 
     if (!isFinishing() && !isDestroyed()) {
-        d.show();
-        
-        d.setOnShowListener(dialog -> {
-    if (!AppTTS.isMuted(MainActivity.this)
-            && ttsReady[0]) {
-        speakPermissionsTTS();
-    }
-});
 
-        // 🔊 INITIAL TTS
+        d.setOnShowListener(dialog -> {
+            if (!AppTTS.isMuted(MainActivity.this)
+                    && ttsReady[0]) {
+                speakPermissionsTTS();
+            }
+        });
+
+        d.show();
+
         if (ttsReady[0] && !AppTTS.isMuted(this)) {
-    speakPermissionsTTS();
-}
+            speakPermissionsTTS();
+        }
     }
 }
 

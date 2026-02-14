@@ -3497,7 +3497,7 @@ private LinearLayout buildMuteRow() {
             gr ? "Σίγαση φωνητικών οδηγιών"
                : "Mute voice instructions"
     );
-    label.setTextColor(0xFFAAAAAA);
+    label.setTextColor(Color.WHITE);
     label.setTextSize(14f);
 
     // --------------------------------------------------------
@@ -4114,8 +4114,11 @@ logLabelWarnValue(
 // PLAY TEST TONE
 // ------------------------------------------------------------
 
-// FORCE MEDIA SPEAKER PATH
+// FORCE CLEAN MEDIA STATE (FULL RESET)
 if (am != null) {
+    try { am.stopBluetoothSco(); } catch (Throwable ignore) {}
+    try { am.setBluetoothScoOn(false); } catch (Throwable ignore) {}
+    try { am.setMicrophoneMute(false); } catch (Throwable ignore) {}
     try { am.setMode(AudioManager.MODE_NORMAL); } catch (Throwable ignore) {}
     try { am.setSpeakerphoneOn(true); } catch (Throwable ignore) {}
 }
@@ -4333,6 +4336,9 @@ logInfo(gr ? "LAB 2 — Έλεγχος Συχνοτήτων Ηχείου"
         (AudioManager) getSystemService(Context.AUDIO_SERVICE);
 
 if (am != null) {
+    try { am.stopBluetoothSco(); } catch (Throwable ignore) {}
+    try { am.setBluetoothScoOn(false); } catch (Throwable ignore) {}
+    try { am.setMicrophoneMute(false); } catch (Throwable ignore) {}
     try { am.setMode(AudioManager.MODE_NORMAL); } catch (Throwable ignore) {}
     try { am.setSpeakerphoneOn(true); } catch (Throwable ignore) {}
 }

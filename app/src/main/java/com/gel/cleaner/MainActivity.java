@@ -131,10 +131,8 @@ if (hasMissingPermissions()
 protected void onPause() {
     super.onPause();
     try {
-        try {
     AppTTS.stop();
 } catch (Throwable ignore) {}
-    } catch (Throwable ignore) {}
 }
 
 // ------------------------------------------------------------
@@ -409,20 +407,16 @@ d.setOnDismissListener(dialog -> {
 // -------------------------------------------------
 d.setOnCancelListener(dialog -> {
     try {
-        try {
     AppTTS.stop();
 } catch (Throwable ignore) {}
-    } catch (Throwable ignore) {}
 });
 
 // ================= ACTIONS =================
 continueBtn.setOnClickListener(v -> {
 
     try {
-        try {
     AppTTS.stop();
 } catch (Throwable ignore) {}
-    } catch (Throwable ignore) {}
 
     if (cb.isChecked()) {
         disablePermissionsForever();
@@ -435,17 +429,6 @@ continueBtn.setOnClickListener(v -> {
 skipBtn.setOnClickListener(v -> {
 
     permissionsSkippedThisLaunch = true;
-
-    d.dismiss();
-    permissionIndex = REQUIRED_PERMISSIONS.length;
-    requestNextPermission();
-});
-
-    try {
-        try {
-    AppTTS.stop();
-} catch (Throwable ignore) {}
-    } catch (Throwable ignore) {}
 
     d.dismiss();
     permissionIndex = REQUIRED_PERMISSIONS.length;
@@ -893,10 +876,8 @@ d.setOnDismissListener(dialog -> {
 // --------------------------------------------
 d.setOnCancelListener(dialog -> {
     try {
-        try {
     AppTTS.stop();
 } catch (Throwable ignore) {}
-    } catch (Throwable ignore) {}
     welcomeShown = false;
 });
 
@@ -919,12 +900,9 @@ d.show();
 // OK BUTTON
 // --------------------------------------------
 okBtn.setOnClickListener(v -> {
-
-    try {
-        try {
+   try {
     AppTTS.stop();
 } catch (Throwable ignore) {}
-    } catch (Throwable ignore) {}
 
     welcomeShown = false;
 
@@ -1052,10 +1030,8 @@ d.setOnDismissListener(dialog -> {
 // --------------------------------------------
 d.setOnCancelListener(dialog -> {
     try {
-        try {
     AppTTS.stop();
 } catch (Throwable ignore) {}
-    } catch (Throwable ignore) {}
     welcomeShown = false;
 });
 
@@ -1082,10 +1058,8 @@ if (w != null) {
 androidBtn.setOnClickListener(v -> {
 
     try {
-        try {
     AppTTS.stop();
 } catch (Throwable ignore) {}
-    } catch (Throwable ignore) {}
 
     welcomeShown = false;
 
@@ -1101,10 +1075,8 @@ androidBtn.setOnClickListener(v -> {
 appleBtn.setOnClickListener(v -> {
 
     try {
-        try {
     AppTTS.stop();
 } catch (Throwable ignore) {}
-    } catch (Throwable ignore) {}
 
     welcomeShown = false;
 

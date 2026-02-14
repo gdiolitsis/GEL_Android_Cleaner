@@ -52,9 +52,6 @@ public class MainActivity extends GELAutoActivityHook
     private TextView txtLogs;
     private ScrollView scroll;
 
-    private final TextToSpeech[] tts = new TextToSpeech[1];
-    private final boolean[] ttsReady = new boolean[1];
-
     // =========================================================
     // PREFS
     // =========================================================
@@ -102,13 +99,6 @@ protected void onCreate(Bundle savedInstanceState) {
         });
     }
 
-    // ---------------------------------------------------------
-// TTS INIT (CLEAN)
-// ---------------------------------------------------------
-tts[0] = new TextToSpeech(this, status -> {
-    ttsReady[0] = (status == TextToSpeech.SUCCESS);
-});
-
     // =========================================================
     // ENTRY FLOW (FIXED)
     // =========================================================
@@ -135,7 +125,9 @@ tts[0] = new TextToSpeech(this, status -> {
 protected void onPause() {
     super.onPause();
     try {
-        if (tts[0] != null) tts[0].stop();
+        try {
+    AppTTS.stop();
+} catch (Throwable ignore) {}
     } catch (Throwable ignore) {}
 }
 
@@ -402,7 +394,9 @@ if (d.getWindow() != null) {
 // -------------------------------------------------
 d.setOnDismissListener(dialog -> {
     try {
-        if (tts[0] != null) tts[0].stop();
+        try {
+    AppTTS.stop();
+} catch (Throwable ignore) {}
     } catch (Throwable ignore) {}
 });
 
@@ -411,7 +405,9 @@ d.setOnDismissListener(dialog -> {
 // -------------------------------------------------
 d.setOnCancelListener(dialog -> {
     try {
-        if (tts[0] != null) tts[0].stop();
+        try {
+    AppTTS.stop();
+} catch (Throwable ignore) {}
     } catch (Throwable ignore) {}
 });
 
@@ -419,7 +415,9 @@ d.setOnCancelListener(dialog -> {
 continueBtn.setOnClickListener(v -> {
 
     try {
-        if (tts[0] != null) tts[0].stop();
+        try {
+    AppTTS.stop();
+} catch (Throwable ignore) {}
     } catch (Throwable ignore) {}
 
     if (cb.isChecked()) {
@@ -433,7 +431,9 @@ continueBtn.setOnClickListener(v -> {
 skipBtn.setOnClickListener(v -> {
 
     try {
-        if (tts[0] != null) tts[0].stop();
+        try {
+    AppTTS.stop();
+} catch (Throwable ignore) {}
     } catch (Throwable ignore) {}
 
     d.dismiss();
@@ -626,73 +626,54 @@ private ArrayAdapter<String> neonAdapter(String[] names) {
 // =========================================================
 private void speakPermissionsTTS() {
 
-    if (tts[0] == null || !ttsReady[0]) return;
     if (AppTTS.isMuted(this)) return;
 
-    try {
+    if (AppLang.isGreek(this)) {
 
-        tts[0].stop();
+        AppTTS.speak(
+                this,
+                getPermissionsTextGR(),
+                new Locale("el", "GR"),
+                "PERMISSIONS_GR"
+        );
 
-        if (AppLang.isGreek(this)) {
+    } else {
 
-            tts[0].setLanguage(new Locale("el", "GR"));
-            tts[0].speak(
-                    getPermissionsTextGR(),
-                    TextToSpeech.QUEUE_FLUSH,
-                    null,
-                    "PERMISSIONS_GR"
-            );
-
-        } else {
-
-            tts[0].setLanguage(Locale.US);
-            tts[0].speak(
-                    getPermissionsTextEN(),
-                    TextToSpeech.QUEUE_FLUSH,
-                    null,
-                    "PERMISSIONS_EN"
-            );
-        }
-
-    } catch (Throwable ignore) {}
+        AppTTS.speak(
+                this,
+                getPermissionsTextEN(),
+                Locale.US,
+                "PERMISSIONS_EN"
+        );
+    }
 }
 
     // =========================================================
     // TTS — WELCOME
     // =========================================================
-  
-  private void speakWelcomeTTS() {
+    private void speakWelcomeTTS() {
 
-    try {
+    if (!welcomeShown) return;
+    if (AppTTS.isMuted(this)) return;
 
-        if (!welcomeShown) return;  // 🔥
-        if (tts[0] == null || !ttsReady[0]) return;
-        if (AppTTS.isMuted(MainActivity.this)) return;
+    if (AppLang.isGreek(this)) {
 
-        tts[0].stop();
+        AppTTS.speak(
+                this,
+                getWelcomeTextGR(),
+                new Locale("el", "GR"),
+                "WELCOME_GR"
+        );
 
-        if (AppLang.isGreek(this)) {
+    } else {
 
-            tts[0].setLanguage(new Locale("el", "GR"));
-            tts[0].speak(
-                    getWelcomeTextGR(),
-                    TextToSpeech.QUEUE_FLUSH,
-                    null,
-                    "WELCOME_GR"
-            );
-
-        } else {
-
-            tts[0].setLanguage(Locale.US);
-            tts[0].speak(
-                    getWelcomeTextEN(),
-                    TextToSpeech.QUEUE_FLUSH,
-                    null,
-                    "WELCOME_EN"
-            );
-        }
-
-    } catch (Throwable ignore) {}
+        AppTTS.speak(
+                this,
+                getWelcomeTextEN(),
+                Locale.US,
+                "WELCOME_EN"
+        );
+    }
 }
 
     // =========================================================
@@ -900,7 +881,9 @@ welcomeShown = true;
 // --------------------------------------------
 d.setOnDismissListener(dialog -> {
     try {
-        if (tts[0] != null) tts[0].stop();
+        try {
+    AppTTS.stop();
+} catch (Throwable ignore) {}
     } catch (Throwable ignore) {}
     welcomeShown = false;
 });
@@ -910,7 +893,9 @@ d.setOnDismissListener(dialog -> {
 // --------------------------------------------
 d.setOnCancelListener(dialog -> {
     try {
-        if (tts[0] != null) tts[0].stop();
+        try {
+    AppTTS.stop();
+} catch (Throwable ignore) {}
     } catch (Throwable ignore) {}
     welcomeShown = false;
 });
@@ -937,7 +922,9 @@ d.show();
 okBtn.setOnClickListener(v -> {
 
     try {
-        if (tts[0] != null) tts[0].stop();
+        try {
+    AppTTS.stop();
+} catch (Throwable ignore) {}
     } catch (Throwable ignore) {}
 
     welcomeShown = false;
@@ -1056,7 +1043,9 @@ welcomeShown = true;
 // --------------------------------------------
 d.setOnDismissListener(dialog -> {
     try {
-        if (tts[0] != null) tts[0].stop();
+        try {
+    AppTTS.stop();
+} catch (Throwable ignore) {}
     } catch (Throwable ignore) {}
     welcomeShown = false;
 });
@@ -1066,7 +1055,9 @@ d.setOnDismissListener(dialog -> {
 // --------------------------------------------
 d.setOnCancelListener(dialog -> {
     try {
-        if (tts[0] != null) tts[0].stop();
+        try {
+    AppTTS.stop();
+} catch (Throwable ignore) {}
     } catch (Throwable ignore) {}
     welcomeShown = false;
 });
@@ -1094,7 +1085,9 @@ if (w != null) {
 androidBtn.setOnClickListener(v -> {
 
     try {
-        if (tts[0] != null) tts[0].stop();
+        try {
+    AppTTS.stop();
+} catch (Throwable ignore) {}
     } catch (Throwable ignore) {}
 
     welcomeShown = false;
@@ -1111,7 +1104,9 @@ androidBtn.setOnClickListener(v -> {
 appleBtn.setOnClickListener(v -> {
 
     try {
-        if (tts[0] != null) tts[0].stop();
+        try {
+    AppTTS.stop();
+} catch (Throwable ignore) {}
     } catch (Throwable ignore) {}
 
     welcomeShown = false;

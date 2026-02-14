@@ -4131,10 +4131,16 @@ tg.startTone(ToneGenerator.TONE_DTMF_1, 1200);
             // MIC ANALYSIS
             // ------------------------------------------------------------
 
-// ------------------------------------------------------------
-// HARD AUDIO RESET BEFORE MIC CAPTURE (MANDATORY)
-// ------------------------------------------------------------
-hardNormalizeAudioForMic();
+// SAFE AUDIO NORMALIZE BEFORE MIC CAPTURE (NO EXTRA HELPERS)
+if (am != null) {
+    try { am.stopBluetoothSco(); } catch (Throwable ignore) {}
+    try { am.setBluetoothScoOn(false); } catch (Throwable ignore) {}
+    try { am.setMicrophoneMute(false); } catch (Throwable ignore) {}
+    try { am.setMode(AudioManager.MODE_NORMAL); } catch (Throwable ignore) {}
+    // Κρατάμε speaker ON γιατί θέλουμε το mic να "ακούσει" το speaker
+    try { am.setSpeakerphoneOn(true); } catch (Throwable ignore) {}
+}
+SystemClock.sleep(250);
 
 MicDiagnosticEngine.Result r =
         MicDiagnosticEngine.run(this);
@@ -4364,10 +4370,15 @@ tg = new ToneGenerator(AudioManager.STREAM_MUSIC, 90);
 // MIC FEEDBACK ANALYSIS
 // ----------------------------------------------------
 
-// ----------------------------------------------------
-// HARD AUDIO RESET BEFORE MIC CAPTURE (MANDATORY)
-// ----------------------------------------------------
-hardNormalizeAudioForMic();
+// SAFE AUDIO NORMALIZE BEFORE MIC CAPTURE (NO EXTRA HELPERS)
+if (am != null) {
+    try { am.stopBluetoothSco(); } catch (Throwable ignore) {}
+    try { am.setBluetoothScoOn(false); } catch (Throwable ignore) {}
+    try { am.setMicrophoneMute(false); } catch (Throwable ignore) {}
+    try { am.setMode(AudioManager.MODE_NORMAL); } catch (Throwable ignore) {}
+    try { am.setSpeakerphoneOn(true); } catch (Throwable ignore) {}
+}
+SystemClock.sleep(250);
 
 MicDiagnosticEngine.Result r =
         MicDiagnosticEngine.run(this);

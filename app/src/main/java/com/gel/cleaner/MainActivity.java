@@ -905,6 +905,8 @@ d.show();
 // =========================================================
 private void showPlatformSelectPopup() {
 
+    boolean gr = AppLang.isGreek(this);  // 🔥 ΑΥΤΟ ΛΕΙΠΕΙ
+
     AlertDialog.Builder b =
             new AlertDialog.Builder(
                     MainActivity.this,

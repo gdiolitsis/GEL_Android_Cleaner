@@ -431,8 +431,10 @@ skipBtn.setOnClickListener(v -> {
 
     permissionsSkippedThisLaunch = true;
 
+    try { AppTTS.stop(); } catch (Throwable ignore) {}
+
     d.dismiss();
-    requestNextPermission();
+
 });
 
 // -------------------------------------------------

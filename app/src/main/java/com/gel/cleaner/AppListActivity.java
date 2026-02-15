@@ -315,21 +315,37 @@ searchBox.addTextChangedListener(new TextWatcher() {
 
     // ================= HEADERS =================
 
-    if (!users.isEmpty()) {
-        AppEntry header = new AppEntry();
-        header.isHeader = true;
-        header.headerTitle = "📱 USER APPS";
-        visible.add(header);
+    // ================= USER SECTION =================
+if (!users.isEmpty()) {
+    AppEntry header = new AppEntry();
+    header.isHeader = true;
+    header.headerTitle = userSectionExpanded
+            ? "📱 USER APPS ▼"
+            : "📱 USER APPS ▶";
+    header.isUserHeader = true;
+
+    visible.add(header);
+
+    if (userSectionExpanded) {
         visible.addAll(users);
     }
+}
 
-    if (!systems.isEmpty()) {
-        AppEntry header = new AppEntry();
-        header.isHeader = true;
-        header.headerTitle = "⚙ SYSTEM APPS";
-        visible.add(header);
+// ================= SYSTEM SECTION =================
+if (!systems.isEmpty()) {
+    AppEntry header = new AppEntry();
+    header.isHeader = true;
+    header.headerTitle = systemSectionExpanded
+            ? "⚙ SYSTEM APPS ▼"
+            : "⚙ SYSTEM APPS ▶";
+    header.isSystemHeader = true;
+
+    visible.add(header);
+
+    if (systemSectionExpanded) {
         visible.addAll(systems);
     }
+}
 
     runOnUiThread(() -> adapter.notifyDataSetChanged());
 }

@@ -67,6 +67,24 @@ public class AppListActivity extends GELAutoActivityHook {
         adapter = new AppListAdapter(this, visible);
         list.setAdapter(adapter);
 
+        CheckBox checkAll = findViewById(R.id.checkSelectAll);
+
+if (checkAll != null) {
+
+    checkAll.setOnCheckedChangeListener((buttonView, isChecked) -> {
+
+        for (AppEntry e : visible) {
+
+            if (e == null) continue;
+            if (e.isHeader) continue;
+
+            e.selected = isChecked;
+        }
+
+        adapter.notifyDataSetChanged();
+    });
+}
+
         // ================= SEARCH =================
         if (searchBox != null) {
             searchBox.addTextChangedListener(new TextWatcher() {

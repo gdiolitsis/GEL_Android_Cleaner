@@ -261,10 +261,23 @@ if (!name.contains(s) && !pkg.contains(s)) continue;
         Comparator<AppEntry> comparator;
 
         if (sortByCacheBiggest) {
-            comparator = (a, b) -> Long.compare(b.cacheBytes, a.cacheBytes);
-        } else {
-            comparator = this::alphaCompare;
-        }
+
+    comparator = (a, b) -> {
+
+        long ca = a.cacheBytes;
+        long cb = b.cacheBytes;
+
+        if (ca < 0 && cb < 0) return alphaCompare(a, b);
+        if (ca < 0) return 1;   // unknown last
+        if (cb < 0) return -1;  // unknown last
+
+        int cmp = Long.compare(cb, ca); // biggest first
+        return (cmp != 0) ? cmp : alphaCompare(a, b);
+    };
+
+} else {
+    comparator = this::alphaCompare;
+}
 
         Collections.sort(users, comparator);
         Collections.sort(systems, comparator);

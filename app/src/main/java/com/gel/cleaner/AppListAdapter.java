@@ -30,8 +30,7 @@ public class AppListAdapter extends BaseAdapter {
     private final boolean hasFoldable;
     private GELFoldableAnimationPack animPack;
 
-    public AppListAdapterSafe(Context ctx,
-                              List<AppListActivity.AppEntry> data) {
+    public AppListAdapter(Context ctx, List<AppEntry> data) {
 
         this.ctx = ctx;
         this.data = data;

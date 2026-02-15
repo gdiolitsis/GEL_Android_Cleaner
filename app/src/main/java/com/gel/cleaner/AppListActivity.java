@@ -346,32 +346,33 @@ protected void onCreate(@Nullable Bundle savedInstanceState) {
 
     // ================= USER SECTION =================
 if (!users.isEmpty()) {
-    AppEntry header = new AppEntry();
-    header.isHeader = true;
-    header.headerTitle = userSectionExpanded
-            ? "📱 USER APPS ▼"
-            : "📱 USER APPS ▶";
-    header.isUserHeader = true;
 
-    visible.add(header);
+    AppEntry userHeader = new AppEntry();
+    userHeader.isHeader = true;
+    userHeader.isUserHeader = true;
+    userHeader.headerTitle = userExpanded
+            ? "📱 USER APPS (tap to collapse)"
+            : "📱 USER APPS (tap to expand)";
 
-    if (userSectionExpanded) {
+    visible.add(userHeader);
+
+    if (userExpanded) {
         visible.addAll(users);
     }
 }
-
 // ================= SYSTEM SECTION =================
 if (!systems.isEmpty()) {
-    AppEntry header = new AppEntry();
-    header.isHeader = true;
-    header.headerTitle = systemSectionExpanded
-            ? "⚙ SYSTEM APPS ▼"
-            : "⚙ SYSTEM APPS ▶";
-    header.isSystemHeader = true;
 
-    visible.add(header);
+    AppEntry systemHeader = new AppEntry();
+    systemHeader.isHeader = true;
+    systemHeader.isSystemHeader = true;
+    systemHeader.headerTitle = systemExpanded
+            ? "⚙ SYSTEM APPS (tap to collapse)"
+            : "⚙ SYSTEM APPS (tap to expand)";
 
-    if (systemSectionExpanded) {
+    visible.add(systemHeader);
+
+    if (systemExpanded) {
         visible.addAll(systems);
     }
 }

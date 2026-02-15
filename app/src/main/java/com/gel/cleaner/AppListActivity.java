@@ -289,6 +289,25 @@ for (AppEntry e : allApps) {
     }
 }
 
+Comparator<AppEntry> comparator;
+
+if (sortByCacheBiggest) {
+    comparator = (a, b) -> {
+        long ca = a.cacheBytes;
+        long cb = b.cacheBytes;
+        if (ca < 0 && cb < 0) return alphaCompare(a,b);
+        if (ca < 0) return 1;
+        if (cb < 0) return -1;
+        int cmp = Long.compare(cb, ca);
+        return cmp != 0 ? cmp : alphaCompare(a,b);
+    };
+} else {
+    comparator = this::alphaCompare;
+}
+
+Collections.sort(users, comparator);
+Collections.sort(systems, comparator);
+        
     // Sort inside each group
     if (sortByCacheBiggest) {
 
@@ -314,6 +333,22 @@ for (AppEntry e : allApps) {
         Collections.sort(systems, this::alphaCompare);
     }
 
+if (!users.isEmpty()) {
+    AppEntry header = new AppEntry();
+    header.isHeader = true;
+    header.headerTitle = "📱 USER APPS";
+    visible.add(header);
+    visible.addAll(users);
+}
+
+if (!systems.isEmpty()) {
+    AppEntry header = new AppEntry();
+    header.isHeader = true;
+    header.headerTitle = "⚙ SYSTEM APPS";
+    visible.add(header);
+    visible.addAll(systems);
+}
+        
     // Merge: User first, then System
     visible.addAll(users);
     visible.addAll(systems);

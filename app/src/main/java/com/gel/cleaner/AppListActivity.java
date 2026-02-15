@@ -38,12 +38,8 @@ import java.util.Locale;
 public class AppListActivity extends GELAutoActivityHook implements GELFoldableCallback {
 
     private ListView list;
-
-    private boolean userSectionExpanded = true;
-private boolean systemSectionExpanded = true;
-
     private boolean userExpanded = true;
-private boolean systemExpanded = true;
+    private boolean systemExpanded = true;
 
     // Foldable system
     private GELFoldableDetector foldDetector;

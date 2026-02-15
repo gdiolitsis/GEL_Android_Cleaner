@@ -43,6 +43,14 @@ public class AppListActivity extends GELAutoActivityHook
         PackageManager pm = getPackageManager();
         List<ResolveInfo> apps = pm.queryIntentActivities(i, 0);
 
+apps.sort((a, b) -> {
+    CharSequence l1 = a.loadLabel(pm);
+    CharSequence l2 = b.loadLabel(pm);
+    if (l1 == null) return -1;
+    if (l2 == null) return 1;
+    return l1.toString().compareToIgnoreCase(l2.toString());
+});
+            
         AppListAdapter ad = new AppListAdapter(this, apps);
         list.setAdapter(ad);
 

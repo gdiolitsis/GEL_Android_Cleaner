@@ -417,12 +417,15 @@ searchBox.addTextChangedListener(new TextWatcher() {
     // MODEL
     // ============================================================
     static class AppEntry {
-        String pkg;
-        String label;
-        boolean isSystem;
-        boolean selected;
-        long appBytes;   // -1 unknown
-        long cacheBytes; // -1 unknown
-        ApplicationInfo ai;
-    }
+    String pkg;
+    String label;
+    boolean isSystem;
+    boolean selected;
+    long appBytes;
+    long cacheBytes;
+    ApplicationInfo ai;
+
+    boolean isHeader;
+    String headerTitle;
+}
 }

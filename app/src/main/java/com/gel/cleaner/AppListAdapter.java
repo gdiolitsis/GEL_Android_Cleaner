@@ -1,10 +1,8 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// FINAL — AppListAdapter (All Installed Apps + MultiSelect + Sizes)
-// SAFE • Foldable ready • AutoScaling preserved
+// RecyclerView AppListAdapter — FULL GEL EDITION
+// DiffUtil • Smooth Updates • Header Support • Safe
 
 package com.gel.cleaner;
-
-import com.gel.cleaner.base.*;
 
 import android.content.Context;
 import android.content.pm.PackageManager;
@@ -13,184 +11,183 @@ import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.BaseAdapter;
+import android.view.animation.AlphaAnimation;
 import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.DiffUtil;
+import androidx.recyclerview.widget.RecyclerView;
+
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.List;
 
-public class AppListAdapter extends BaseAdapter {
+public class AppListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+
+    private static final int TYPE_HEADER = 0;
+    private static final int TYPE_APP = 1;
 
     private final Context ctx;
-    private final List<AppListActivity.AppEntry> data;
     private final LayoutInflater inflater;
+    private final PackageManager pm;
 
-    private final boolean hasFoldable;
-    private GELFoldableAnimationPack animPack;
+    private final List<AppListActivity.AppEntry> data = new ArrayList<>();
 
-    public AppListAdapter(Context ctx,
-                          List<AppListActivity.AppEntry> data) {
-
+    public AppListAdapter(Context ctx) {
         this.ctx = ctx;
-        this.data = data;
         this.inflater = LayoutInflater.from(ctx);
-
-        if (ctx instanceof GELAutoActivityHook) {
-            hasFoldable = true;
-            animPack = new GELFoldableAnimationPack(ctx);
-        } else {
-            hasFoldable = false;
-        }
+        this.pm = ctx.getPackageManager();
+        setHasStableIds(true);
     }
 
-    @Override
-    public int getCount() {
-        return data == null ? 0 : data.size();
-    }
+    // ============================================================
+    // PUBLIC UPDATE (DiffUtil)
+    // ============================================================
 
-    @Override
-    public Object getItem(int position) {
-        return data == null ? null : data.get(position);
+    public void submitList(List<AppListActivity.AppEntry> newList) {
+
+        DiffUtil.DiffResult diff =
+                DiffUtil.calculateDiff(new DiffCallback(this.data, newList));
+
+        this.data.clear();
+        this.data.addAll(newList);
+
+        diff.dispatchUpdatesTo(this);
     }
 
     @Override
     public long getItemId(int position) {
-        return position;
+        AppListActivity.AppEntry e = data.get(position);
+        if (e.isHeader) return e.headerTitle.hashCode();
+        return e.pkg != null ? e.pkg.hashCode() : position;
+    }
+
+    @Override
+    public int getItemViewType(int position) {
+        return data.get(position).isHeader ? TYPE_HEADER : TYPE_APP;
+    }
+
+    @Override
+    public int getItemCount() {
+        return data.size();
     }
 
     // ============================================================
-    // HOLDER
+    // VIEW HOLDERS
     // ============================================================
-    static class Holder {
+
+    static class HeaderHolder extends RecyclerView.ViewHolder {
+
+        TextView title;
+
+        HeaderHolder(@NonNull View itemView) {
+            super(itemView);
+            title = itemView.findViewById(R.id.headerTitle);
+        }
+    }
+
+    static class AppHolder extends RecyclerView.ViewHolder {
+
         TextView name;
         TextView pkg;
         TextView size;
         TextView cache;
         ImageView icon;
         CheckBox select;
+
+        AppHolder(@NonNull View itemView) {
+            super(itemView);
+            name   = itemView.findViewById(R.id.appLabel);
+            pkg    = itemView.findViewById(R.id.appPackage);
+            size   = itemView.findViewById(R.id.appSize);
+            cache  = itemView.findViewById(R.id.appCache);
+            icon   = itemView.findViewById(R.id.appIcon);
+            select = itemView.findViewById(R.id.appCheck);
+        }
     }
 
     // ============================================================
-    // VIEW
+    // CREATE
     // ============================================================
+
+    @NonNull
     @Override
-public View getView(int position,
-                    View convertView,
-                    ViewGroup parent) {
+    public RecyclerView.ViewHolder onCreateViewHolder(
+            @NonNull ViewGroup parent,
+            int viewType) {
 
-    AppListActivity.AppEntry e = data.get(position);
-    if (e == null) return convertView;
-
-    // ================= HEADER =================
-    if (e.isHeader) {
-        TextView header = new TextView(ctx);
-        header.setText(e.headerTitle);
-        header.setTextSize(15f);
-        header.setPadding(24,16,24,16);
-        header.setTextColor(0xFFFFD700);
-        header.setBackgroundColor(0xFF1A1A1A);
-        return header;
-    }
-
-    Holder h;
-
-    if (convertView == null) {
-
-        convertView = inflater.inflate(
-                R.layout.list_item_app,
-                parent,
-                false
-        );
-
-        h = new Holder();
-
-        h.name   = convertView.findViewById(R.id.appLabel);
-        h.pkg    = convertView.findViewById(R.id.appPackage);
-        h.icon   = convertView.findViewById(R.id.appIcon);
-        h.size   = convertView.findViewById(R.id.appSize);
-        h.cache  = convertView.findViewById(R.id.appCache);
-        h.select = convertView.findViewById(R.id.appCheck);
-
-        convertView.setTag(h);
-
-        if (ctx instanceof GELAutoActivityHook) {
-            GELAutoActivityHook a =
-                    (GELAutoActivityHook) ctx;
-
-            h.name.setTextSize(a.sp(15f));
-            h.pkg.setTextSize(a.sp(12f));
-            h.size.setTextSize(a.sp(12f));
-            h.cache.setTextSize(a.sp(12f));
-
-            ViewGroup.LayoutParams lp =
-                    h.icon.getLayoutParams();
-            lp.width  = a.dp(38);
-            lp.height = a.dp(38);
-            h.icon.setLayoutParams(lp);
-
-            int pad = a.dp(12);
-            convertView.setPadding(pad,pad,pad,pad);
+        if (viewType == TYPE_HEADER) {
+            View v = inflater.inflate(R.layout.list_item_header, parent, false);
+            return new HeaderHolder(v);
+        } else {
+            View v = inflater.inflate(R.layout.list_item_app, parent, false);
+            return new AppHolder(v);
         }
-
-        if (hasFoldable && animPack != null) {
-            animPack.applyListItemFade(convertView);
-        }
-
-    } else {
-        h = (Holder) convertView.getTag();
     }
-
-    PackageManager pm = ctx.getPackageManager();
-
-    // NAME
-    h.name.setText(
-            TextUtils.isEmpty(e.label)
-                    ? "Unknown"
-                    : e.label
-    );
-
-    // ICON
-    try {
-        h.icon.setImageDrawable(
-                pm.getApplicationIcon(e.pkg)
-        );
-    } catch (Exception ignored) {
-        h.icon.setImageResource(
-                android.R.drawable.sym_def_app_icon
-        );
-    }
-
-    // PACKAGE
-    h.pkg.setText(e.pkg);
-
-    // TYPE COLOR
-    if (e.isSystem) {
-        h.name.setTextColor(0xFFFFD700);
-    } else {
-        h.name.setTextColor(Color.WHITE);
-    }
-
-    // APP SIZE
-    h.size.setText("App: " + formatBytes(e.appBytes));
-
-    // CACHE SIZE
-    h.cache.setText("Cache: " + formatBytes(e.cacheBytes));
-
-    // CHECKBOX
-    h.select.setOnCheckedChangeListener(null);
-    h.select.setChecked(e.selected);
-    h.select.setOnCheckedChangeListener((b, checked) -> {
-        e.selected = checked;
-    });
-
-    return convertView;
-}
 
     // ============================================================
-    // FORMAT SIZE
+    // BIND
     // ============================================================
+
+    @Override
+    public void onBindViewHolder(
+            @NonNull RecyclerView.ViewHolder holder,
+            int position) {
+
+        AppListActivity.AppEntry e = data.get(position);
+
+        if (getItemViewType(position) == TYPE_HEADER) {
+
+            HeaderHolder h = (HeaderHolder) holder;
+            h.title.setText(e.headerTitle);
+            return;
+        }
+
+        AppHolder h = (AppHolder) holder;
+
+        // NAME
+        h.name.setText(
+                TextUtils.isEmpty(e.label) ? "Unknown" : e.label
+        );
+
+        // ICON
+        try {
+            h.icon.setImageDrawable(pm.getApplicationIcon(e.pkg));
+        } catch (Exception ignored) {
+            h.icon.setImageResource(android.R.drawable.sym_def_app_icon);
+        }
+
+        // PACKAGE
+        h.pkg.setText(e.pkg);
+
+        // SYSTEM COLOR
+        if (e.isSystem) {
+            h.name.setTextColor(0xFFFFD700);
+        } else {
+            h.name.setTextColor(Color.WHITE);
+        }
+
+        // SIZE
+        h.size.setText("App: " + formatBytes(e.appBytes));
+        h.cache.setText("Cache: " + formatBytes(e.cacheBytes));
+
+        // CHECKBOX
+        h.select.setOnCheckedChangeListener(null);
+        h.select.setChecked(e.selected);
+        h.select.setOnCheckedChangeListener((b, checked) -> e.selected = checked);
+
+        // GEL fade animation
+        AlphaAnimation anim = new AlphaAnimation(0f, 1f);
+        anim.setDuration(220);
+        holder.itemView.startAnimation(anim);
+    }
+
+    // ============================================================
+    // SIZE FORMAT
+    // ============================================================
+
     private String formatBytes(long bytes) {
 
         if (bytes < 0) return "—";
@@ -206,5 +203,52 @@ public View getView(int position,
         if (kb >= 1) return df.format(kb) + " KB";
 
         return bytes + " B";
+    }
+
+    // ============================================================
+    // DIFF CALLBACK
+    // ============================================================
+
+    static class DiffCallback extends DiffUtil.Callback {
+
+        private final List<AppListActivity.AppEntry> oldList;
+        private final List<AppListActivity.AppEntry> newList;
+
+        DiffCallback(
+                List<AppListActivity.AppEntry> oldList,
+                List<AppListActivity.AppEntry> newList) {
+            this.oldList = oldList;
+            this.newList = newList;
+        }
+
+        @Override
+        public int getOldListSize() { return oldList.size(); }
+
+        @Override
+        public int getNewListSize() { return newList.size(); }
+
+        @Override
+        public boolean areItemsTheSame(int oldPos, int newPos) {
+
+            AppListActivity.AppEntry o = oldList.get(oldPos);
+            AppListActivity.AppEntry n = newList.get(newPos);
+
+            if (o.isHeader && n.isHeader)
+                return o.headerTitle.equals(n.headerTitle);
+
+            return o.pkg != null && o.pkg.equals(n.pkg);
+        }
+
+        @Override
+        public boolean areContentsTheSame(int oldPos, int newPos) {
+
+            AppListActivity.AppEntry o = oldList.get(oldPos);
+            AppListActivity.AppEntry n = newList.get(newPos);
+
+            return o.selected == n.selected &&
+                   o.cacheBytes == n.cacheBytes &&
+                   o.appBytes == n.appBytes &&
+                   TextUtils.equals(o.label, n.label);
+        }
     }
 }

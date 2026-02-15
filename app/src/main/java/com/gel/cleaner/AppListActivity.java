@@ -269,28 +269,25 @@ searchBox.addTextChangedListener(new TextWatcher() {
 
     visible.clear();
 
-    ArrayList<AppEntry> users = new ArrayList<>();
-    ArrayList<AppEntry> systems = new ArrayList<>();
+ArrayList<AppEntry> users = new ArrayList<>();
+ArrayList<AppEntry> systems = new ArrayList<>();
 
-    for (AppEntry e : allApps) {
-        if (e == null) continue;
+for (AppEntry e : allApps) {
+    if (e == null) continue;
 
-        if (e.isSystem && !showSystem) continue;
-        if (!e.isSystem && !showUser) continue;
-
-        if (!TextUtils.isEmpty(search)) {
-            String s = search.toLowerCase(Locale.getDefault());
-            String name = e.label == null ? "" : e.label.toLowerCase(Locale.getDefault());
-            String pkg = e.pkg == null ? "" : e.pkg.toLowerCase(Locale.getDefault());
-            if (!name.contains(s) && !pkg.contains(s)) continue;
-        }
-
-        if (e.isSystem) {
-            systems.add(e);
-        } else {
-            users.add(e);
-        }
+    if (!TextUtils.isEmpty(search)) {
+        String s = search.toLowerCase(Locale.US);
+        String name = e.label == null ? "" : e.label.toLowerCase(Locale.US);
+        String pkg  = e.pkg == null ? "" : e.pkg.toLowerCase(Locale.US);
+        if (!name.contains(s) && !pkg.contains(s)) continue;
     }
+
+    if (e.isSystem) {
+        if (showSystem) systems.add(e);
+    } else {
+        if (showUser) users.add(e);
+    }
+}
 
     // Sort inside each group
     if (sortByCacheBiggest) {

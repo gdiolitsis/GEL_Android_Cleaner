@@ -64,56 +64,86 @@ private boolean systemSectionExpanded = true;
     private int guidedIndex = 0;
     private String guidedCurrentPkg = null;
 
-    @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_app_cache);
+ @Override
+protected void onCreate(@Nullable Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    setContentView(R.layout.activity_app_cache);
 
-        list = findViewById(R.id.listApps);
+    list = findViewById(R.id.listApps);
 
-        EditText searchBox = findViewById(R.id.searchBar);
+    EditText searchBox = findViewById(R.id.searchBar);
 
-searchBox.addTextChangedListener(new TextWatcher() {
-    @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+    // ================= SEARCH =================
+    if (searchBox != null) {
+        searchBox.addTextChangedListener(new TextWatcher() {
 
-    @Override
-    public void onTextChanged(CharSequence s, int start, int before, int count) {
-        search = (s == null) ? "" : s.toString().trim();
-        applyFiltersAndSort();
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                search = (s == null) ? "" : s.toString().trim();
+                applyFiltersAndSort();
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {}
+        });
     }
 
-    @Override public void afterTextChanged(Editable s) {}
-});
+    // ================= ADAPTER =================
+    adapter = new AppListAdapter(this, visible);
+    list.setAdapter(adapter);
 
-        adapter = new AppListAdapter(this, visible);
+    // ================= CLICK =================
+    list.setOnItemClickListener((parent, view, position, id) -> {
 
-        // Tap: open settings (normal mode)
-        list.setOnItemClickListener((AdapterView<?> parent, android.view.View view, int position, long id) -> {
-            if (position < 0 || position >= visible.size()) return;
-            AppEntry e = visible.get(position);
-            if (e == null) return;
-            openAppDetails(e.pkg);
-        });
+        if (position < 0 || position >= visible.size()) return;
 
-        // Long tap: toggle selection (multi-select)
-        list.setOnItemLongClickListener((parent, view, position, id) -> {
-            if (position < 0 || position >= visible.size()) return true;
-            AppEntry e = visible.get(position);
-            if (e == null) return true;
-            e.selected = !e.selected;
-            adapter.notifyDataSetChanged();
-            return true;
-        });
+        AppEntry e = visible.get(position);
+        if (e == null) return;
 
-        // INIT FOLDABLE ENGINE (SAFE)
-        uiManager    = new GELFoldableUIManager(this);
-        animPack     = new GELFoldableAnimationPack(this);
-        dualPane     = new DualPaneManager(this);
-        foldDetector = new GELFoldableDetector(this, this);
+        // HEADER CLICK (collapse / expand)
+        if (e.isHeader) {
 
-        // LOAD
-        new Thread(this::loadAllApps).start();
-    }
+            if (e.isUserHeader) {
+                userSectionExpanded = !userSectionExpanded;
+            }
+
+            if (e.isSystemHeader) {
+                systemSectionExpanded = !systemSectionExpanded;
+            }
+
+            applyFiltersAndSort();
+            return;
+        }
+
+        // NORMAL CLICK → open app settings
+        openAppDetails(e.pkg);
+    });
+
+    // ================= LONG CLICK (MULTI SELECT) =================
+    list.setOnItemLongClickListener((parent, view, position, id) -> {
+
+        if (position < 0 || position >= visible.size()) return true;
+
+        AppEntry e = visible.get(position);
+        if (e == null || e.isHeader) return true;
+
+        e.selected = !e.selected;
+        adapter.notifyDataSetChanged();
+        return true;
+    });
+
+    // ================= FOLDABLE INIT =================
+    uiManager    = new GELFoldableUIManager(this);
+    animPack     = new GELFoldableAnimationPack(this);
+    dualPane     = new DualPaneManager(this);
+    foldDetector = new GELFoldableDetector(this, this);
+
+    // ================= LOAD DATA =================
+    new Thread(this::loadAllApps).start();
+}
 
     @Override
     protected void onResume() {

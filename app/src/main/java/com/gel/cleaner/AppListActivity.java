@@ -68,7 +68,7 @@ public class AppListActivity extends GELAutoActivityHook implements GELFoldableC
 
         list = findViewById(R.id.listApps);
 
-        EditText searchBox = findViewById(R.id.searchBox);
+        EditText searchBox = findViewById(R.id.searchBar);
 
 searchBox.addTextChangedListener(new TextWatcher() {
     @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}

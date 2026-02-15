@@ -269,49 +269,30 @@ searchBox.addTextChangedListener(new TextWatcher() {
 
     visible.clear();
 
-ArrayList<AppEntry> users = new ArrayList<>();
-ArrayList<AppEntry> systems = new ArrayList<>();
+    ArrayList<AppEntry> users = new ArrayList<>();
+    ArrayList<AppEntry> systems = new ArrayList<>();
 
-for (AppEntry e : allApps) {
-    if (e == null) continue;
+    for (AppEntry e : allApps) {
+        if (e == null) continue;
 
-    if (!TextUtils.isEmpty(search)) {
-        String s = search.toLowerCase(Locale.US);
-        String name = e.label == null ? "" : e.label.toLowerCase(Locale.US);
-        String pkg  = e.pkg == null ? "" : e.pkg.toLowerCase(Locale.US);
-        if (!name.contains(s) && !pkg.contains(s)) continue;
+        if (!TextUtils.isEmpty(search)) {
+            String s = search.toLowerCase(Locale.US);
+            String name = e.label == null ? "" : e.label.toLowerCase(Locale.US);
+            String pkg  = e.pkg == null ? "" : e.pkg.toLowerCase(Locale.US);
+            if (!name.contains(s) && !pkg.contains(s)) continue;
+        }
+
+        if (e.isSystem) {
+            if (showSystem) systems.add(e);
+        } else {
+            if (showUser) users.add(e);
+        }
     }
 
-    if (e.isSystem) {
-        if (showSystem) systems.add(e);
-    } else {
-        if (showUser) users.add(e);
-    }
-}
+    Comparator<AppEntry> comparator;
 
-Comparator<AppEntry> comparator;
-
-if (sortByCacheBiggest) {
-    comparator = (a, b) -> {
-        long ca = a.cacheBytes;
-        long cb = b.cacheBytes;
-        if (ca < 0 && cb < 0) return alphaCompare(a,b);
-        if (ca < 0) return 1;
-        if (cb < 0) return -1;
-        int cmp = Long.compare(cb, ca);
-        return cmp != 0 ? cmp : alphaCompare(a,b);
-    };
-} else {
-    comparator = this::alphaCompare;
-}
-
-Collections.sort(users, comparator);
-Collections.sort(systems, comparator);
-        
-    // Sort inside each group
     if (sortByCacheBiggest) {
-
-        Comparator<AppEntry> cacheSort = (a, b) -> {
+        comparator = (a, b) -> {
             long ca = a.cacheBytes;
             long cb = b.cacheBytes;
 
@@ -320,38 +301,32 @@ Collections.sort(systems, comparator);
             if (cb < 0) return -1;
 
             int cmp = Long.compare(cb, ca);
-            if (cmp != 0) return cmp;
-            return alphaCompare(a, b);
+            return cmp != 0 ? cmp : alphaCompare(a, b);
         };
-
-        Collections.sort(users, cacheSort);
-        Collections.sort(systems, cacheSort);
-
     } else {
-
-        Collections.sort(users, this::alphaCompare);
-        Collections.sort(systems, this::alphaCompare);
+        comparator = this::alphaCompare;
     }
 
-if (!users.isEmpty()) {
-    AppEntry header = new AppEntry();
-    header.isHeader = true;
-    header.headerTitle = "📱 USER APPS";
-    visible.add(header);
-    visible.addAll(users);
-}
+    Collections.sort(users, comparator);
+    Collections.sort(systems, comparator);
 
-if (!systems.isEmpty()) {
-    AppEntry header = new AppEntry();
-    header.isHeader = true;
-    header.headerTitle = "⚙ SYSTEM APPS";
-    visible.add(header);
-    visible.addAll(systems);
-}
-        
-    // Merge: User first, then System
-    visible.addAll(users);
-    visible.addAll(systems);
+    // ================= HEADERS =================
+
+    if (!users.isEmpty()) {
+        AppEntry header = new AppEntry();
+        header.isHeader = true;
+        header.headerTitle = "📱 USER APPS";
+        visible.add(header);
+        visible.addAll(users);
+    }
+
+    if (!systems.isEmpty()) {
+        AppEntry header = new AppEntry();
+        header.isHeader = true;
+        header.headerTitle = "⚙ SYSTEM APPS";
+        visible.add(header);
+        visible.addAll(systems);
+    }
 
     runOnUiThread(() -> adapter.notifyDataSetChanged());
 }

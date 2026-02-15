@@ -74,7 +74,7 @@ public class MainActivity extends GELAutoActivityHook
 protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_main);
-
+    
     // BASIC BINDS
     txtLogs = findViewById(R.id.txtLogs);
     scroll  = findViewById(R.id.scrollRoot);
@@ -432,7 +432,6 @@ skipBtn.setOnClickListener(v -> {
     permissionsSkippedThisLaunch = true;
 
     d.dismiss();
-    permissionIndex = REQUIRED_PERMISSIONS.length;
     requestNextPermission();
 });
 

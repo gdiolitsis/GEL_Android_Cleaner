@@ -21,6 +21,7 @@ import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
@@ -247,9 +248,10 @@ if (checkAll != null) {
 
             if (!TextUtils.isEmpty(search)) {
                 String s = search.toLowerCase(Locale.US);
-                if (!e.label.toLowerCase(Locale.US).contains(s)
-                        && !e.pkg.toLowerCase(Locale.US).contains(s))
-                    continue;
+                String name = e.label == null ? "" : e.label.toLowerCase(Locale.US);
+String pkg  = e.pkg == null ? "" : e.pkg.toLowerCase(Locale.US);
+
+if (!name.contains(s) && !pkg.contains(s)) continue;
             }
 
             if (e.isSystem) systems.add(e);

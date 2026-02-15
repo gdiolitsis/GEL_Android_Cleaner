@@ -67,8 +67,11 @@
     <!-- ============================================================
          📂 APP LIST
          ============================================================ -->
-    <ListView
-        android:id="@+id/listApps"
+    <androidx.recyclerview.widget.RecyclerView
+    android:id="@+id/listApps"
+    android:layout_width="match_parent"
+    android:layout_height="0dp"
+    android:layout_weight="1"/>
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"

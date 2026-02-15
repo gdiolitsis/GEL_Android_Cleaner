@@ -12,7 +12,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
-import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -22,7 +21,6 @@ import android.text.TextUtils;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.widget.EditText;
-import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -35,13 +33,16 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Locale;
 
-public class AppListActivity extends GELAutoActivityHook implements GELFoldableCallback {
+public class AppListActivity extends GELAutoActivityHook
+        implements GELFoldableCallback {
 
     private ListView list;
+
+    // SECTION STATE
     private boolean userExpanded = true;
     private boolean systemExpanded = true;
 
-    // Foldable system
+    // Foldable
     private GELFoldableDetector foldDetector;
     private GELFoldableUIManager uiManager;
     private GELFoldableAnimationPack animPack;
@@ -51,168 +52,103 @@ public class AppListActivity extends GELAutoActivityHook implements GELFoldableC
     private final ArrayList<AppEntry> allApps = new ArrayList<>();
     private final ArrayList<AppEntry> visible = new ArrayList<>();
     private AppListAdapter adapter;
+
     // FILTERS
     private boolean showUser = true;
     private boolean showSystem = true;
     private String search = "";
     private boolean sortByCacheBiggest = false;
 
-    // GUIDED MODE
-    private boolean guidedActive = false;
-    private final ArrayList<String> guidedQueue = new ArrayList<>();
-    private int guidedIndex = 0;
-    private String guidedCurrentPkg = null;
+    // ============================================================
+    // ON CREATE
+    // ============================================================
+    @Override
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_app_cache);
 
- @Override
-protected void onCreate(@Nullable Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
-    setContentView(R.layout.activity_app_cache);
+        list = findViewById(R.id.listApps);
+        EditText searchBox = findViewById(R.id.searchBar);
 
-    list = findViewById(R.id.listApps);
+        if (searchBox != null) {
+            searchBox.addTextChangedListener(new TextWatcher() {
+                @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
 
-    EditText searchBox = findViewById(R.id.searchBar);
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    search = (s == null) ? "" : s.toString().trim();
+                    applyFiltersAndSort();
+                }
 
-    // ================= SEARCH =================
-    if (searchBox != null) {
-        searchBox.addTextChangedListener(new TextWatcher() {
+                @Override public void afterTextChanged(Editable s) {}
+            });
+        }
 
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+        adapter = new AppListAdapter(this, visible);
+        list.setAdapter(adapter);
 
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                search = (s == null) ? "" : s.toString().trim();
+        // ================= CLICK =================
+        list.setOnItemClickListener((parent, view, position, id) -> {
+
+            if (position < 0 || position >= visible.size()) return;
+
+            AppEntry e = visible.get(position);
+            if (e == null) return;
+
+            // HEADER TAP
+            if (e.isHeader) {
+
+                if (e.isUserHeader) {
+                    userExpanded = !userExpanded;
+                }
+
+                if (e.isSystemHeader) {
+                    systemExpanded = !systemExpanded;
+                }
+
                 applyFiltersAndSort();
+                return;
             }
 
-            @Override
-            public void afterTextChanged(Editable s) {}
+            // NORMAL APP TAP
+            openAppDetails(e.pkg);
         });
-    }
 
-    // ================= ADAPTER =================
-    adapter = new AppListAdapter(this, visible);
-    list.setAdapter(adapter);
+        // ================= LONG CLICK =================
+        list.setOnItemLongClickListener((parent, view, position, id) -> {
 
-    // ================= CLICK =================
-    list.setOnItemClickListener((parent, view, position, id) -> {
+            if (position < 0 || position >= visible.size()) return true;
 
-        if (position < 0 || position >= visible.size()) return;
+            AppEntry e = visible.get(position);
+            if (e == null || e.isHeader) return true;
 
-        AppEntry e = visible.get(position);
-        if (e == null) return;
+            e.selected = !e.selected;
+            adapter.notifyDataSetChanged();
+            return true;
+        });
 
-        // HEADER CLICK (collapse / expand)
-        if (e.isHeader) {
+        // Foldable init
+        uiManager    = new GELFoldableUIManager(this);
+        animPack     = new GELFoldableAnimationPack(this);
+        dualPane     = new DualPaneManager(this);
+        foldDetector = new GELFoldableDetector(this, this);
 
-            if (e.isUserHeader) {
-                userSectionExpanded = !userSectionExpanded;
-            }
-
-            if (e.isSystemHeader) {
-                systemSectionExpanded = !systemSectionExpanded;
-            }
-
-            applyFiltersAndSort();
-            return;
-        }
-
-        // NORMAL CLICK → open app settings
-        openAppDetails(e.pkg);
-    });
-
-    // ================= LONG CLICK (MULTI SELECT) =================
-    list.setOnItemLongClickListener((parent, view, position, id) -> {
-
-        if (position < 0 || position >= visible.size()) return true;
-
-        AppEntry e = visible.get(position);
-        if (e == null || e.isHeader) return true;
-
-        e.selected = !e.selected;
-        adapter.notifyDataSetChanged();
-        return true;
-    });
-
-    // ================= FOLDABLE INIT =================
-    uiManager    = new GELFoldableUIManager(this);
-    animPack     = new GELFoldableAnimationPack(this);
-    dualPane     = new DualPaneManager(this);
-    foldDetector = new GELFoldableDetector(this, this);
-
-    // ================= LOAD DATA =================
-    new Thread(this::loadAllApps).start();
-}
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        if (foldDetector != null) foldDetector.start();
-
-        // GUIDED: when user returns from Settings -> go next
-        if (guidedActive) {
-            advanceGuidedIfNeeded();
-        }
-    }
-
-    @Override
-    protected void onPause() {
-        if (foldDetector != null) foldDetector.stop();
-        super.onPause();
+        new Thread(this::loadAllApps).start();
     }
 
     // ============================================================
-    // FOLDABLE CALLBACKS
-    // ============================================================
-    @Override
-    public void onPostureChanged(@NonNull Posture posture) {
-        final boolean isInner =
-                (posture == Posture.FLAT ||
-                 posture == Posture.TABLE_MODE ||
-                 posture == Posture.FULLY_OPEN);
-
-        if (animPack != null) {
-            animPack.animateReflow(() -> {
-                if (uiManager != null) uiManager.applyUI(isInner);
-                try { DualPaneManager.prepareIfSupported(this); } catch (Throwable ignore) {}
-            });
-        } else {
-            if (uiManager != null) uiManager.applyUI(isInner);
-            try { DualPaneManager.prepareIfSupported(this); } catch (Throwable ignore) {}
-        }
-    }
-
-    @Override
-    public void onScreenChanged(boolean isInner) {
-        if (animPack != null) {
-            animPack.animateReflow(() -> {
-                if (uiManager != null) uiManager.applyUI(isInner);
-                try { DualPaneManager.prepareIfSupported(this); } catch (Throwable ignore) {}
-            });
-        } else {
-            if (uiManager != null) uiManager.applyUI(isInner);
-            try { DualPaneManager.prepareIfSupported(this); } catch (Throwable ignore) {}
-        }
-    }
-
-    // ============================================================
-    // LOAD APPS (ALL INSTALLED)
+    // LOAD APPS
     // ============================================================
     private void loadAllApps() {
         try {
             PackageManager pm = getPackageManager();
-            ArrayList<ApplicationInfo> apps = new ArrayList<>(pm.getInstalledApplications(PackageManager.GET_META_DATA));
+            ArrayList<ApplicationInfo> apps =
+                    new ArrayList<>(pm.getInstalledApplications(PackageManager.GET_META_DATA));
 
             allApps.clear();
 
             for (ApplicationInfo ai : apps) {
                 if (ai == null) continue;
-
-                // Exclude ourselves? (optional)
-                if (getPackageName().equals(ai.packageName)) {
-                    // keep it if you want, but usually hide
-                    // continue;
-                }
 
                 AppEntry e = new AppEntry();
                 e.pkg = ai.packageName;
@@ -220,9 +156,7 @@ protected void onCreate(@Nullable Bundle savedInstanceState) {
                 e.label = String.valueOf(pm.getApplicationLabel(ai));
                 e.ai = ai;
 
-                // sizes (best effort)
                 fillSizesBestEffort(e);
-
                 allApps.add(e);
             }
 
@@ -236,149 +170,76 @@ protected void onCreate(@Nullable Bundle savedInstanceState) {
     }
 
     // ============================================================
-    // SIZES (StorageStatsManager on API 26+ with Usage Access)
-    // ============================================================
-    private void fillSizesBestEffort(AppEntry e) {
-        e.appBytes = -1;
-        e.cacheBytes = -1;
-
-        if (e == null || TextUtils.isEmpty(e.pkg)) return;
-
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-            // Old devices: keep unknown (production-safe, no hidden APIs)
-            return;
-        }
-
-        if (!hasUsageAccess()) {
-            return;
-        }
-
-        try {
-            StorageStatsManager ssm = (StorageStatsManager) getSystemService(Context.STORAGE_STATS_SERVICE);
-            if (ssm == null) return;
-
-            StorageStats st = ssm.queryStatsForPackage(
-                    android.os.storage.StorageManager.UUID_DEFAULT,
-                    e.pkg,
-                    android.os.UserHandle.getUserHandleForUid(Process.myUid())
-            );
-
-            if (st != null) {
-                e.appBytes = st.getAppBytes();
-                e.cacheBytes = st.getCacheBytes();
-            }
-        } catch (Throwable ignore) {}
-    }
-
-    private boolean hasUsageAccess() {
-        try {
-            AppOpsManager appOps = (AppOpsManager) getSystemService(Context.APP_OPS_SERVICE);
-            if (appOps == null) return false;
-
-            int mode = appOps.checkOpNoThrow(
-                    AppOpsManager.OPSTR_GET_USAGE_STATS,
-                    Process.myUid(),
-                    getPackageName()
-            );
-            return mode == AppOpsManager.MODE_ALLOWED;
-        } catch (Throwable t) {
-            return false;
-        }
-    }
-
-    // Call this from a button later (Guided UI)
-    private void requestUsageAccess() {
-        try {
-            Intent intent = new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS);
-            startActivity(intent);
-        } catch (Throwable ignore) {}
-    }
-
-    // ============================================================
-    // FILTER + SORT
+    // FILTER + SORT + HEADERS
     // ============================================================
     private void applyFiltersAndSort() {
 
-    visible.clear();
+        visible.clear();
 
-    ArrayList<AppEntry> users = new ArrayList<>();
-    ArrayList<AppEntry> systems = new ArrayList<>();
+        ArrayList<AppEntry> users = new ArrayList<>();
+        ArrayList<AppEntry> systems = new ArrayList<>();
 
-    for (AppEntry e : allApps) {
-        if (e == null) continue;
+        for (AppEntry e : allApps) {
+            if (e == null) continue;
 
-        if (!TextUtils.isEmpty(search)) {
-            String s = search.toLowerCase(Locale.US);
-            String name = e.label == null ? "" : e.label.toLowerCase(Locale.US);
-            String pkg  = e.pkg == null ? "" : e.pkg.toLowerCase(Locale.US);
-            if (!name.contains(s) && !pkg.contains(s)) continue;
+            if (!TextUtils.isEmpty(search)) {
+                String s = search.toLowerCase(Locale.US);
+                String name = e.label == null ? "" : e.label.toLowerCase(Locale.US);
+                String pkg  = e.pkg == null ? "" : e.pkg.toLowerCase(Locale.US);
+                if (!name.contains(s) && !pkg.contains(s)) continue;
+            }
+
+            if (e.isSystem) {
+                if (showSystem) systems.add(e);
+            } else {
+                if (showUser) users.add(e);
+            }
         }
 
-        if (e.isSystem) {
-            if (showSystem) systems.add(e);
-        } else {
-            if (showUser) users.add(e);
+        Comparator<AppEntry> comparator =
+                sortByCacheBiggest
+                        ? (a, b) -> {
+                            long ca = a.cacheBytes;
+                            long cb = b.cacheBytes;
+
+                            if (ca < 0 && cb < 0) return alphaCompare(a, b);
+                            if (ca < 0) return 1;
+                            if (cb < 0) return -1;
+
+                            int cmp = Long.compare(cb, ca);
+                            return cmp != 0 ? cmp : alphaCompare(a, b);
+                        }
+                        : this::alphaCompare;
+
+        Collections.sort(users, comparator);
+        Collections.sort(systems, comparator);
+
+        if (!users.isEmpty()) {
+            AppEntry header = new AppEntry();
+            header.isHeader = true;
+            header.isUserHeader = true;
+            header.headerTitle = userExpanded
+                    ? "📱 USER APPS (tap to collapse)"
+                    : "📱 USER APPS (tap to expand)";
+            visible.add(header);
+
+            if (userExpanded) visible.addAll(users);
         }
+
+        if (!systems.isEmpty()) {
+            AppEntry header = new AppEntry();
+            header.isHeader = true;
+            header.isSystemHeader = true;
+            header.headerTitle = systemExpanded
+                    ? "⚙ SYSTEM APPS (tap to collapse)"
+                    : "⚙ SYSTEM APPS (tap to expand)";
+            visible.add(header);
+
+            if (systemExpanded) visible.addAll(systems);
+        }
+
+        runOnUiThread(() -> adapter.notifyDataSetChanged());
     }
-
-    Comparator<AppEntry> comparator;
-
-    if (sortByCacheBiggest) {
-        comparator = (a, b) -> {
-            long ca = a.cacheBytes;
-            long cb = b.cacheBytes;
-
-            if (ca < 0 && cb < 0) return alphaCompare(a, b);
-            if (ca < 0) return 1;
-            if (cb < 0) return -1;
-
-            int cmp = Long.compare(cb, ca);
-            return cmp != 0 ? cmp : alphaCompare(a, b);
-        };
-    } else {
-        comparator = this::alphaCompare;
-    }
-
-    Collections.sort(users, comparator);
-    Collections.sort(systems, comparator);
-
-    // ================= HEADERS =================
-
-    // ================= USER SECTION =================
-if (!users.isEmpty()) {
-
-    AppEntry userHeader = new AppEntry();
-    userHeader.isHeader = true;
-    userHeader.isUserHeader = true;
-    userHeader.headerTitle = userExpanded
-            ? "📱 USER APPS (tap to collapse)"
-            : "📱 USER APPS (tap to expand)";
-
-    visible.add(userHeader);
-
-    if (userExpanded) {
-        visible.addAll(users);
-    }
-}
-// ================= SYSTEM SECTION =================
-if (!systems.isEmpty()) {
-
-    AppEntry systemHeader = new AppEntry();
-    systemHeader.isHeader = true;
-    systemHeader.isSystemHeader = true;
-    systemHeader.headerTitle = systemExpanded
-            ? "⚙ SYSTEM APPS (tap to collapse)"
-            : "⚙ SYSTEM APPS (tap to expand)";
-
-    visible.add(systemHeader);
-
-    if (systemExpanded) {
-        visible.addAll(systems);
-    }
-}
-
-    runOnUiThread(() -> adapter.notifyDataSetChanged());
-}
 
     private int alphaCompare(AppEntry a, AppEntry b) {
         String la = (a == null || a.label == null) ? "" : a.label;
@@ -396,74 +257,12 @@ if (!systems.isEmpty()) {
     }
 
     // ============================================================
-    // GUIDED BATCH MODE (SAFE)
-    // ============================================================
-    private void startGuidedFromSelected() {
-        guidedQueue.clear();
-        guidedIndex = 0;
-        guidedCurrentPkg = null;
-
-        for (AppEntry e : visible) {
-            if (e != null && e.selected && !TextUtils.isEmpty(e.pkg)) {
-                guidedQueue.add(e.pkg);
-            }
-        }
-
-        if (guidedQueue.isEmpty()) {
-            Toast.makeText(this, "No apps selected", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        guidedActive = true;
-        openNextGuided();
-    }
-
-    private void stopGuided() {
-        guidedActive = false;
-        guidedQueue.clear();
-        guidedIndex = 0;
-        guidedCurrentPkg = null;
-    }
-
-    private void skipCurrentGuided() {
-        if (!guidedActive) return;
-        guidedIndex++;
-        openNextGuided();
-    }
-
-    private void advanceGuidedIfNeeded() {
-        // We returned from Settings -> go next
-        // (No need to detect if cache cleared; user is the judge.)
-        if (!guidedActive) return;
-
-        // If we have a current, advance to next
-        if (guidedCurrentPkg != null) {
-            guidedIndex++;
-            openNextGuided();
-        }
-    }
-
-    private void openNextGuided() {
-        if (!guidedActive) return;
-
-        if (guidedIndex < 0) guidedIndex = 0;
-
-        if (guidedIndex >= guidedQueue.size()) {
-            stopGuided();
-            Toast.makeText(this, "Guided batch finished", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        guidedCurrentPkg = guidedQueue.get(guidedIndex);
-        openAppDetails(guidedCurrentPkg);
-    }
-
-    // ============================================================
-    // OPEN APP SETTINGS
+    // OPEN SETTINGS
     // ============================================================
     private void openAppDetails(String pkg) {
         try {
-            Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+            Intent intent =
+                    new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
             intent.setData(Uri.parse("package:" + pkg));
             startActivity(intent);
         } catch (Throwable ignored) {}
@@ -473,18 +272,17 @@ if (!systems.isEmpty()) {
     // MODEL
     // ============================================================
     static class AppEntry {
-    String pkg;
-    String label;
-    boolean isSystem;
-    boolean selected;
-    long appBytes;
-    long cacheBytes;
-    ApplicationInfo ai;
+        String pkg;
+        String label;
+        boolean isSystem;
+        boolean selected;
+        long appBytes;
+        long cacheBytes;
+        ApplicationInfo ai;
 
-    // HEADER SUPPORT
-    boolean isHeader;
-    boolean isUserHeader;
-    boolean isSystemHeader;
-    String headerTitle;
-}
+        boolean isHeader;
+        boolean isUserHeader;
+        boolean isSystemHeader;
+        String headerTitle;
+    }
 }

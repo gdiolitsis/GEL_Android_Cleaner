@@ -30,7 +30,8 @@ public class AppListAdapter extends BaseAdapter {
     private final boolean hasFoldable;
     private GELFoldableAnimationPack animPack;
 
-    public AppListAdapter(Context ctx, List<AppEntry> data) {
+    public AppListAdapter(Context ctx,
+                          List<AppListActivity.AppEntry> data) {
 
         this.ctx = ctx;
         this.data = data;
@@ -165,14 +166,10 @@ public class AppListAdapter extends BaseAdapter {
         }
 
         // APP SIZE
-        h.size.setText(
-                "App: " + formatBytes(e.appBytes)
-        );
+        h.size.setText("App: " + formatBytes(e.appBytes));
 
         // CACHE SIZE
-        h.cache.setText(
-                "Cache: " + formatBytes(e.cacheBytes)
-        );
+        h.cache.setText("Cache: " + formatBytes(e.cacheBytes));
 
         // CHECKBOX
         h.select.setOnCheckedChangeListener(null);

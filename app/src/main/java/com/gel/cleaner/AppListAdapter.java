@@ -76,123 +76,117 @@ public class AppListAdapter extends BaseAdapter {
     // VIEW
     // ============================================================
     @Override
-    public View getView(int position,
-                        View convertView,
-                        ViewGroup parent) {
+public View getView(int position,
+                    View convertView,
+                    ViewGroup parent) {
 
-       AppListActivity.AppEntry e = data.get(position);
-if (e == null) return convertView;
+    AppListActivity.AppEntry e = data.get(position);
+    if (e == null) return convertView;
 
-if (e.isHeader) {
-    TextView header = new TextView(ctx);
-    header.setText(e.headerTitle);
-    header.setTextSize(15f);
-    header.setPadding(24,16,24,16);
-    header.setTextColor(0xFFFFD700);
-    header.setBackgroundColor(0xFF1A1A1A);
-    return header;
-}
-        
-        Holder h;
+    // ================= HEADER =================
+    if (e.isHeader) {
+        TextView header = new TextView(ctx);
+        header.setText(e.headerTitle);
+        header.setTextSize(15f);
+        header.setPadding(24,16,24,16);
+        header.setTextColor(0xFFFFD700);
+        header.setBackgroundColor(0xFF1A1A1A);
+        return header;
+    }
 
-        if (convertView == null) {
+    Holder h;
 
-            convertView = inflater.inflate(
-                    R.layout.list_item_app,
-                    parent,
-                    false
-            );
+    if (convertView == null) {
 
-            h = new Holder();
-
-            h.name   = convertView.findViewById(R.id.appLabel);
-            h.pkg    = convertView.findViewById(R.id.appPackage);
-            h.icon   = convertView.findViewById(R.id.appIcon);
-            h.size   = convertView.findViewById(R.id.appSize);
-            h.cache  = convertView.findViewById(R.id.appCache);
-            h.select = convertView.findViewById(R.id.appCheck);
-
-            convertView.setTag(h);
-
-            if (ctx instanceof GELAutoActivityHook) {
-                GELAutoActivityHook a =
-                        (GELAutoActivityHook) ctx;
-
-                h.name.setTextSize(a.sp(15f));
-                h.pkg.setTextSize(a.sp(12f));
-                h.size.setTextSize(a.sp(12f));
-                h.cache.setTextSize(a.sp(12f));
-
-                ViewGroup.LayoutParams lp =
-                        h.icon.getLayoutParams();
-                lp.width  = a.dp(38);
-                lp.height = a.dp(38);
-                h.icon.setLayoutParams(lp);
-
-                int pad = a.dp(12);
-                convertView.setPadding(pad,pad,pad,pad);
-            }
-
-            if (hasFoldable && animPack != null) {
-                animPack.applyListItemFade(convertView);
-            }
-
-        } else {
-            h = (Holder) convertView.getTag();
-        }
-
-        // ============================================================
-        // BIND DATA
-        // ============================================================
-
-        AppListActivity.AppEntry e = data.get(position);
-        if (e == null) return convertView;
-
-        PackageManager pm = ctx.getPackageManager();
-
-        // NAME
-        h.name.setText(
-                TextUtils.isEmpty(e.label)
-                        ? "Unknown"
-                        : e.label
+        convertView = inflater.inflate(
+                R.layout.list_item_app,
+                parent,
+                false
         );
 
-        // ICON
-        try {
-            h.icon.setImageDrawable(
-                    pm.getApplicationIcon(e.pkg)
-            );
-        } catch (Exception ignored) {
-            h.icon.setImageResource(
-                    android.R.drawable.sym_def_app_icon
-            );
+        h = new Holder();
+
+        h.name   = convertView.findViewById(R.id.appLabel);
+        h.pkg    = convertView.findViewById(R.id.appPackage);
+        h.icon   = convertView.findViewById(R.id.appIcon);
+        h.size   = convertView.findViewById(R.id.appSize);
+        h.cache  = convertView.findViewById(R.id.appCache);
+        h.select = convertView.findViewById(R.id.appCheck);
+
+        convertView.setTag(h);
+
+        if (ctx instanceof GELAutoActivityHook) {
+            GELAutoActivityHook a =
+                    (GELAutoActivityHook) ctx;
+
+            h.name.setTextSize(a.sp(15f));
+            h.pkg.setTextSize(a.sp(12f));
+            h.size.setTextSize(a.sp(12f));
+            h.cache.setTextSize(a.sp(12f));
+
+            ViewGroup.LayoutParams lp =
+                    h.icon.getLayoutParams();
+            lp.width  = a.dp(38);
+            lp.height = a.dp(38);
+            h.icon.setLayoutParams(lp);
+
+            int pad = a.dp(12);
+            convertView.setPadding(pad,pad,pad,pad);
         }
 
-        // PACKAGE
-        h.pkg.setText(e.pkg);
-
-        // TYPE COLOR
-        if (e.isSystem) {
-            h.name.setTextColor(0xFFFFD700); // gold system
-        } else {
-            h.name.setTextColor(Color.WHITE);
+        if (hasFoldable && animPack != null) {
+            animPack.applyListItemFade(convertView);
         }
 
-        // APP SIZE
-        h.size.setText("App: " + formatBytes(e.appBytes));
-
-        // CACHE SIZE
-        h.cache.setText("Cache: " + formatBytes(e.cacheBytes));
-
-        // CHECKBOX
-        h.select.setOnCheckedChangeListener(null);
-        h.select.setChecked(e.selected);
-        h.select.setOnCheckedChangeListener((b, checked) -> {
-            e.selected = checked;
-        });
-
-        return convertView;
+    } else {
+        h = (Holder) convertView.getTag();
     }
+
+    PackageManager pm = ctx.getPackageManager();
+
+    // NAME
+    h.name.setText(
+            TextUtils.isEmpty(e.label)
+                    ? "Unknown"
+                    : e.label
+    );
+
+    // ICON
+    try {
+        h.icon.setImageDrawable(
+                pm.getApplicationIcon(e.pkg)
+        );
+    } catch (Exception ignored) {
+        h.icon.setImageResource(
+                android.R.drawable.sym_def_app_icon
+        );
+    }
+
+    // PACKAGE
+    h.pkg.setText(e.pkg);
+
+    // TYPE COLOR
+    if (e.isSystem) {
+        h.name.setTextColor(0xFFFFD700);
+    } else {
+        h.name.setTextColor(Color.WHITE);
+    }
+
+    // APP SIZE
+    h.size.setText("App: " + formatBytes(e.appBytes));
+
+    // CACHE SIZE
+    h.cache.setText("Cache: " + formatBytes(e.cacheBytes));
+
+    // CHECKBOX
+    h.select.setOnCheckedChangeListener(null);
+    h.select.setChecked(e.selected);
+    h.select.setOnCheckedChangeListener((b, checked) -> {
+        e.selected = checked;
+    });
+
+    return convertView;
+}
 
     // ============================================================
     // FORMAT SIZE

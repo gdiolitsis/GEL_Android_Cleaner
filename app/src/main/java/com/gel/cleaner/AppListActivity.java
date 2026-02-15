@@ -1,9 +1,7 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// AppListActivity — FINAL STABLE SAFE BUILD (Thread-safe + No UI freeze)
+// AppListActivity — FINAL STABLE RecyclerView BUILD
 
 package com.gel.cleaner;
-
-import com.gel.cleaner.base.*;
 
 import android.app.AppOpsManager;
 import android.app.usage.StorageStats;
@@ -23,10 +21,11 @@ import android.text.TextWatcher;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
-import android.widget.ListView;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import java.text.Collator;
 import java.util.ArrayList;
@@ -36,7 +35,7 @@ import java.util.Locale;
 
 public class AppListActivity extends GELAutoActivityHook {
 
-    private ListView list;
+    private RecyclerView recyclerView;
 
     private boolean userExpanded = true;
     private boolean systemExpanded = true;
@@ -48,7 +47,6 @@ public class AppListActivity extends GELAutoActivityHook {
     private String search = "";
     private boolean sortByCacheBiggest = false;
 
-    // ================= GUIDED MODE =================
     private boolean guidedActive = false;
     private final ArrayList<String> guidedQueue = new ArrayList<>();
     private int guidedIndex = 0;
@@ -58,15 +56,17 @@ public class AppListActivity extends GELAutoActivityHook {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_app_cache);
 
-        list = findViewById(R.id.listApps);
+        recyclerView = findViewById(R.id.listApps);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+
         EditText searchBox = findViewById(R.id.searchBar);
         Button btnSortName = findViewById(R.id.btnSortName);
         Button btnSortCache = findViewById(R.id.btnSortCache);
         Button btnGuided = findViewById(R.id.btnGuidedClean);
         CheckBox checkAll = findViewById(R.id.checkSelectAll);
 
-        adapter = new AppListAdapter(this, visible);
-        list.setAdapter(adapter);
+        adapter = new AppListAdapter(this);
+        recyclerView.setAdapter(adapter);
 
         // ================= SELECT ALL =================
         if (checkAll != null) {
@@ -77,7 +77,7 @@ public class AppListActivity extends GELAutoActivityHook {
                     e.selected = checked;
                 }
 
-                adapter.notifyDataSetChanged();
+                adapter.submitList(new ArrayList<>(visible));
             });
         }
 
@@ -113,39 +113,6 @@ public class AppListActivity extends GELAutoActivityHook {
         if (btnGuided != null) {
             btnGuided.setOnClickListener(v -> startGuidedFromSelected());
         }
-
-        // ================= CLICK =================
-        list.setOnItemClickListener((parent, view, position, id) -> {
-
-            if (position < 0 || position >= visible.size()) return;
-
-            AppEntry e = visible.get(position);
-            if (e == null) return;
-
-            if (e.isHeader) {
-
-                if (e.isUserHeader) userExpanded = !userExpanded;
-                if (e.isSystemHeader) systemExpanded = !systemExpanded;
-
-                applyFiltersAndSort();
-                return;
-            }
-
-            openAppDetails(e.pkg);
-        });
-
-        // ================= LONG CLICK =================
-        list.setOnItemLongClickListener((parent, view, position, id) -> {
-
-            if (position < 0 || position >= visible.size()) return true;
-
-            AppEntry e = visible.get(position);
-            if (e == null || e.isHeader) return true;
-
-            e.selected = !e.selected;
-            adapter.notifyDataSetChanged();
-            return true;
-        });
 
         new Thread(this::loadAllApps).start();
     }
@@ -228,7 +195,7 @@ public class AppListActivity extends GELAutoActivityHook {
     }
 
     // ============================================================
-    // APPLY FILTER + SORT (SAFE THREAD)
+    // FILTER + SORT
     // ============================================================
 
     private void applyFiltersAndSort() {
@@ -240,8 +207,6 @@ public class AppListActivity extends GELAutoActivityHook {
             ArrayList<AppEntry> systems = new ArrayList<>();
 
             for (AppEntry e : allApps) {
-
-                if (e == null) continue;
 
                 if (!TextUtils.isEmpty(search)) {
                     String s = search.toLowerCase(Locale.US);
@@ -257,20 +222,15 @@ public class AppListActivity extends GELAutoActivityHook {
             Comparator<AppEntry> comparator;
 
             if (sortByCacheBiggest) {
-
                 comparator = (a, b) -> {
-
                     long ca = a.cacheBytes;
                     long cb = b.cacheBytes;
-
                     if (ca < 0 && cb < 0) return alphaCompare(a,b);
                     if (ca < 0) return 1;
                     if (cb < 0) return -1;
-
                     int cmp = Long.compare(cb, ca);
                     return (cmp != 0) ? cmp : alphaCompare(a,b);
                 };
-
             } else {
                 comparator = this::alphaCompare;
             }
@@ -279,7 +239,6 @@ public class AppListActivity extends GELAutoActivityHook {
             Collections.sort(systems, comparator);
 
             if (!users.isEmpty()) {
-
                 AppEntry h = new AppEntry();
                 h.isHeader = true;
                 h.isUserHeader = true;
@@ -287,12 +246,10 @@ public class AppListActivity extends GELAutoActivityHook {
                         ? "📱 USER APPS (tap to collapse)"
                         : "📱 USER APPS (tap to expand)";
                 temp.add(h);
-
                 if (userExpanded) temp.addAll(users);
             }
 
             if (!systems.isEmpty()) {
-
                 AppEntry h = new AppEntry();
                 h.isHeader = true;
                 h.isSystemHeader = true;
@@ -300,14 +257,13 @@ public class AppListActivity extends GELAutoActivityHook {
                         ? "⚙ SYSTEM APPS (tap to collapse)"
                         : "⚙ SYSTEM APPS (tap to expand)";
                 temp.add(h);
-
                 if (systemExpanded) temp.addAll(systems);
             }
 
             runOnUiThread(() -> {
                 visible.clear();
                 visible.addAll(temp);
-                adapter.notifyDataSetChanged();
+                adapter.submitList(new ArrayList<>(visible));
             });
 
         }).start();
@@ -315,19 +271,13 @@ public class AppListActivity extends GELAutoActivityHook {
 
     private int alphaCompare(AppEntry a, AppEntry b) {
 
-        String la = (a == null || a.label == null) ? "" : a.label;
-        String lb = (b == null || b.label == null) ? "" : b.label;
-
         Collator c = Collator.getInstance(Locale.getDefault());
         c.setStrength(Collator.PRIMARY);
 
-        int cmp = c.compare(la, lb);
+        int cmp = c.compare(a.label, b.label);
         if (cmp != 0) return cmp;
 
-        String pa = (a == null || a.pkg == null) ? "" : a.pkg;
-        String pb = (b == null || b.pkg == null) ? "" : b.pkg;
-
-        return pa.compareToIgnoreCase(pb);
+        return a.pkg.compareToIgnoreCase(b.pkg);
     }
 
     // ============================================================
@@ -360,19 +310,15 @@ public class AppListActivity extends GELAutoActivityHook {
             return;
         }
 
-        openAppDetails(guidedQueue.get(guidedIndex));
+        Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+        intent.setData(Uri.parse("package:" + guidedQueue.get(guidedIndex)));
+        startActivity(intent);
     }
 
     private void advanceGuidedIfNeeded() {
         if (!guidedActive) return;
         guidedIndex++;
         openNextGuided();
-    }
-
-    private void openAppDetails(String pkg) {
-        Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-        intent.setData(Uri.parse("package:" + pkg));
-        startActivity(intent);
     }
 
     // ============================================================

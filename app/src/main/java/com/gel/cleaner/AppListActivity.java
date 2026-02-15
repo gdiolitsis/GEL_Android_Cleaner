@@ -82,8 +82,7 @@ searchBox.addTextChangedListener(new TextWatcher() {
     @Override public void afterTextChanged(Editable s) {}
 });
 
-        adapter = new AppListAdapterSafe(this, visible);
-        list.setAdapter(adapter);
+        adapter = new AppListAdapter(this, visible);
 
         // Tap: open settings (normal mode)
         list.setOnItemClickListener((AdapterView<?> parent, android.view.View view, int position, long id) -> {

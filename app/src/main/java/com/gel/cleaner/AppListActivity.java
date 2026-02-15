@@ -39,6 +39,9 @@ public class AppListActivity extends GELAutoActivityHook implements GELFoldableC
 
     private ListView list;
 
+    private boolean userSectionExpanded = true;
+private boolean systemSectionExpanded = true;
+
     // Foldable system
     private GELFoldableDetector foldDetector;
     private GELFoldableUIManager uiManager;

@@ -266,45 +266,63 @@ searchBox.addTextChangedListener(new TextWatcher() {
     // FILTER + SORT
     // ============================================================
     private void applyFiltersAndSort() {
-        visible.clear();
 
-        for (AppEntry e : allApps) {
-            if (e == null) continue;
+    visible.clear();
 
-            if (e.isSystem && !showSystem) continue;
-            if (!e.isSystem && !showUser) continue;
+    ArrayList<AppEntry> users = new ArrayList<>();
+    ArrayList<AppEntry> systems = new ArrayList<>();
 
-            if (!TextUtils.isEmpty(search)) {
-                String s = search.toLowerCase(Locale.US);
-                String name = (e.label == null ? "" : e.label.toLowerCase(Locale.US));
-                String pkg = (e.pkg == null ? "" : e.pkg.toLowerCase(Locale.US));
-                if (!name.contains(s) && !pkg.contains(s)) continue;
-            }
+    for (AppEntry e : allApps) {
+        if (e == null) continue;
 
-            visible.add(e);
+        if (e.isSystem && !showSystem) continue;
+        if (!e.isSystem && !showUser) continue;
+
+        if (!TextUtils.isEmpty(search)) {
+            String s = search.toLowerCase(Locale.getDefault());
+            String name = e.label == null ? "" : e.label.toLowerCase(Locale.getDefault());
+            String pkg = e.pkg == null ? "" : e.pkg.toLowerCase(Locale.getDefault());
+            if (!name.contains(s) && !pkg.contains(s)) continue;
         }
 
-        // sort
-        if (sortByCacheBiggest) {
-            Collections.sort(visible, (a, b) -> {
-                long ca = a == null ? -1 : a.cacheBytes;
-                long cb = b == null ? -1 : b.cacheBytes;
-                // unknown last
-                if (ca < 0 && cb < 0) return alphaCompare(a, b);
-                if (ca < 0) return 1;
-                if (cb < 0) return -1;
-                int cmp = Long.compare(cb, ca); // desc
-                if (cmp != 0) return cmp;
-                return alphaCompare(a, b);
-            });
+        if (e.isSystem) {
+            systems.add(e);
         } else {
-            Collections.sort(visible, this::alphaCompare);
+            users.add(e);
         }
-
-        runOnUiThread(() -> {
-            adapter.notifyDataSetChanged();
-        });
     }
+
+    // Sort inside each group
+    if (sortByCacheBiggest) {
+
+        Comparator<AppEntry> cacheSort = (a, b) -> {
+            long ca = a.cacheBytes;
+            long cb = b.cacheBytes;
+
+            if (ca < 0 && cb < 0) return alphaCompare(a, b);
+            if (ca < 0) return 1;
+            if (cb < 0) return -1;
+
+            int cmp = Long.compare(cb, ca);
+            if (cmp != 0) return cmp;
+            return alphaCompare(a, b);
+        };
+
+        Collections.sort(users, cacheSort);
+        Collections.sort(systems, cacheSort);
+
+    } else {
+
+        Collections.sort(users, this::alphaCompare);
+        Collections.sort(systems, this::alphaCompare);
+    }
+
+    // Merge: User first, then System
+    visible.addAll(users);
+    visible.addAll(systems);
+
+    runOnUiThread(() -> adapter.notifyDataSetChanged());
+}
 
     private int alphaCompare(AppEntry a, AppEntry b) {
         String la = (a == null || a.label == null) ? "" : a.label;

@@ -7,7 +7,10 @@
     android:background="@color/gel_bg"
     android:padding="12dp">
 
+    <!-- ========================================================= -->
     <!-- 🔍 SEARCH BAR -->
+    <!-- ========================================================= -->
+
     <EditText
         android:id="@+id/searchBar"
         android:layout_width="match_parent"
@@ -22,12 +25,14 @@
         android:imeOptions="actionDone"
         android:layout_marginBottom="10dp"/>
 
+    <!-- ========================================================= -->
     <!-- 📊 SORT CONTROLS -->
+    <!-- ========================================================= -->
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:gravity="center_vertical"
         android:layout_marginBottom="8dp">
 
         <Button
@@ -52,15 +57,42 @@
             android:textColor="@color/gel_text_primary"/>
     </LinearLayout>
 
-    <CheckBox
-        android:id="@+id/checkSelectAll"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Select all visible"
-        android:textColor="@color/gel_text_primary"
-        android:layout_marginBottom="6dp"/>
+    <!-- ========================================================= -->
+    <!-- 🎯 CATEGORY SELECT CONTROLS -->
+    <!-- ========================================================= -->
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="8dp">
+
+        <Button
+            android:id="@+id/btnSelectUsers"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:text="Select USERS"
+            android:textAllCaps="false"
+            android:backgroundTint="#39FF14"
+            android:textColor="@android:color/black"/>
+
+        <Button
+            android:id="@+id/btnSelectSystem"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:text="Select SYSTEM"
+            android:textAllCaps="false"
+            android:layout_marginStart="6dp"
+            android:backgroundTint="#FF9800"
+            android:textColor="@android:color/black"/>
+    </LinearLayout>
+
+    <!-- ========================================================= -->
     <!-- 📂 APP LIST -->
+    <!-- ========================================================= -->
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/listApps"
         android:layout_width="match_parent"
@@ -68,7 +100,10 @@
         android:layout_weight="1"
         android:scrollbars="vertical"/>
 
+    <!-- ========================================================= -->
     <!-- ⚡ GUIDED MODE BUTTON -->
+    <!-- ========================================================= -->
+
     <Button
         android:id="@+id/btnGuidedClean"
         android:layout_width="match_parent"

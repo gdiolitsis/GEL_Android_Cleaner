@@ -234,24 +234,27 @@ if (checkAll != null) {
     }
 
     // ============================================================
-    // FILTER + SORT
+    // APPLY FILTER + SORT
     // ============================================================
 
-    private void applyFiltersAndSort() {
+private void applyFiltersAndSort() {
 
-        visible.clear();
+    new Thread(() -> {
 
+        ArrayList<AppEntry> tempVisible = new ArrayList<>();
         ArrayList<AppEntry> users = new ArrayList<>();
         ArrayList<AppEntry> systems = new ArrayList<>();
 
         for (AppEntry e : allApps) {
 
+            if (e == null) continue;
+
             if (!TextUtils.isEmpty(search)) {
                 String s = search.toLowerCase(Locale.US);
                 String name = e.label == null ? "" : e.label.toLowerCase(Locale.US);
-String pkg  = e.pkg == null ? "" : e.pkg.toLowerCase(Locale.US);
+                String pkg  = e.pkg == null ? "" : e.pkg.toLowerCase(Locale.US);
 
-if (!name.contains(s) && !pkg.contains(s)) continue;
+                if (!name.contains(s) && !pkg.contains(s)) continue;
             }
 
             if (e.isSystem) systems.add(e);
@@ -262,62 +265,85 @@ if (!name.contains(s) && !pkg.contains(s)) continue;
 
         if (sortByCacheBiggest) {
 
-    comparator = (a, b) -> {
+            comparator = (a, b) -> {
 
-        long ca = a.cacheBytes;
-        long cb = b.cacheBytes;
+                long ca = a.cacheBytes;
+                long cb = b.cacheBytes;
 
-        if (ca < 0 && cb < 0) return alphaCompare(a, b);
-        if (ca < 0) return 1;   // unknown last
-        if (cb < 0) return -1;  // unknown last
+                if (ca < 0 && cb < 0) return alphaCompare(a, b);
+                if (ca < 0) return 1;   // unknown last
+                if (cb < 0) return -1;  // unknown last
 
-        int cmp = Long.compare(cb, ca); // biggest first
-        return (cmp != 0) ? cmp : alphaCompare(a, b);
-    };
+                int cmp = Long.compare(cb, ca); // biggest first
+                return (cmp != 0) ? cmp : alphaCompare(a, b);
+            };
 
-} else {
-    comparator = this::alphaCompare;
-}
+        } else {
+            comparator = this::alphaCompare;
+        }
 
         Collections.sort(users, comparator);
         Collections.sort(systems, comparator);
 
+        // ================= USER SECTION =================
         if (!users.isEmpty()) {
 
-            AppEntry header = new AppEntry();
-            header.isHeader = true;
-            header.isUserHeader = true;
-            header.headerTitle = userExpanded
+            AppEntry userHeader = new AppEntry();
+            userHeader.isHeader = true;
+            userHeader.isUserHeader = true;
+            userHeader.headerTitle = userExpanded
                     ? "📱 USER APPS (tap to collapse)"
                     : "📱 USER APPS (tap to expand)";
 
-            visible.add(header);
+            tempVisible.add(userHeader);
 
-            if (userExpanded) visible.addAll(users);
+            if (userExpanded) {
+                tempVisible.addAll(users);
+            }
         }
 
+        // ================= SYSTEM SECTION =================
         if (!systems.isEmpty()) {
 
-            AppEntry header = new AppEntry();
-            header.isHeader = true;
-            header.isSystemHeader = true;
-            header.headerTitle = systemExpanded
+            AppEntry systemHeader = new AppEntry();
+            systemHeader.isHeader = true;
+            systemHeader.isSystemHeader = true;
+            systemHeader.headerTitle = systemExpanded
                     ? "⚙ SYSTEM APPS (tap to collapse)"
                     : "⚙ SYSTEM APPS (tap to expand)";
 
-            visible.add(header);
+            tempVisible.add(systemHeader);
 
-            if (systemExpanded) visible.addAll(systems);
+            if (systemExpanded) {
+                tempVisible.addAll(systems);
+            }
         }
 
-        runOnUiThread(() -> adapter.notifyDataSetChanged());
-    }
+        runOnUiThread(() -> {
+            visible.clear();
+            visible.addAll(tempVisible);
+            adapter.notifyDataSetChanged();
+        });
 
-    private int alphaCompare(AppEntry a, AppEntry b) {
-        Collator c = Collator.getInstance(Locale.getDefault());
-        c.setStrength(Collator.PRIMARY);
-        return c.compare(a.label, b.label);
-    }
+    }).start();
+}
+
+private int alphaCompare(AppEntry a, AppEntry b) {
+
+    String la = (a == null || a.label == null) ? "" : a.label;
+    String lb = (b == null || b.label == null) ? "" : b.label;
+
+    Collator c = Collator.getInstance(Locale.getDefault());
+    c.setStrength(Collator.PRIMARY);
+
+    int cmp = c.compare(la, lb);
+    if (cmp != 0) return cmp;
+
+    String pa = (a == null || a.pkg == null) ? "" : a.pkg;
+    String pb = (b == null || b.pkg == null) ? "" : b.pkg;
+
+    return pa.compareToIgnoreCase(pb);
+}
 
     // ============================================================
     // GUIDED MODE

@@ -80,6 +80,19 @@ public class AppListAdapter extends BaseAdapter {
                         View convertView,
                         ViewGroup parent) {
 
+       AppListActivity.AppEntry e = data.get(position);
+if (e == null) return convertView;
+
+if (e.isHeader) {
+    TextView header = new TextView(ctx);
+    header.setText(e.headerTitle);
+    header.setTextSize(15f);
+    header.setPadding(24,16,24,16);
+    header.setTextColor(0xFFFFD700);
+    header.setBackgroundColor(0xFF1A1A1A);
+    return header;
+}
+        
         Holder h;
 
         if (convertView == null) {

@@ -1,5 +1,5 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// RecyclerView AppListAdapter — STABLE SAFE BUILD
+// AppListAdapter — STABLE SAFE BUILD
 
 package com.gel.cleaner;
 

@@ -1,6 +1,5 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// RecyclerView AppListAdapter — FULL GEL EDITION
-// DiffUtil • Smooth Updates • Header Support • Safe
+// RecyclerView AppListAdapter — STABLE SAFE BUILD
 
 package com.gel.cleaner;
 
@@ -11,7 +10,6 @@ import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.AlphaAnimation;
 import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -43,7 +41,7 @@ public class AppListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     }
 
     // ============================================================
-    // PUBLIC UPDATE (DiffUtil)
+    // SUBMIT LIST (DiffUtil)
     // ============================================================
 
     public void submitList(List<AppListActivity.AppEntry> newList) {
@@ -109,7 +107,7 @@ public class AppListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     }
 
     // ============================================================
-    // CREATE
+    // CREATE VIEW
     // ============================================================
 
     @NonNull
@@ -147,7 +145,7 @@ public class AppListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
         AppHolder h = (AppHolder) holder;
 
-        // NAME
+        // LABEL
         h.name.setText(
                 TextUtils.isEmpty(e.label) ? "Unknown" : e.label
         );
@@ -162,7 +160,7 @@ public class AppListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         // PACKAGE
         h.pkg.setText(e.pkg);
 
-        // SYSTEM COLOR
+        // COLOR FOR SYSTEM
         if (e.isSystem) {
             h.name.setTextColor(0xFFFFD700);
         } else {
@@ -177,15 +175,10 @@ public class AppListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         h.select.setOnCheckedChangeListener(null);
         h.select.setChecked(e.selected);
         h.select.setOnCheckedChangeListener((b, checked) -> e.selected = checked);
-
-        // GEL fade animation
-        AlphaAnimation anim = new AlphaAnimation(0f, 1f);
-        anim.setDuration(220);
-        holder.itemView.startAnimation(anim);
     }
 
     // ============================================================
-    // SIZE FORMAT
+    // FORMAT BYTES
     // ============================================================
 
     private String formatBytes(long bytes) {
@@ -234,7 +227,7 @@ public class AppListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             AppListActivity.AppEntry n = newList.get(newPos);
 
             if (o.isHeader && n.isHeader)
-                return o.headerTitle.equals(n.headerTitle);
+                return TextUtils.equals(o.headerTitle, n.headerTitle);
 
             return o.pkg != null && o.pkg.equals(n.pkg);
         }

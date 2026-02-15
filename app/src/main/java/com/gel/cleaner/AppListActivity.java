@@ -1,5 +1,5 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// AppListActivity — FINAL STABLE RecyclerView BUILD
+// AppListActivity — FINAL RecyclerView + Category Select BUILD
 
 package com.gel.cleaner;
 
@@ -19,7 +19,6 @@ import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.widget.Button;
-import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -59,27 +58,15 @@ public class AppListActivity extends GELAutoActivityHook {
         recyclerView = findViewById(R.id.listApps);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        EditText searchBox = findViewById(R.id.searchBar);
-        Button btnSortName = findViewById(R.id.btnSortName);
-        Button btnSortCache = findViewById(R.id.btnSortCache);
-        Button btnGuided = findViewById(R.id.btnGuidedClean);
-        CheckBox checkAll = findViewById(R.id.checkSelectAll);
+        EditText searchBox      = findViewById(R.id.searchBar);
+        Button btnSortName      = findViewById(R.id.btnSortName);
+        Button btnSortCache     = findViewById(R.id.btnSortCache);
+        Button btnGuided        = findViewById(R.id.btnGuidedClean);
+        Button btnSelectUsers   = findViewById(R.id.btnSelectUsers);
+        Button btnSelectSystem  = findViewById(R.id.btnSelectSystem);
 
         adapter = new AppListAdapter(this);
         recyclerView.setAdapter(adapter);
-
-        // ================= SELECT ALL =================
-        if (checkAll != null) {
-            checkAll.setOnCheckedChangeListener((b, checked) -> {
-
-                for (AppEntry e : visible) {
-                    if (e == null || e.isHeader) continue;
-                    e.selected = checked;
-                }
-
-                adapter.submitList(new ArrayList<>(visible));
-            });
-        }
 
         // ================= SEARCH =================
         if (searchBox != null) {
@@ -106,6 +93,30 @@ public class AppListActivity extends GELAutoActivityHook {
             btnSortCache.setOnClickListener(v -> {
                 sortByCacheBiggest = true;
                 applyFiltersAndSort();
+            });
+        }
+
+        // ================= SELECT USERS =================
+        if (btnSelectUsers != null) {
+            btnSelectUsers.setOnClickListener(v -> {
+                for (AppEntry e : visible) {
+                    if (!e.isHeader && !e.isSystem) {
+                        e.selected = true;
+                    }
+                }
+                adapter.submitList(new ArrayList<>(visible));
+            });
+        }
+
+        // ================= SELECT SYSTEM =================
+        if (btnSelectSystem != null) {
+            btnSelectSystem.setOnClickListener(v -> {
+                for (AppEntry e : visible) {
+                    if (!e.isHeader && e.isSystem) {
+                        e.selected = true;
+                    }
+                }
+                adapter.submitList(new ArrayList<>(visible));
             });
         }
 
@@ -176,7 +187,6 @@ public class AppListActivity extends GELAutoActivityHook {
     }
 
     private boolean hasUsageAccess() {
-
         try {
             AppOpsManager appOps =
                     (AppOpsManager) getSystemService(Context.APP_OPS_SERVICE);
@@ -290,7 +300,9 @@ public class AppListActivity extends GELAutoActivityHook {
         guidedIndex = 0;
 
         for (AppEntry e : visible) {
-            if (!e.isHeader && e.selected) guidedQueue.add(e.pkg);
+            if (!e.isHeader && e.selected) {
+                guidedQueue.add(e.pkg);
+            }
         }
 
         if (guidedQueue.isEmpty()) {

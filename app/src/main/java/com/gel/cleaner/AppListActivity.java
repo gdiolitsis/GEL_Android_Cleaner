@@ -48,8 +48,7 @@ public class AppListActivity extends GELAutoActivityHook implements GELFoldableC
     // DATA
     private final ArrayList<AppEntry> allApps = new ArrayList<>();
     private final ArrayList<AppEntry> visible = new ArrayList<>();
-    private AppListAdapterSafe adapter;
-
+    private AppListAdapter adapter;
     // FILTERS
     private boolean showUser = true;
     private boolean showSystem = true;

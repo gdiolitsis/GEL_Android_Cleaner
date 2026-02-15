@@ -1,25 +1,38 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// AppListActivity — Foldable-ready + GELAutoScaling + DarkGold UI (FIXED v3.0)
-// NOTE: Full compile-safe patch — no dispatchMode() usage.
+// AppListActivity — All Installed Apps + User/System + Alpha Sort + Guided Batch Settings (SAFE)
 
 package com.gel.cleaner;
 
 import com.gel.cleaner.base.*;
 
+import android.app.AppOpsManager;
+import android.app.usage.StorageStats;
+import android.app.usage.StorageStatsManager;
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
+import android.graphics.Color;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Process;
+import android.provider.Settings;
+import android.text.TextUtils;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import java.util.List;
+import java.text.Collator;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Locale;
 
-public class AppListActivity extends GELAutoActivityHook
-        implements GELFoldableCallback {
+public class AppListActivity extends GELAutoActivityHook implements GELFoldableCallback {
 
     private ListView list;
 
@@ -29,52 +42,70 @@ public class AppListActivity extends GELAutoActivityHook
     private GELFoldableAnimationPack animPack;
     private DualPaneManager dualPane;
 
+    // DATA
+    private final ArrayList<AppEntry> allApps = new ArrayList<>();
+    private final ArrayList<AppEntry> visible = new ArrayList<>();
+    private AppListAdapterSafe adapter;
+
+    // FILTERS
+    private boolean showUser = true;
+    private boolean showSystem = true;
+    private String search = "";
+    private boolean sortByCacheBiggest = false;
+
+    // GUIDED MODE
+    private boolean guidedActive = false;
+    private final ArrayList<String> guidedQueue = new ArrayList<>();
+    private int guidedIndex = 0;
+    private String guidedCurrentPkg = null;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_app_cache);
 
-        // NORMAL UI
         list = findViewById(R.id.listApps);
 
-        Intent i = new Intent(Intent.ACTION_MAIN, null);
-        i.addCategory(Intent.CATEGORY_LAUNCHER);
+        adapter = new AppListAdapterSafe(this, visible);
+        list.setAdapter(adapter);
 
-        PackageManager pm = getPackageManager();
-        List<ResolveInfo> apps = pm.queryIntentActivities(i, 0);
-
-apps.sort((a, b) -> {
-    CharSequence l1 = a.loadLabel(pm);
-    CharSequence l2 = b.loadLabel(pm);
-    if (l1 == null) return -1;
-    if (l2 == null) return 1;
-    return l1.toString().compareToIgnoreCase(l2.toString());
-});
-            
-        AppListAdapter ad = new AppListAdapter(this, apps);
-        list.setAdapter(ad);
-
-        list.setOnItemClickListener((AdapterView<?> parent, android.view.View view,
-                                     int position, long id) -> {
-            ResolveInfo info = apps.get(position);
-            if (info != null && info.activityInfo != null) {
-                openAppDetails(info.activityInfo.packageName);
-            }
+        // Tap: open settings (normal mode)
+        list.setOnItemClickListener((AdapterView<?> parent, android.view.View view, int position, long id) -> {
+            if (position < 0 || position >= visible.size()) return;
+            AppEntry e = visible.get(position);
+            if (e == null) return;
+            openAppDetails(e.pkg);
         });
 
-        // ============================================================
+        // Long tap: toggle selection (multi-select)
+        list.setOnItemLongClickListener((parent, view, position, id) -> {
+            if (position < 0 || position >= visible.size()) return true;
+            AppEntry e = visible.get(position);
+            if (e == null) return true;
+            e.selected = !e.selected;
+            adapter.notifyDataSetChanged();
+            return true;
+        });
+
         // INIT FOLDABLE ENGINE (SAFE)
-        // ============================================================
         uiManager    = new GELFoldableUIManager(this);
         animPack     = new GELFoldableAnimationPack(this);
         dualPane     = new DualPaneManager(this);
         foldDetector = new GELFoldableDetector(this, this);
+
+        // LOAD
+        new Thread(this::loadAllApps).start();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         if (foldDetector != null) foldDetector.start();
+
+        // GUIDED: when user returns from Settings -> go next
+        if (guidedActive) {
+            advanceGuidedIfNeeded();
+        }
     }
 
     @Override
@@ -88,7 +119,6 @@ apps.sort((a, b) -> {
     // ============================================================
     @Override
     public void onPostureChanged(@NonNull Posture posture) {
-
         final boolean isInner =
                 (posture == Posture.FLAT ||
                  posture == Posture.TABLE_MODE ||
@@ -107,7 +137,6 @@ apps.sort((a, b) -> {
 
     @Override
     public void onScreenChanged(boolean isInner) {
-
         if (animPack != null) {
             animPack.animateReflow(() -> {
                 if (uiManager != null) uiManager.applyUI(isInner);
@@ -120,14 +149,247 @@ apps.sort((a, b) -> {
     }
 
     // ============================================================
+    // LOAD APPS (ALL INSTALLED)
+    // ============================================================
+    private void loadAllApps() {
+        try {
+            PackageManager pm = getPackageManager();
+            ArrayList<ApplicationInfo> apps = new ArrayList<>(pm.getInstalledApplications(PackageManager.GET_META_DATA));
+
+            allApps.clear();
+
+            for (ApplicationInfo ai : apps) {
+                if (ai == null) continue;
+
+                // Exclude ourselves? (optional)
+                if (getPackageName().equals(ai.packageName)) {
+                    // keep it if you want, but usually hide
+                    // continue;
+                }
+
+                AppEntry e = new AppEntry();
+                e.pkg = ai.packageName;
+                e.isSystem = (ai.flags & ApplicationInfo.FLAG_SYSTEM) != 0;
+                e.label = String.valueOf(pm.getApplicationLabel(ai));
+                e.ai = ai;
+
+                // sizes (best effort)
+                fillSizesBestEffort(e);
+
+                allApps.add(e);
+            }
+
+            applyFiltersAndSort();
+
+        } catch (Throwable t) {
+            runOnUiThread(() ->
+                    Toast.makeText(this, "Failed to load apps", Toast.LENGTH_SHORT).show()
+            );
+        }
+    }
+
+    // ============================================================
+    // SIZES (StorageStatsManager on API 26+ with Usage Access)
+    // ============================================================
+    private void fillSizesBestEffort(AppEntry e) {
+        e.appBytes = -1;
+        e.cacheBytes = -1;
+
+        if (e == null || TextUtils.isEmpty(e.pkg)) return;
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            // Old devices: keep unknown (production-safe, no hidden APIs)
+            return;
+        }
+
+        if (!hasUsageAccess()) {
+            return;
+        }
+
+        try {
+            StorageStatsManager ssm = (StorageStatsManager) getSystemService(Context.STORAGE_STATS_SERVICE);
+            if (ssm == null) return;
+
+            StorageStats st = ssm.queryStatsForPackage(
+                    android.os.storage.StorageManager.UUID_DEFAULT,
+                    e.pkg,
+                    android.os.UserHandle.getUserHandleForUid(Process.myUid())
+            );
+
+            if (st != null) {
+                e.appBytes = st.getAppBytes();
+                e.cacheBytes = st.getCacheBytes();
+            }
+        } catch (Throwable ignore) {}
+    }
+
+    private boolean hasUsageAccess() {
+        try {
+            AppOpsManager appOps = (AppOpsManager) getSystemService(Context.APP_OPS_SERVICE);
+            if (appOps == null) return false;
+
+            int mode = appOps.checkOpNoThrow(
+                    AppOpsManager.OPSTR_GET_USAGE_STATS,
+                    Process.myUid(),
+                    getPackageName()
+            );
+            return mode == AppOpsManager.MODE_ALLOWED;
+        } catch (Throwable t) {
+            return false;
+        }
+    }
+
+    // Call this from a button later (Guided UI)
+    private void requestUsageAccess() {
+        try {
+            Intent intent = new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS);
+            startActivity(intent);
+        } catch (Throwable ignore) {}
+    }
+
+    // ============================================================
+    // FILTER + SORT
+    // ============================================================
+    private void applyFiltersAndSort() {
+        visible.clear();
+
+        for (AppEntry e : allApps) {
+            if (e == null) continue;
+
+            if (e.isSystem && !showSystem) continue;
+            if (!e.isSystem && !showUser) continue;
+
+            if (!TextUtils.isEmpty(search)) {
+                String s = search.toLowerCase(Locale.US);
+                String name = (e.label == null ? "" : e.label.toLowerCase(Locale.US));
+                String pkg = (e.pkg == null ? "" : e.pkg.toLowerCase(Locale.US));
+                if (!name.contains(s) && !pkg.contains(s)) continue;
+            }
+
+            visible.add(e);
+        }
+
+        // sort
+        if (sortByCacheBiggest) {
+            Collections.sort(visible, (a, b) -> {
+                long ca = a == null ? -1 : a.cacheBytes;
+                long cb = b == null ? -1 : b.cacheBytes;
+                // unknown last
+                if (ca < 0 && cb < 0) return alphaCompare(a, b);
+                if (ca < 0) return 1;
+                if (cb < 0) return -1;
+                int cmp = Long.compare(cb, ca); // desc
+                if (cmp != 0) return cmp;
+                return alphaCompare(a, b);
+            });
+        } else {
+            Collections.sort(visible, this::alphaCompare);
+        }
+
+        runOnUiThread(() -> {
+            adapter.notifyDataSetChanged();
+        });
+    }
+
+    private int alphaCompare(AppEntry a, AppEntry b) {
+        String la = (a == null || a.label == null) ? "" : a.label;
+        String lb = (b == null || b.label == null) ? "" : b.label;
+
+        Collator c = Collator.getInstance(Locale.getDefault());
+        c.setStrength(Collator.PRIMARY);
+
+        int cmp = c.compare(la, lb);
+        if (cmp != 0) return cmp;
+
+        String pa = (a == null || a.pkg == null) ? "" : a.pkg;
+        String pb = (b == null || b.pkg == null) ? "" : b.pkg;
+        return pa.compareToIgnoreCase(pb);
+    }
+
+    // ============================================================
+    // GUIDED BATCH MODE (SAFE)
+    // ============================================================
+    private void startGuidedFromSelected() {
+        guidedQueue.clear();
+        guidedIndex = 0;
+        guidedCurrentPkg = null;
+
+        for (AppEntry e : visible) {
+            if (e != null && e.selected && !TextUtils.isEmpty(e.pkg)) {
+                guidedQueue.add(e.pkg);
+            }
+        }
+
+        if (guidedQueue.isEmpty()) {
+            Toast.makeText(this, "No apps selected", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        guidedActive = true;
+        openNextGuided();
+    }
+
+    private void stopGuided() {
+        guidedActive = false;
+        guidedQueue.clear();
+        guidedIndex = 0;
+        guidedCurrentPkg = null;
+    }
+
+    private void skipCurrentGuided() {
+        if (!guidedActive) return;
+        guidedIndex++;
+        openNextGuided();
+    }
+
+    private void advanceGuidedIfNeeded() {
+        // We returned from Settings -> go next
+        // (No need to detect if cache cleared; user is the judge.)
+        if (!guidedActive) return;
+
+        // If we have a current, advance to next
+        if (guidedCurrentPkg != null) {
+            guidedIndex++;
+            openNextGuided();
+        }
+    }
+
+    private void openNextGuided() {
+        if (!guidedActive) return;
+
+        if (guidedIndex < 0) guidedIndex = 0;
+
+        if (guidedIndex >= guidedQueue.size()) {
+            stopGuided();
+            Toast.makeText(this, "Guided batch finished", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        guidedCurrentPkg = guidedQueue.get(guidedIndex);
+        openAppDetails(guidedCurrentPkg);
+    }
+
+    // ============================================================
     // OPEN APP SETTINGS
     // ============================================================
     private void openAppDetails(String pkg) {
         try {
-            Intent intent =
-                    new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-            intent.setData(android.net.Uri.parse("package:" + pkg));
+            Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+            intent.setData(Uri.parse("package:" + pkg));
             startActivity(intent);
-        } catch (Exception ignored) {}
+        } catch (Throwable ignored) {}
+    }
+
+    // ============================================================
+    // MODEL
+    // ============================================================
+    static class AppEntry {
+        String pkg;
+        String label;
+        boolean isSystem;
+        boolean selected;
+        long appBytes;   // -1 unknown
+        long cacheBytes; // -1 unknown
+        ApplicationInfo ai;
     }
 }

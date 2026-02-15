@@ -4,24 +4,30 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
-    android:padding="10dp"
+    android:paddingStart="12dp"
+    android:paddingEnd="12dp"
+    android:paddingTop="10dp"
+    android:paddingBottom="10dp"
     android:gravity="center_vertical"
-    android:background="@color/gel_bg">
+    android:background="@color/gel_bg"
+    android:clickable="true"
+    android:focusable="true">
 
     <!-- MULTI SELECT -->
     <CheckBox
         android:id="@+id/appCheck"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="8dp"
+        android:layout_marginEnd="10dp"
         android:buttonTint="#FFD700" />
 
     <!-- ICON -->
     <ImageView
         android:id="@+id/appIcon"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:layout_marginEnd="12dp" />
+        android:layout_width="46dp"
+        android:layout_height="46dp"
+        android:layout_marginEnd="12dp"
+        android:scaleType="centerCrop" />
 
     <!-- TEXT COLUMN -->
     <LinearLayout
@@ -35,17 +41,21 @@
             android:id="@+id/appLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="16sp"
+            android:textSize="15sp"
             android:textStyle="bold"
-            android:textColor="@color/gel_text_primary" />
+            android:textColor="@color/gel_text_primary"
+            android:maxLines="1"
+            android:ellipsize="end" />
 
         <!-- PACKAGE -->
         <TextView
             android:id="@+id/appPackage"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="12sp"
-            android:textColor="@color/gel_text_secondary" />
+            android:textSize="11sp"
+            android:textColor="@color/gel_text_secondary"
+            android:maxLines="1"
+            android:ellipsize="end" />
 
         <!-- APP SIZE -->
         <TextView
@@ -54,7 +64,7 @@
             android:layout_height="wrap_content"
             android:textSize="12sp"
             android:textColor="#39FF14"
-            android:paddingTop="2dp" />
+            android:paddingTop="3dp" />
 
         <!-- CACHE SIZE -->
         <TextView

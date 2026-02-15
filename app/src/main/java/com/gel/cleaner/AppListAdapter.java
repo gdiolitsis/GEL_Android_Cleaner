@@ -21,7 +21,7 @@ import android.widget.TextView;
 import java.text.DecimalFormat;
 import java.util.List;
 
-public class AppListAdapterSafe extends BaseAdapter {
+public class AppListAdapter extends BaseAdapter {
 
     private final Context ctx;
     private final List<AppListActivity.AppEntry> data;

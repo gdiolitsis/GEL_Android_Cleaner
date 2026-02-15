@@ -7,9 +7,7 @@
     android:background="@color/gel_bg"
     android:padding="12dp">
 
-    <!-- ============================================================
-         🔍 SEARCH BAR
-         ============================================================ -->
+    <!-- 🔍 SEARCH BAR -->
     <EditText
         android:id="@+id/searchBar"
         android:layout_width="match_parent"
@@ -24,9 +22,7 @@
         android:imeOptions="actionDone"
         android:layout_marginBottom="10dp"/>
 
-    <!-- ============================================================
-         📊 SORT CONTROLS
-         ============================================================ -->
+    <!-- 📊 SORT CONTROLS -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -57,31 +53,22 @@
     </LinearLayout>
 
     <CheckBox
-    android:id="@+id/checkSelectAll"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:text="Select all visible"
-    android:textColor="@color/gel_text_primary"
-    android:layout_marginBottom="6dp"/>
+        android:id="@+id/checkSelectAll"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Select all visible"
+        android:textColor="@color/gel_text_primary"
+        android:layout_marginBottom="6dp"/>
 
-    <!-- ============================================================
-         📂 APP LIST
-         ============================================================ -->
+    <!-- 📂 APP LIST -->
     <androidx.recyclerview.widget.RecyclerView
-    android:id="@+id/listApps"
-    android:layout_width="match_parent"
-    android:layout_height="0dp"
-    android:layout_weight="1"/>
+        android:id="@+id/listApps"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:divider="#333333"
-        android:dividerHeight="1dp"
         android:scrollbars="vertical"/>
 
-    <!-- ============================================================
-         ⚡ GUIDED MODE BUTTON
-         ============================================================ -->
+    <!-- ⚡ GUIDED MODE BUTTON -->
     <Button
         android:id="@+id/btnGuidedClean"
         android:layout_width="match_parent"

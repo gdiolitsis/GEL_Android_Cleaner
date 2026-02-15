@@ -1,5 +1,5 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// AppListActivity — FINAL SAFE BUILD
+// AppListActivity — FINAL STABLE SAFE BUILD (Thread-safe + No UI freeze)
 
 package com.gel.cleaner;
 
@@ -52,7 +52,6 @@ public class AppListActivity extends GELAutoActivityHook {
     private boolean guidedActive = false;
     private final ArrayList<String> guidedQueue = new ArrayList<>();
     private int guidedIndex = 0;
-    private String guidedCurrentPkg = null;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -64,27 +63,23 @@ public class AppListActivity extends GELAutoActivityHook {
         Button btnSortName = findViewById(R.id.btnSortName);
         Button btnSortCache = findViewById(R.id.btnSortCache);
         Button btnGuided = findViewById(R.id.btnGuidedClean);
+        CheckBox checkAll = findViewById(R.id.checkSelectAll);
 
         adapter = new AppListAdapter(this, visible);
         list.setAdapter(adapter);
 
-        CheckBox checkAll = findViewById(R.id.checkSelectAll);
+        // ================= SELECT ALL =================
+        if (checkAll != null) {
+            checkAll.setOnCheckedChangeListener((b, checked) -> {
 
-if (checkAll != null) {
+                for (AppEntry e : visible) {
+                    if (e == null || e.isHeader) continue;
+                    e.selected = checked;
+                }
 
-    checkAll.setOnCheckedChangeListener((buttonView, isChecked) -> {
-
-        for (AppEntry e : visible) {
-
-            if (e == null) continue;
-            if (e.isHeader) continue;
-
-            e.selected = isChecked;
+                adapter.notifyDataSetChanged();
+            });
         }
-
-        adapter.notifyDataSetChanged();
-    });
-}
 
         // ================= SEARCH =================
         if (searchBox != null) {
@@ -114,7 +109,7 @@ if (checkAll != null) {
             });
         }
 
-        // ================= GUIDED BUTTON =================
+        // ================= GUIDED =================
         if (btnGuided != null) {
             btnGuided.setOnClickListener(v -> startGuidedFromSelected());
         }
@@ -179,7 +174,6 @@ if (checkAll != null) {
             e.ai = ai;
 
             fillSizesBestEffort(e);
-
             allApps.add(e);
         }
 
@@ -234,116 +228,107 @@ if (checkAll != null) {
     }
 
     // ============================================================
-    // APPLY FILTER + SORT
+    // APPLY FILTER + SORT (SAFE THREAD)
     // ============================================================
 
-private void applyFiltersAndSort() {
+    private void applyFiltersAndSort() {
 
-    new Thread(() -> {
+        new Thread(() -> {
 
-        ArrayList<AppEntry> tempVisible = new ArrayList<>();
-        ArrayList<AppEntry> users = new ArrayList<>();
-        ArrayList<AppEntry> systems = new ArrayList<>();
+            ArrayList<AppEntry> temp = new ArrayList<>();
+            ArrayList<AppEntry> users = new ArrayList<>();
+            ArrayList<AppEntry> systems = new ArrayList<>();
 
-        for (AppEntry e : allApps) {
+            for (AppEntry e : allApps) {
 
-            if (e == null) continue;
+                if (e == null) continue;
 
-            if (!TextUtils.isEmpty(search)) {
-                String s = search.toLowerCase(Locale.US);
-                String name = e.label == null ? "" : e.label.toLowerCase(Locale.US);
-                String pkg  = e.pkg == null ? "" : e.pkg.toLowerCase(Locale.US);
+                if (!TextUtils.isEmpty(search)) {
+                    String s = search.toLowerCase(Locale.US);
+                    String name = e.label == null ? "" : e.label.toLowerCase(Locale.US);
+                    String pkg  = e.pkg == null ? "" : e.pkg.toLowerCase(Locale.US);
+                    if (!name.contains(s) && !pkg.contains(s)) continue;
+                }
 
-                if (!name.contains(s) && !pkg.contains(s)) continue;
+                if (e.isSystem) systems.add(e);
+                else users.add(e);
             }
 
-            if (e.isSystem) systems.add(e);
-            else users.add(e);
-        }
+            Comparator<AppEntry> comparator;
 
-        Comparator<AppEntry> comparator;
+            if (sortByCacheBiggest) {
 
-        if (sortByCacheBiggest) {
+                comparator = (a, b) -> {
 
-            comparator = (a, b) -> {
+                    long ca = a.cacheBytes;
+                    long cb = b.cacheBytes;
 
-                long ca = a.cacheBytes;
-                long cb = b.cacheBytes;
+                    if (ca < 0 && cb < 0) return alphaCompare(a,b);
+                    if (ca < 0) return 1;
+                    if (cb < 0) return -1;
 
-                if (ca < 0 && cb < 0) return alphaCompare(a, b);
-                if (ca < 0) return 1;   // unknown last
-                if (cb < 0) return -1;  // unknown last
+                    int cmp = Long.compare(cb, ca);
+                    return (cmp != 0) ? cmp : alphaCompare(a,b);
+                };
 
-                int cmp = Long.compare(cb, ca); // biggest first
-                return (cmp != 0) ? cmp : alphaCompare(a, b);
-            };
-
-        } else {
-            comparator = this::alphaCompare;
-        }
-
-        Collections.sort(users, comparator);
-        Collections.sort(systems, comparator);
-
-        // ================= USER SECTION =================
-        if (!users.isEmpty()) {
-
-            AppEntry userHeader = new AppEntry();
-            userHeader.isHeader = true;
-            userHeader.isUserHeader = true;
-            userHeader.headerTitle = userExpanded
-                    ? "📱 USER APPS (tap to collapse)"
-                    : "📱 USER APPS (tap to expand)";
-
-            tempVisible.add(userHeader);
-
-            if (userExpanded) {
-                tempVisible.addAll(users);
+            } else {
+                comparator = this::alphaCompare;
             }
-        }
 
-        // ================= SYSTEM SECTION =================
-        if (!systems.isEmpty()) {
+            Collections.sort(users, comparator);
+            Collections.sort(systems, comparator);
 
-            AppEntry systemHeader = new AppEntry();
-            systemHeader.isHeader = true;
-            systemHeader.isSystemHeader = true;
-            systemHeader.headerTitle = systemExpanded
-                    ? "⚙ SYSTEM APPS (tap to collapse)"
-                    : "⚙ SYSTEM APPS (tap to expand)";
+            if (!users.isEmpty()) {
 
-            tempVisible.add(systemHeader);
+                AppEntry h = new AppEntry();
+                h.isHeader = true;
+                h.isUserHeader = true;
+                h.headerTitle = userExpanded
+                        ? "📱 USER APPS (tap to collapse)"
+                        : "📱 USER APPS (tap to expand)";
+                temp.add(h);
 
-            if (systemExpanded) {
-                tempVisible.addAll(systems);
+                if (userExpanded) temp.addAll(users);
             }
-        }
 
-        runOnUiThread(() -> {
-            visible.clear();
-            visible.addAll(tempVisible);
-            adapter.notifyDataSetChanged();
-        });
+            if (!systems.isEmpty()) {
 
-    }).start();
-}
+                AppEntry h = new AppEntry();
+                h.isHeader = true;
+                h.isSystemHeader = true;
+                h.headerTitle = systemExpanded
+                        ? "⚙ SYSTEM APPS (tap to collapse)"
+                        : "⚙ SYSTEM APPS (tap to expand)";
+                temp.add(h);
 
-private int alphaCompare(AppEntry a, AppEntry b) {
+                if (systemExpanded) temp.addAll(systems);
+            }
 
-    String la = (a == null || a.label == null) ? "" : a.label;
-    String lb = (b == null || b.label == null) ? "" : b.label;
+            runOnUiThread(() -> {
+                visible.clear();
+                visible.addAll(temp);
+                adapter.notifyDataSetChanged();
+            });
 
-    Collator c = Collator.getInstance(Locale.getDefault());
-    c.setStrength(Collator.PRIMARY);
+        }).start();
+    }
 
-    int cmp = c.compare(la, lb);
-    if (cmp != 0) return cmp;
+    private int alphaCompare(AppEntry a, AppEntry b) {
 
-    String pa = (a == null || a.pkg == null) ? "" : a.pkg;
-    String pb = (b == null || b.pkg == null) ? "" : b.pkg;
+        String la = (a == null || a.label == null) ? "" : a.label;
+        String lb = (b == null || b.label == null) ? "" : b.label;
 
-    return pa.compareToIgnoreCase(pb);
-}
+        Collator c = Collator.getInstance(Locale.getDefault());
+        c.setStrength(Collator.PRIMARY);
+
+        int cmp = c.compare(la, lb);
+        if (cmp != 0) return cmp;
+
+        String pa = (a == null || a.pkg == null) ? "" : a.pkg;
+        String pb = (b == null || b.pkg == null) ? "" : b.pkg;
+
+        return pa.compareToIgnoreCase(pb);
+    }
 
     // ============================================================
     // GUIDED MODE
@@ -375,8 +360,7 @@ private int alphaCompare(AppEntry a, AppEntry b) {
             return;
         }
 
-        guidedCurrentPkg = guidedQueue.get(guidedIndex);
-        openAppDetails(guidedCurrentPkg);
+        openAppDetails(guidedQueue.get(guidedIndex));
     }
 
     private void advanceGuidedIfNeeded() {

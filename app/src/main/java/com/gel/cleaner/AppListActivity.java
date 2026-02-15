@@ -481,7 +481,10 @@ if (!systems.isEmpty()) {
     long cacheBytes;
     ApplicationInfo ai;
 
+    // HEADER SUPPORT
     boolean isHeader;
+    boolean isUserHeader;
+    boolean isSystemHeader;
     String headerTitle;
 }
 }

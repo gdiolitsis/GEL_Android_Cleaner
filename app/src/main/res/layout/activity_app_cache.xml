@@ -15,7 +15,7 @@
         android:id="@+id/searchBar"
         android:layout_width="match_parent"
         android:layout_height="48dp"
-        android:hint="Search app..."
+        android:hint="@string/search_app"
         android:textColor="@color/gel_text_primary"
         android:textColorHint="@color/gel_text_secondary"
         android:background="@drawable/gel_input_bg"
@@ -26,7 +26,7 @@
         android:layout_marginBottom="10dp"/>
 
     <!-- ========================================================= -->
-    <!-- 📊 SORT CONTROLS -->
+    <!-- 📊 TOP CONTROLS -->
     <!-- ========================================================= -->
 
     <LinearLayout
@@ -36,11 +36,11 @@
         android:layout_marginBottom="8dp">
 
         <Button
-            android:id="@+id/btnSortName"
+            android:id="@+id/btnSelectAll"
             android:layout_width="0dp"
             android:layout_height="42dp"
             android:layout_weight="1"
-            android:text="A–Z"
+            android:text="@string/select_all"
             android:textAllCaps="false"
             android:backgroundTint="#FFD700"
             android:textColor="@color/gel_text_primary"/>
@@ -50,7 +50,7 @@
             android:layout_width="0dp"
             android:layout_height="42dp"
             android:layout_weight="1"
-            android:text="Largest Cache"
+            android:text="@string/largest_cache"
             android:textAllCaps="false"
             android:layout_marginStart="6dp"
             android:backgroundTint="#FFD700"
@@ -58,7 +58,7 @@
     </LinearLayout>
 
     <!-- ========================================================= -->
-    <!-- 🎯 CATEGORY SELECT CONTROLS -->
+    <!-- 🎯 CATEGORY SELECT -->
     <!-- ========================================================= -->
 
     <LinearLayout
@@ -72,7 +72,7 @@
             android:layout_width="0dp"
             android:layout_height="40dp"
             android:layout_weight="1"
-            android:text="Select USERS"
+            android:text="@string/select_users"
             android:textAllCaps="false"
             android:backgroundTint="#39FF14"
             android:textColor="@android:color/black"/>
@@ -82,7 +82,7 @@
             android:layout_width="0dp"
             android:layout_height="40dp"
             android:layout_weight="1"
-            android:text="Select SYSTEM"
+            android:text="@string/select_system"
             android:textAllCaps="false"
             android:layout_marginStart="6dp"
             android:backgroundTint="#FF9800"
@@ -101,14 +101,14 @@
         android:scrollbars="vertical"/>
 
     <!-- ========================================================= -->
-    <!-- ⚡ GUIDED MODE BUTTON -->
+    <!-- ⚡ GUIDED MODE -->
     <!-- ========================================================= -->
 
     <Button
         android:id="@+id/btnGuidedClean"
         android:layout_width="match_parent"
         android:layout_height="48dp"
-        android:text="Start Guided Cache Cleaning"
+        android:text="@string/start_guided_cleaning"
         android:textAllCaps="false"
         android:layout_marginTop="10dp"
         android:backgroundTint="#FFD700"

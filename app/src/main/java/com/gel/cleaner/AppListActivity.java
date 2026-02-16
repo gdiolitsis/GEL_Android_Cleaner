@@ -52,6 +52,11 @@ public class AppListActivity extends GELAutoActivityHook {
 
     private String mode = "cache";
     private boolean isUninstallMode = false;
+    
+private boolean allSelected = false;
+private boolean usersSelected = false;
+private boolean systemSelected = false;
+    
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {

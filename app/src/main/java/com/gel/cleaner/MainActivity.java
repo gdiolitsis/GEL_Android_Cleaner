@@ -100,6 +100,35 @@ protected void onCreate(Bundle savedInstanceState) {
         });
     }
 
+Button btnUninstall = findViewById(R.id.btnAppUninstall);
+
+btnUninstall.setOnClickListener(v -> {
+
+    Intent i = new Intent(this, AppListActivity.class);
+    i.putExtra("mode", "uninstall");
+    startActivity(i);
+
+});
+
+View appManager = findViewById(R.id.btnAppManager);
+
+if (appManager != null) {
+
+    appManager.setOnClickListener(v -> {
+        try {
+
+            Intent i = new Intent(this, AppListActivity.class);
+            i.putExtra("mode", "uninstall");   // 🔴 UNINSTALL MODE
+            startActivity(i);
+
+        } catch (Exception e) {
+            Toast.makeText(this,
+                    "Cannot open App Manager",
+                    Toast.LENGTH_SHORT).show();
+        }
+    });
+}
+
 // =========================================================
 // ENTRY FLOW (FIXED)
 // =========================================================
@@ -1275,15 +1304,20 @@ private void setupButtons() {
             this::showBrowserPicker);
 
     View appCache = findViewById(R.id.btnAppCache);
-    if(appCache!=null){
-        appCache.setOnClickListener(v -> {
-            try {
-                startActivity(new Intent(this, AppListActivity.class));
-            } catch (Exception e) {
-                Toast.makeText(this,"Cannot open App List",Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
+if (appCache != null) {
+
+    appCache.setOnClickListener(v -> {
+        try {
+
+            Intent i = new Intent(this, AppListActivity.class);
+            i.putExtra("mode", "cache");   // 🔵 CACHE MODE
+            startActivity(i);
+
+        } catch (Exception e) {
+            Toast.makeText(this, "Cannot open App List", Toast.LENGTH_SHORT).show();
+        }
+    });
+}
 
     bind(R.id.btnDiagnostics, () -> {
         startActivity(new Intent(

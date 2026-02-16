@@ -604,30 +604,69 @@ for (AppEntry e : snapshot) {
 
     private void showGelDialog(String message) {
 
-        AlertDialog.Builder b = new AlertDialog.Builder(this);
+    AlertDialog.Builder b = new AlertDialog.Builder(this);
 
-        LinearLayout box = new LinearLayout(this);
-        box.setPadding(dp(22), dp(18), dp(22), dp(16));
-        box.setGravity(Gravity.CENTER);
-        box.setOrientation(LinearLayout.VERTICAL);
+    LinearLayout root = new LinearLayout(this);
+    root.setOrientation(LinearLayout.VERTICAL);
+    root.setPadding(dp(22), dp(18), dp(22), dp(16));
 
-        GradientDrawable bg = new GradientDrawable();
-        bg.setColor(0xFF101010);
-        bg.setCornerRadius(dp(18));
-        bg.setStroke(dp(3), 0xFFFFD700);
-        box.setBackground(bg);
+    GradientDrawable bg = new GradientDrawable();
+    bg.setColor(0xFF101010);          // Dark header area
+    bg.setCornerRadius(dp(18));
+    bg.setStroke(dp(3), 0xFFFFD700);  // Gold border
+    root.setBackground(bg);
 
-        TextView tv = new TextView(this);
-        tv.setTextColor(Color.WHITE);
-        tv.setTextSize(15.5f);
-        tv.setText(message);
-        tv.setGravity(Gravity.CENTER);
+    // ===== TITLE =====
+    TextView title = new TextView(this);
+    title.setText(message);
+    title.setTextColor(Color.WHITE);
+    title.setTextSize(17f);
+    title.setTypeface(null, Typeface.BOLD);
+    title.setGravity(Gravity.CENTER);
+    title.setPadding(0, 0, 0, dp(14));
 
-        box.addView(tv);
-        b.setView(box);
-        b.setPositiveButton("OK", (d, w) -> d.dismiss());
-        b.show();
+    root.addView(title);
+
+    // ===== NEON GREEN BODY =====
+    LinearLayout neonBox = new LinearLayout(this);
+    neonBox.setPadding(dp(18), dp(16), dp(18), dp(16));
+    neonBox.setGravity(Gravity.CENTER);
+
+    GradientDrawable neonBg = new GradientDrawable();
+    neonBg.setColor(0xFF39FF14);      // 💚 Neon green
+    neonBg.setCornerRadius(dp(14));
+    neonBg.setStroke(dp(2), 0xFFFFD700);
+
+    neonBox.setBackground(neonBg);
+
+    TextView body = new TextView(this);
+    body.setText(
+            AppLang.isGreek(this)
+                    ? "Η διαδικασία ολοκληρώθηκε επιτυχώς."
+                    : "Operation completed successfully."
+    );
+    body.setTextColor(Color.BLACK);
+    body.setTextSize(15f);
+    body.setGravity(Gravity.CENTER);
+
+    neonBox.addView(body);
+    root.addView(neonBox);
+
+    b.setView(root);
+
+    AlertDialog d = b.create();
+
+    if (d.getWindow() != null) {
+        d.getWindow().setBackgroundDrawable(
+                new ColorDrawable(Color.TRANSPARENT)
+        );
     }
+
+    d.setButton(AlertDialog.BUTTON_POSITIVE, "OK",
+            (dialog, which) -> dialog.dismiss());
+
+    d.show();
+}
 
     // ============================================================
     // MODEL

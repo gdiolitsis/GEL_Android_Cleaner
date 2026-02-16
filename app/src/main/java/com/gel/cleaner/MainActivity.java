@@ -100,15 +100,17 @@ protected void onCreate(Bundle savedInstanceState) {
         });
     }
 
-Button btnUninstall = findViewById(R.id.btnAppUninstall);
+Button btnUninstall = findViewById(R.id.btnAppManager);
 
-btnUninstall.setOnClickListener(v -> {
+if (btnUninstall != null) {
+    btnUninstall.setOnClickListener(v -> {
 
-    Intent i = new Intent(this, AppListActivity.class);
-    i.putExtra("mode", "uninstall");
-    startActivity(i);
+        Intent i = new Intent(this, AppListActivity.class);
+        i.putExtra("mode", "uninstall");
+        startActivity(i);
 
-});
+    });
+}
 
 View appManager = findViewById(R.id.btnAppManager);
 

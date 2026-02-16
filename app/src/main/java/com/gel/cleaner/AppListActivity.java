@@ -213,6 +213,7 @@ updateStartButtonUI();
 
     });
 }
+}
 
 @Override
 protected void onResume() {

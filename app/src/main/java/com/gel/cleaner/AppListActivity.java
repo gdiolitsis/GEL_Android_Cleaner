@@ -49,6 +49,8 @@ public class AppListActivity extends GELAutoActivityHook {
     private TextView txtStatsUsers;
     private TextView txtStatsSystem;
     private TextView txtStatsSelected;
+    
+    private boolean returnedFromUsageScreen = false;
 
     private final ArrayList<AppEntry> allApps = new ArrayList<>();
     private final ArrayList<AppEntry> visible = new ArrayList<>();
@@ -212,15 +214,27 @@ updateStartButtonUI();
     });
 }
 
-        // Initial load
-        new Thread(this::loadAllApps).start();
-    }
-
 @Override
 protected void onResume() {
     super.onResume();
 
-    if (hasUsageAccess()) {
+    // 1️⃣ Αν μόλις γυρίσαμε από Usage screen
+    if (returnedFromUsageScreen) {
+        returnedFromUsageScreen = false;
+
+        if (hasUsageAccess()) {
+            new Thread(this::loadAllApps).start();
+        }
+
+        return; // ⛔ ΜΗΝ συνεχίσεις άλλο
+    }
+
+    // 2️⃣ Κανονική ροή
+    if (!hasUsageAccess()) {
+        return; // ⛔ ΜΗΝ ξαναδείξεις dialog
+    }
+
+    if (allApps.isEmpty()) {
         new Thread(this::loadAllApps).start();
     }
 
@@ -292,11 +306,9 @@ private void showUninstallConfirmDialog() {
 
     if (!hasUsageAccess()) {
         showUsageAccessDialog();
-        return;
+    } else {
+        new Thread(this::loadAllApps).start();
     }
-
-    // Access granted → load apps normally
-    new Thread(this::loadAllApps).start();
 }
 
     private void showUsageAccessDialog() {
@@ -400,28 +412,37 @@ private void updateStartButtonText() {
     // LOAD APPS
     // ============================================================
 
-    private void loadAllApps() {
+    // ============================================================
+// LOAD APPS
+// ============================================================
 
-        PackageManager pm = getPackageManager();
+private void loadAllApps() {
+
+    PackageManager pm = getPackageManager();
+
+    synchronized (this) {
         allApps.clear();
-
-        for (ApplicationInfo ai : pm.getInstalledApplications(0)) {
-
-            AppEntry e = new AppEntry();
-            e.pkg = ai.packageName;
-            e.label = String.valueOf(pm.getApplicationLabel(ai));
-            e.isSystem = (ai.flags & ApplicationInfo.FLAG_SYSTEM) != 0;
-
-            // sizes
-            e.appBytes = -1;
-            e.cacheBytes = -1;
-            fillSizes(e);
-
-            allApps.add(e);
-        }
-
-        applyFiltersAndSort();
+        visible.clear();   // 🔥 ΠΟΛΥ ΣΗΜΑΝΤΙΚΟ
     }
+
+    for (ApplicationInfo ai : pm.getInstalledApplications(0)) {
+
+        AppEntry e = new AppEntry();
+        e.pkg = ai.packageName;
+        e.label = String.valueOf(pm.getApplicationLabel(ai));
+        e.isSystem = (ai.flags & ApplicationInfo.FLAG_SYSTEM) != 0;
+
+        e.appBytes = -1;
+        e.cacheBytes = -1;
+
+        fillSizes(e);
+
+        allApps.add(e);
+    }
+
+    // ❗ UI update ΠΑΝΤΑ στο main thread
+    runOnUiThread(this::applyFiltersAndSort);
+}
 
     private void fillSizes(AppEntry e) {
 
@@ -448,81 +469,103 @@ private void updateStartButtonText() {
         } catch (Throwable ignored) {}
     }
 
-    // ============================================================
-    // FILTER + SORT
-    // ============================================================
+// ============================================================
+// FILTER + SORT (STABLE - NO DUPLICATES)
+// ============================================================
 
-    private void applyFiltersAndSort() {
+private void applyFiltersAndSort() {
 
-        new Thread(() -> {
+    // Snapshot once to avoid concurrent modification
+    final ArrayList<AppEntry> snapshot = new ArrayList<>(allApps);
 
-            ArrayList<AppEntry> users = new ArrayList<>();
-            ArrayList<AppEntry> systems = new ArrayList<>();
+    new Thread(() -> {
 
-            ArrayList<AppEntry> snapshot = new ArrayList<>(allApps);
+        ArrayList<AppEntry> users   = new ArrayList<>();
+        ArrayList<AppEntry> systems = new ArrayList<>();
 
-for (AppEntry e : snapshot) {
+        String s = (search == null) ? "" : search.toLowerCase(Locale.US);
 
-                if (e == null) continue;
+        for (AppEntry e : snapshot) {
+        	
+        // 🔥 Hide 0-cache apps ONLY in cache mode
+if (!isUninstallMode) {
+    if (e.cacheBytes <= 0) continue;
+}
 
-                if (!TextUtils.isEmpty(search)) {
-                    String s = search.toLowerCase(Locale.US);
-                    String name = (e.label == null) ? "" : e.label.toLowerCase(Locale.US);
-                    String pkg  = (e.pkg == null) ? "" : e.pkg.toLowerCase(Locale.US);
-                    if (!name.contains(s) && !pkg.contains(s)) continue;
+            if (e == null) continue;
+            if (e.isHeader) continue; // 🔒 NEVER process headers
+
+            if (!TextUtils.isEmpty(s)) {
+                String name = (e.label == null) ? "" : e.label.toLowerCase(Locale.US);
+                String pkg  = (e.pkg == null) ? "" : e.pkg.toLowerCase(Locale.US);
+                if (!name.contains(s) && !pkg.contains(s)) continue;
+            }
+
+            if (e.isSystem) systems.add(e);
+            else users.add(e);
+        }
+
+        Comparator<AppEntry> comp = sortByCacheBiggest
+                ? (a, b) -> {
+                    long ca = (a == null) ? -1 : a.cacheBytes;
+                    long cb = (b == null) ? -1 : b.cacheBytes;
+
+                    if (ca < 0 && cb < 0) return alphaCompare(a, b);
+                    if (ca < 0) return 1;
+                    if (cb < 0) return -1;
+
+                    int c = Long.compare(cb, ca);
+                    return (c != 0) ? c : alphaCompare(a, b);
                 }
+                : this::alphaCompare;
 
-                if (e.isSystem) systems.add(e);
-                else users.add(e);
-            }
+        Collections.sort(users, comp);
+        Collections.sort(systems, comp);
 
-            Comparator<AppEntry> comp = sortByCacheBiggest
-                    ? (a, b) -> {
-                        long ca = (a == null) ? -1 : a.cacheBytes;
-                        long cb = (b == null) ? -1 : b.cacheBytes;
-                        if (ca < 0 && cb < 0) return alphaCompare(a, b);
-                        if (ca < 0) return 1;
-                        if (cb < 0) return -1;
-                        int c = Long.compare(cb, ca);
-                        return (c != 0) ? c : alphaCompare(a, b);
-                    }
-                    : this::alphaCompare;
+        final ArrayList<AppEntry> rebuilt = new ArrayList<>();
 
-            Collections.sort(users, comp);
-            Collections.sort(systems, comp);
+        // ---- USER HEADER ----
+        if (!users.isEmpty()) {
 
-            ArrayList<AppEntry> temp = new ArrayList<>();
+            AppEntry h = new AppEntry();
+            h.isHeader = true;
+            h.isUserHeader = true;
+            h.headerTitle = userExpanded
+                    ? "📱 USER APPS ▼"
+                    : "📱 USER APPS ►";
 
-            if (!users.isEmpty()) {
-                AppEntry h = new AppEntry();
-                h.isHeader = true;
-                h.isUserHeader = true;
-                h.headerTitle = userExpanded ? "📱 USER APPS ▼" : "📱 USER APPS ►";
-                temp.add(h);
-                if (userExpanded) temp.addAll(users);
-            }
+            rebuilt.add(h);
 
-            if (!systems.isEmpty()) {
-                AppEntry h = new AppEntry();
-                h.isHeader = true;
-                h.isSystemHeader = true;
-                h.headerTitle = systemExpanded ? "⚙ SYSTEM APPS ▼" : "⚙ SYSTEM APPS ►";
-                temp.add(h);
-                if (systemExpanded) temp.addAll(systems);
-            }
+            if (userExpanded) rebuilt.addAll(users);
+        }
 
-            runOnUiThread(() -> {
-                visible.clear();
-                visible.addAll(temp);
+        // ---- SYSTEM HEADER ----
+        if (!systems.isEmpty()) {
 
-                // IMPORTANT: after rebuild, toggles must reflect current selection
-                syncToggleStatesFromSelection();
+            AppEntry h = new AppEntry();
+            h.isHeader = true;
+            h.isSystemHeader = true;
+            h.headerTitle = systemExpanded
+                    ? "⚙ SYSTEM APPS ▼"
+                    : "⚙ SYSTEM APPS ►";
 
-                refreshUI();
-            });
+            rebuilt.add(h);
 
-        }).start();
-    }
+            if (systemExpanded) rebuilt.addAll(systems);
+        }
+
+        runOnUiThread(() -> {
+
+            // 🔒 HARD RESET
+            visible.clear();
+            visible.addAll(rebuilt);
+
+            syncToggleStatesFromSelection();
+            refreshUI();
+        });
+
+    }).start();
+}
 
     private int alphaCompare(AppEntry a, AppEntry b) {
         if (a == null && b == null) return 0;

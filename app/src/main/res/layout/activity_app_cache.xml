@@ -102,8 +102,7 @@
     android:textAllCaps="false"
     android:layout_marginStart="6dp"
     android:textColor="#FF0000"
-    android:background="@drawable/gel_btn_gold_outline"
-    android:backgroundTint="#FFFF00"/>
+    android:background="@drawable/gel_btn_yellow_gold" />
     </LinearLayout>
 
     <!-- ========================================================= -->

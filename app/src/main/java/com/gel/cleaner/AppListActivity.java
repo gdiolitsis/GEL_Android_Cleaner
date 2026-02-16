@@ -1,5 +1,5 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// AppListActivity — FINAL GEL COMPLETE BUILD
+// AppListActivity — FINAL STABLE GEL BUILD
 
 package com.gel.cleaner;
 
@@ -22,6 +22,7 @@ import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.view.Gravity;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -73,6 +74,9 @@ public class AppListActivity extends GELAutoActivityHook {
         recyclerView = findViewById(R.id.listApps);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
+        adapter = new AppListAdapter(this);
+        recyclerView.setAdapter(adapter);
+
         txtStats = new TextView(this);
         txtStats.setTextColor(Color.parseColor("#FFD700"));
         txtStats.setTextSize(13f);
@@ -86,14 +90,11 @@ public class AppListActivity extends GELAutoActivityHook {
         Button btnSelectSystem = findViewById(R.id.btnSelectSystem);
         Button btnGuided       = findViewById(R.id.btnGuidedClean);
 
-        adapter = new AppListAdapter(this);
-        recyclerView.setAdapter(adapter);
-
-        requestUsageAccessIfNeeded();
-
         String mode = getIntent().getStringExtra("mode");
         if (mode == null) mode = "cache";
         isUninstallMode = "uninstall".equals(mode);
+
+        requestUsageAccessIfNeeded();
 
         // SEARCH
         if (searchBox != null) {
@@ -116,7 +117,7 @@ public class AppListActivity extends GELAutoActivityHook {
             });
         }
 
-        // GLOBAL SELECT
+        // SELECT ALL
         if (btnSelectAll != null) {
             btnSelectAll.setOnClickListener(v -> {
                 allSelected = !allSelected;
@@ -171,80 +172,82 @@ public class AppListActivity extends GELAutoActivityHook {
         new Thread(this::loadAllApps).start();
     }
 
-    requestUsageAccessIfNeeded();
-showUsageAccessDialog();
-
     @Override
     protected void onResume() {
         super.onResume();
-        if (hasUsageAccess())
-            new Thread(this::loadAllApps).start();
+
+        if (!hasUsageAccess()) {
+            showUsageAccessDialog();
+            return;
+        }
+
+        new Thread(this::loadAllApps).start();
 
         if (guidedActive) advanceGuided();
     }
-    if (!hasUsageAccess()) {
-    showUsageAccessDialog();
-}
+
+    // ============================================================
+    // USAGE ACCESS
+    // ============================================================
+
+    private void requestUsageAccessIfNeeded() {
+        if (!hasUsageAccess()) {
+            showUsageAccessDialog();
+        }
+    }
 
     private void showUsageAccessDialog() {
 
-    if (hasUsageAccess()) return;
+        AlertDialog.Builder b =
+                new AlertDialog.Builder(this, R.style.Theme_GEL_DarkGold);
 
-    androidx.appcompat.app.AlertDialog.Builder b =
-            new androidx.appcompat.app.AlertDialog.Builder(
-                    this,
-                    R.style.Theme_GEL_DarkGold
+        b.setCancelable(false);
+
+        b.setTitle("Usage Access Required");
+        b.setMessage("To display application and cache sizes,\nplease enable Usage Access permission.");
+
+        b.setPositiveButton("Enable", (d,w) ->
+                startActivity(new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)));
+
+        b.setNegativeButton("Continue Limited", (d,w)-> d.dismiss());
+
+        b.show();
+    }
+
+    private boolean hasUsageAccess() {
+        try {
+            AppOpsManager appOps =
+                    (AppOpsManager) getSystemService(Context.APP_OPS_SERVICE);
+
+            int mode = appOps.checkOpNoThrow(
+                    AppOpsManager.OPSTR_GET_USAGE_STATS,
+                    Process.myUid(),
+                    getPackageName()
             );
 
-    b.setCancelable(false);
+            return mode == AppOpsManager.MODE_ALLOWED;
 
-    String msg = AppLang.isGreek(this)
-            ? "Για να εμφανίζονται τα μεγέθη εφαρμογών και cache,\n" +
-              "πρέπει να ενεργοποιήσεις Πρόσβαση Χρήσης.\n\n" +
-              "Χωρίς αυτήν, η λειτουργία θα είναι περιορισμένη."
-            : "To display application and cache sizes,\n" +
-              "Usage Access permission is required.\n\n" +
-              "Without it, functionality will be limited.";
-
-    b.setTitle(AppLang.isGreek(this)
-            ? "Απαιτείται Πρόσβαση Χρήσης"
-            : "Usage Access Required");
-
-    b.setMessage(msg);
-
-    b.setPositiveButton(
-            AppLang.isGreek(this)
-                    ? "Ενεργοποίηση"
-                    : "Enable Usage Access",
-            (d, w) -> {
-                Intent intent =
-                        new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS);
-                startActivity(intent);
-            });
-
-    b.setNegativeButton(
-            AppLang.isGreek(this)
-                    ? "Συνέχεια με περιορισμούς"
-                    : "Continue Limited",
-            (d, w) -> d.dismiss()
-    );
-
-    b.show();
-}
+        } catch (Throwable t) {
+            return false;
+        }
+    }
 
     // ============================================================
     // LOAD APPS
     // ============================================================
 
     private void loadAllApps() {
+
         PackageManager pm = getPackageManager();
         allApps.clear();
 
         for (ApplicationInfo ai : pm.getInstalledApplications(0)) {
+
             AppEntry e = new AppEntry();
             e.pkg = ai.packageName;
             e.label = String.valueOf(pm.getApplicationLabel(ai));
             e.isSystem = (ai.flags & ApplicationInfo.FLAG_SYSTEM) != 0;
+
             fillSizes(e);
             allApps.add(e);
         }
@@ -253,6 +256,7 @@ showUsageAccessDialog();
     }
 
     private void fillSizes(AppEntry e) {
+
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return;
         if (!hasUsageAccess()) return;
 
@@ -344,6 +348,7 @@ showUsageAccessDialog();
     }
 
     private void updateStats() {
+
         int total = allApps.size();
         int vis = 0;
         int sel = 0;
@@ -371,6 +376,7 @@ showUsageAccessDialog();
     // ============================================================
 
     private void startGuided() {
+
         guidedQueue.clear();
         guidedIndex = 0;
 
@@ -388,6 +394,7 @@ showUsageAccessDialog();
     }
 
     private void openNext() {
+
         if (guidedIndex >= guidedQueue.size()) {
             guidedActive = false;
             showGelDialog("Operation finished");
@@ -411,40 +418,13 @@ showUsageAccessDialog();
     }
 
     // ============================================================
-    // USAGE ACCESS
-    // ============================================================
-
-    private void requestUsageAccessIfNeeded() {
-        if (hasUsageAccess()) return;
-        showGelDialog(getString(R.string.toast_usage_access));
-        startActivity(new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS));
-    }
-
-    private boolean hasUsageAccess() {
-        try {
-            AppOpsManager appOps =
-                    (AppOpsManager) getSystemService(Context.APP_OPS_SERVICE);
-
-            int mode = appOps.checkOpNoThrow(
-                    AppOpsManager.OPSTR_GET_USAGE_STATS,
-                    Process.myUid(),
-                    getPackageName()
-            );
-
-            return mode == AppOpsManager.MODE_ALLOWED;
-
-        } catch (Throwable t) {
-            return false;
-        }
-    }
-
-    // ============================================================
     // GEL DIALOG
     // ============================================================
 
     private void showGelDialog(String message) {
 
-        AlertDialog.Builder b = new AlertDialog.Builder(this);
+        AlertDialog.Builder b =
+                new AlertDialog.Builder(this, R.style.Theme_GEL_DarkGold);
 
         LinearLayout box = new LinearLayout(this);
         box.setPadding(40,40,40,40);

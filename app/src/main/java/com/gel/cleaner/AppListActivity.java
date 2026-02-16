@@ -77,6 +77,8 @@ public class AppListActivity extends GELAutoActivityHook {
         String mode = getIntent().getStringExtra("mode");
 boolean isUninstallMode = "uninstall".equals(mode);
 
+        isUninstallMode = "uninstall".equals(getIntent().getStringExtra("mode"));
+
         // ================= SEARCH =================
         if (searchBox != null) {
             searchBox.addTextChangedListener(new TextWatcher() {
@@ -331,7 +333,18 @@ boolean isUninstallMode = "uninstall".equals(mode);
             return;
         }
 
-        Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+        if (isUninstallMode) {
+
+    Intent intent = new Intent(Intent.ACTION_DELETE);
+    intent.setData(Uri.parse("package:" + guidedQueue.get(guidedIndex)));
+    startActivity(intent);
+
+} else {
+
+    Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+    intent.setData(Uri.parse("package:" + guidedQueue.get(guidedIndex)));
+    startActivity(intent);
+}
         intent.setData(Uri.parse("package:" + guidedQueue.get(guidedIndex)));
         startActivity(intent);
     }

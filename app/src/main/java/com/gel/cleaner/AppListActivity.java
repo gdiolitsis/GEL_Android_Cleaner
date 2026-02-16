@@ -1,5 +1,5 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// AppListActivity — FINAL RecyclerView + Category Select BUILD
+// AppListActivity — FINAL STABLE RecyclerView BUILD (Cache + Uninstall Mode)
 
 package com.gel.cleaner;
 
@@ -51,7 +51,7 @@ public class AppListActivity extends GELAutoActivityHook {
     private int guidedIndex = 0;
 
     private String mode = "cache";
-    private boolean isUninstallMode;
+    private boolean isUninstallMode = false;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -61,23 +61,19 @@ public class AppListActivity extends GELAutoActivityHook {
         recyclerView = findViewById(R.id.listApps);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        EditText searchBox      = findViewById(R.id.searchBar);
-        Button btnSortName      = findViewById(R.id.btnSortName);
-        Button btnSortCache     = findViewById(R.id.btnSortCache);
-        Button btnGuided        = findViewById(R.id.btnGuidedClean);
-        Button btnSelectUsers   = findViewById(R.id.btnSelectUsers);
-        Button btnSelectSystem  = findViewById(R.id.btnSelectSystem);
+        EditText searchBox     = findViewById(R.id.searchBar);
+        Button btnSortCache    = findViewById(R.id.btnSortCache);
+        Button btnGuided       = findViewById(R.id.btnGuidedClean);
+        Button btnSelectUsers  = findViewById(R.id.btnSelectUsers);
+        Button btnSelectSystem = findViewById(R.id.btnSelectSystem);
 
         adapter = new AppListAdapter(this);
         recyclerView.setAdapter(adapter);
 
+        // ================= MODE =================
         mode = getIntent().getStringExtra("mode");
         if (mode == null) mode = "cache";
-
-        String mode = getIntent().getStringExtra("mode");
-boolean isUninstallMode = "uninstall".equals(mode);
-
-        isUninstallMode = "uninstall".equals(getIntent().getStringExtra("mode"));
+        isUninstallMode = "uninstall".equals(mode);
 
         // ================= SEARCH =================
         if (searchBox != null) {
@@ -92,14 +88,7 @@ boolean isUninstallMode = "uninstall".equals(mode);
             });
         }
 
-        // ================= SORT =================
-        if (btnSortName != null) {
-            btnSortName.setOnClickListener(v -> {
-                sortByCacheBiggest = false;
-                applyFiltersAndSort();
-            });
-        }
-
+        // ================= SORT BY CACHE =================
         if (btnSortCache != null) {
             btnSortCache.setOnClickListener(v -> {
                 sortByCacheBiggest = true;
@@ -131,7 +120,7 @@ boolean isUninstallMode = "uninstall".equals(mode);
             });
         }
 
-        // ================= GUIDED =================
+        // ================= GUIDED ACTION =================
         if (btnGuided != null) {
             btnGuided.setOnClickListener(v -> startGuidedFromSelected());
         }
@@ -263,9 +252,7 @@ boolean isUninstallMode = "uninstall".equals(mode);
                 AppEntry h = new AppEntry();
                 h.isHeader = true;
                 h.isUserHeader = true;
-                h.headerTitle = userExpanded
-                        ? "📱 USER APPS (tap to collapse)"
-                        : "📱 USER APPS (tap to expand)";
+                h.headerTitle = "📱 USER APPS";
                 temp.add(h);
                 if (userExpanded) temp.addAll(users);
             }
@@ -274,9 +261,7 @@ boolean isUninstallMode = "uninstall".equals(mode);
                 AppEntry h = new AppEntry();
                 h.isHeader = true;
                 h.isSystemHeader = true;
-                h.headerTitle = systemExpanded
-                        ? "⚙ SYSTEM APPS (tap to collapse)"
-                        : "⚙ SYSTEM APPS (tap to expand)";
+                h.headerTitle = "⚙ SYSTEM APPS";
                 temp.add(h);
                 if (systemExpanded) temp.addAll(systems);
             }
@@ -329,24 +314,21 @@ boolean isUninstallMode = "uninstall".equals(mode);
 
         if (guidedIndex >= guidedQueue.size()) {
             guidedActive = false;
-            Toast.makeText(this, "Guided cleaning finished", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Operation finished", Toast.LENGTH_SHORT).show();
             return;
         }
 
+        String pkg = guidedQueue.get(guidedIndex);
+
         if (isUninstallMode) {
-
-    Intent intent = new Intent(Intent.ACTION_DELETE);
-    intent.setData(Uri.parse("package:" + guidedQueue.get(guidedIndex)));
-    startActivity(intent);
-
-} else {
-
-    Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-    intent.setData(Uri.parse("package:" + guidedQueue.get(guidedIndex)));
-    startActivity(intent);
-}
-        intent.setData(Uri.parse("package:" + guidedQueue.get(guidedIndex)));
-        startActivity(intent);
+            Intent intent = new Intent(Intent.ACTION_DELETE);
+            intent.setData(Uri.parse("package:" + pkg));
+            startActivity(intent);
+        } else {
+            Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+            intent.setData(Uri.parse("package:" + pkg));
+            startActivity(intent);
+        }
     }
 
     private void advanceGuidedIfNeeded() {

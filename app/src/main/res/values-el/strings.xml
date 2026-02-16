@@ -46,11 +46,11 @@
 <string name="search_app">Αναζήτηση εφαρμογής...</string>
 <string name="select_all">Επιλογή ΟΛΩΝ</string>
 <string name="deselect_all">Αποεπιλογή ΟΛΩΝ</string>
-<string name="largest_cache">Μεγαλύτερη Cache</string>
-<string name="select_users">Επιλογή ΧΡΗΣΤΗ</string>
-<string name="deselect_users">Αποεπιλογή ΧΡΗΣΤΗ</string>
-<string name="select_system">Επιλογή ΣΥΣΤΗΜΑΤΟΣ</string>
-<string name="deselect_system">Αποεπιλογή ΣΥΣΤΗΜΑΤΟΣ</string>
+<string name="largest_cache">Μεγαλύτερη Προσωρινή Μνήμη</string>
+<string name="select_users">Επιλογή Εφαρμογών Χρήστη</string>
+<string name="deselect_users">Αποεπιλογή Εφαρμογών Χρήστη</string>
+<string name="select_system">Επιλογή Εφαρμογών Συστήματος</string>
+<string name="deselect_system">Αποεπιλογή Εφαρμογών Συστήματος</string>
 <string name="start_guided_cleaning">Εκκίνηση Καθοδηγούμενου Καθαρισμού Cache</string>
 <string name="app_manager_btn">🗂 Διαχείριση Εφαρμογών\n(Λειτουργία Απεγκατάστασης)</string>
 

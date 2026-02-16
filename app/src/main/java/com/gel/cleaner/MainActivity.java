@@ -1,5 +1,5 @@
-// GDiolitsis Engine Lab (GEL) — Author & Developer
-// MainActivity — STABLE FINAL
+// GDiolitsis Engine Lab (GEL) - Author & Developer
+// MainActivity - STABLE FINAL
 // NOTE: Always return full file ready for copy-paste (no patch-only replies).
 
 package com.gel.cleaner;
@@ -43,14 +43,14 @@ public class MainActivity extends GELAutoActivityHook
     // =========================================================
     private boolean welcomeShown = false;
     private int permissionIndex = 0;
+    private boolean pendingUsageAccess = false;
 
     private static final int REQ_PERMISSIONS = 1001;
     private static final String PREF_PERMISSIONS_DISABLED = "permissions_disabled";
     private boolean permissionsSkippedThisLaunch = false;
 
     // Usage Access continuation
-    private boolean pendingUsageAccess = false;
-
+    
     private final String[] REQUIRED_PERMISSIONS = new String[]{
             Manifest.permission.RECORD_AUDIO,
             Manifest.permission.ACCESS_FINE_LOCATION,
@@ -96,15 +96,14 @@ public class MainActivity extends GELAutoActivityHook
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
+protected void onResume() {
+    super.onResume();
 
-        // If we sent user to Usage Access settings, continue the flow when they return.
-        if (pendingUsageAccess && hasUsageAccess()) {
-            pendingUsageAccess = false;
-            requestNextPermission(); // will fall through to welcome
-        }
+    if (pendingUsageAccess) {
+        pendingUsageAccess = false;
+        showWelcomePopup();
     }
+}
 
     // =========================================================
     // ON CREATE
@@ -159,7 +158,7 @@ public class MainActivity extends GELAutoActivityHook
                 try {
 
                     Intent i = new Intent(this, AppListActivity.class);
-                    i.putExtra("mode", "uninstall");   // 🔴 UNINSTALL MODE
+                    i.putExtra("mode", "uninstall");  
                     startActivity(i);
 
                 } catch (Exception e) {
@@ -207,7 +206,7 @@ public class MainActivity extends GELAutoActivityHook
     }
 
     // ------------------------------------------------------------
-    // MUTE ROW (UNIFIED — AppTTS HELPER)
+    // MUTE ROW (UNIFIED - AppTTS HELPER)
     // ------------------------------------------------------------
 
     private LinearLayout buildMuteRow() {
@@ -221,13 +220,14 @@ public class MainActivity extends GELAutoActivityHook
         row.setPadding(0, dp(8), 0, dp(16));
 
         CheckBox muteCheck = new CheckBox(this);
-        muteCheck.setChecked(AppTTS.isMuted(this));
-        muteCheck.setPadding(0, 0, dp(6), 0);
-        TextView label = new TextView(this);
-        label.setText(
-                gr ? "Σίγαση φωνητικών οδηγιών"
-                        : "Mute voice instructions"
-        );
+muteCheck.setChecked(AppTTS.isMuted(this));
+muteCheck.setPadding(0, 0, dp(6), 0);
+
+TextView label = new TextView(this);
+label.setText(
+        gr ? "Σίγαση φωνητικών οδηγιών"
+           : "Mute voice instructions"
+);
 
         label.setTextColor(Color.WHITE);
         label.setTextSize(14f);
@@ -241,7 +241,7 @@ public class MainActivity extends GELAutoActivityHook
             AppTTS.setMuted(this, newState);
             muteCheck.setChecked(newState);
 
-            // 🔇 Immediate hard stop when muting
+            //  Immediate hard stop when muting
             if (newState) {
                 try { AppTTS.stop(); } catch (Throwable ignore) {}
             }
@@ -279,7 +279,7 @@ public class MainActivity extends GELAutoActivityHook
     }
 
     // ============================================================
-    // PERMISSIONS POPUP — GEL STYLE (GLOBAL MUTE + LANG + TTS)
+    // PERMISSIONS POPUP - GEL STYLE (GLOBAL MUTE + LANG + TTS)
     // ============================================================
     private void showPermissionsPopup() {
 
@@ -305,7 +305,7 @@ public class MainActivity extends GELAutoActivityHook
         root.setBackground(bg);
 
         // ================= TITLE =================
-        TextView title = new TextView(this);
+       TextView title = new TextView(this);
         title.setText(gr ? "ΑΠΑΙΤΟΥΜΕΝΕΣ ΑΔΕΙΕΣ" : "REQUIRED PERMISSIONS");
         title.setTextColor(Color.WHITE);
         title.setTextSize(18f);
@@ -399,12 +399,12 @@ public class MainActivity extends GELAutoActivityHook
 
         // ================= CHECKBOX =================
         CheckBox cb = new CheckBox(this);
-        cb.setText(AppLang.isGreek(this)
-                ? "Να μην εμφανιστεί ξανά"
-                : "Do not show again");
-        cb.setTextColor(Color.WHITE);
-        cb.setPadding(0, dp(8), 0, dp(8));
-        root.addView(cb);
+cb.setText(AppLang.isGreek(this)
+        ? "Να μην εμφανιστεί ξανά"
+        : "Do not show again");
+cb.setTextColor(Color.WHITE);
+cb.setPadding(0, dp(8), 0, dp(8));
+root.addView(cb);
 
         // ================= BUTTON ROW =================
         LinearLayout btnRow = new LinearLayout(this);
@@ -421,7 +421,8 @@ public class MainActivity extends GELAutoActivityHook
         btnLp.setMargins(dp(10), 0, dp(10), 0);
 
         Button skipBtn = new Button(this);
-        skipBtn.setText(AppLang.isGreek(this) ? "ΠΑΡΑΛΕΙΨΗ" : "SKIP");
+        skipBtn.setText(
+        AppLang.isGreek(this) ? "ΠΑΡΑΛΕΙΨΗ" : "SKIP");
         skipBtn.setAllCaps(false);
         skipBtn.setTextColor(Color.WHITE);
         skipBtn.setTextSize(16f);
@@ -436,7 +437,8 @@ public class MainActivity extends GELAutoActivityHook
         skipBtn.setLayoutParams(btnLp);
 
         Button continueBtn = new Button(this);
-        continueBtn.setText(AppLang.isGreek(this) ? "ΣΥΝΕΧΕΙΑ" : "CONTINUE");
+        continueBtn.setText(
+        AppLang.isGreek(this) ? "ΣΥΝΕΧΕΙΑ" : "CONTINUE");
         continueBtn.setAllCaps(false);
         continueBtn.setTextColor(Color.WHITE);
         continueBtn.setTextSize(16f);
@@ -526,75 +528,61 @@ public class MainActivity extends GELAutoActivityHook
     }
 
     // ============================================================
-    // PERMISSIONS TEXT — GR
-    // ============================================================
-    private String getPermissionsTextGR() {
-        return "Η εφαρμογή χρειάζεται άδειες, για να πραγματοποιήσει "
-                + "ελέγχους στην συσκευή σου.\n\n"
-                + "Οι άδειες, θα σου ζητηθούν μία μία από το σύστημα Android.\n\n"
-                + "Το σύστημα, ενδέχεται να ζητήσει πρόσβαση σε:\n"
-                + "• Τοποθεσία,\n"
-                + "• Αποθήκευση,\n"
-                + "• Τηλέφωνο,\n"
-                + "• Μικρόφωνο.\n\n"
-                + "Δεν γίνεται καταγραφή, ή αποθήκευση προσωπικών δεδομένων.";
-    }
+// PERMISSIONS TEXT - GR
+// ============================================================
+private String getPermissionsTextGR() {
+    return "Η εφαρμογή χρειάζεται άδειες, για να πραγματοποιήσει "
+            + "ελέγχους στη συσκευή σου.\n\n"
+            + "Οι άδειες θα σου ζητηθούν μία-μία από το σύστημα Android.\n\n"
+            + "Το σύστημα ενδέχεται να ζητήσει πρόσβαση σε:\n"
+            + "• Τοποθεσία,\n"
+            + "• Αποθήκευση,\n"
+            + "• Τηλέφωνο,\n"
+            + "• Μικρόφωνο.\n\n"
+            + "Δεν γίνεται καταγραφή ή αποθήκευση προσωπικών δεδομένων.";
+}
 
-    // ============================================================
-    // PERMISSIONS TEXT — EN
-    // ============================================================
-    private String getPermissionsTextEN() {
-        return "The application requires permissions, to perform "
-                + "diagnostic checks on your device.\n\n"
-                + "Permissions, will be requested one by one by the Android system.\n\n"
-                + "The system may request access to:\n"
-                + "• Location,\n"
-                + "• Storage,\n"
-                + "• Phone,\n"
-                + "• Microphone.\n\n"
-                + "No personal data is recorded or stored.";
-    }
+// ============================================================
+// PERMISSIONS TEXT - EN
+// ============================================================
+private String getPermissionsTextEN() {
+    return "The application requires permissions to perform "
+            + "diagnostic checks on your device.\n\n"
+            + "Permissions will be requested one by one by the Android system.\n\n"
+            + "The system may request access to:\n"
+            + "• Location,\n"
+            + "• Storage,\n"
+            + "• Phone,\n"
+            + "• Microphone.\n\n"
+            + "No personal data is recorded or stored.";
+}
 
     // =========================================================
     // REQUEST FLOW
     // =========================================================
     private void requestNextPermission() {
 
-        while (permissionIndex < REQUIRED_PERMISSIONS.length) {
+    while (permissionIndex < REQUIRED_PERMISSIONS.length) {
 
-            String p = REQUIRED_PERMISSIONS[permissionIndex];
+        String p = REQUIRED_PERMISSIONS[permissionIndex];
 
-            if (ContextCompat.checkSelfPermission(this, p)
-                    != PackageManager.PERMISSION_GRANTED) {
+        if (ContextCompat.checkSelfPermission(this, p)
+                != PackageManager.PERMISSION_GRANTED) {
 
-                ActivityCompat.requestPermissions(
-                        this,
-                        new String[]{p},
-                        REQ_PERMISSIONS
-                );
-                return;
-            }
-
-            permissionIndex++;
-        }
-
-        // ================= END RUNTIME PERMS → USAGE ACCESS (A)
-        if (!hasUsageAccess()) {
-            pendingUsageAccess = true;
-            try {
-                startActivity(new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS));
-            } catch (Throwable t) {
-                // If settings cannot open, continue to welcome anyway
-                pendingUsageAccess = false;
-            }
+            ActivityCompat.requestPermissions(
+                    this,
+                    new String[]{p},
+                    REQ_PERMISSIONS
+            );
             return;
         }
 
-        // ================= END FLOW → WELCOME
-        if (!isWelcomeDisabled() && !consumeSkipWelcomeOnce()) {
-            showWelcomePopup();
-        }
+        permissionIndex++;
     }
+
+    // Runtime finished → show usage popup
+    showUsageAccessPopup();
+}
 
     @Override
     public void onRequestPermissionsResult(
@@ -690,7 +678,7 @@ public class MainActivity extends GELAutoActivityHook
     }
 
     // =========================================================
-    // TTS — Permissions
+    // TTS - Permissions
     // =========================================================
     private void speakPermissionsTTS() {
 
@@ -713,7 +701,7 @@ public class MainActivity extends GELAutoActivityHook
     }
 
     // =========================================================
-    // TTS — WELCOME
+    // TTS - WELCOME
     // =========================================================
     private void speakWelcomeTTS() {
 
@@ -740,34 +728,34 @@ public class MainActivity extends GELAutoActivityHook
     // WELCOME TEXT
     // =========================================================
     private String getWelcomeTextEN() {
-        return
-                "Although this is an Android application, " +
-                        "it is the only tool at the market, that can also help you " +
-                        "understand problems on Apple devices.\n\n" +
-                        "By importing panic logs, from your iPhone or iPad, " +
-                        "we analyze, what really happened inside your device.\n\n" +
-                        "You will understand:\n" +
-                        "• what your panic logs mean.\n" +
-                        "• what caused the issue,\n" +
-                        "• and how you can solve it.\n\n" +
-                        "Choose what you want to explore:\n" +
-                        "your Android device, or an other Apple device?.";
-    }
+    return
+            "Although this is an Android application, " +
+            "it is the only tool on the market that can also help you " +
+            "understand problems on Apple devices.\n\n" +
+            "By importing panic logs from your iPhone or iPad, " +
+            "we analyze what really happened inside your device.\n\n" +
+            "You will understand:\n" +
+            "• what your panic logs mean.\n" +
+            "• what caused the issue,\n" +
+            "• and how you can solve it.\n\n" +
+            "Choose what you want to explore:\n" +
+            "your Android device or another Apple device.";
+}
 
-    private String getWelcomeTextGR() {
-        return
-                "Παρότι αυτή είναι εφαρμογή Android, " +
-                        "είναι το μοναδικό εργαλείο στην αγορά, που μπορεί να σε βοηθήσει " +
-                        "να καταλάβεις προβλήματα, και σε συσκευές Apple.\n\n" +
-                        "Με την εισαγωγή panic logs, από iPhone ή iPad, " +
-                        "αναλύουμε τι συνέβη πραγματικά μέσα στη συσκευή σου.\n\n" +
-                        "Θα καταλάβεις:\n" +
-                        "• τι σημαίνουν τα panic logs.\n" +
-                        "• τι προκάλεσε το πρόβλημα,\n" +
-                        "• και πώς μπορείς να το λύσεις.\n\n" +
-                        "Διάλεξε τι θέλεις να εξερευνήσεις:\n" +
-                        "τη συσκευή Android σου, ή μια άλλη συσκευή Apple?.";
-    }
+private String getWelcomeTextGR() {
+    return
+            "Παρότι αυτή είναι εφαρμογή Android, " +
+            "είναι το μοναδικό εργαλείο στην αγορά που μπορεί να σε βοηθήσει " +
+            "να καταλάβεις προβλήματα και σε συσκευές Apple.\n\n" +
+            "Με την εισαγωγή panic logs από iPhone ή iPad, " +
+            "αναλύουμε τι συνέβη πραγματικά μέσα στη συσκευή σου.\n\n" +
+            "Θα καταλάβεις:\n" +
+            "• τι σημαίνουν τα panic logs.\n" +
+            "• τι προκάλεσε το πρόβλημα,\n" +
+            "• και πώς μπορείς να το λύσεις.\n\n" +
+            "Διάλεξε τι θέλεις να εξερευνήσεις:\n" +
+            "τη συσκευή Android σου ή μια άλλη συσκευή Apple.";
+}
 
     // =========================================================
     // DIMEN
@@ -780,9 +768,71 @@ public class MainActivity extends GELAutoActivityHook
         );
     }
 
-    // ============================================================
-    // WELCOME POPUP — LAB 28 STYLE (MUTE + LANG + TTS)  ✅FINAL
-    // ============================================================
+// ============================================================
+// USAGE ACCESS POPUP (GEL STYLE)
+// ============================================================
+private void showUsageAccessPopup() {
+
+    final boolean gr = AppLang.isGreek(this);
+
+    AlertDialog.Builder b =
+            new AlertDialog.Builder(
+                    this,
+                    android.R.style.Theme_Material_Dialog_NoActionBar
+            );
+
+    b.setCancelable(false);
+
+    LinearLayout root = new LinearLayout(this);
+    root.setOrientation(LinearLayout.VERTICAL);
+    root.setPadding(dp(24), dp(20), dp(24), dp(18));
+
+    GradientDrawable bg = new GradientDrawable();
+    bg.setColor(0xFF101010);
+    bg.setCornerRadius(dp(18));
+    bg.setStroke(dp(4), 0xFFFFD700);
+    root.setBackground(bg);
+
+    TextView title = new TextView(this);
+    title.setText(gr ? "Πρόσβαση Χρήσης" : "Usage Access");
+    title.setTextColor(Color.WHITE);
+    title.setTextSize(18f);
+    title.setGravity(Gravity.CENTER);
+    title.setPadding(0, 0, 0, dp(12));
+
+    TextView msg = new TextView(this);
+    msg.setText(gr
+            ? "Για να λειτουργεί σωστά ο καθαρισμός cache\n"
+              + "και η ανάλυση μεγεθών εφαρμογών,\n"
+              + "απαιτείται Πρόσβαση Χρήσης.\n\n"
+              + "Θα μεταφερθείς στις Ρυθμίσεις."
+            : "To enable cache cleaning and app size analysis,\n"
+              + "Usage Access is required.\n\n"
+              + "You will be redirected to Settings.");
+    msg.setTextColor(0xFF39FF14);
+    msg.setGravity(Gravity.CENTER);
+
+    root.addView(title);
+    root.addView(msg);
+
+    b.setView(root);
+
+    b.setPositiveButton(gr ? "Συνέχεια" : "Continue", (d, w) -> {
+        pendingUsageAccess = true;
+        try {
+            startActivity(new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS));
+        } catch (Throwable ignored) {
+            pendingUsageAccess = false;
+            showWelcomePopup();
+        }
+    });
+
+    b.setNegativeButton(gr ? "Παράλειψη" : "Skip", (d, w) -> {
+        showWelcomePopup();
+    });
+
+    b.show();
+}
 
     // ------------------------------------------------------------
     // SHOW POPUP
@@ -795,7 +845,7 @@ public class MainActivity extends GELAutoActivityHook
                 new AlertDialog.Builder(MainActivity.this);
 
         b.setCancelable(true);
-
+        
         // ================= ROOT =================
         LinearLayout root = new LinearLayout(MainActivity.this);
         root.setOrientation(LinearLayout.VERTICAL);
@@ -809,7 +859,7 @@ public class MainActivity extends GELAutoActivityHook
 
         // ================= TITLE =================
         TextView title = new TextView(MainActivity.this);
-        title.setText(AppLang.isGreek(this) ? "ΚΑΛΩΣ ΗΡΘΑΤΕ" : "WELCOME");
+        title.setText(AppLang.isGreek(this) ? "ÎšÎ‘Î›Î©Î£ Î—Î¡Î˜Î‘Î¤Î•" : "WELCOME");
         title.setTextColor(Color.WHITE);
         title.setTextSize(18f);
         title.setTypeface(null, Typeface.BOLD);
@@ -860,7 +910,7 @@ public class MainActivity extends GELAutoActivityHook
                     ) {
 
                         String code = (position == 0) ? "en" : "el";
-                        changeLang(code);   // 🔥 χρησιμοποιούμε το υπάρχον σύστημα
+                        changeLang(code); 
 
                     }
 
@@ -896,12 +946,12 @@ public class MainActivity extends GELAutoActivityHook
 
         // ================= CHECKBOX =================
         CheckBox cb = new CheckBox(this);
-        cb.setText(AppLang.isGreek(this)
-                ? "Να μην εμφανιστεί ξανά"
-                : "Do not show again");
-        cb.setTextColor(Color.WHITE);
-        cb.setPadding(0, dp(8), 0, dp(8));
-        root.addView(cb);
+cb.setText(AppLang.isGreek(this)
+        ? "Να μην εμφανιστεί ξανά"
+        : "Do not show again");
+cb.setTextColor(Color.WHITE);
+cb.setPadding(0, dp(8), 0, dp(8));
+root.addView(cb);
 
         // ================= OK BUTTON =================
         Button okBtn = new Button(MainActivity.this);
@@ -985,11 +1035,11 @@ public class MainActivity extends GELAutoActivityHook
     }
 
     // =========================================================
-    // PLATFORM SELECT — FINAL, CLEAN
+    // PLATFORM SELECT - FINAL, CLEAN
     // =========================================================
     private void showPlatformSelectPopup() {
 
-        boolean gr = AppLang.isGreek(this);  // 🔥 ΑΥΤΟ ΛΕΙΠΕΙ
+        boolean gr = AppLang.isGreek(this); 
 
         AlertDialog.Builder b =
                 new AlertDialog.Builder(
@@ -1019,9 +1069,9 @@ public class MainActivity extends GELAutoActivityHook
 
         // ANDROID BUTTON
         TextView androidBtn = new TextView(this);
-        androidBtn.setText(gr
-                ? "🤖  Η ANDROID ΣΥΣΚΕΥΗ ΜΟΥ"
-                : "🤖  MY ANDROID DEVICE");
+androidBtn.setText(gr
+        ? "🤖  Η ANDROID ΣΥΣΚΕΥΗ ΜΟΥ"
+        : "🤖  MY ANDROID DEVICE");
         androidBtn.setTextColor(0xFF000000);
         androidBtn.setTextSize(17f);
         androidBtn.setTypeface(Typeface.DEFAULT_BOLD);
@@ -1044,9 +1094,9 @@ public class MainActivity extends GELAutoActivityHook
 
         // APPLE BUTTON
         TextView appleBtn = new TextView(this);
-        appleBtn.setText(gr
-                ? "🍎  ΑΛΛΗ ΣΥΣΚΕΥΗ APPLE"
-                : "🍎  OTHER APPLE DEVICE");
+appleBtn.setText(gr
+        ? "🍎  ΑΛΛΗ ΣΥΣΚΕΥΗ APPLE"
+        : "🍎  OTHER APPLE DEVICE");
         appleBtn.setTextColor(Color.WHITE);
         appleBtn.setTextSize(17f);
         appleBtn.setTypeface(Typeface.DEFAULT_BOLD);
@@ -1129,7 +1179,7 @@ public class MainActivity extends GELAutoActivityHook
             savePlatform("android");
 
             setSkipWelcomeOnce(true);
-            permissionsSkippedThisLaunch = true;   // ✅ ΠΡΟΣΘΗΚΗ
+            permissionsSkippedThisLaunch = true; 
 
             d.dismiss();
             recreate();
@@ -1147,7 +1197,7 @@ public class MainActivity extends GELAutoActivityHook
             savePlatform("apple");
 
             setSkipWelcomeOnce(true);
-            permissionsSkippedThisLaunch = true;   // ✅ ΠΡΟΣΘΗΚΗ
+            permissionsSkippedThisLaunch = true;  
 
             d.dismiss();
             recreate();
@@ -1155,12 +1205,11 @@ public class MainActivity extends GELAutoActivityHook
     }
 
     // =========================================================
-    // 🍎 APPLE ENTRY POINT
+    // APPLE ENTRY POINT
     // =========================================================
     private void openAppleInternalPeripherals() {
-        // ΜΗΝ ξανανοίγεις MainActivity
-        applyAppleModeUI();
-    }
+    applyAppleModeUI();
+}
 
     // =========================================================
     // ANDROID MODE UI FILTER
@@ -1184,12 +1233,12 @@ public class MainActivity extends GELAutoActivityHook
         show(R.id.btnPhoneInfoPeripherals);
         show(R.id.btnDiagnostics);
 
-        // 🤖 ANDROID DIAGNOSTICS — LOCALIZED + RESET STYLE
+        // ANDROID DIAGNOSTICS - LOCALIZED + RESET STYLE
         View diagBtn = findViewById(R.id.btnDiagnostics);
         if (diagBtn instanceof TextView) {
             TextView tv = (TextView) diagBtn;
             tv.setText(R.string.diagnostics_android);
-            tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20f); // ⬆️ μεγαλύτερη
+            tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20f); 
         }
     }
 
@@ -1216,7 +1265,7 @@ public class MainActivity extends GELAutoActivityHook
         show(R.id.btnDiagnostics);
         show(R.id.btnAppleDeviceDeclaration);
 
-        // 🍎 APPLE DIAGNOSTICS — LOCALIZED + EMPHASIZED
+        // APPLE DIAGNOSTICS - LOCALIZED + EMPHASIZED
         View v = findViewById(R.id.btnDiagnostics);
         if (v instanceof TextView) {
             TextView tv = (TextView) v;
@@ -1247,17 +1296,9 @@ public class MainActivity extends GELAutoActivityHook
     }
 
     private void changeLang(String code) {
-
-        // Αν είναι ήδη ίδια → exit
         if (code.equals(LocaleHelper.getLang(this))) return;
-
-        // Apply locale
         LocaleHelper.set(this, code);
-
-        // Μην ξαναπετάξει welcome
         setSkipWelcomeOnce(true);
-
-        // Refresh
         recreate();
     }
 
@@ -1284,7 +1325,7 @@ public class MainActivity extends GELAutoActivityHook
     }
 
     // =========================================================
-    // BUTTONS — PLATFORM AWARE
+    // BUTTONS - PLATFORM AWARE
     // =========================================================
     private void setupButtons() {
 
@@ -1292,7 +1333,7 @@ public class MainActivity extends GELAutoActivityHook
                 this::showAppleDeviceDeclarationPopup);
 
         // ==========================
-        // 📱 INTERNAL INFO
+        //  INTERNAL INFO
         // ==========================
         bind(R.id.btnPhoneInfoInternal, () -> {
             if (isAppleMode()) {
@@ -1309,7 +1350,7 @@ public class MainActivity extends GELAutoActivityHook
         });
 
         // ==========================
-        // 🔌 PERIPHERALS INFO
+        //  PERIPHERALS INFO
         // ==========================
         bind(R.id.btnPhoneInfoPeripherals, () -> {
             if (isAppleMode()) {
@@ -1325,11 +1366,11 @@ public class MainActivity extends GELAutoActivityHook
             }
         });
 
-        // ==========================
-        // ⚙️ ΥΠΟΛΟΙΠΑ ΚΟΥΜΠΙΑ
-        // ==========================
-        bind(R.id.btnCpuRamLive,
-                () -> startActivity(new Intent(this, CpuRamLiveActivity.class)));
+// ==========================
+// ⚙️ ΥΠΟΛΟΙΠΑ ΚΟΥΜΠΙΑ
+// ==========================
+bind(R.id.btnCpuRamLive,
+        () -> startActivity(new Intent(this, CpuRamLiveActivity.class)));
 
         bind(R.id.btnCleanAll,
                 () -> GELCleaner.deepClean(this,this));
@@ -1344,7 +1385,7 @@ public class MainActivity extends GELAutoActivityHook
                 try {
 
                     Intent i = new Intent(this, AppListActivity.class);
-                    i.putExtra("mode", "cache");   // 🔵 CACHE MODE
+                    i.putExtra("mode", "cache");   // CACHE MODE
                     startActivity(i);
 
                 } catch (Exception e) {
@@ -1380,7 +1421,7 @@ public class MainActivity extends GELAutoActivityHook
     }
 
     // =========================================================
-    // 🍎 APPLE DEVICE DECLARATION
+    //  APPLE DEVICE DECLARATION
     // =========================================================
     private void showAppleDeviceDeclarationPopup() {
 
@@ -1408,7 +1449,7 @@ public class MainActivity extends GELAutoActivityHook
         root.addView(title);
 
         // ==========================
-        // 📱 iPHONE BUTTON
+        // ðŸ“± iPHONE BUTTON
         // ==========================
         Button iphoneBtn = new Button(this);
         iphoneBtn.setIncludeFontPadding(false);
@@ -1433,7 +1474,7 @@ public class MainActivity extends GELAutoActivityHook
         iphoneBtn.setPadding(dp(16), dp(14), dp(16), dp(14));
 
         // ==========================
-        // 📲 iPAD BUTTON
+        // ðŸ“² iPAD BUTTON
         // ==========================
         Button ipadBtn = new Button(this);
         ipadBtn.setIncludeFontPadding(false);
@@ -1486,7 +1527,7 @@ public class MainActivity extends GELAutoActivityHook
     }
 
     // =========================================================
-    // 🍎 MODEL PICKER — GEL STYLE (FINAL)
+    //  MODEL PICKER - GEL STYLE (FINAL)
     // =========================================================
     private void showAppleModelPicker(String type) {
 
@@ -1590,10 +1631,10 @@ public class MainActivity extends GELAutoActivityHook
             saveAppleDevice(type, normalizedModel);
 
             TextView btn = findViewById(R.id.btnAppleDeviceDeclaration);
-            if (btn != null) {
-                btn.setText("🍎 " + type.toUpperCase(Locale.US)
-                        + " — " + rawModel);
-            }
+if (btn != null) {
+    btn.setText("🍎 " + type.toUpperCase(Locale.US)
+            + " — " + rawModel);
+}
 
             Toast.makeText(
                     this,
@@ -1606,7 +1647,7 @@ public class MainActivity extends GELAutoActivityHook
     }
 
     // =========================================================
-    // NORMALIZE APPLE MODEL — MATCH iPadSpecs / AppleSpecs
+    // NORMALIZE APPLE MODEL - MATCH iPadSpecs / AppleSpecs
     // =========================================================
     private String normalizeAppleModel(String raw) {
 
@@ -1645,7 +1686,7 @@ public class MainActivity extends GELAutoActivityHook
     }
 
     // =========================================================
-    // BROWSER PICKER — DYNAMIC (REAL BROWSERS ONLY)
+    // BROWSER PICKER - DYNAMIC (REAL BROWSERS ONLY)
     // =========================================================
     private void showBrowserPicker() {
 
@@ -1703,7 +1744,7 @@ public class MainActivity extends GELAutoActivityHook
         String[] names = apps.keySet().toArray(new String[0]);
 
         // -----------------------------------------------------
-        // POPUP (ΔΕΝ ΤΟ ΠΕΙΡΑΖΟΥΜΕ)
+        // POPUP 
         // -----------------------------------------------------
         AlertDialog.Builder builder = buildNeonDialog();
 
@@ -1712,7 +1753,7 @@ public class MainActivity extends GELAutoActivityHook
         title.setTextColor(0xFFFFFFFF);
         title.setTextSize(18f);
         title.setTypeface(null, Typeface.BOLD);
-        title.setGravity(Gravity.CENTER); // ⬅️ ΚΕΝΤΡΟ
+        title.setGravity(Gravity.CENTER); 
         title.setPadding(dp(16), dp(14), dp(16), dp(10));
 
         title.setLayoutParams(

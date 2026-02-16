@@ -1,5 +1,5 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// AppListActivity — FINAL STABLE RecyclerView BUILD (Cache + Uninstall Mode)
+// AppListActivity — FINAL GEL BUILD (Cache + Uninstall + Full Toggle Select)
 
 package com.gel.cleaner;
 
@@ -36,9 +36,6 @@ public class AppListActivity extends GELAutoActivityHook {
 
     private RecyclerView recyclerView;
 
-    private boolean userExpanded = true;
-    private boolean systemExpanded = true;
-
     private final ArrayList<AppEntry> allApps = new ArrayList<>();
     private final ArrayList<AppEntry> visible = new ArrayList<>();
     private AppListAdapter adapter;
@@ -50,13 +47,12 @@ public class AppListActivity extends GELAutoActivityHook {
     private final ArrayList<String> guidedQueue = new ArrayList<>();
     private int guidedIndex = 0;
 
-    private String mode = "cache";
     private boolean isUninstallMode = false;
-    
-private boolean allSelected = false;
-private boolean usersSelected = false;
-private boolean systemSelected = false;
-    
+
+    // ===== SELECT STATES =====
+    private boolean allSelected = false;
+    private boolean usersSelected = false;
+    private boolean systemSelected = false;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -69,18 +65,19 @@ private boolean systemSelected = false;
         EditText searchBox     = findViewById(R.id.searchBar);
         Button btnSortCache    = findViewById(R.id.btnSortCache);
         Button btnGuided       = findViewById(R.id.btnGuidedClean);
+        Button btnSelectAll    = findViewById(R.id.btnSelectAll);
         Button btnSelectUsers  = findViewById(R.id.btnSelectUsers);
         Button btnSelectSystem = findViewById(R.id.btnSelectSystem);
 
         adapter = new AppListAdapter(this);
         recyclerView.setAdapter(adapter);
 
-        // ================= MODE =================
-        mode = getIntent().getStringExtra("mode");
+        // ===== MODE =====
+        String mode = getIntent().getStringExtra("mode");
         if (mode == null) mode = "cache";
         isUninstallMode = "uninstall".equals(mode);
 
-        // ================= SEARCH =================
+        // ===== SEARCH =====
         if (searchBox != null) {
             searchBox.addTextChangedListener(new TextWatcher() {
                 @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
@@ -93,7 +90,7 @@ private boolean systemSelected = false;
             });
         }
 
-        // ================= SORT BY CACHE =================
+        // ===== SORT =====
         if (btnSortCache != null) {
             btnSortCache.setOnClickListener(v -> {
                 sortByCacheBiggest = true;
@@ -101,31 +98,73 @@ private boolean systemSelected = false;
             });
         }
 
-        // ================= SELECT USERS =================
+        // ===== GLOBAL SELECT =====
+        if (btnSelectAll != null) {
+            btnSelectAll.setOnClickListener(v -> {
+
+                allSelected = !allSelected;
+
+                for (AppEntry e : visible) {
+                    if (!e.isHeader) {
+                        e.selected = allSelected;
+                    }
+                }
+
+                btnSelectAll.setText(
+                        allSelected ?
+                                getString(R.string.deselect_all) :
+                                getString(R.string.select_all)
+                );
+
+                adapter.submitList(new ArrayList<>(visible));
+            });
+        }
+
+        // ===== USER SELECT =====
         if (btnSelectUsers != null) {
             btnSelectUsers.setOnClickListener(v -> {
+
+                usersSelected = !usersSelected;
+
                 for (AppEntry e : visible) {
                     if (!e.isHeader && !e.isSystem) {
-                        e.selected = true;
+                        e.selected = usersSelected;
                     }
                 }
+
+                btnSelectUsers.setText(
+                        usersSelected ?
+                                getString(R.string.deselect_user_apps) :
+                                getString(R.string.select_user_apps)
+                );
+
                 adapter.submitList(new ArrayList<>(visible));
             });
         }
 
-        // ================= SELECT SYSTEM =================
+        // ===== SYSTEM SELECT =====
         if (btnSelectSystem != null) {
             btnSelectSystem.setOnClickListener(v -> {
+
+                systemSelected = !systemSelected;
+
                 for (AppEntry e : visible) {
                     if (!e.isHeader && e.isSystem) {
-                        e.selected = true;
+                        e.selected = systemSelected;
                     }
                 }
+
+                btnSelectSystem.setText(
+                        systemSelected ?
+                                getString(R.string.deselect_system_apps) :
+                                getString(R.string.select_system_apps)
+                );
+
                 adapter.submitList(new ArrayList<>(visible));
             });
         }
 
-        // ================= GUIDED ACTION =================
+        // ===== GUIDED ACTION =====
         if (btnGuided != null) {
             btnGuided.setOnClickListener(v -> startGuidedFromSelected());
         }
@@ -234,21 +273,10 @@ private boolean systemSelected = false;
                 else users.add(e);
             }
 
-            Comparator<AppEntry> comparator;
-
-            if (sortByCacheBiggest) {
-                comparator = (a, b) -> {
-                    long ca = a.cacheBytes;
-                    long cb = b.cacheBytes;
-                    if (ca < 0 && cb < 0) return alphaCompare(a,b);
-                    if (ca < 0) return 1;
-                    if (cb < 0) return -1;
-                    int cmp = Long.compare(cb, ca);
-                    return (cmp != 0) ? cmp : alphaCompare(a,b);
-                };
-            } else {
-                comparator = this::alphaCompare;
-            }
+            Comparator<AppEntry> comparator =
+                    sortByCacheBiggest ?
+                            (a, b) -> Long.compare(b.cacheBytes, a.cacheBytes) :
+                            this::alphaCompare;
 
             Collections.sort(users, comparator);
             Collections.sort(systems, comparator);
@@ -256,19 +284,17 @@ private boolean systemSelected = false;
             if (!users.isEmpty()) {
                 AppEntry h = new AppEntry();
                 h.isHeader = true;
-                h.isUserHeader = true;
                 h.headerTitle = "📱 USER APPS";
                 temp.add(h);
-                if (userExpanded) temp.addAll(users);
+                temp.addAll(users);
             }
 
             if (!systems.isEmpty()) {
                 AppEntry h = new AppEntry();
                 h.isHeader = true;
-                h.isSystemHeader = true;
                 h.headerTitle = "⚙ SYSTEM APPS";
                 temp.add(h);
-                if (systemExpanded) temp.addAll(systems);
+                temp.addAll(systems);
             }
 
             runOnUiThread(() -> {
@@ -356,8 +382,6 @@ private boolean systemSelected = false;
         ApplicationInfo ai;
 
         boolean isHeader;
-        boolean isUserHeader;
-        boolean isSystemHeader;
         String headerTitle;
     }
 }

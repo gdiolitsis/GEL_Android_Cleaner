@@ -49,6 +49,18 @@ public class AppListActivity extends GELAutoActivityHook {
 
     private boolean isUninstallMode = false;
 
+    private void requestUsageAccessIfNeeded() {
+
+    if (hasUsageAccess()) return;
+
+    Toast.makeText(this,
+            getString(R.string.toast_usage_access),
+            Toast.LENGTH_LONG).show();
+
+    Intent intent = new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS);
+    startActivity(intent);
+}
+
     // ===== SELECT STATES =====
     private boolean allSelected = false;
     private boolean usersSelected = false;
@@ -71,6 +83,7 @@ public class AppListActivity extends GELAutoActivityHook {
 
         adapter = new AppListAdapter(this);
         recyclerView.setAdapter(adapter);
+        requestUsageAccessIfNeeded();
 
         // ===== MODE =====
         String mode = getIntent().getStringExtra("mode");
@@ -173,10 +186,15 @@ public class AppListActivity extends GELAutoActivityHook {
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-        if (guidedActive) advanceGuidedIfNeeded();
+protected void onResume() {
+    super.onResume();
+
+    if (hasUsageAccess()) {
+        new Thread(this::loadAllApps).start();
     }
+
+    if (guidedActive) advanceGuidedIfNeeded();
+}
 
     // ============================================================
     // LOAD APPS

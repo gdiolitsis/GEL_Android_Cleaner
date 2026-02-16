@@ -42,6 +42,21 @@
     <string name="app_cache_title">Select app to clear cache</string>
     <string name="app_icon_desc">App Icon</string>
 
+    <!-- CACHE -->
+    <resources>
+
+    <string name="search_app">Search app...</string>
+    <string name="select_all">Select ALL</string>
+    <string name="deselect_all">Deselect ALL</string>
+    <string name="largest_cache">Largest Cache</string>
+    <string name="select_users">Select USERS</string>
+    <string name="deselect_users">Deselect USERS</string>
+    <string name="select_system">Select SYSTEM</string>
+    <string name="deselect_system">Deselect SYSTEM</string>
+    <string name="start_guided_cleaning">Start Guided Cache Cleaning</string>
+
+</resources>
+
     <!-- PERFORMANCE -->
     <string name="diagnostics">GEL Device Diagnostics</string>
     <string name="diagnostics_android">GEL Device Diagnostics</string>

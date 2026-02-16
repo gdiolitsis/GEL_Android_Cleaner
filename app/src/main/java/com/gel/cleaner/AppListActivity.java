@@ -623,11 +623,6 @@ public class AppListActivity extends GELAutoActivityHook {
         b.show();
     }
 
-    private int dp(int v) {
-        float d = getResources().getDisplayMetrics().density;
-        return Math.round(v * d);
-    }
-
     // ============================================================
     // MODEL
     // ============================================================

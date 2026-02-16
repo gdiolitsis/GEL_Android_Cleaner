@@ -12,7 +12,9 @@ import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
+import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -26,6 +28,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -376,7 +379,7 @@ private void showNextAppToast() {
 
 private void updateStartButtonText() {
 
-    Button startBtn = findViewById(R.id.btnStartGuided);
+    Button startBtn = findViewById(R.id.btnGuidedClean);
 
     if (isUninstallMode) {
         startBtn.setText(

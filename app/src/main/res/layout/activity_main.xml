@@ -263,6 +263,20 @@
                 android:padding="6dp"/>
         </LinearLayout>
 
+        <!-- NEW: UNINSTALL APPS BUTTON -->
+        <Button
+            android:id="@+id/btnAppUninstall"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:text="@string/app_uninstall"
+            android:background="@drawable/gel_btn_outline_selector"
+            android:textColor="@color/gel_btn_text_white"
+            android:layout_marginTop="6dp"
+            android:layout_marginBottom="6dp"
+            android:gravity="center"
+            android:maxLines="2"
+            android:padding="8dp"/>
+
         <!-- ================================================= -->
         <!-- PERFORMANCE -->
         <!-- ================================================= -->

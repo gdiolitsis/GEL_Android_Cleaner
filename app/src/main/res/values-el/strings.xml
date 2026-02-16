@@ -53,6 +53,7 @@
 <string name="deselect_system">Αποεπιλογή Εφαρμογών Συστήματος</string>
 <string name="start_guided_cleaning">Εκκίνηση Καθοδηγούμενου Καθαρισμού Cache</string>
 <string name="app_manager_btn">🗂 Διαχείριση Εφαρμογών\n(Λειτουργία Απεγκατάστασης)</string>
+<string name="app_uninstall_gr">🗑 Απεγκατάσταση Εφαρμογών</string>
 
     <!-- PERFORMANCE -->
 <string name="diagnostics">GEL Διάγνωση Συσκευής</string>

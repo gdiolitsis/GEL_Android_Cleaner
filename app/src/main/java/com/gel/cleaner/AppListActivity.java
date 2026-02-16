@@ -358,7 +358,9 @@ public class AppListActivity extends GELAutoActivityHook {
             ArrayList<AppEntry> users = new ArrayList<>();
             ArrayList<AppEntry> systems = new ArrayList<>();
 
-            for (AppEntry e : allApps) {
+            ArrayList<AppEntry> snapshot = new ArrayList<>(allApps);
+
+for (AppEntry e : snapshot) {
 
                 if (e == null) continue;
 

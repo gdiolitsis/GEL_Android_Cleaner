@@ -1,5 +1,5 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// AppListActivity — FINAL PRO BUILD (Dark-Gold + Stats + Full Toggle)
+// AppListActivity — FINAL GEL COMPLETE BUILD
 
 package com.gel.cleaner;
 
@@ -11,6 +11,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Build;
@@ -39,30 +40,30 @@ import java.util.Locale;
 public class AppListActivity extends GELAutoActivityHook {
 
     private RecyclerView recyclerView;
+    private TextView txtStats;
 
     private final ArrayList<AppEntry> allApps = new ArrayList<>();
     private final ArrayList<AppEntry> visible = new ArrayList<>();
     private AppListAdapter adapter;
 
-    private boolean isUninstallMode = false;
+    private String search = "";
     private boolean sortByCacheBiggest = false;
+    private boolean isUninstallMode = false;
 
-    // ===== SELECT STATES =====
+    private boolean userExpanded = true;
+    private boolean systemExpanded = true;
+
     private boolean allSelected = false;
     private boolean usersSelected = false;
     private boolean systemSelected = false;
 
-    // ===== STATS =====
-    private TextView txtTotal;
-    private TextView txtUsers;
-    private TextView txtSystem;
-    private TextView txtSelected;
-    private TextView txtSelectedCache;
-    private TextView txtSelectedApp;
-
+    private boolean guidedActive = false;
     private final ArrayList<String> guidedQueue = new ArrayList<>();
     private int guidedIndex = 0;
-    private boolean guidedActive = false;
+
+    // ============================================================
+    // ON CREATE
+    // ============================================================
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -72,19 +73,18 @@ public class AppListActivity extends GELAutoActivityHook {
         recyclerView = findViewById(R.id.listApps);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
+        txtStats = new TextView(this);
+        txtStats.setTextColor(Color.parseColor("#FFD700"));
+        txtStats.setTextSize(13f);
+        txtStats.setPadding(4,4,4,8);
+        ((LinearLayout) recyclerView.getParent()).addView(txtStats, 3);
+
         EditText searchBox     = findViewById(R.id.searchBar);
         Button btnSelectAll    = findViewById(R.id.btnSelectAll);
+        Button btnSortCache    = findViewById(R.id.btnSortCache);
         Button btnSelectUsers  = findViewById(R.id.btnSelectUsers);
         Button btnSelectSystem = findViewById(R.id.btnSelectSystem);
-        Button btnSortCache    = findViewById(R.id.btnSortCache);
         Button btnGuided       = findViewById(R.id.btnGuidedClean);
-
-        txtTotal         = findViewById(R.id.txtStatTotal);
-        txtUsers         = findViewById(R.id.txtStatUsers);
-        txtSystem        = findViewById(R.id.txtStatSystem);
-        txtSelected      = findViewById(R.id.txtStatSelected);
-        txtSelectedCache = findViewById(R.id.txtStatCache);
-        txtSelectedApp   = findViewById(R.id.txtStatApp);
 
         adapter = new AppListAdapter(this);
         recyclerView.setAdapter(adapter);
@@ -95,65 +95,89 @@ public class AppListActivity extends GELAutoActivityHook {
         if (mode == null) mode = "cache";
         isUninstallMode = "uninstall".equals(mode);
 
+        // SEARCH
         if (searchBox != null) {
             searchBox.addTextChangedListener(new TextWatcher() {
                 @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+                @Override public void afterTextChanged(Editable s) {}
                 @Override
                 public void onTextChanged(CharSequence s, int start, int before, int count) {
-                    applyFiltersAndSort(s.toString());
+                    search = s == null ? "" : s.toString().trim();
+                    applyFiltersAndSort();
                 }
-                @Override public void afterTextChanged(Editable s) {}
             });
         }
 
+        // SORT
         if (btnSortCache != null) {
             btnSortCache.setOnClickListener(v -> {
                 sortByCacheBiggest = !sortByCacheBiggest;
-                applyFiltersAndSort(null);
+                applyFiltersAndSort();
             });
         }
 
+        // GLOBAL SELECT
         if (btnSelectAll != null) {
             btnSelectAll.setOnClickListener(v -> {
                 allSelected = !allSelected;
-                for (AppEntry e : visible) if (!e.isHeader) e.selected = allSelected;
+                for (AppEntry e : visible)
+                    if (!e.isHeader) e.selected = allSelected;
+
                 btnSelectAll.setText(allSelected ?
                         getString(R.string.deselect_all) :
                         getString(R.string.select_all));
+
                 refreshUI();
             });
         }
 
+        // USERS
         if (btnSelectUsers != null) {
             btnSelectUsers.setOnClickListener(v -> {
                 usersSelected = !usersSelected;
                 for (AppEntry e : visible)
                     if (!e.isHeader && !e.isSystem)
                         e.selected = usersSelected;
+
                 btnSelectUsers.setText(usersSelected ?
                         getString(R.string.deselect_user_apps) :
                         getString(R.string.select_user_apps));
+
                 refreshUI();
             });
         }
 
+        // SYSTEM
         if (btnSelectSystem != null) {
             btnSelectSystem.setOnClickListener(v -> {
                 systemSelected = !systemSelected;
                 for (AppEntry e : visible)
                     if (!e.isHeader && e.isSystem)
                         e.selected = systemSelected;
+
                 btnSelectSystem.setText(systemSelected ?
                         getString(R.string.deselect_system_apps) :
                         getString(R.string.select_system_apps));
+
                 refreshUI();
             });
         }
 
-        if (btnGuided != null)
+        // GUIDED
+        if (btnGuided != null) {
             btnGuided.setOnClickListener(v -> startGuided());
+        }
 
         new Thread(this::loadAllApps).start();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (hasUsageAccess())
+            new Thread(this::loadAllApps).start();
+
+        if (guidedActive) advanceGuided();
     }
 
     // ============================================================
@@ -161,26 +185,22 @@ public class AppListActivity extends GELAutoActivityHook {
     // ============================================================
 
     private void loadAllApps() {
-
         PackageManager pm = getPackageManager();
         allApps.clear();
 
         for (ApplicationInfo ai : pm.getInstalledApplications(0)) {
-
             AppEntry e = new AppEntry();
             e.pkg = ai.packageName;
             e.label = String.valueOf(pm.getApplicationLabel(ai));
             e.isSystem = (ai.flags & ApplicationInfo.FLAG_SYSTEM) != 0;
-
             fillSizes(e);
             allApps.add(e);
         }
 
-        applyFiltersAndSort(null);
+        applyFiltersAndSort();
     }
 
     private void fillSizes(AppEntry e) {
-
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return;
         if (!hasUsageAccess()) return;
 
@@ -194,40 +214,68 @@ public class AppListActivity extends GELAutoActivityHook {
                     android.os.UserHandle.getUserHandleForUid(Process.myUid())
             );
 
-            e.appBytes = st.getAppBytes();
-            e.cacheBytes = st.getCacheBytes();
+            if (st != null) {
+                e.appBytes = st.getAppBytes();
+                e.cacheBytes = st.getCacheBytes();
+            }
 
         } catch (Throwable ignored) {}
     }
 
     // ============================================================
-    // FILTER
+    // FILTER + SORT
     // ============================================================
 
-    private void applyFiltersAndSort(String search) {
+    private void applyFiltersAndSort() {
 
         new Thread(() -> {
 
-            ArrayList<AppEntry> temp = new ArrayList<>();
+            ArrayList<AppEntry> users = new ArrayList<>();
+            ArrayList<AppEntry> systems = new ArrayList<>();
 
             for (AppEntry e : allApps) {
 
                 if (!TextUtils.isEmpty(search)) {
                     String s = search.toLowerCase(Locale.US);
-                    if (!e.label.toLowerCase(Locale.US).contains(s)
-                            && !e.pkg.toLowerCase(Locale.US).contains(s))
+                    if (!e.label.toLowerCase(Locale.US).contains(s) &&
+                        !e.pkg.toLowerCase(Locale.US).contains(s))
                         continue;
                 }
 
-                temp.add(e);
+                if (e.isSystem) systems.add(e);
+                else users.add(e);
             }
 
-            Comparator<AppEntry> comp =
-                    sortByCacheBiggest ?
-                            (a,b) -> Long.compare(b.cacheBytes, a.cacheBytes) :
-                            this::alphaCompare;
+            Comparator<AppEntry> comp = sortByCacheBiggest ?
+                    (a,b)->Long.compare(b.cacheBytes,a.cacheBytes)
+                    : this::alphaCompare;
 
-            Collections.sort(temp, comp);
+            Collections.sort(users, comp);
+            Collections.sort(systems, comp);
+
+            ArrayList<AppEntry> temp = new ArrayList<>();
+
+            if (!users.isEmpty()) {
+                AppEntry h = new AppEntry();
+                h.isHeader = true;
+                h.isUserHeader = true;
+                h.headerTitle = userExpanded ?
+                        "📱 USER APPS ▼" :
+                        "📱 USER APPS ►";
+                temp.add(h);
+                if (userExpanded) temp.addAll(users);
+            }
+
+            if (!systems.isEmpty()) {
+                AppEntry h = new AppEntry();
+                h.isHeader = true;
+                h.isSystemHeader = true;
+                h.headerTitle = systemExpanded ?
+                        "⚙ SYSTEM APPS ▼" :
+                        "⚙ SYSTEM APPS ►";
+                temp.add(h);
+                if (systemExpanded) temp.addAll(systems);
+            }
 
             runOnUiThread(() -> {
                 visible.clear();
@@ -238,80 +286,56 @@ public class AppListActivity extends GELAutoActivityHook {
         }).start();
     }
 
-    private int alphaCompare(AppEntry a, AppEntry b) {
-        Collator c = Collator.getInstance(Locale.getDefault());
-        return c.compare(a.label, b.label);
-    }
-
-    // ============================================================
-    // UI REFRESH
-    // ============================================================
-
     private void refreshUI() {
         adapter.submitList(new ArrayList<>(visible));
         updateStats();
     }
 
     private void updateStats() {
-
-        int total = 0, users = 0, systems = 0, selected = 0;
-        long selCache = 0, selApp = 0;
+        int total = allApps.size();
+        int vis = 0;
+        int sel = 0;
 
         for (AppEntry e : visible) {
-
-            total++;
-            if (e.isSystem) systems++;
-            else users++;
-
-            if (e.selected) {
-                selected++;
-                selCache += e.cacheBytes;
-                selApp   += e.appBytes;
+            if (!e.isHeader) {
+                vis++;
+                if (e.selected) sel++;
             }
         }
 
-        if (txtTotal != null)    txtTotal.setText("Total: " + total);
-        if (txtUsers != null)    txtUsers.setText("User: " + users);
-        if (txtSystem != null)   txtSystem.setText("System: " + systems);
-        if (txtSelected != null) txtSelected.setText("Selected: " + selected);
-        if (txtSelectedCache != null)
-            txtSelectedCache.setText("Cache: " + formatBytes(selCache));
-        if (txtSelectedApp != null)
-            txtSelectedApp.setText("App: " + formatBytes(selApp));
+        txtStats.setText("Total: " + total +
+                "   Visible: " + vis +
+                "   Selected: " + sel);
     }
 
-    private String formatBytes(long b) {
-        if (b <= 0) return "0 B";
-        float kb = b / 1024f;
-        if (kb < 1024) return String.format(Locale.US,"%.1f KB",kb);
-        float mb = kb / 1024f;
-        if (mb < 1024) return String.format(Locale.US,"%.1f MB",mb);
-        return String.format(Locale.US,"%.1f GB",mb/1024f);
+    private int alphaCompare(AppEntry a, AppEntry b) {
+        Collator c = Collator.getInstance(Locale.getDefault());
+        c.setStrength(Collator.PRIMARY);
+        return c.compare(a.label, b.label);
     }
 
     // ============================================================
-    // GUIDED
+    // GUIDED MODE
     // ============================================================
 
     private void startGuided() {
-
         guidedQueue.clear();
+        guidedIndex = 0;
 
         for (AppEntry e : visible)
-            if (e.selected) guidedQueue.add(e.pkg);
+            if (!e.isHeader && e.selected)
+                guidedQueue.add(e.pkg);
 
         if (guidedQueue.isEmpty()) {
             showGelDialog("No apps selected");
             return;
         }
 
-        guidedIndex = 0;
         guidedActive = true;
         openNext();
     }
 
     private void openNext() {
-
         if (guidedIndex >= guidedQueue.size()) {
             guidedActive = false;
             showGelDialog("Operation finished");
@@ -320,12 +344,18 @@ public class AppListActivity extends GELAutoActivityHook {
 
         String pkg = guidedQueue.get(guidedIndex);
 
-        Intent i = isUninstallMode ?
+        Intent intent = isUninstallMode ?
                 new Intent(Intent.ACTION_DELETE) :
                 new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
 
-        i.setData(Uri.parse("package:" + pkg));
-        startActivity(i);
+        intent.setData(Uri.parse("package:" + pkg));
+        startActivity(intent);
+    }
+
+    private void advanceGuided() {
+        if (!guidedActive) return;
+        guidedIndex++;
+        openNext();
     }
 
     // ============================================================
@@ -339,16 +369,21 @@ public class AppListActivity extends GELAutoActivityHook {
     }
 
     private boolean hasUsageAccess() {
-        AppOpsManager appOps =
-                (AppOpsManager) getSystemService(Context.APP_OPS_SERVICE);
+        try {
+            AppOpsManager appOps =
+                    (AppOpsManager) getSystemService(Context.APP_OPS_SERVICE);
 
-        int mode = appOps.checkOpNoThrow(
-                AppOpsManager.OPSTR_GET_USAGE_STATS,
-                Process.myUid(),
-                getPackageName()
-        );
+            int mode = appOps.checkOpNoThrow(
+                    AppOpsManager.OPSTR_GET_USAGE_STATS,
+                    Process.myUid(),
+                    getPackageName()
+            );
 
-        return mode == AppOpsManager.MODE_ALLOWED;
+            return mode == AppOpsManager.MODE_ALLOWED;
+
+        } catch (Throwable t) {
+            return false;
+        }
     }
 
     // ============================================================
@@ -358,24 +393,26 @@ public class AppListActivity extends GELAutoActivityHook {
     private void showGelDialog(String message) {
 
         AlertDialog.Builder b = new AlertDialog.Builder(this);
-        LinearLayout root = new LinearLayout(this);
-        root.setPadding(50,40,50,40);
-        root.setGravity(Gravity.CENTER);
+
+        LinearLayout box = new LinearLayout(this);
+        box.setPadding(40,40,40,40);
+        box.setGravity(Gravity.CENTER);
 
         GradientDrawable bg = new GradientDrawable();
-        bg.setColor(0xFF101010);
+        bg.setColor(Color.parseColor("#101010"));
         bg.setCornerRadius(30);
-        bg.setStroke(4,0xFFFFD700);
-        root.setBackground(bg);
+        bg.setStroke(4, Color.parseColor("#FFD700"));
+        box.setBackground(bg);
 
         TextView tv = new TextView(this);
-        tv.setText(message);
-        tv.setTextColor(0xFFFFFFFF);
+        tv.setTextColor(Color.WHITE);
         tv.setTextSize(16f);
+        tv.setText(message);
+        tv.setGravity(Gravity.CENTER);
 
-        root.addView(tv);
-        b.setView(root);
-        b.setPositiveButton("OK",null);
+        box.addView(tv);
+        b.setView(box);
+        b.setPositiveButton("OK", null);
         b.show();
     }
 
@@ -390,6 +427,10 @@ public class AppListActivity extends GELAutoActivityHook {
         boolean selected;
         long appBytes;
         long cacheBytes;
+
         boolean isHeader;
+        boolean isUserHeader;
+        boolean isSystemHeader;
+        String headerTitle;
     }
 }

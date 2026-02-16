@@ -160,6 +160,6 @@
     android:textAllCaps="false"
     android:layout_marginTop="10dp"
     android:textColor="#000000"
-    android:background="@drawable/gel_btn_gold_outline"/>
+    android:background="@drawable/gel_btn_green_gold"/>
 
 </LinearLayout>

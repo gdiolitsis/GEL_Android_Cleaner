@@ -51,6 +51,7 @@ public class AppListActivity extends GELAutoActivityHook {
     private int guidedIndex = 0;
 
     private String mode = "cache";
+    private boolean isUninstallMode;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -72,6 +73,9 @@ public class AppListActivity extends GELAutoActivityHook {
 
         mode = getIntent().getStringExtra("mode");
         if (mode == null) mode = "cache";
+
+        String mode = getIntent().getStringExtra("mode");
+boolean isUninstallMode = "uninstall".equals(mode);
 
         // ================= SEARCH =================
         if (searchBox != null) {

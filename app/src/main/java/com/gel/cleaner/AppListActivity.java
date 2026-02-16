@@ -343,27 +343,37 @@ public class AppListActivity extends GELAutoActivityHook {
     }
 
     private void refreshUI() {
-        adapter.submitList(new ArrayList<>(visible));
-        updateStats();
-    }
+    adapter.submitList(new ArrayList<>(visible));
+    updateStats();   // 🔥 ΧΩΡΙΣ ΑΥΤΟ θα δείχνει 0
+}
 
     private void updateStats() {
 
-        int total = allApps.size();
-        int vis = 0;
-        int sel = 0;
+    int total = allApps.size();
+    int visibleCount = 0;
+    int selectedCount = 0;
+    int userCount = 0;
+    int systemCount = 0;
 
-        for (AppEntry e : visible) {
-            if (!e.isHeader) {
-                vis++;
-                if (e.selected) sel++;
-            }
-        }
-
-        txtStats.setText("Total: " + total +
-                "   Visible: " + vis +
-                "   Selected: " + sel);
+    for (AppEntry e : allApps) {
+        if (e.isSystem) systemCount++;
+        else userCount++;
     }
+
+    for (AppEntry e : visible) {
+        if (!e.isHeader) {
+            visibleCount++;
+            if (e.selected) selectedCount++;
+        }
+    }
+
+    txtStats.setText(
+            "Total Apps: " + total +
+            "\nUser Apps: " + userCount +
+            "\nSystem Apps: " + systemCount +
+            "\nSelected: " + selectedCount
+    );
+}
 
     private int alphaCompare(AppEntry a, AppEntry b) {
         Collator c = Collator.getInstance(Locale.getDefault());

@@ -53,6 +53,7 @@
 <string name="deselect_system">Deselect SYSTEM</string>
 <string name="start_guided_cleaning">Start Guided Cache Cleaning</string>
 <string name="app_manager_btn">🗂 App Manager\n(Uninstall Mode)</string>
+<string name="app_uninstall">🗑 Uninstall Apps</string>
 
     <!-- PERFORMANCE -->
     <string name="diagnostics">GEL Device Diagnostics</string>

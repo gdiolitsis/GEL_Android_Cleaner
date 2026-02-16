@@ -51,6 +51,7 @@ public class AppListActivity extends GELAutoActivityHook {
     private TextView txtStatsSelected;
     
     private boolean returnedFromUsageScreen = false;
+    private boolean isLoadingApps = false;
 
     private final ArrayList<AppEntry> allApps = new ArrayList<>();
     private final ArrayList<AppEntry> visible = new ArrayList<>();
@@ -244,6 +245,26 @@ protected void onResume() {
     }
 }
 
+private boolean isDeviceRooted() {
+
+    String[] paths = {
+            "/system/bin/su",
+            "/system/xbin/su",
+            "/sbin/su",
+            "/system/su",
+            "/system/bin/.ext/su",
+            "/system/usr/we-need-root/su"
+    };
+
+    for (String path : paths) {
+        if (new java.io.File(path).exists()) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 private void updateStartButtonUI() {
 
     Button startBtn = findViewById(R.id.btnGuidedClean);
@@ -410,20 +431,19 @@ private void updateStartButtonText() {
 }
 
     // ============================================================
-    // LOAD APPS
-    // ============================================================
-
-    // ============================================================
 // LOAD APPS
 // ============================================================
 
 private void loadAllApps() {
 
+    if (isLoadingApps) return;
+    isLoadingApps = true;
+
     PackageManager pm = getPackageManager();
 
     synchronized (this) {
         allApps.clear();
-        visible.clear();   // 🔥 ΠΟΛΥ ΣΗΜΑΝΤΙΚΟ
+        visible.clear();
     }
 
     for (ApplicationInfo ai : pm.getInstalledApplications(0)) {
@@ -441,8 +461,10 @@ private void loadAllApps() {
         allApps.add(e);
     }
 
-    // ❗ UI update ΠΑΝΤΑ στο main thread
-    runOnUiThread(this::applyFiltersAndSort);
+    runOnUiThread(() -> {
+        applyFiltersAndSort();
+        isLoadingApps = false;  // 🔥 reset
+    });
 }
 
     private void fillSizes(AppEntry e) {
@@ -484,18 +506,25 @@ private void applyFiltersAndSort() {
         ArrayList<AppEntry> users   = new ArrayList<>();
         ArrayList<AppEntry> systems = new ArrayList<>();
 
+        boolean rooted = isDeviceRooted();   // ✅ ΜΙΑ ΦΟΡΑ
         String s = (search == null) ? "" : search.toLowerCase(Locale.US);
 
         for (AppEntry e : snapshot) {
-        	
-        // 🔥 Hide 0-cache apps ONLY in cache mode
-if (!isUninstallMode) {
-    if (e.cacheBytes <= 0) continue;
-}
 
             if (e == null) continue;
             if (e.isHeader) continue; // 🔒 NEVER process headers
 
+            // 🔥 UNINSTALL MODE → hide system apps if NOT rooted
+            if (isUninstallMode && !rooted && e.isSystem) {
+                continue;
+            }
+
+            // 🔥 CACHE MODE → hide apps with 0 cache
+            if (!isUninstallMode && e.cacheBytes <= 0) {
+                continue;
+            }
+
+            // 🔎 SEARCH FILTER
             if (!TextUtils.isEmpty(s)) {
                 String name = (e.label == null) ? "" : e.label.toLowerCase(Locale.US);
                 String pkg  = (e.pkg == null) ? "" : e.pkg.toLowerCase(Locale.US);
@@ -527,7 +556,6 @@ if (!isUninstallMode) {
 
         // ---- USER HEADER ----
         if (!users.isEmpty()) {
-
             AppEntry h = new AppEntry();
             h.isHeader = true;
             h.isUserHeader = true;
@@ -536,13 +564,11 @@ if (!isUninstallMode) {
                     : "📱 USER APPS ►";
 
             rebuilt.add(h);
-
             if (userExpanded) rebuilt.addAll(users);
         }
 
         // ---- SYSTEM HEADER ----
         if (!systems.isEmpty()) {
-
             AppEntry h = new AppEntry();
             h.isHeader = true;
             h.isSystemHeader = true;
@@ -551,13 +577,11 @@ if (!isUninstallMode) {
                     : "⚙ SYSTEM APPS ►";
 
             rebuilt.add(h);
-
             if (systemExpanded) rebuilt.addAll(systems);
         }
 
         runOnUiThread(() -> {
 
-            // 🔒 HARD RESET
             visible.clear();
             visible.addAll(rebuilt);
 

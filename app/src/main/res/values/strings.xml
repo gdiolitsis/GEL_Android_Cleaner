@@ -43,8 +43,6 @@
     <string name="app_icon_desc">App Icon</string>
 
     <!-- CACHE -->
-    <resources>
-
     <string name="search_app">Search app...</string>
     <string name="select_all">Select ALL</string>
     <string name="deselect_all">Deselect ALL</string>

@@ -50,6 +50,8 @@ public class AppListActivity extends GELAutoActivityHook {
     private final ArrayList<String> guidedQueue = new ArrayList<>();
     private int guidedIndex = 0;
 
+    private String mode = "cache";
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -67,6 +69,9 @@ public class AppListActivity extends GELAutoActivityHook {
 
         adapter = new AppListAdapter(this);
         recyclerView.setAdapter(adapter);
+
+        mode = getIntent().getStringExtra("mode");
+        if (mode == null) mode = "cache";
 
         // ================= SEARCH =================
         if (searchBox != null) {

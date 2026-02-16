@@ -47,11 +47,11 @@
 <string name="select_all">Select ALL</string>
 <string name="deselect_all">Deselect ALL</string>
 <string name="largest_cache">Largest Cache</string>
-<string name="select_users">Select USERS</string>
-<string name="deselect_users">Deselect USERS</string>
-<string name="select_system">Select SYSTEM</string>
-<string name="deselect_system">Deselect SYSTEM</string>
-<string name="start_guided_cleaning">Start Guided Cache Cleaning</string>
+<string name="select_user_apps">Select USER APPS</string>
+<string name="deselect_user_apps">Deselect USER APPS</string>
+<string name="select_system_apps">Select SYSTEM APPS</string>
+<string name="deselect_system_apps">Deselect SYSTEM APPS</string>
+<string name="start_guided_cleaning">Start Guided Cleaning</string>
 <string name="app_manager_btn">🗂 App Manager\n(Uninstall Mode)</string>
 <string name="app_uninstall">🗑 Uninstall Apps</string>
 

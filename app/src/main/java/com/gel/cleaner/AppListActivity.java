@@ -101,7 +101,7 @@ public class AppListActivity extends GELAutoActivityHook {
         isUninstallMode = "uninstall".equalsIgnoreCase(mode);
 
         // Permission prompt (Usage Access = sizes)
-        requestUsageAccessIfNeeded();
+        checkUsageAccessGate();
 
         // SEARCH
         if (searchBox != null) {
@@ -203,29 +203,33 @@ public class AppListActivity extends GELAutoActivityHook {
         new Thread(this::loadAllApps).start();
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
+@Override
+protected void onResume() {
+    super.onResume();
 
-        // If user returned from settings and now has access -> reload sizes
-        if (hasUsageAccess()) {
-            new Thread(this::loadAllApps).start();
-        } else {
-            // still no access -> keep dialog smart but not spammy
-            // (only show if lists are empty OR sizes are still needed)
-            if (allApps.isEmpty()) showUsageAccessDialog();
-        }
-
-        if (guidedActive) advanceGuided();
+    if (hasUsageAccess()) {
+        new Thread(this::loadAllApps).start();
     }
+
+    if (guidedActive) {
+        advanceGuided();
+    }
+}
 
     // ============================================================
     // USAGE ACCESS
     // ============================================================
 
-    private void requestUsageAccessIfNeeded() {
-        if (!hasUsageAccess()) showUsageAccessDialog();
+    private void checkUsageAccessGate() {
+
+    if (!hasUsageAccess()) {
+        showUsageAccessDialog();
+        return;
     }
+
+    // Access granted → load apps normally
+    new Thread(this::loadAllApps).start();
+}
 
     private void showUsageAccessDialog() {
 

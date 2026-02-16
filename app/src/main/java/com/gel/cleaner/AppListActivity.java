@@ -171,6 +171,9 @@ public class AppListActivity extends GELAutoActivityHook {
         new Thread(this::loadAllApps).start();
     }
 
+    requestUsageAccessIfNeeded();
+showUsageAccessDialog();
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -179,6 +182,55 @@ public class AppListActivity extends GELAutoActivityHook {
 
         if (guidedActive) advanceGuided();
     }
+    if (!hasUsageAccess()) {
+    showUsageAccessDialog();
+}
+
+    private void showUsageAccessDialog() {
+
+    if (hasUsageAccess()) return;
+
+    androidx.appcompat.app.AlertDialog.Builder b =
+            new androidx.appcompat.app.AlertDialog.Builder(
+                    this,
+                    R.style.Theme_GEL_DarkGold
+            );
+
+    b.setCancelable(false);
+
+    String msg = AppLang.isGreek(this)
+            ? "Για να εμφανίζονται τα μεγέθη εφαρμογών και cache,\n" +
+              "πρέπει να ενεργοποιήσεις Πρόσβαση Χρήσης.\n\n" +
+              "Χωρίς αυτήν, η λειτουργία θα είναι περιορισμένη."
+            : "To display application and cache sizes,\n" +
+              "Usage Access permission is required.\n\n" +
+              "Without it, functionality will be limited.";
+
+    b.setTitle(AppLang.isGreek(this)
+            ? "Απαιτείται Πρόσβαση Χρήσης"
+            : "Usage Access Required");
+
+    b.setMessage(msg);
+
+    b.setPositiveButton(
+            AppLang.isGreek(this)
+                    ? "Ενεργοποίηση"
+                    : "Enable Usage Access",
+            (d, w) -> {
+                Intent intent =
+                        new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS);
+                startActivity(intent);
+            });
+
+    b.setNegativeButton(
+            AppLang.isGreek(this)
+                    ? "Συνέχεια με περιορισμούς"
+                    : "Continue Limited",
+            (d, w) -> d.dismiss()
+    );
+
+    b.show();
+}
 
     // ============================================================
     // LOAD APPS

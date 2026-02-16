@@ -54,8 +54,6 @@
 <string name="start_guided_cleaning">Start Guided Cache Cleaning</string>
 <string name="app_manager_btn">🗂 App Manager\n(Uninstall Mode)</string>
 
-</resources>
-
     <!-- PERFORMANCE -->
     <string name="diagnostics">GEL Device Diagnostics</string>
     <string name="diagnostics_android">GEL Device Diagnostics</string>

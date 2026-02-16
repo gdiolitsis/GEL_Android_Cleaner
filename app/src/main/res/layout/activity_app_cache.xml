@@ -26,6 +26,54 @@
         android:layout_marginBottom="10dp"/>
 
     <!-- ========================================================= -->
+    <!-- 📊 GEL STATS PANEL -->
+    <!-- ========================================================= -->
+
+    <LinearLayout
+        android:id="@+id/layoutStats"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="10dp"
+        android:layout_marginBottom="10dp"
+        android:background="@drawable/gel_stats_bg">
+
+        <TextView
+            android:id="@+id/txtStatsTotal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Total Apps: 0"
+            android:textColor="#FFD700"
+            android:textSize="14sp"
+            android:textStyle="bold"/>
+
+        <TextView
+            android:id="@+id/txtStatsUsers"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="User Apps: 0"
+            android:textColor="#39FF14"
+            android:textSize="13sp"/>
+
+        <TextView
+            android:id="@+id/txtStatsSystem"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="System Apps: 0"
+            android:textColor="#FF9800"
+            android:textSize="13sp"/>
+
+        <TextView
+            android:id="@+id/txtStatsSelected"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Selected: 0"
+            android:textColor="#FFFFFF"
+            android:textSize="13sp"
+            android:textStyle="bold"/>
+    </LinearLayout>
+
+    <!-- ========================================================= -->
     <!-- 📊 TOP CONTROLS -->
     <!-- ========================================================= -->
 
@@ -65,14 +113,14 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:layout_marginBottom="8dp">
+        android:layout_marginBottom="10dp">
 
         <Button
             android:id="@+id/btnSelectUsers"
             android:layout_width="0dp"
             android:layout_height="40dp"
             android:layout_weight="1"
-            android:text="@string/select_users"
+            android:text="@string/select_user_apps"
             android:textAllCaps="false"
             android:backgroundTint="#39FF14"
             android:textColor="@android:color/black"/>
@@ -82,7 +130,7 @@
             android:layout_width="0dp"
             android:layout_height="40dp"
             android:layout_weight="1"
-            android:text="@string/select_system"
+            android:text="@string/select_system_apps"
             android:textAllCaps="false"
             android:layout_marginStart="6dp"
             android:backgroundTint="#FF9800"

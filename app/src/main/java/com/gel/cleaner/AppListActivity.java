@@ -13,8 +13,6 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
-import android.graphics.Typeface;
-import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -101,6 +99,8 @@ public class AppListActivity extends GELAutoActivityHook {
         String mode = getIntent().getStringExtra("mode");
         if (mode == null) mode = "cache";
         isUninstallMode = "uninstall".equalsIgnoreCase(mode);
+        
+updateStartButtonUI();
 
         // Permission prompt (Usage Access = sizes)
         checkUsageAccessGate();
@@ -198,8 +198,16 @@ public class AppListActivity extends GELAutoActivityHook {
 
         // GUIDED ACTION
         if (btnGuided != null) {
-            btnGuided.setOnClickListener(v -> startGuided());
+    btnGuided.setOnClickListener(v -> {
+
+        if (isUninstallMode) {
+            showUninstallConfirmDialog();
+        } else {
+            startGuided();
         }
+
+    });
+}
 
         // Initial load
         new Thread(this::loadAllApps).start();
@@ -216,6 +224,61 @@ protected void onResume() {
     if (guidedActive) {
         advanceGuided();
     }
+}
+
+private void updateStartButtonUI() {
+
+    Button startBtn = findViewById(R.id.btnGuidedClean);
+    if (startBtn == null) return;
+
+    boolean gr = AppLang.isGreek(this);
+
+    if (isUninstallMode) {
+
+        startBtn.setText(
+                gr
+                        ? "🗑 Απεγκατάσταση επιλεγμένων εφαρμογών"
+                        : "🗑 Uninstall selected apps"
+        );
+
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(0xFFD00000); // GEL red
+        bg.setCornerRadius(dp(14));
+        bg.setStroke(dp(3), 0xFFFFD700);
+
+        startBtn.setBackground(bg);
+        startBtn.setTextColor(Color.WHITE);
+
+    } else {
+
+        startBtn.setText(
+                gr
+                        ? "Έναρξη καθοδηγούμενου καθαρισμού"
+                        : "Start Guided Cleaning"
+        );
+
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(0xFF39FF14); // neon green
+        bg.setCornerRadius(dp(14));
+        bg.setStroke(dp(3), 0xFFFFD700);
+
+        startBtn.setBackground(bg);
+        startBtn.setTextColor(Color.BLACK);
+    }
+}
+
+private void showUninstallConfirmDialog() {
+
+    boolean gr = AppLang.isGreek(this);
+
+    new AlertDialog.Builder(this)
+            .setTitle(gr ? "Επιβεβαίωση" : "Confirmation")
+            .setMessage(gr
+                    ? "Θέλεις να απεγκαταστήσεις τις επιλεγμένες εφαρμογές;"
+                    : "Do you want to uninstall the selected apps?")
+            .setPositiveButton(gr ? "ΝΑΙ" : "YES", (d, w) -> startGuided())
+            .setNegativeButton(gr ? "ΑΚΥΡΟ" : "CANCEL", null)
+            .show();
 }
 
     // ============================================================
@@ -300,6 +363,35 @@ protected void onResume() {
             return false;
         }
     }
+
+private void showNextAppToast() {
+    Toast.makeText(
+            this,
+            AppLang.isGreek(this)
+                    ? "Πάτησε Πίσω για να συνεχίσεις στην επόμενη εφαρμογή."
+                    : "Press Back to continue to the next app.",
+            Toast.LENGTH_LONG
+    ).show();
+}
+
+private void updateStartButtonText() {
+
+    Button startBtn = findViewById(R.id.btnStartGuided);
+
+    if (isUninstallMode) {
+        startBtn.setText(
+                AppLang.isGreek(this)
+                        ? "Απεγκατάσταση επιλεγμένων εφαρμογών"
+                        : "Uninstall selected apps"
+        );
+    } else {
+        startBtn.setText(
+                AppLang.isGreek(this)
+                        ? "Έναρξη καθοδηγούμενου καθαρισμού"
+                        : "Start Guided Cleaning"
+        );
+    }
+}
 
     // ============================================================
     // LOAD APPS
@@ -569,30 +661,44 @@ for (AppEntry e : snapshot) {
         openNext();
     }
 
-    private void openNext() {
+private void openNext() {
 
-        if (guidedIndex >= guidedQueue.size()) {
-            guidedActive = false;
-            showGelDialog(AppLang.isGreek(this) ? "Η διαδικασία ολοκληρώθηκε." : "Operation finished.");
-            return;
-        }
-
-        String pkg = guidedQueue.get(guidedIndex);
-
-        Intent intent = isUninstallMode
-                ? new Intent(Intent.ACTION_DELETE)
-                : new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-
-        intent.setData(Uri.parse("package:" + pkg));
-
-        try {
-            startActivity(intent);
-        } catch (Throwable t) {
-            showGelDialog(AppLang.isGreek(this) ? "Αδυναμία ανοίγματος ρυθμίσεων." : "Cannot open settings.");
-            guidedIndex++;
-            openNext();
-        }
+    if (guidedIndex >= guidedQueue.size()) {
+        guidedActive = false;
+        showGelDialog(
+                AppLang.isGreek(this)
+                        ? "Η διαδικασία ολοκληρώθηκε."
+                        : "Operation finished."
+        );
+        return;
     }
+
+    String pkg = guidedQueue.get(guidedIndex);
+
+    Intent intent = isUninstallMode
+            ? new Intent(Intent.ACTION_DELETE)
+            : new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+
+    intent.setData(Uri.parse("package:" + pkg));
+
+    try {
+
+        guidedIndex++;            // ✅ προχωράμε πρώτα index
+        startActivity(intent);    // ✅ μία μόνο φορά
+        showNextAppToast();       // ✅ ενημέρωση χρήστη
+
+    } catch (Throwable t) {
+
+        showGelDialog(
+                AppLang.isGreek(this)
+                        ? "Αδυναμία ανοίγματος ρυθμίσεων."
+                        : "Cannot open settings."
+        );
+
+        guidedIndex++;
+        openNext();
+    }
+}
 
     private void advanceGuided() {
         if (!guidedActive) return;
@@ -600,25 +706,33 @@ for (AppEntry e : snapshot) {
         openNext();
     }
 
-    // ============================================================
-    // GEL DIALOG (Dark-Gold)
-    // ============================================================
+// ============================================================
+// GEL DIALOG (Dark-Gold + Neon Body)
+// ============================================================
+private void showGelDialog(String message) {
 
-    private void showGelDialog(String message) {
+    final boolean gr = AppLang.isGreek(this);
 
-    AlertDialog.Builder b = new AlertDialog.Builder(this);
+    AlertDialog.Builder b =
+            new AlertDialog.Builder(
+                    this,
+                    android.R.style.Theme_Material_Dialog_NoActionBar
+            );
 
+    b.setCancelable(false);
+
+    // ================= ROOT =================
     LinearLayout root = new LinearLayout(this);
     root.setOrientation(LinearLayout.VERTICAL);
     root.setPadding(dp(22), dp(18), dp(22), dp(16));
 
     GradientDrawable bg = new GradientDrawable();
-    bg.setColor(0xFF101010);          // Dark header area
+    bg.setColor(0xFF101010);          // Dark background
     bg.setCornerRadius(dp(18));
     bg.setStroke(dp(3), 0xFFFFD700);  // Gold border
     root.setBackground(bg);
 
-    // ===== TITLE =====
+    // ================= TITLE =================
     TextView title = new TextView(this);
     title.setText(message);
     title.setTextColor(Color.WHITE);
@@ -629,13 +743,13 @@ for (AppEntry e : snapshot) {
 
     root.addView(title);
 
-    // ===== NEON GREEN BODY =====
+    // ================= NEON BODY =================
     LinearLayout neonBox = new LinearLayout(this);
     neonBox.setPadding(dp(18), dp(16), dp(18), dp(16));
     neonBox.setGravity(Gravity.CENTER);
 
     GradientDrawable neonBg = new GradientDrawable();
-    neonBg.setColor(0xFF39FF14);      // 💚 Neon green
+    neonBg.setColor(0xFF39FF14);      // Neon green
     neonBg.setCornerRadius(dp(14));
     neonBg.setStroke(dp(2), 0xFFFFD700);
 
@@ -643,7 +757,7 @@ for (AppEntry e : snapshot) {
 
     TextView body = new TextView(this);
     body.setText(
-            AppLang.isGreek(this)
+            gr
                     ? "Η διαδικασία ολοκληρώθηκε επιτυχώς."
                     : "Operation completed successfully."
     );
@@ -654,18 +768,44 @@ for (AppEntry e : snapshot) {
     neonBox.addView(body);
     root.addView(neonBox);
 
+    // ================= OK BUTTON (GEL STYLE) =================
+    Button okBtn = new Button(this);
+    okBtn.setText("OK");
+    okBtn.setAllCaps(false);
+    okBtn.setTextColor(Color.WHITE);
+    okBtn.setTextSize(16f);
+    okBtn.setTypeface(null, Typeface.BOLD);
+    okBtn.setPadding(dp(18), dp(12), dp(18), dp(12));
+
+    GradientDrawable okBg = new GradientDrawable();
+    okBg.setColor(0xFF0F8A3B);       // Dark green
+    okBg.setCornerRadius(dp(14));
+    okBg.setStroke(dp(2), 0xFFFFD700);
+
+    okBtn.setBackground(okBg);
+
+    LinearLayout.LayoutParams lpBtn =
+            new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+            );
+    lpBtn.setMargins(0, dp(16), 0, 0);
+    okBtn.setLayoutParams(lpBtn);
+
+    root.addView(okBtn);
+
     b.setView(root);
 
     AlertDialog d = b.create();
 
+    // REMOVE default white corners
     if (d.getWindow() != null) {
         d.getWindow().setBackgroundDrawable(
                 new ColorDrawable(Color.TRANSPARENT)
         );
     }
 
-    d.setButton(AlertDialog.BUTTON_POSITIVE, "OK",
-            (dialog, which) -> dialog.dismiss());
+    okBtn.setOnClickListener(v -> d.dismiss());
 
     d.show();
 }

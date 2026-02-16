@@ -46,15 +46,15 @@
 <string name="search_app">Αναζήτηση εφαρμογής...</string>
 <string name="select_all">Επιλογή ΟΛΩΝ</string>
 <string name="deselect_all">Αποεπιλογή ΟΛΩΝ</string>
-<string name="largest_cache">Μεγαλύτερη Προσωρινή Μνήμη</string>
-<string name="select_users">Επιλογή Εφαρμογών Χρήστη</string>
-<string name="deselect_users">Αποεπιλογή Εφαρμογών Χρήστη</string>
-<string name="select_system">Επιλογή Εφαρμογών Συστήματος</string>
-<string name="deselect_system">Αποεπιλογή Εφαρμογών Συστήματος</string>
-<string name="start_guided_cleaning">Εκκίνηση Καθοδηγούμενου Καθαρισμού Cache</string>
+<string name="largest_cache">Μεγαλύτερη Cache</string>
+<string name="select_user_apps">Επιλογή ΕΦΑΡΜΟΓΩΝ ΧΡΗΣΤΗ</string>
+<string name="deselect_user_apps">Αποεπιλογή ΕΦΑΡΜΟΓΩΝ ΧΡΗΣΤΗ</string>
+<string name="select_system_apps">Επιλογή ΕΦΑΡΜΟΓΩΝ ΣΥΣΤΗΜΑΤΟΣ</string>
+<string name="deselect_system_apps">Αποεπιλογή ΕΦΑΡΜΟΓΩΝ ΣΥΣΤΗΜΑΤΟΣ</string>
+<string name="start_guided_cleaning">Εκκίνηση Καθοδηγούμενης Διαδικασίας</string>
 <string name="app_manager_btn">🗂 Διαχείριση Εφαρμογών\n(Λειτουργία Απεγκατάστασης)</string>
-<string name="app_uninstall_gr">🗑 Απεγκατάσταση Εφαρμογών</string>
-
+<string name="app_uninstall">🗑 Απεγκατάσταση Εφαρμογών</string>
+    
     <!-- PERFORMANCE -->
 <string name="diagnostics">GEL Διάγνωση Συσκευής</string>
 <string name="diagnostics_android">GEL Διάγνωση Συσκευής</string>

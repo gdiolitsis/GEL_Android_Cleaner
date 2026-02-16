@@ -1,5 +1,5 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// AppListActivity — FINAL STABLE GEL BUILD
+// AppListActivity — FINAL STABLE GEL BUILD (Cache + Uninstall + Toggles + Stats Panel)
 
 package com.gel.cleaner;
 
@@ -22,7 +22,6 @@ import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.view.Gravity;
-import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -41,7 +40,12 @@ import java.util.Locale;
 public class AppListActivity extends GELAutoActivityHook {
 
     private RecyclerView recyclerView;
-    private TextView txtStats;
+
+    // STATS (FROM XML PANEL)
+    private TextView txtStatsTotal;
+    private TextView txtStatsUsers;
+    private TextView txtStatsSystem;
+    private TextView txtStatsSelected;
 
     private final ArrayList<AppEntry> allApps = new ArrayList<>();
     private final ArrayList<AppEntry> visible = new ArrayList<>();
@@ -54,6 +58,7 @@ public class AppListActivity extends GELAutoActivityHook {
     private boolean userExpanded = true;
     private boolean systemExpanded = true;
 
+    // TOGGLE STATES
     private boolean allSelected = false;
     private boolean usersSelected = false;
     private boolean systemSelected = false;
@@ -77,11 +82,11 @@ public class AppListActivity extends GELAutoActivityHook {
         adapter = new AppListAdapter(this);
         recyclerView.setAdapter(adapter);
 
-        txtStats = new TextView(this);
-        txtStats.setTextColor(Color.parseColor("#FFD700"));
-        txtStats.setTextSize(13f);
-        txtStats.setPadding(4,4,4,8);
-        ((LinearLayout) recyclerView.getParent()).addView(txtStats, 3);
+        // STATS PANEL (XML)
+        txtStatsTotal    = findViewById(R.id.txtStatsTotal);
+        txtStatsUsers    = findViewById(R.id.txtStatsUsers);
+        txtStatsSystem   = findViewById(R.id.txtStatsSystem);
+        txtStatsSelected = findViewById(R.id.txtStatsSelected);
 
         EditText searchBox     = findViewById(R.id.searchBar);
         Button btnSelectAll    = findViewById(R.id.btnSelectAll);
@@ -90,10 +95,12 @@ public class AppListActivity extends GELAutoActivityHook {
         Button btnSelectSystem = findViewById(R.id.btnSelectSystem);
         Button btnGuided       = findViewById(R.id.btnGuidedClean);
 
+        // MODE
         String mode = getIntent().getStringExtra("mode");
         if (mode == null) mode = "cache";
-        isUninstallMode = "uninstall".equals(mode);
+        isUninstallMode = "uninstall".equalsIgnoreCase(mode);
 
+        // Permission prompt (Usage Access = sizes)
         requestUsageAccessIfNeeded();
 
         // SEARCH
@@ -103,13 +110,13 @@ public class AppListActivity extends GELAutoActivityHook {
                 @Override public void afterTextChanged(Editable s) {}
                 @Override
                 public void onTextChanged(CharSequence s, int start, int before, int count) {
-                    search = s == null ? "" : s.toString().trim();
+                    search = (s == null) ? "" : s.toString().trim();
                     applyFiltersAndSort();
                 }
             });
         }
 
-        // SORT
+        // SORT (TOGGLE)
         if (btnSortCache != null) {
             btnSortCache.setOnClickListener(v -> {
                 sortByCacheBiggest = !sortByCacheBiggest;
@@ -117,58 +124,82 @@ public class AppListActivity extends GELAutoActivityHook {
             });
         }
 
-        // SELECT ALL
+        // GLOBAL SELECT (TOGGLE)
         if (btnSelectAll != null) {
             btnSelectAll.setOnClickListener(v -> {
                 allSelected = !allSelected;
-                for (AppEntry e : visible)
-                    if (!e.isHeader) e.selected = allSelected;
 
-                btnSelectAll.setText(allSelected ?
-                        getString(R.string.deselect_all) :
-                        getString(R.string.select_all));
+                for (AppEntry e : visible) {
+                    if (e == null || e.isHeader) continue;
+                    e.selected = allSelected;
+                }
+
+                // When global select is used, category toggles become "unknown" -> recompute
+                syncToggleStatesFromSelection();
+
+                btnSelectAll.setText(allSelected
+                        ? getString(R.string.deselect_all)
+                        : getString(R.string.select_all));
 
                 refreshUI();
             });
+
+            // initial wording
+            btnSelectAll.setText(getString(R.string.select_all));
         }
 
-        // USERS
+        // USER APPS SELECT (TOGGLE)
         if (btnSelectUsers != null) {
             btnSelectUsers.setOnClickListener(v -> {
                 usersSelected = !usersSelected;
-                for (AppEntry e : visible)
-                    if (!e.isHeader && !e.isSystem)
-                        e.selected = usersSelected;
 
-                btnSelectUsers.setText(usersSelected ?
-                        getString(R.string.deselect_user_apps) :
-                        getString(R.string.select_user_apps));
+                for (AppEntry e : visible) {
+                    if (e == null || e.isHeader) continue;
+                    if (!e.isSystem) e.selected = usersSelected;
+                }
+
+                // Recompute global toggle too
+                syncToggleStatesFromSelection();
+
+                btnSelectUsers.setText(usersSelected
+                        ? getString(R.string.deselect_user_apps)
+                        : getString(R.string.select_user_apps));
 
                 refreshUI();
             });
+
+            btnSelectUsers.setText(getString(R.string.select_user_apps));
         }
 
-        // SYSTEM
+        // SYSTEM APPS SELECT (TOGGLE)
         if (btnSelectSystem != null) {
             btnSelectSystem.setOnClickListener(v -> {
                 systemSelected = !systemSelected;
-                for (AppEntry e : visible)
-                    if (!e.isHeader && e.isSystem)
-                        e.selected = systemSelected;
 
-                btnSelectSystem.setText(systemSelected ?
-                        getString(R.string.deselect_system_apps) :
-                        getString(R.string.select_system_apps));
+                for (AppEntry e : visible) {
+                    if (e == null || e.isHeader) continue;
+                    if (e.isSystem) e.selected = systemSelected;
+                }
+
+                // Recompute global toggle too
+                syncToggleStatesFromSelection();
+
+                btnSelectSystem.setText(systemSelected
+                        ? getString(R.string.deselect_system_apps)
+                        : getString(R.string.select_system_apps));
 
                 refreshUI();
             });
+
+            btnSelectSystem.setText(getString(R.string.select_system_apps));
         }
 
-        // GUIDED
+        // GUIDED ACTION
         if (btnGuided != null) {
             btnGuided.setOnClickListener(v -> startGuided());
         }
 
+        // Initial load
         new Thread(this::loadAllApps).start();
     }
 
@@ -176,12 +207,14 @@ public class AppListActivity extends GELAutoActivityHook {
     protected void onResume() {
         super.onResume();
 
-        if (!hasUsageAccess()) {
-            showUsageAccessDialog();
-            return;
+        // If user returned from settings and now has access -> reload sizes
+        if (hasUsageAccess()) {
+            new Thread(this::loadAllApps).start();
+        } else {
+            // still no access -> keep dialog smart but not spammy
+            // (only show if lists are empty OR sizes are still needed)
+            if (allApps.isEmpty()) showUsageAccessDialog();
         }
-
-        new Thread(this::loadAllApps).start();
 
         if (guidedActive) advanceGuided();
     }
@@ -191,33 +224,63 @@ public class AppListActivity extends GELAutoActivityHook {
     // ============================================================
 
     private void requestUsageAccessIfNeeded() {
-        if (!hasUsageAccess()) {
-            showUsageAccessDialog();
-        }
+        if (!hasUsageAccess()) showUsageAccessDialog();
     }
 
     private void showUsageAccessDialog() {
 
-        AlertDialog.Builder b =
-                new AlertDialog.Builder(this, R.style.Theme_GEL_DarkGold);
+        if (hasUsageAccess()) return;
 
+        final boolean gr = AppLang.isGreek(this);
+
+        AlertDialog.Builder b = new AlertDialog.Builder(this);
+
+        LinearLayout root = new LinearLayout(this);
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.setPadding(dp(22), dp(18), dp(22), dp(16));
+
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(0xFF101010);
+        bg.setCornerRadius(dp(18));
+        bg.setStroke(dp(3), 0xFFFFD700);
+        root.setBackground(bg);
+
+        TextView title = new TextView(this);
+        title.setText(gr ? "Απαιτείται Πρόσβαση Χρήσης" : "Usage Access Required");
+        title.setTextColor(Color.WHITE);
+        title.setTextSize(18f);
+        title.setGravity(Gravity.CENTER);
+        title.setPadding(0, 0, 0, dp(10));
+
+        TextView msg = new TextView(this);
+        msg.setText(gr
+                ? "Για να εμφανίζονται τα μεγέθη εφαρμογών και cache,\nενεργοποίησε «Πρόσβαση Χρήσης».\n\nΧωρίς αυτό, θα δεις λίστα αλλά χωρίς μεγέθη."
+                : "To show app + cache sizes,\nplease enable Usage Access.\n\nWithout it, the list works but sizes stay empty.");
+        msg.setTextColor(0xFFDDDDDD);
+        msg.setTextSize(14.5f);
+        msg.setGravity(Gravity.CENTER);
+
+        root.addView(title);
+        root.addView(msg);
+
+        b.setView(root);
         b.setCancelable(false);
 
-        b.setTitle("Usage Access Required");
-        b.setMessage("To display application and cache sizes,\nplease enable Usage Access permission.");
+        b.setPositiveButton(gr ? "Enable Usage Access" : "Enable Usage Access", (d, w) -> {
+            try {
+                startActivity(new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS));
+            } catch (Throwable ignored) {}
+        });
 
-        b.setPositiveButton("Enable", (d,w) ->
-                startActivity(new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)));
-
-        b.setNegativeButton("Continue Limited", (d,w)-> d.dismiss());
+        b.setNegativeButton(gr ? "Συνέχεια" : "Continue", (d, w) -> d.dismiss());
 
         b.show();
     }
 
     private boolean hasUsageAccess() {
         try {
-            AppOpsManager appOps =
-                    (AppOpsManager) getSystemService(Context.APP_OPS_SERVICE);
+            AppOpsManager appOps = (AppOpsManager) getSystemService(Context.APP_OPS_SERVICE);
+            if (appOps == null) return false;
 
             int mode = appOps.checkOpNoThrow(
                     AppOpsManager.OPSTR_GET_USAGE_STATS,
@@ -248,7 +311,11 @@ public class AppListActivity extends GELAutoActivityHook {
             e.label = String.valueOf(pm.getApplicationLabel(ai));
             e.isSystem = (ai.flags & ApplicationInfo.FLAG_SYSTEM) != 0;
 
+            // sizes
+            e.appBytes = -1;
+            e.cacheBytes = -1;
             fillSizes(e);
+
             allApps.add(e);
         }
 
@@ -257,12 +324,14 @@ public class AppListActivity extends GELAutoActivityHook {
 
     private void fillSizes(AppEntry e) {
 
+        if (e == null) return;
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return;
         if (!hasUsageAccess()) return;
 
         try {
             StorageStatsManager ssm =
                     (StorageStatsManager) getSystemService(Context.STORAGE_STATS_SERVICE);
+            if (ssm == null) return;
 
             StorageStats st = ssm.queryStatsForPackage(
                     android.os.storage.StorageManager.UUID_DEFAULT,
@@ -291,19 +360,29 @@ public class AppListActivity extends GELAutoActivityHook {
 
             for (AppEntry e : allApps) {
 
+                if (e == null) continue;
+
                 if (!TextUtils.isEmpty(search)) {
                     String s = search.toLowerCase(Locale.US);
-                    if (!e.label.toLowerCase(Locale.US).contains(s) &&
-                        !e.pkg.toLowerCase(Locale.US).contains(s))
-                        continue;
+                    String name = (e.label == null) ? "" : e.label.toLowerCase(Locale.US);
+                    String pkg  = (e.pkg == null) ? "" : e.pkg.toLowerCase(Locale.US);
+                    if (!name.contains(s) && !pkg.contains(s)) continue;
                 }
 
                 if (e.isSystem) systems.add(e);
                 else users.add(e);
             }
 
-            Comparator<AppEntry> comp = sortByCacheBiggest ?
-                    (a,b)->Long.compare(b.cacheBytes,a.cacheBytes)
+            Comparator<AppEntry> comp = sortByCacheBiggest
+                    ? (a, b) -> {
+                        long ca = (a == null) ? -1 : a.cacheBytes;
+                        long cb = (b == null) ? -1 : b.cacheBytes;
+                        if (ca < 0 && cb < 0) return alphaCompare(a, b);
+                        if (ca < 0) return 1;
+                        if (cb < 0) return -1;
+                        int c = Long.compare(cb, ca);
+                        return (c != 0) ? c : alphaCompare(a, b);
+                    }
                     : this::alphaCompare;
 
             Collections.sort(users, comp);
@@ -315,9 +394,7 @@ public class AppListActivity extends GELAutoActivityHook {
                 AppEntry h = new AppEntry();
                 h.isHeader = true;
                 h.isUserHeader = true;
-                h.headerTitle = userExpanded ?
-                        "📱 USER APPS ▼" :
-                        "📱 USER APPS ►";
+                h.headerTitle = userExpanded ? "📱 USER APPS ▼" : "📱 USER APPS ►";
                 temp.add(h);
                 if (userExpanded) temp.addAll(users);
             }
@@ -326,9 +403,7 @@ public class AppListActivity extends GELAutoActivityHook {
                 AppEntry h = new AppEntry();
                 h.isHeader = true;
                 h.isSystemHeader = true;
-                h.headerTitle = systemExpanded ?
-                        "⚙ SYSTEM APPS ▼" :
-                        "⚙ SYSTEM APPS ►";
+                h.headerTitle = systemExpanded ? "⚙ SYSTEM APPS ▼" : "⚙ SYSTEM APPS ►";
                 temp.add(h);
                 if (systemExpanded) temp.addAll(systems);
             }
@@ -336,49 +411,131 @@ public class AppListActivity extends GELAutoActivityHook {
             runOnUiThread(() -> {
                 visible.clear();
                 visible.addAll(temp);
+
+                // IMPORTANT: after rebuild, toggles must reflect current selection
+                syncToggleStatesFromSelection();
+
                 refreshUI();
             });
 
         }).start();
     }
 
+    private int alphaCompare(AppEntry a, AppEntry b) {
+        if (a == null && b == null) return 0;
+        if (a == null) return 1;
+        if (b == null) return -1;
+
+        Collator c = Collator.getInstance(Locale.getDefault());
+        c.setStrength(Collator.PRIMARY);
+
+        String la = (a.label == null) ? "" : a.label;
+        String lb = (b.label == null) ? "" : b.label;
+
+        int cmp = c.compare(la, lb);
+        if (cmp != 0) return cmp;
+
+        String pa = (a.pkg == null) ? "" : a.pkg;
+        String pb = (b.pkg == null) ? "" : b.pkg;
+
+        return pa.compareToIgnoreCase(pb);
+    }
+
+    // ============================================================
+    // UI REFRESH + STATS (THIS IS THE SAFE POINT)
+    // ============================================================
+
     private void refreshUI() {
-    adapter.submitList(new ArrayList<>(visible));
-    updateStats();   // 🔥 ΧΩΡΙΣ ΑΥΤΟ θα δείχνει 0
-}
+        adapter.submitList(new ArrayList<>(visible));
+        updateStats();   // 🔥 ΧΩΡΙΣ ΑΥΤΟ θα δείχνει 0
+    }
 
     private void updateStats() {
 
-    int total = allApps.size();
-    int visibleCount = 0;
-    int selectedCount = 0;
-    int userCount = 0;
-    int systemCount = 0;
+        int total = allApps.size();
+        int visibleCount = 0;
+        int selectedCount = 0;
+        int userCount = 0;
+        int systemCount = 0;
 
-    for (AppEntry e : allApps) {
-        if (e.isSystem) systemCount++;
-        else userCount++;
-    }
+        for (AppEntry e : allApps) {
+            if (e == null) continue;
+            if (e.isSystem) systemCount++;
+            else userCount++;
+        }
 
-    for (AppEntry e : visible) {
-        if (!e.isHeader) {
-            visibleCount++;
-            if (e.selected) selectedCount++;
+        for (AppEntry e : visible) {
+            if (e == null) continue;
+            if (!e.isHeader) {
+                visibleCount++;
+                if (e.selected) selectedCount++;
+            }
+        }
+
+        // Update XML panel
+        if (txtStatsTotal != null) {
+            txtStatsTotal.setText("Total Apps: " + total + "   (Visible: " + visibleCount + ")");
+        }
+        if (txtStatsUsers != null) {
+            txtStatsUsers.setText("User Apps: " + userCount);
+        }
+        if (txtStatsSystem != null) {
+            txtStatsSystem.setText("System Apps: " + systemCount);
+        }
+        if (txtStatsSelected != null) {
+            txtStatsSelected.setText("Selected: " + selectedCount);
         }
     }
 
-    txtStats.setText(
-            "Total Apps: " + total +
-            "\nUser Apps: " + userCount +
-            "\nSystem Apps: " + systemCount +
-            "\nSelected: " + selectedCount
-    );
-}
+    // ============================================================
+    // TOGGLE SYNC (prevents “select says deselect” mismatch)
+    // ============================================================
 
-    private int alphaCompare(AppEntry a, AppEntry b) {
-        Collator c = Collator.getInstance(Locale.getDefault());
-        c.setStrength(Collator.PRIMARY);
-        return c.compare(a.label, b.label);
+    private void syncToggleStatesFromSelection() {
+
+        int selectable = 0;
+        int selected = 0;
+
+        int userSelectable = 0;
+        int userSelected = 0;
+
+        int sysSelectable = 0;
+        int sysSelected = 0;
+
+        for (AppEntry e : visible) {
+            if (e == null || e.isHeader) continue;
+
+            selectable++;
+            if (e.selected) selected++;
+
+            if (e.isSystem) {
+                sysSelectable++;
+                if (e.selected) sysSelected++;
+            } else {
+                userSelectable++;
+                if (e.selected) userSelected++;
+            }
+        }
+
+        allSelected = (selectable > 0 && selected == selectable);
+        usersSelected = (userSelectable > 0 && userSelected == userSelectable);
+        systemSelected = (sysSelectable > 0 && sysSelected == sysSelectable);
+
+        // Update button wording if buttons exist
+        Button btnSelectAll = findViewById(R.id.btnSelectAll);
+        if (btnSelectAll != null) {
+            btnSelectAll.setText(allSelected ? getString(R.string.deselect_all) : getString(R.string.select_all));
+        }
+
+        Button btnSelectUsers = findViewById(R.id.btnSelectUsers);
+        if (btnSelectUsers != null) {
+            btnSelectUsers.setText(usersSelected ? getString(R.string.deselect_user_apps) : getString(R.string.select_user_apps));
+        }
+
+        Button btnSelectSystem = findViewById(R.id.btnSelectSystem);
+        if (btnSelectSystem != null) {
+            btnSelectSystem.setText(systemSelected ? getString(R.string.deselect_system_apps) : getString(R.string.select_system_apps));
+        }
     }
 
     // ============================================================
@@ -390,12 +547,13 @@ public class AppListActivity extends GELAutoActivityHook {
         guidedQueue.clear();
         guidedIndex = 0;
 
-        for (AppEntry e : visible)
-            if (!e.isHeader && e.selected)
-                guidedQueue.add(e.pkg);
+        for (AppEntry e : visible) {
+            if (e == null || e.isHeader) continue;
+            if (e.selected) guidedQueue.add(e.pkg);
+        }
 
         if (guidedQueue.isEmpty()) {
-            showGelDialog("No apps selected");
+            showGelDialog(AppLang.isGreek(this) ? "Δεν έχεις επιλέξει εφαρμογές." : "No apps selected.");
             return;
         }
 
@@ -407,18 +565,25 @@ public class AppListActivity extends GELAutoActivityHook {
 
         if (guidedIndex >= guidedQueue.size()) {
             guidedActive = false;
-            showGelDialog("Operation finished");
+            showGelDialog(AppLang.isGreek(this) ? "Η διαδικασία ολοκληρώθηκε." : "Operation finished.");
             return;
         }
 
         String pkg = guidedQueue.get(guidedIndex);
 
-        Intent intent = isUninstallMode ?
-                new Intent(Intent.ACTION_DELETE) :
-                new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+        Intent intent = isUninstallMode
+                ? new Intent(Intent.ACTION_DELETE)
+                : new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
 
         intent.setData(Uri.parse("package:" + pkg));
-        startActivity(intent);
+
+        try {
+            startActivity(intent);
+        } catch (Throwable t) {
+            showGelDialog(AppLang.isGreek(this) ? "Αδυναμία ανοίγματος ρυθμίσεων." : "Cannot open settings.");
+            guidedIndex++;
+            openNext();
+        }
     }
 
     private void advanceGuided() {
@@ -428,34 +593,39 @@ public class AppListActivity extends GELAutoActivityHook {
     }
 
     // ============================================================
-    // GEL DIALOG
+    // GEL DIALOG (Dark-Gold)
     // ============================================================
 
     private void showGelDialog(String message) {
 
-        AlertDialog.Builder b =
-                new AlertDialog.Builder(this, R.style.Theme_GEL_DarkGold);
+        AlertDialog.Builder b = new AlertDialog.Builder(this);
 
         LinearLayout box = new LinearLayout(this);
-        box.setPadding(40,40,40,40);
+        box.setPadding(dp(22), dp(18), dp(22), dp(16));
         box.setGravity(Gravity.CENTER);
+        box.setOrientation(LinearLayout.VERTICAL);
 
         GradientDrawable bg = new GradientDrawable();
-        bg.setColor(Color.parseColor("#101010"));
-        bg.setCornerRadius(30);
-        bg.setStroke(4, Color.parseColor("#FFD700"));
+        bg.setColor(0xFF101010);
+        bg.setCornerRadius(dp(18));
+        bg.setStroke(dp(3), 0xFFFFD700);
         box.setBackground(bg);
 
         TextView tv = new TextView(this);
         tv.setTextColor(Color.WHITE);
-        tv.setTextSize(16f);
+        tv.setTextSize(15.5f);
         tv.setText(message);
         tv.setGravity(Gravity.CENTER);
 
         box.addView(tv);
         b.setView(box);
-        b.setPositiveButton("OK", null);
+        b.setPositiveButton("OK", (d, w) -> d.dismiss());
         b.show();
+    }
+
+    private int dp(int v) {
+        float d = getResources().getDisplayMetrics().density;
+        return Math.round(v * d);
     }
 
     // ============================================================

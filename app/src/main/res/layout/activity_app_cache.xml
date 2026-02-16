@@ -84,25 +84,25 @@
         android:layout_marginBottom="8dp">
 
         <Button
-            android:id="@+id/btnSelectAll"
-            android:layout_width="0dp"
-            android:layout_height="42dp"
-            android:layout_weight="1"
-            android:text="@string/select_all"
-            android:textAllCaps="false"
-            android:backgroundTint="#FFD700"
-            android:textColor="@color/gel_text_primary"/>
-
+    android:id="@+id/btnSelectAll"
+    android:layout_width="0dp"
+    android:layout_height="42dp"
+    android:layout_weight="1"
+    android:text="@string/select_all"
+    android:textAllCaps="false"
+    android:textColor="#000000"
+    android:background="@drawable/gel_btn_blue_gold"/>
+        
         <Button
-            android:id="@+id/btnSortCache"
-            android:layout_width="0dp"
-            android:layout_height="42dp"
-            android:layout_weight="1"
-            android:text="@string/largest_cache"
-            android:textAllCaps="false"
-            android:layout_marginStart="6dp"
-            android:backgroundTint="#FFD700"
-            android:textColor="@color/gel_text_primary"/>
+    android:id="@+id/btnSortCache"
+    android:layout_width="0dp"
+    android:layout_height="42dp"
+    android:layout_weight="1"
+    android:text="@string/largest_cache"
+    android:textAllCaps="false"
+    android:layout_marginStart="6dp"
+    android:textColor="#FF0000"
+    android:background="@drawable/gel_btn_gold_outline"/>
     </LinearLayout>
 
     <!-- ========================================================= -->
@@ -116,25 +116,25 @@
         android:layout_marginBottom="10dp">
 
         <Button
-            android:id="@+id/btnSelectUsers"
-            android:layout_width="0dp"
-            android:layout_height="40dp"
-            android:layout_weight="1"
-            android:text="@string/select_user_apps"
-            android:textAllCaps="false"
-            android:backgroundTint="#39FF14"
-            android:textColor="@android:color/black"/>
+    android:id="@+id/btnSelectUsers"
+    android:layout_width="0dp"
+    android:layout_height="40dp"
+    android:layout_weight="1"
+    android:text="@string/select_user_apps"
+    android:textAllCaps="false"
+    android:textColor="#FFFFFF"
+    android:background="@drawable/gel_btn_green_gold"/>
 
         <Button
-            android:id="@+id/btnSelectSystem"
-            android:layout_width="0dp"
-            android:layout_height="40dp"
-            android:layout_weight="1"
-            android:text="@string/select_system_apps"
-            android:textAllCaps="false"
-            android:layout_marginStart="6dp"
-            android:backgroundTint="#FF9800"
-            android:textColor="@android:color/black"/>
+    android:id="@+id/btnSelectSystem"
+    android:layout_width="0dp"
+    android:layout_height="40dp"
+    android:layout_weight="1"
+    android:text="@string/select_system_apps"
+    android:textAllCaps="false"
+    android:layout_marginStart="6dp"
+    android:textColor="#FFFFFF"
+    android:background="@drawable/gel_btn_red_gold"/>
     </LinearLayout>
 
     <!-- ========================================================= -->
@@ -153,13 +153,13 @@
     <!-- ========================================================= -->
 
     <Button
-        android:id="@+id/btnGuidedClean"
-        android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:text="@string/start_guided_cleaning"
-        android:textAllCaps="false"
-        android:layout_marginTop="10dp"
-        android:backgroundTint="#FFD700"
-        android:textColor="@color/gel_text_primary"/>
+    android:id="@+id/btnGuidedClean"
+    android:layout_width="match_parent"
+    android:layout_height="48dp"
+    android:text="@string/start_guided_cleaning"
+    android:textAllCaps="false"
+    android:layout_marginTop="10dp"
+    android:textColor="#000000"
+    android:background="@drawable/gel_btn_gold_outline"/>
 
 </LinearLayout>

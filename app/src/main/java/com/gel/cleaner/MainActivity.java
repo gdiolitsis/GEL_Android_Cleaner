@@ -8,6 +8,8 @@ import com.gel.cleaner.iphone.*;
 import com.gel.cleaner.base.*;
 
 import android.app.AppOpsManager;
+import android.app.usage.UsageStats;
+import android.app.usage.UsageStatsManager;
 import android.Manifest;
 import android.content.*;
 import android.content.Intent;
@@ -17,6 +19,7 @@ import android.content.SharedPreferences;
 import android.graphics.*;
 import android.graphics.drawable.*;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -138,22 +141,14 @@ private boolean returningFromUsageSettings = false;
 protected void onResume() {
     super.onResume();
 
-    // Αν γυρίσαμε από Settings
+    // Αν γυρίσαμε από Usage Settings
     if (returningFromUsageSettings) {
-
         returningFromUsageSettings = false;
-
-        if (hasUsageAccess()) {
-            // Permission δόθηκε → προχωράμε κανονικά
-            return;
-        }
-
-        // Δεν δόθηκε → δεν ξαναεμφανίζουμε άμεσα
-        return;
+        return; // Δεν ξαναελέγχουμε άμεσα
     }
 
     // Κανονικός έλεγχος
-    if (!hasUsageAccess() && !usagePopupVisible) {
+    if (!usagePopupVisible && !hasUsageAccess()) {
         showUsageAccessPopup();
     }
 }
@@ -962,17 +957,16 @@ if (usagePopupVisible) return;
     if (!isFinishing() && !isDestroyed()) {
         d.show();
 
-        // -------------------------------------------------
-        // GEL TTS (SMOOTH DELAY)
-        // -------------------------------------------------
-        root.postDelayed(() -> {
-            if (!AppTTS.isMuted()) {
-                try {
-                    AppTTS.speak(messageText);
-                } catch (Throwable ignore) {}
-            }
-        }, 220);
-    }
+// -------------------------------------------------
+// GEL TTS (SMOOTH DELAY)
+// -------------------------------------------------
+root.postDelayed(() -> {
+    try {
+        if (!AppTTS.isMuted(MainActivity.this)) {
+            AppTTS.speak(MainActivity.this, messageText);
+        }
+    } catch (Throwable ignore) {}
+}, 220);
 
     // -------------------------------------------------
     // ACTIONS
@@ -1023,7 +1017,7 @@ if (usagePopupVisible) return;
 
         // ================= TITLE =================
         TextView title = new TextView(MainActivity.this);
-        title.setText(AppLang.isGreek(this) ? "ÎšÎ‘Î›Î©Î£ Î—Î¡Î˜Î‘Î¤Î•" : "WELCOME");
+        title.setText(AppLang.isGreek(this) ? "ΚΑΛΩΣ ΗΡΘΑΤΕ" : "WELCOME");
         title.setTextColor(Color.WHITE);
         title.setTextSize(18f);
         title.setTypeface(null, Typeface.BOLD);

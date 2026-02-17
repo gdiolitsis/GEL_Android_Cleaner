@@ -45,6 +45,9 @@ public class MainActivity extends GELAutoActivityHook
     private int permissionIndex = 0;
     private boolean pendingUsageAccess = false;
 
+private boolean usagePopupVisible = false;
+private boolean returningFromUsageSettings = false;
+
     private static final int REQ_PERMISSIONS = 1001;
     private static final String PREF_PERMISSIONS_DISABLED = "permissions_disabled";
     private boolean permissionsSkippedThisLaunch = false;
@@ -78,30 +81,80 @@ public class MainActivity extends GELAutoActivityHook
     // USAGE ACCESS (CLEAN)
     // =========================================================
     private boolean hasUsageAccess() {
-        try {
-            AppOpsManager appOps =
-                    (AppOpsManager) getSystemService(APP_OPS_SERVICE);
 
-            int mode = appOps.checkOpNoThrow(
-                    AppOpsManager.OPSTR_GET_USAGE_STATS,
-                    Process.myUid(),
-                    getPackageName()
-            );
+    // ---------- PRIMARY (AppOps) ----------
+    try {
+        AppOpsManager appOps =
+                (AppOpsManager) getSystemService(Context.APP_OPS_SERVICE);
 
-            return mode == AppOpsManager.MODE_ALLOWED;
+        if (appOps != null) {
 
-        } catch (Throwable t) {
-            return false;
+            int mode;
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                mode = appOps.unsafeCheckOpNoThrow(
+                        AppOpsManager.OPSTR_GET_USAGE_STATS,
+                        android.os.Process.myUid(),
+                        getPackageName()
+                );
+            } else {
+                mode = appOps.checkOpNoThrow(
+                        AppOpsManager.OPSTR_GET_USAGE_STATS,
+                        android.os.Process.myUid(),
+                        getPackageName()
+                );
+            }
+
+            if (mode == AppOpsManager.MODE_ALLOWED) {
+                return true;
+            }
         }
-    }
 
-    @Override
+    } catch (Throwable ignore) {}
+
+    // ---------- FALLBACK (REAL DATA TEST) ----------
+    try {
+        UsageStatsManager usm =
+                (UsageStatsManager) getSystemService(Context.USAGE_STATS_SERVICE);
+
+        if (usm != null) {
+            long now = System.currentTimeMillis();
+            List<UsageStats> stats =
+                    usm.queryUsageStats(
+                            UsageStatsManager.INTERVAL_DAILY,
+                            now - 1000 * 60,
+                            now
+                    );
+
+            return stats != null && !stats.isEmpty();
+        }
+
+    } catch (Throwable ignore) {}
+
+    return false;
+}
+
+@Override
 protected void onResume() {
     super.onResume();
 
-    if (pendingUsageAccess) {
-        pendingUsageAccess = false;
-        showWelcomePopup();
+    // Αν γυρίσαμε από Settings
+    if (returningFromUsageSettings) {
+
+        returningFromUsageSettings = false;
+
+        if (hasUsageAccess()) {
+            // Permission δόθηκε → προχωράμε κανονικά
+            return;
+        }
+
+        // Δεν δόθηκε → δεν ξαναεμφανίζουμε άμεσα
+        return;
+    }
+
+    // Κανονικός έλεγχος
+    if (!hasUsageAccess() && !usagePopupVisible) {
+        showUsageAccessPopup();
     }
 }
 
@@ -773,6 +826,9 @@ private String getWelcomeTextGR() {
 // ============================================================
 private void showUsageAccessPopup() {
 
+if (usagePopupVisible) return;
+    usagePopupVisible = true;
+
     final boolean gr = AppLang.isGreek(this);
 
     String titleText = gr ? "Πρόσβαση Χρήσης" : "Usage Access";
@@ -887,8 +943,9 @@ private void showUsageAccessPopup() {
 
     // STOP TTS WHEN CLOSED
     d.setOnDismissListener(dialog -> {
-        try { AppTTS.stop(); } catch (Throwable ignore) {}
-    });
+    usagePopupVisible = false;
+    try { AppTTS.stop(); } catch (Throwable ignore) {}
+});
 
     // BLOCK BACK BUTTON
     d.setOnKeyListener((dialog, keyCode, event) -> {
@@ -921,23 +978,24 @@ private void showUsageAccessPopup() {
     // ACTIONS
     // -------------------------------------------------
     yes.setOnClickListener(v -> {
-        AppTTS.stop();
-        d.dismiss();
-        pendingUsageAccess = true;
+    AppTTS.stop();
+    d.dismiss();
 
-        try {
-            startActivity(new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS));
-        } catch (Throwable ignored) {
-            pendingUsageAccess = false;
-            showWelcomePopup();
-        }
-    });
+    usagePopupVisible = false;
+    returningFromUsageSettings = true;
+
+    try {
+        startActivity(new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS));
+    } catch (Throwable ignored) {
+        showWelcomePopup();
+    }
+});
 
     no.setOnClickListener(v -> {
-        AppTTS.stop();
-        d.dismiss();
-        showWelcomePopup();
-    });
+    AppTTS.stop();
+    d.dismiss();
+    usagePopupVisible = false;
+});
 }
 
     // ------------------------------------------------------------

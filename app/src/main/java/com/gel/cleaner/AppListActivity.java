@@ -231,6 +231,68 @@ if (btnSelectSystem != null) {
 }
 }
 
+    // ------------------------------------------------------------
+    // MUTE ROW (UNIFIED - AppTTS HELPER)
+    // ------------------------------------------------------------
+
+    private LinearLayout buildMuteRow() {
+        final boolean gr = AppLang.isGreek(this);
+        LinearLayout row = new LinearLayout(this);
+
+        row.setOrientation(LinearLayout.HORIZONTAL);
+
+        row.setGravity(Gravity.CENTER_VERTICAL);
+
+        row.setPadding(0, dp(8), 0, dp(16));
+
+        CheckBox muteCheck = new CheckBox(this);
+muteCheck.setChecked(AppTTS.isMuted(this));
+muteCheck.setPadding(0, 0, dp(6), 0);
+
+TextView label = new TextView(this);
+label.setText(
+        gr ? "Σίγαση φωνητικών οδηγιών"
+           : "Mute voice instructions"
+);
+
+        label.setTextColor(Color.WHITE);
+        label.setTextSize(14f);
+
+        // --------------------------------------------------------
+        // TOGGLE (ROW + LABEL CLICK)
+        // --------------------------------------------------------
+
+        View.OnClickListener toggle = v -> {
+            boolean newState = !AppTTS.isMuted(this);
+            AppTTS.setMuted(this, newState);
+            muteCheck.setChecked(newState);
+
+            //  Immediate hard stop when muting
+            if (newState) {
+                try { AppTTS.stop(); } catch (Throwable ignore) {}
+            }
+        };
+
+        label.setOnClickListener(toggle);
+
+        // --------------------------------------------------------
+        // CHECKBOX DIRECT CHANGE
+        // --------------------------------------------------------
+
+        muteCheck.setOnCheckedChangeListener((button, checked) -> {
+            if (checked == AppTTS.isMuted(this)) return;
+            AppTTS.setMuted(this, checked);
+            if (checked) {
+                try { AppTTS.stop(); } catch (Throwable ignore) {}
+            }
+        });
+
+        row.addView(muteCheck);
+        row.addView(label);
+        return row;
+    }
+
+
 @Override
 protected void onResume() {
     super.onResume();

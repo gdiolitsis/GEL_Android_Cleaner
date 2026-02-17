@@ -265,6 +265,95 @@ private boolean isDeviceRooted() {
     return false;
 }
 
+private void showRootRequiredDialog() {
+
+    boolean gr = AppLang.isGreek(this);
+
+    AlertDialog.Builder b =
+            new AlertDialog.Builder(
+                    this,
+                    android.R.style.Theme_Material_Dialog_NoActionBar
+            );
+
+    LinearLayout root = new LinearLayout(this);
+    root.setOrientation(LinearLayout.VERTICAL);
+    root.setPadding(dp(26), dp(24), dp(26), dp(22));
+
+    GradientDrawable bg = new GradientDrawable();
+    bg.setColor(0xFF000000);
+    bg.setCornerRadius(dp(18));
+    bg.setStroke(dp(3), 0xFFFFD700);
+    root.setBackground(bg);
+
+    TextView msg = new TextView(this);
+    msg.setText(gr
+            ? "Αυτή η ενέργεια, απαιτεί rooted συσκευή.\nΔεν επιτρέπεται η απεγκατάσταση εφαρμογών συστήματος, σε αυτή την συσκευή."
+            : "This action, requires a rooted device.\nYou cannot uninstall system apps on this device.");
+    msg.setTextColor(0xFF39FF14);
+    msg.setTextSize(15f);
+    msg.setGravity(Gravity.CENTER);
+    msg.setPadding(0, 0, 0, dp(18));
+
+    root.addView(msg);
+
+    LinearLayout btnRow = new LinearLayout(this);
+    btnRow.setOrientation(LinearLayout.HORIZONTAL);
+    btnRow.setGravity(Gravity.CENTER);
+
+    LinearLayout.LayoutParams lp =
+            new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+            );
+    lp.setMargins(dp(12), dp(8), dp(12), dp(8));
+
+    Button exitBtn = new Button(this);
+    exitBtn.setText(gr ? "ΕΞΟΔΟΣ" : "EXIT");
+    exitBtn.setAllCaps(false);
+    exitBtn.setTextColor(Color.WHITE);
+
+    GradientDrawable exitBg = new GradientDrawable();
+    exitBg.setColor(0xFF8B0000);
+    exitBg.setCornerRadius(dp(14));
+    exitBg.setStroke(dp(3), 0xFFFFD700);
+    exitBtn.setBackground(exitBg);
+    exitBtn.setLayoutParams(lp);
+
+    exitBtn.setOnClickListener(v -> {
+        try { AppTTS.stop(); } catch (Throwable ignore) {}
+        dialogDismissSafe();
+    });
+
+    btnRow.addView(exitBtn);
+    root.addView(btnRow);
+
+    b.setView(root);
+    b.setCancelable(false);
+
+    AlertDialog d = b.create();
+
+    if (d.getWindow() != null) {
+        d.getWindow().setBackgroundDrawable(
+                new ColorDrawable(Color.TRANSPARENT)
+        );
+    }
+
+    d.setOnDismissListener(dialog -> {
+        try { AppTTS.stop(); } catch (Throwable ignore) {}
+    });
+
+    d.show();
+
+    new Handler(Looper.getMainLooper()).postDelayed(() -> {
+        AppTTS.ensureSpeak(
+                this,
+                gr
+                        ? "Αυτή η ενέργεια, απαιτεί rooted συσκευή.\nΔεν επιτρέπεται η απεγκατάσταση εφαρμογών συστήματος, σε αυτή την συσκευή."
+            : "This action, requires a rooted device.\nYou cannot uninstall system apps on this device.");
+        );
+    }, 500);
+}
+
 private void updateStartButtonUI() {
 
     Button startBtn = findViewById(R.id.btnGuidedClean);

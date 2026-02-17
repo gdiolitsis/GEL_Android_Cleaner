@@ -352,7 +352,6 @@ private void showRootRequiredDialog() {
             : "This action, requires a rooted device.\nYou cannot uninstall system apps on this device.");
         );
     }, 500);
-}
 
 private void updateStartButtonUI() {
 

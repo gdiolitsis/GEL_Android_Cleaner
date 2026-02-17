@@ -251,7 +251,7 @@ public boolean isUninstallMode() {
     return isUninstallMode;
 }
 
-public boolean isDeviceRooted()
+public boolean isDeviceRooted() {
 
     String[] paths = {
             "/system/bin/su",

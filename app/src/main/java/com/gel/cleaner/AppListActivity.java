@@ -300,7 +300,7 @@ public void showRootRequiredDialog() {
 
     GradientDrawable bg = new GradientDrawable();
     bg.setColor(0xFF000000);
-    bg.setCornerRadius(dp(18));
+    bg.setCornerRadius(dp(10));
     bg.setStroke(dp(3), 0xFFFFD700);
     root.setBackground(bg);
 
@@ -325,6 +325,11 @@ public void showRootRequiredDialog() {
                     LinearLayout.LayoutParams.WRAP_CONTENT
             );
     lp.setMargins(dp(12), dp(8), dp(12), dp(8));
+
+// ==========================
+// MUTE ROW (UNIFIED — AppTTS HELPER)
+// ==========================
+root.addView(buildMuteRow());
 
     Button exitBtn = new Button(this);
     exitBtn.setText(gr ? "ΕΞΟΔΟΣ" : "EXIT");

@@ -895,31 +895,42 @@ if (usagePopupVisible) return;
             new LinearLayout.LayoutParams(0, dp(54), 1f);
     lp.setMargins(dp(6), 0, dp(6), 0);
 
-    // CONTINUE
-    Button yes = new Button(this);
-    yes.setText(gr ? "Συνέχεια" : "CONTINUE");
-    yes.setAllCaps(false);
-    yes.setTextColor(Color.WHITE);
-    yes.setLayoutParams(lp);
+// CONTINUE
+Button yes = new Button(this);
+yes.setText(gr ? "ΣΥΝΈΧΕΙΑ" : "CONTINUE");
+yes.setAllCaps(false);
+yes.setTextColor(Color.WHITE);
+yes.setTextSize(16f);
+yes.setTypeface(null, Typeface.BOLD);
+yes.setPadding(0, dp(12), 0, dp(12));
+yes.setLayoutParams(lp);
 
-    GradientDrawable yesBg = new GradientDrawable();
-    yesBg.setColor(0xFF00C853);
-    yesBg.setCornerRadius(dp(14));
-    yesBg.setStroke(dp(3), 0xFFFFD700);
-    yes.setBackground(yesBg);
+GradientDrawable yesBg = new GradientDrawable();
+yesBg.setColor(0xFF00E676); // πιο φωτεινό πράσινο
+yesBg.setCornerRadius(dp(10));
+yesBg.setStroke(dp(3), 0xFFFFD700);
+yes.setBackground(yesBg);
+
+yes.setElevation(dp(4)); // depth effect
 
     // SKIP
-    Button no = new Button(this);
-    no.setText(gr ? "Παράλειψη" : "SKIP");
-    no.setAllCaps(false);
-    no.setTextColor(Color.WHITE);
-    no.setLayoutParams(lp);
+    // SKIP
+Button no = new Button(this);
+no.setText(gr ? "ΠΑΡΆΛΕΙΨΗ" : "SKIP");
+no.setAllCaps(false);
+no.setTextColor(Color.WHITE);
+no.setTextSize(16f);
+no.setTypeface(null, Typeface.BOLD);
+no.setPadding(0, dp(12), 0, dp(12));
+no.setLayoutParams(lp);
 
-    GradientDrawable noBg = new GradientDrawable();
-    noBg.setColor(0xFFD50000);
-    noBg.setCornerRadius(dp(14));
-    noBg.setStroke(dp(3), 0xFFFFD700);
-    no.setBackground(noBg);
+GradientDrawable noBg = new GradientDrawable();
+noBg.setColor(0xFFC62828); // πιο καθαρό κόκκινο
+noBg.setCornerRadius(dp(10));
+noBg.setStroke(dp(3), 0xFFFFD700);
+no.setBackground(noBg);
+
+no.setElevation(dp(4)); // depth effect
 
     buttons.addView(yes);
     buttons.addView(no);

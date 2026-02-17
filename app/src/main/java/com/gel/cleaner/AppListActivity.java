@@ -350,7 +350,6 @@ private void showRootRequiredDialog() {
                 gr
                         ? "Αυτή η ενέργεια, απαιτεί rooted συσκευή.\nΔεν επιτρέπεται η απεγκατάσταση εφαρμογών συστήματος."
             : "This action, requires a rooted device.\nYou cannot uninstall system apps.");
-        );
     }, 500);
 }
 

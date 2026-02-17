@@ -1,5 +1,5 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// AppListAdapter — STABLE SAFE BUILD
+// AppListAdapter — STABLE SAFE BUILD (Root-Aware)
 
 package com.gel.cleaner;
 
@@ -77,9 +77,7 @@ public class AppListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     // ============================================================
 
     static class HeaderHolder extends RecyclerView.ViewHolder {
-
         TextView title;
-
         HeaderHolder(@NonNull View itemView) {
             super(itemView);
             title = itemView.findViewById(R.id.headerTitle);
@@ -137,7 +135,6 @@ public class AppListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         AppListActivity.AppEntry e = data.get(position);
 
         if (getItemViewType(position) == TYPE_HEADER) {
-
             HeaderHolder h = (HeaderHolder) holder;
             h.title.setText(e.headerTitle);
             return;
@@ -145,36 +142,54 @@ public class AppListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
         AppHolder h = (AppHolder) holder;
 
-        // LABEL
         h.name.setText(
                 TextUtils.isEmpty(e.label) ? "Unknown" : e.label
         );
 
-        // ICON
         try {
             h.icon.setImageDrawable(pm.getApplicationIcon(e.pkg));
         } catch (Exception ignored) {
             h.icon.setImageResource(android.R.drawable.sym_def_app_icon);
         }
 
-        // PACKAGE
         h.pkg.setText(e.pkg);
 
-        // COLOR FOR SYSTEM
         if (e.isSystem) {
             h.name.setTextColor(0xFFFFD700);
         } else {
             h.name.setTextColor(Color.WHITE);
         }
 
-        // SIZE
         h.size.setText("App: " + formatBytes(e.appBytes));
         h.cache.setText("Cache: " + formatBytes(e.cacheBytes));
 
-        // CHECKBOX
+        // ============================================================
+        // ROOT PROTECTION LOGIC (ONLY HERE)
+        // ============================================================
+
         h.select.setOnCheckedChangeListener(null);
         h.select.setChecked(e.selected);
-        h.select.setOnCheckedChangeListener((b, checked) -> e.selected = checked);
+
+        h.select.setOnCheckedChangeListener((b, checked) -> {
+
+            // If trying to select system app in uninstall mode without root
+            if (ctx instanceof AppListActivity) {
+
+                AppListActivity activity = (AppListActivity) ctx;
+
+                if (activity.isUninstallMode()
+                        && !activity.isDeviceRooted()
+                        && e.isSystem) {
+
+                    // Block selection
+                    b.setChecked(false);
+                    activity.showRootRequiredDialog();
+                    return;
+                }
+            }
+
+            e.selected = checked;
+        });
     }
 
     // ============================================================

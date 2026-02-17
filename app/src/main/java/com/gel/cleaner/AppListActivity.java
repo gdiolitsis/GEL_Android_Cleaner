@@ -189,27 +189,33 @@ if (btnSelectAll != null) {
         }
 
         // SYSTEM APPS SELECT (TOGGLE)
-        if (btnSelectSystem != null) {
-            btnSelectSystem.setOnClickListener(v -> {
-                systemSelected = !systemSelected;
+if (btnSelectSystem != null) {
+    btnSelectSystem.setOnClickListener(v -> {
 
-                for (AppEntry e : visible) {
-                    if (e == null || e.isHeader) continue;
-                    if (e.isSystem) e.selected = systemSelected;
-                }
-
-                // Recompute global toggle too
-                syncToggleStatesFromSelection();
-
-                btnSelectSystem.setText(systemSelected
-                        ? getString(R.string.deselect_system_apps)
-                        : getString(R.string.select_system_apps));
-
-                refreshUI();
-            });
-
-            btnSelectSystem.setText(getString(R.string.select_system_apps));
+        // 🔒 Αν uninstall mode + όχι root → μπλοκάρισμα
+        if (isUninstallMode && !isDeviceRooted()) {
+            showRootRequiredDialog();
+            return;
         }
+
+        systemSelected = !systemSelected;
+
+        for (AppEntry e : visible) {
+            if (e == null || e.isHeader) continue;
+            if (e.isSystem) e.selected = systemSelected;
+        }
+
+        syncToggleStatesFromSelection();
+
+        btnSelectSystem.setText(systemSelected
+                ? getString(R.string.deselect_system_apps)
+                : getString(R.string.select_system_apps));
+
+        refreshUI();
+    });
+
+    btnSelectSystem.setText(getString(R.string.select_system_apps));
+}
 
         // GUIDED ACTION
         if (btnGuided != null) {

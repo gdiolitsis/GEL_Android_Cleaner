@@ -18,6 +18,8 @@ import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.Process;
 import android.provider.Settings;
 import android.text.Editable;
@@ -245,7 +247,11 @@ protected void onResume() {
     }
 }
 
-private boolean isDeviceRooted() {
+public boolean isUninstallMode() {
+    return isUninstallMode;
+}
+
+public boolean isDeviceRooted()
 
     String[] paths = {
             "/system/bin/su",
@@ -265,7 +271,7 @@ private boolean isDeviceRooted() {
     return false;
 }
 
-private void showRootRequiredDialog() {
+public void showRootRequiredDialog()
 
     boolean gr = AppLang.isGreek(this);
 

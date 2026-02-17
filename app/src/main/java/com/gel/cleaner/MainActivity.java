@@ -991,6 +991,7 @@ root.postDelayed(() -> {
     usagePopupVisible = false;
 });
 }
+}
 
     // ------------------------------------------------------------
     // SHOW POPUP

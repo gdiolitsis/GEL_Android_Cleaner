@@ -769,7 +769,7 @@ private String getWelcomeTextGR() {
     }
 
 // ============================================================
-// USAGE ACCESS POPUP (GEL STYLE FINAL)
+// USAGE ACCESS POPUP (GEL STYLE FINAL + TTS)
 // ============================================================
 private void showUsageAccessPopup() {
 
@@ -822,7 +822,7 @@ private void showUsageAccessPopup() {
     // -------------------------------------------------
     TextView msg = new TextView(this);
     msg.setText(messageText);
-    msg.setTextColor(0xFF39FF14); // NEON GREEN
+    msg.setTextColor(0xFF39FF14);
     msg.setTextSize(14f);
     msg.setGravity(Gravity.CENTER);
     msg.setLineSpacing(0f, 1.15f);
@@ -844,9 +844,7 @@ private void showUsageAccessPopup() {
             new LinearLayout.LayoutParams(0, dp(54), 1f);
     lp.setMargins(dp(6), 0, dp(6), 0);
 
-    // ===============================
-    // CONTINUE (NEON GREEN)
-    // ===============================
+    // CONTINUE
     Button yes = new Button(this);
     yes.setText(gr ? "Συνέχεια" : "CONTINUE");
     yes.setAllCaps(false);
@@ -854,14 +852,12 @@ private void showUsageAccessPopup() {
     yes.setLayoutParams(lp);
 
     GradientDrawable yesBg = new GradientDrawable();
-    yesBg.setColor(0xFF00C853); // NEON GREEN
+    yesBg.setColor(0xFF00C853);
     yesBg.setCornerRadius(dp(14));
     yesBg.setStroke(dp(3), 0xFFFFD700);
     yes.setBackground(yesBg);
 
-    // ===============================
-    // SKIP (RED)
-    // ===============================
+    // SKIP
     Button no = new Button(this);
     no.setText(gr ? "Παράλειψη" : "SKIP");
     no.setAllCaps(false);
@@ -869,7 +865,7 @@ private void showUsageAccessPopup() {
     no.setLayoutParams(lp);
 
     GradientDrawable noBg = new GradientDrawable();
-    noBg.setColor(0xFFD50000); // RED
+    noBg.setColor(0xFFD50000);
     noBg.setCornerRadius(dp(14));
     noBg.setStroke(dp(3), 0xFFFFD700);
     no.setBackground(noBg);
@@ -908,6 +904,17 @@ private void showUsageAccessPopup() {
 
     if (!isFinishing() && !isDestroyed()) {
         d.show();
+
+        // -------------------------------------------------
+        // GEL TTS (SMOOTH DELAY)
+        // -------------------------------------------------
+        root.postDelayed(() -> {
+            if (!AppTTS.isMuted()) {
+                try {
+                    AppTTS.speak(messageText);
+                } catch (Throwable ignore) {}
+            }
+        }, 220);
     }
 
     // -------------------------------------------------

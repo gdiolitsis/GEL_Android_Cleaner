@@ -527,7 +527,7 @@ root.addView(cb);
         }
     }
 
-    // ============================================================
+// ============================================================
 // PERMISSIONS TEXT - GR
 // ============================================================
 private String getPermissionsTextGR() {
@@ -769,11 +769,22 @@ private String getWelcomeTextGR() {
     }
 
 // ============================================================
-// USAGE ACCESS POPUP (GEL STYLE)
+// USAGE ACCESS POPUP (GEL STYLE FINAL)
 // ============================================================
 private void showUsageAccessPopup() {
 
     final boolean gr = AppLang.isGreek(this);
+
+    String titleText = gr ? "Πρόσβαση Χρήσης" : "Usage Access";
+
+    String messageText = gr
+            ? "Για να λειτουργεί σωστά ο καθαρισμός cache,\n"
+            + "και η ανάλυση μεγεθών εφαρμογών,\n"
+            + "απαιτείται Πρόσβαση Χρήσης.\n\n"
+            + "Θα μεταφερθείς στις Ρυθμίσεις."
+            : "To enable cache cleaning and app size analysis,\n"
+            + "Usage Access is required.\n\n"
+            + "You will be redirected to Settings.";
 
     AlertDialog.Builder b =
             new AlertDialog.Builder(
@@ -781,11 +792,12 @@ private void showUsageAccessPopup() {
                     android.R.style.Theme_Material_Dialog_NoActionBar
             );
 
-    b.setCancelable(false);
-
+    // -------------------------------------------------
+    // ROOT
+    // -------------------------------------------------
     LinearLayout root = new LinearLayout(this);
     root.setOrientation(LinearLayout.VERTICAL);
-    root.setPadding(dp(24), dp(20), dp(24), dp(18));
+    root.setPadding(dp(20), dp(18), dp(20), dp(16));
 
     GradientDrawable bg = new GradientDrawable();
     bg.setColor(0xFF101010);
@@ -793,32 +805,119 @@ private void showUsageAccessPopup() {
     bg.setStroke(dp(4), 0xFFFFD700);
     root.setBackground(bg);
 
+    // -------------------------------------------------
+    // TITLE
+    // -------------------------------------------------
     TextView title = new TextView(this);
-    title.setText(gr ? "Πρόσβαση Χρήσης" : "Usage Access");
+    title.setText(titleText);
     title.setTextColor(Color.WHITE);
-    title.setTextSize(18f);
+    title.setTextSize(17f);
+    title.setTypeface(null, Typeface.BOLD);
     title.setGravity(Gravity.CENTER);
-    title.setPadding(0, 0, 0, dp(12));
-
-    TextView msg = new TextView(this);
-    msg.setText(gr
-            ? "Για να λειτουργεί σωστά ο καθαρισμός cache\n"
-              + "και η ανάλυση μεγεθών εφαρμογών,\n"
-              + "απαιτείται Πρόσβαση Χρήσης.\n\n"
-              + "Θα μεταφερθείς στις Ρυθμίσεις."
-            : "To enable cache cleaning and app size analysis,\n"
-              + "Usage Access is required.\n\n"
-              + "You will be redirected to Settings.");
-    msg.setTextColor(0xFF39FF14);
-    msg.setGravity(Gravity.CENTER);
-
+    title.setPadding(0, 0, 0, dp(10));
     root.addView(title);
+
+    // -------------------------------------------------
+    // MESSAGE
+    // -------------------------------------------------
+    TextView msg = new TextView(this);
+    msg.setText(messageText);
+    msg.setTextColor(0xFF39FF14); // NEON GREEN
+    msg.setTextSize(14f);
+    msg.setGravity(Gravity.CENTER);
+    msg.setLineSpacing(0f, 1.15f);
     root.addView(msg);
 
-    b.setView(root);
+    // -------------------------------------------------
+    // MUTE ROW
+    // -------------------------------------------------
+    root.addView(buildMuteRow());
 
-    b.setPositiveButton(gr ? "Συνέχεια" : "Continue", (d, w) -> {
+    // -------------------------------------------------
+    // BUTTONS ROW
+    // -------------------------------------------------
+    LinearLayout buttons = new LinearLayout(this);
+    buttons.setOrientation(LinearLayout.HORIZONTAL);
+    buttons.setPadding(0, dp(14), 0, 0);
+
+    LinearLayout.LayoutParams lp =
+            new LinearLayout.LayoutParams(0, dp(54), 1f);
+    lp.setMargins(dp(6), 0, dp(6), 0);
+
+    // ===============================
+    // CONTINUE (NEON GREEN)
+    // ===============================
+    Button yes = new Button(this);
+    yes.setText(gr ? "Συνέχεια" : "CONTINUE");
+    yes.setAllCaps(false);
+    yes.setTextColor(Color.WHITE);
+    yes.setLayoutParams(lp);
+
+    GradientDrawable yesBg = new GradientDrawable();
+    yesBg.setColor(0xFF00C853); // NEON GREEN
+    yesBg.setCornerRadius(dp(14));
+    yesBg.setStroke(dp(3), 0xFFFFD700);
+    yes.setBackground(yesBg);
+
+    // ===============================
+    // SKIP (RED)
+    // ===============================
+    Button no = new Button(this);
+    no.setText(gr ? "Παράλειψη" : "SKIP");
+    no.setAllCaps(false);
+    no.setTextColor(Color.WHITE);
+    no.setLayoutParams(lp);
+
+    GradientDrawable noBg = new GradientDrawable();
+    noBg.setColor(0xFFD50000); // RED
+    noBg.setCornerRadius(dp(14));
+    noBg.setStroke(dp(3), 0xFFFFD700);
+    no.setBackground(noBg);
+
+    buttons.addView(yes);
+    buttons.addView(no);
+    root.addView(buttons);
+
+    b.setView(root);
+    b.setCancelable(false);
+
+    final AlertDialog d = b.create();
+
+    if (d.getWindow() != null) {
+        d.getWindow().setBackgroundDrawable(
+                new ColorDrawable(Color.TRANSPARENT)
+        );
+    }
+
+    // STOP TTS WHEN CLOSED
+    d.setOnDismissListener(dialog -> {
+        try { AppTTS.stop(); } catch (Throwable ignore) {}
+    });
+
+    // BLOCK BACK BUTTON
+    d.setOnKeyListener((dialog, keyCode, event) -> {
+        if (keyCode == KeyEvent.KEYCODE_BACK
+                && event.getAction() == KeyEvent.ACTION_UP) {
+
+            try { AppTTS.stop(); } catch (Throwable ignore) {}
+            dialog.dismiss();
+            return true;
+        }
+        return false;
+    });
+
+    if (!isFinishing() && !isDestroyed()) {
+        d.show();
+    }
+
+    // -------------------------------------------------
+    // ACTIONS
+    // -------------------------------------------------
+    yes.setOnClickListener(v -> {
+        AppTTS.stop();
+        d.dismiss();
         pendingUsageAccess = true;
+
         try {
             startActivity(new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS));
         } catch (Throwable ignored) {
@@ -827,11 +926,11 @@ private void showUsageAccessPopup() {
         }
     });
 
-    b.setNegativeButton(gr ? "Παράλειψη" : "Skip", (d, w) -> {
+    no.setOnClickListener(v -> {
+        AppTTS.stop();
+        d.dismiss();
         showWelcomePopup();
     });
-
-    b.show();
 }
 
     // ------------------------------------------------------------

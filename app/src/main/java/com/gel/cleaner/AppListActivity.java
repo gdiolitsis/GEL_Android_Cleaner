@@ -37,6 +37,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.text.Collator;
+import java.util.List;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -55,8 +56,11 @@ public class AppListActivity extends GELAutoActivityHook {
     private boolean returnedFromUsageScreen = false;
     private boolean isLoadingApps = false;
 
-    private final ArrayList<AppEntry> allApps = new ArrayList<>();
-    private final ArrayList<AppEntry> visible = new ArrayList<>();
+    private final List<AppEntry> allApps =
+        Collections.synchronizedList(new ArrayList<>());
+    private final List<AppEntry> visible =
+        Collections.synchronizedList(new ArrayList<>());
+   
     private AppListAdapter adapter;
 
     private String search = "";
@@ -134,29 +138,32 @@ updateStartButtonUI();
             });
         }
 
-        // GLOBAL SELECT (TOGGLE)
-        if (btnSelectAll != null) {
-            btnSelectAll.setOnClickListener(v -> {
-                allSelected = !allSelected;
+// GLOBAL SELECT (TOGGLE)
+if (btnSelectAll != null) {
+    btnSelectAll.setOnClickListener(v -> {
 
-                for (AppEntry e : visible) {
-                    if (e == null || e.isHeader) continue;
-                    e.selected = allSelected;
-                }
+        allSelected = !allSelected;
 
-                // When global select is used, category toggles become "unknown" -> recompute
-                syncToggleStatesFromSelection();
+        List<AppEntry> snapshot = new ArrayList<>(visible);
 
-                btnSelectAll.setText(allSelected
-                        ? getString(R.string.deselect_all)
-                        : getString(R.string.select_all));
-
-                refreshUI();
-            });
-
-            // initial wording
-            btnSelectAll.setText(getString(R.string.select_all));
+        for (AppEntry e : snapshot) {
+            if (e == null || e.isHeader) continue;
+            e.selected = allSelected;
         }
+
+        // Recalculate toggle states
+        syncToggleStatesFromSelection();
+
+        btnSelectAll.setText(allSelected
+                ? getString(R.string.deselect_all)
+                : getString(R.string.select_all));
+
+        refreshUI();
+    });
+
+    // initial wording
+    btnSelectAll.setText(getString(R.string.select_all));
+}
 
         // USER APPS SELECT (TOGGLE)
         if (btnSelectUsers != null) {
@@ -698,40 +705,41 @@ private void applyFiltersAndSort() {
 
     private void updateStats() {
 
-        int total = allApps.size();
-        int visibleCount = 0;
-        int selectedCount = 0;
-        int userCount = 0;
-        int systemCount = 0;
+    List<AppEntry> allSnapshot = new ArrayList<>(allApps);
+    List<AppEntry> visibleSnapshot = new ArrayList<>(visible);
 
-        for (AppEntry e : allApps) {
-            if (e == null) continue;
-            if (e.isSystem) systemCount++;
-            else userCount++;
-        }
+    int total = allSnapshot.size();
+    int visibleCount = 0;
+    int selectedCount = 0;
+    int userCount = 0;
+    int systemCount = 0;
 
-        for (AppEntry e : visible) {
-            if (e == null) continue;
-            if (!e.isHeader) {
-                visibleCount++;
-                if (e.selected) selectedCount++;
-            }
-        }
+    for (AppEntry e : allSnapshot) {
+        if (e == null) continue;
+        if (e.isSystem) systemCount++;
+        else userCount++;
+    }
 
-        // Update XML panel
-        if (txtStatsTotal != null) {
-            txtStatsTotal.setText("Total Apps: " + total + "   (Visible: " + visibleCount + ")");
-        }
-        if (txtStatsUsers != null) {
-            txtStatsUsers.setText("User Apps: " + userCount);
-        }
-        if (txtStatsSystem != null) {
-            txtStatsSystem.setText("System Apps: " + systemCount);
-        }
-        if (txtStatsSelected != null) {
-            txtStatsSelected.setText("Selected: " + selectedCount);
+    for (AppEntry e : visibleSnapshot) {
+        if (e == null) continue;
+        if (!e.isHeader) {
+            visibleCount++;
+            if (e.selected) selectedCount++;
         }
     }
+
+    if (txtStatsTotal != null)
+        txtStatsTotal.setText("Total Apps: " + total + "   (Visible: " + visibleCount + ")");
+
+    if (txtStatsUsers != null)
+        txtStatsUsers.setText("User Apps: " + userCount);
+
+    if (txtStatsSystem != null)
+        txtStatsSystem.setText("System Apps: " + systemCount);
+
+    if (txtStatsSelected != null)
+        txtStatsSelected.setText("Selected: " + selectedCount);
+}
 
     // ============================================================
     // TOGGLE SYNC (prevents “select says deselect” mismatch)
@@ -739,50 +747,48 @@ private void applyFiltersAndSort() {
 
     private void syncToggleStatesFromSelection() {
 
-        int selectable = 0;
-        int selected = 0;
+    List<AppEntry> snapshot = new ArrayList<>(visible);
 
-        int userSelectable = 0;
-        int userSelected = 0;
+    int selectable = 0;
+    int selected = 0;
 
-        int sysSelectable = 0;
-        int sysSelected = 0;
+    int userSelectable = 0;
+    int userSelected = 0;
 
-        for (AppEntry e : visible) {
-            if (e == null || e.isHeader) continue;
+    int sysSelectable = 0;
+    int sysSelected = 0;
 
-            selectable++;
-            if (e.selected) selected++;
+    for (AppEntry e : snapshot) {
+        if (e == null || e.isHeader) continue;
 
-            if (e.isSystem) {
-                sysSelectable++;
-                if (e.selected) sysSelected++;
-            } else {
-                userSelectable++;
-                if (e.selected) userSelected++;
-            }
-        }
+        selectable++;
+        if (e.selected) selected++;
 
-        allSelected = (selectable > 0 && selected == selectable);
-        usersSelected = (userSelectable > 0 && userSelected == userSelectable);
-        systemSelected = (sysSelectable > 0 && sysSelected == sysSelectable);
-
-        // Update button wording if buttons exist
-        Button btnSelectAll = findViewById(R.id.btnSelectAll);
-        if (btnSelectAll != null) {
-            btnSelectAll.setText(allSelected ? getString(R.string.deselect_all) : getString(R.string.select_all));
-        }
-
-        Button btnSelectUsers = findViewById(R.id.btnSelectUsers);
-        if (btnSelectUsers != null) {
-            btnSelectUsers.setText(usersSelected ? getString(R.string.deselect_user_apps) : getString(R.string.select_user_apps));
-        }
-
-        Button btnSelectSystem = findViewById(R.id.btnSelectSystem);
-        if (btnSelectSystem != null) {
-            btnSelectSystem.setText(systemSelected ? getString(R.string.deselect_system_apps) : getString(R.string.select_system_apps));
+        if (e.isSystem) {
+            sysSelectable++;
+            if (e.selected) sysSelected++;
+        } else {
+            userSelectable++;
+            if (e.selected) userSelected++;
         }
     }
+
+    allSelected = (selectable > 0 && selected == selectable);
+    usersSelected = (userSelectable > 0 && userSelected == userSelectable);
+    systemSelected = (sysSelectable > 0 && sysSelected == sysSelectable);
+
+    Button btnSelectAll = findViewById(R.id.btnSelectAll);
+    if (btnSelectAll != null)
+        btnSelectAll.setText(allSelected ? getString(R.string.deselect_all) : getString(R.string.select_all));
+
+    Button btnSelectUsers = findViewById(R.id.btnSelectUsers);
+    if (btnSelectUsers != null)
+        btnSelectUsers.setText(usersSelected ? getString(R.string.deselect_user_apps) : getString(R.string.select_user_apps));
+
+    Button btnSelectSystem = findViewById(R.id.btnSelectSystem);
+    if (btnSelectSystem != null)
+        btnSelectSystem.setText(systemSelected ? getString(R.string.deselect_system_apps) : getString(R.string.select_system_apps));
+}
 
     // ============================================================
     // GUIDED MODE
@@ -790,22 +796,26 @@ private void applyFiltersAndSort() {
 
     private void startGuided() {
 
-        guidedQueue.clear();
-        guidedIndex = 0;
+    guidedQueue.clear();
+    guidedIndex = 0;
 
-        for (AppEntry e : visible) {
-            if (e == null || e.isHeader) continue;
-            if (e.selected) guidedQueue.add(e.pkg);
-        }
+    List<AppEntry> snapshot = new ArrayList<>(visible);
 
-        if (guidedQueue.isEmpty()) {
-            showGelDialog(AppLang.isGreek(this) ? "Δεν έχεις επιλέξει εφαρμογές." : "No apps selected.");
-            return;
-        }
-
-        guidedActive = true;
-        openNext();
+    for (AppEntry e : snapshot) {
+        if (e == null || e.isHeader) continue;
+        if (e.selected) guidedQueue.add(e.pkg);
     }
+
+    if (guidedQueue.isEmpty()) {
+        showGelDialog(AppLang.isGreek(this)
+                ? "Δεν έχεις επιλέξει εφαρμογές."
+                : "No apps selected.");
+        return;
+    }
+
+    guidedActive = true;
+    openNext();
+}
 
 private void openNext() {
 

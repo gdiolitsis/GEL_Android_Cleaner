@@ -271,7 +271,7 @@ public boolean isDeviceRooted() {
     return false;
 }
 
-public void showRootRequiredDialog()
+public void showRootRequiredDialog() {
 
     boolean gr = AppLang.isGreek(this);
 

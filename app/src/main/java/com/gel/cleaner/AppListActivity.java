@@ -287,8 +287,8 @@ private void showRootRequiredDialog() {
 
     TextView msg = new TextView(this);
     msg.setText(gr
-            ? "Αυτή η ενέργεια, απαιτεί rooted συσκευή.\nΔεν επιτρέπεται η απεγκατάσταση εφαρμογών συστήματος, σε αυτή την συσκευή."
-            : "This action, requires a rooted device.\nYou cannot uninstall system apps on this device.");
+            ? "Αυτή η ενέργεια, απαιτεί rooted συσκευή.\nΔεν επιτρέπεται η απεγκατάσταση εφαρμογών συστήματος."
+            : "This action, requires a rooted device.\nYou cannot uninstall system apps.");
     msg.setTextColor(0xFF39FF14);
     msg.setTextSize(15f);
     msg.setGravity(Gravity.CENTER);
@@ -319,24 +319,24 @@ private void showRootRequiredDialog() {
     exitBtn.setBackground(exitBg);
     exitBtn.setLayoutParams(lp);
 
-    exitBtn.setOnClickListener(v -> {
-        try { AppTTS.stop(); } catch (Throwable ignore) {}
-        dialogDismissSafe();
-    });
-
     btnRow.addView(exitBtn);
     root.addView(btnRow);
 
     b.setView(root);
     b.setCancelable(false);
 
-    AlertDialog d = b.create();
+    AlertDialog d = b.create();   // ✅ ΠΡΩΤΑ δημιουργία
 
     if (d.getWindow() != null) {
         d.getWindow().setBackgroundDrawable(
                 new ColorDrawable(Color.TRANSPARENT)
         );
     }
+
+    exitBtn.setOnClickListener(v -> {
+        try { AppTTS.stop(); } catch (Throwable ignore) {}
+        d.dismiss();               // ✅ ΤΩΡΑ είναι valid
+    });
 
     d.setOnDismissListener(dialog -> {
         try { AppTTS.stop(); } catch (Throwable ignore) {}
@@ -348,10 +348,11 @@ private void showRootRequiredDialog() {
         AppTTS.ensureSpeak(
                 this,
                 gr
-                        ? "Αυτή η ενέργεια, απαιτεί rooted συσκευή.\nΔεν επιτρέπεται η απεγκατάσταση εφαρμογών συστήματος, σε αυτή την συσκευή."
-            : "This action, requires a rooted device.\nYou cannot uninstall system apps on this device.");
+                        ? "Αυτή η ενέργεια, απαιτεί rooted συσκευή.\nΔεν επιτρέπεται η απεγκατάσταση εφαρμογών συστήματος."
+            : "This action, requires a rooted device.\nYou cannot uninstall system apps.");
         );
     }, 500);
+}
 
 private void updateStartButtonUI() {
 
@@ -499,26 +500,7 @@ private void showNextAppToast() {
     ).show();
 }
 
-private void updateStartButtonText() {
-
-    Button startBtn = findViewById(R.id.btnGuidedClean);
-
-    if (isUninstallMode) {
-        startBtn.setText(
-                AppLang.isGreek(this)
-                        ? "Απεγκατάσταση επιλεγμένων εφαρμογών"
-                        : "Uninstall selected apps"
-        );
-    } else {
-        startBtn.setText(
-                AppLang.isGreek(this)
-                        ? "Έναρξη καθοδηγούμενου καθαρισμού"
-                        : "Start Guided Cleaning"
-        );
-    }
-}
-
-    // ============================================================
+// ============================================================
 // LOAD APPS
 // ============================================================
 

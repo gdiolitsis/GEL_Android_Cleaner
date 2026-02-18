@@ -856,13 +856,14 @@ langSpinner.setOnItemSelectedListener(
 
                 if (!newLang.equals(LocaleHelper.getLang(MainActivity.this))) {
 
-                    LocaleHelper.set(MainActivity.this, newLang);
+    LocaleHelper.set(MainActivity.this, newLang);
 
-                    try { AppTTS.stop(); } catch (Throwable ignore) {}
+    permissionsSkippedThisLaunch = true;  // 🔥 ΑΥΤΟ ΛΕΙΠΕΙ
 
-                    recreate();
-                }
-            }
+    try { AppTTS.stop(); } catch (Throwable ignore) {}
+
+    recreate();
+}
 
             @Override
             public void onNothingSelected(AdapterView<?> parent) {}
@@ -907,7 +908,7 @@ Button okBtn = new Button(MainActivity.this);
 okBtn.setText("OK");
 okBtn.setAllCaps(false);
 okBtn.setTextColor(Color.WHITE);
-okBtn.setTextSize(16f);
+okBtn.setTextSize(TypedValue.COMPLEX_UNIT_SP, 22f);
 okBtn.setTypeface(null, Typeface.BOLD);
 
 GradientDrawable okBg = new GradientDrawable();

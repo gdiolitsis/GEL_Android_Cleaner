@@ -856,14 +856,14 @@ langSpinner.setOnItemSelectedListener(
 
                 if (!newLang.equals(LocaleHelper.getLang(MainActivity.this))) {
 
-    LocaleHelper.set(MainActivity.this, newLang);
+                    LocaleHelper.set(MainActivity.this, newLang);
+                    permissionsSkippedThisLaunch = true;
 
-    permissionsSkippedThisLaunch = true;  // 🔥 ΑΥΤΟ ΛΕΙΠΕΙ
+                    try { AppTTS.stop(); } catch (Throwable ignore) {}
 
-    try { AppTTS.stop(); } catch (Throwable ignore) {}
-
-    recreate();
-}
+                    recreate();
+                }
+            }  // 🔥 ΑΥΤΟ ΕΛΕΙΠΕ
 
             @Override
             public void onNothingSelected(AdapterView<?> parent) {}

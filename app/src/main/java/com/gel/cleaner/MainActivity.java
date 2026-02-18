@@ -474,7 +474,7 @@ root.addView(cb);
         GradientDrawable skipBg = new GradientDrawable();
         skipBg.setColor(0xFF8B0000);
         skipBg.setCornerRadius(dp(10));
-        .setStroke(dp(3), 0xFFFFD700);
+        setStroke(dp(3), 0xFFFFD700);
         skipBtn.setBackground(skipBg);
         skipBtn.setLayoutParams(btnLp);
 

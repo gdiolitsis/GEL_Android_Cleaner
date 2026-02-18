@@ -141,15 +141,17 @@ private boolean returningFromUsageSettings = false;
 protected void onResume() {
     super.onResume();
 
-    // Αν γυρίσαμε από Usage Settings
-    if (returningFromUsageSettings) {
-        returningFromUsageSettings = false;
-        return; // Δεν ξαναελέγχουμε άμεσα
-    }
+    // Αν όλα τα runtime permissions έχουν δοθεί
+    if (!hasMissingPermissions()) {
 
-    // Κανονικός έλεγχος
-    if (!usagePopupVisible && !hasUsageAccess()) {
-        showUsageAccessPopup();
+        // Αν τώρα υπάρχει Usage access
+        if (hasUsageAccess()) {
+
+            // Και δεν έχει εμφανιστεί ακόμα Welcome
+            if (!isWelcomeDisabled() && !consumeSkipWelcomeOnce()) {
+                showWelcomePopup();
+            }
+        }
     }
 }
 
@@ -474,7 +476,7 @@ root.addView(cb);
         GradientDrawable skipBg = new GradientDrawable();
         skipBg.setColor(0xFF8B0000);
         skipBg.setCornerRadius(dp(10));
-        setStroke(dp(3), 0xFFFFD700);
+        .setStroke(dp(3), 0xFFFFD700);
         skipBtn.setBackground(skipBg);
         skipBtn.setLayoutParams(btnLp);
 
@@ -620,8 +622,19 @@ private String getPermissionsTextEN() {
         permissionIndex++;
     }
 
-    // Runtime finished → show usage popup
-    showUsageAccessPopup();
+    // Όταν τελειώσουν τα runtime permissions:
+    if (!hasUsageAccess()) {
+        showUsageAccessPopup();
+        return;
+    }
+
+    // Αν υπάρχει usage access → Welcome
+    if (!isWelcomeDisabled() && !consumeSkipWelcomeOnce()) {
+        showWelcomePopup();
+        return;
+    }
+
+    // Τέλος flow
 }
 
     @Override
@@ -936,6 +949,13 @@ no.setElevation(dp(4)); // depth effect
     d.setOnDismissListener(dialog -> {
     usagePopupVisible = false;
     try { AppTTS.stop(); } catch (Throwable ignore) {}
+
+    // Μετά το κλείσιμο, έλεγχος ξανά
+    if (hasUsageAccess()) {
+        if (!isWelcomeDisabled() && !consumeSkipWelcomeOnce()) {
+            showWelcomePopup();
+        }
+    }
 });
 
     // BLOCK BACK BUTTON
@@ -968,16 +988,19 @@ root.postDelayed(() -> {
     // ACTIONS
     // -------------------------------------------------
     yes.setOnClickListener(v -> {
-    AppTTS.stop();
-    d.dismiss();
 
-    usagePopupVisible = false;
-    returningFromUsageSettings = true;
+    try { AppTTS.stop(); } catch (Throwable ignore) {}
+
+    d.dismiss();
 
     try {
         startActivity(new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS));
     } catch (Throwable ignored) {
-        showWelcomePopup();
+
+        // Αν για κάποιο λόγο αποτύχει το settings
+        if (!isWelcomeDisabled() && !consumeSkipWelcomeOnce()) {
+            showWelcomePopup();
+        }
     }
 });
 

@@ -326,19 +326,48 @@ ArrayAdapter<String> adapter =
             }
 
             @Override
-            public View getDropDownView(int position, View convertView, ViewGroup parent) {
-                TextView tv = (TextView) super.getDropDownView(position, convertView, parent);
-                tv.setTextColor(0xFF00FF9C);         // dropdown: neon green
-                tv.setTypeface(null, Typeface.BOLD); // bold
-                tv.setGravity(Gravity.CENTER);       // centered
-                tv.setPadding(dp(14), dp(12), dp(14), dp(12));
-                return tv;
-            }
+public View getDropDownView(int position, View convertView, ViewGroup parent) {
+    TextView tv = (TextView) super.getDropDownView(position, convertView, parent);
+    tv.setTextColor(Color.BLACK);      // 🔥 ΜΑΥΡΑ
+    tv.setTypeface(null, Typeface.BOLD);
+    tv.setGravity(Gravity.CENTER);
+    tv.setPadding(dp(14), dp(12), dp(14), dp(12));
+    return tv;
+}
         };
 
 adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 langSpinner.setAdapter(adapter);
 langSpinner.setSelection(gr ? 1 : 0);
+
+langSpinner.setOnItemSelectedListener(
+        new AdapterView.OnItemSelectedListener() {
+
+            @Override
+            public void onItemSelected(
+                    AdapterView<?> parent,
+                    View view,
+                    int position,
+                    long id
+            ) {
+
+                String newLang = (position == 0) ? "en" : "el";
+
+                if (!newLang.equals(LocaleHelper.getLang(MainActivity.this))) {
+
+                    LocaleHelper.set(MainActivity.this, newLang);
+
+                    try { AppTTS.stop(); } catch (Throwable ignore) {}
+
+                    d.dismiss();
+                    recreate();
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {}
+        }
+);
 
 // ================= LANGUAGE BOX (GOLD BORDER) =================
 LinearLayout langBox = new LinearLayout(this);
@@ -464,9 +493,8 @@ d.setOnKeyListener((dialog, keyCode, event) -> {
 
     d.dismiss();
 
-    try {
-        startActivity(new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS));
-    } catch (Throwable ignored) {}
+    permissionIndex = 0;
+    requestNextPermission();
 });
 
         skipBtn.setOnClickListener(v -> {

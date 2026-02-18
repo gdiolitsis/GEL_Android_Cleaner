@@ -794,9 +794,16 @@ private void applyFiltersAndSort() {
             }
 
             // 🔥 CACHE MODE → hide apps with 0 cache
-            if (!isUninstallMode && e.cacheBytes <= 0) {
-                continue;
-            }
+           
+if (!isUninstallMode) {
+
+    // Αν έχουμε Usage Access → δείχνουμε μόνο apps με cache > 0
+    if (hasUsageAccess()) {
+        if (e.cacheBytes <= 0) continue;
+    }
+
+    // Αν ΔΕΝ έχουμε Usage Access → ΔΕΝ φιλτράρουμε
+}
 
             // 🔎 SEARCH FILTER
             if (!TextUtils.isEmpty(s)) {

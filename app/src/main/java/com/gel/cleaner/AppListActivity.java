@@ -558,7 +558,7 @@ final String messageText =
                 : "To retrieve app and cache size information,\n"
                   + "Usage Access is required.\n\n"
                   + "No personal data is collected when granting Usage Access.\n\n"
-                  + "You will be redirected to Settings.");
+                  + "You will be redirected to Settings.";
     msg.setTextColor(0xFF00FF9C); // Neon green
     msg.setTextSize(15f);
     msg.setGravity(Gravity.CENTER);

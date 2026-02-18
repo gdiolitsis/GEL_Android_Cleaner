@@ -398,7 +398,7 @@ msg.setBackground(msgBg);
 LinearLayout.LayoutParams msgLp =
         new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.Layout_CONTENT
+                LinearLayout.LayoutParams.WRAP_CONTENT
         );
 msgLp.setMargins(0, 0, 0, dp(16));
 msg.setLayoutParams(msgLp);

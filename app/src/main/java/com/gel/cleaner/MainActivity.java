@@ -343,194 +343,118 @@ label.setText(
 
         b.setCancelable(false);
 
-        // ================= ROOT =================
-        LinearLayout root = new LinearLayout(this);
-        root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(dp(24), dp(20), dp(24), dp(18));
+    // ================= ROOT =================
+LinearLayout root = new LinearLayout(this);
+root.setOrientation(LinearLayout.VERTICAL);
+root.setPadding(dp(24), dp(22), dp(24), dp(20));
 
-        GradientDrawable bg = new GradientDrawable();
-        bg.setColor(0xFFFFD700);
-        bg.setCornerRadius(dp(10));
-        bg.setStroke(dp(3), 0xFFFFD700);
-        root.setBackground(bg);
+GradientDrawable bg = new GradientDrawable();
+bg.setColor(0xFF000000); // Μαύρο background
+bg.setCornerRadius(dp(14));
+bg.setStroke(dp(4), 0xFFFFD700); // Χρυσό περίγραμμα
+root.setBackground(bg);
 
 // ================= TITLE =================
 TextView title = new TextView(this);
 title.setText(gr ? "ΑΠΑΙΤΟΥΜΕΝΕΣ ΑΔΕΙΕΣ" : "REQUIRED PERMISSIONS");
-title.setTextColor(Color.WHITE); // Λευκό
-title.setTextSize(18f);
+title.setTextColor(Color.WHITE);
+title.setTextSize(19f);
 title.setTypeface(null, Typeface.BOLD);
 title.setGravity(Gravity.CENTER);
-title.setPadding(dp(12), dp(12), dp(12), dp(12));
-
-GradientDrawable titleBg = new GradientDrawable();
-titleBg.setColor(0xFF000000); // Μαύρο background
-titleBg.setCornerRadius(dp(10));
-titleBg.setStroke(dp(3), 0xFFFFD700); // Χρυσό περίγραμμα
-title.setBackground(titleBg);
-
-LinearLayout.LayoutParams titleLp =
-        new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-        );
-titleLp.setMargins(0, dp(6), 0, dp(12));
-title.setLayoutParams(titleLp);
-
+title.setPadding(0, 0, 0, dp(14));
 root.addView(title);
-
 
 // ================= MESSAGE =================
 TextView msg = new TextView(this);
 msg.setText(gr ? getPermissionsTextGR()
         : getPermissionsTextEN());
-msg.setTextColor(0xFF00FF9C); // Neon πράσινο
+msg.setTextColor(0xFF00FF9C); // Neon green
 msg.setTextSize(15f);
 msg.setGravity(Gravity.CENTER);
-msg.setPadding(dp(12), dp(12), dp(12), dp(12));
-
-GradientDrawable msgBg = new GradientDrawable();
-msgBg.setColor(0xFF000000); // Μαύρο background
-msgBg.setCornerRadius(dp(8));
-msgBg.setStroke(dp(3), 0xFFFFD700); // Χρυσό περίγραμμα
-msg.setBackground(msgBg);
-
-LinearLayout.LayoutParams msgLp =
-        new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-        );
-msgLp.setMargins(0, 0, 0, dp(16));
-msg.setLayoutParams(msgLp);
-
+msg.setLineSpacing(0f, 1.15f);
+msg.setPadding(dp(6), 0, dp(6), dp(18));
 root.addView(msg);
 
-        // ================= MUTE ROW =================
-        root.addView(buildMuteRow());
+// ================= MUTE ROW =================
+root.addView(buildMuteRow());
 
-        // ================= LANGUAGE SPINNER =================
-        Spinner langSpinner = new Spinner(this);
+// ================= LANGUAGE SPINNER =================
+Spinner langSpinner = new Spinner(this);
 
-        ArrayAdapter<String> adapter =
-                new ArrayAdapter<>(
-                        this,
-                        android.R.layout.simple_spinner_item,
-                        new String[]{"EN", "GR"}
-                );
-        adapter.setDropDownViewResource(
-                android.R.layout.simple_spinner_dropdown_item
+ArrayAdapter<String> adapter =
+        new ArrayAdapter<>(
+                this,
+                android.R.layout.simple_spinner_item,
+                new String[]{"EN", "GR"}
         );
-        langSpinner.setAdapter(adapter);
-        langSpinner.setSelection(gr ? 1 : 0);
+adapter.setDropDownViewResource(
+        android.R.layout.simple_spinner_dropdown_item
+);
+langSpinner.setAdapter(adapter);
+langSpinner.setSelection(gr ? 1 : 0);
 
-        langSpinner.setOnItemSelectedListener(
-                new AdapterView.OnItemSelectedListener() {
+LinearLayout langBox = new LinearLayout(this);
+langBox.setGravity(Gravity.CENTER);
+langBox.setPadding(0, 0, 0, dp(18));
+langBox.addView(langSpinner);
 
-                    @Override
-                    public void onItemSelected(
-                            AdapterView<?> parent,
-                            View view,
-                            int position,
-                            long id
-                    ) {
+root.addView(langBox);
 
-                        String code = (position == 0) ? "en" : "el";
-
-                        changeLang(code);
-
-                        msg.setText(
-                                AppLang.isGreek(MainActivity.this)
-                                        ? getPermissionsTextGR()
-                                        : getPermissionsTextEN()
-                        );
-
-                        if (!AppTTS.isMuted(MainActivity.this)) {
-                            speakPermissionsTTS();
-                        }
-                    }
-
-                    @Override
-                    public void onNothingSelected(AdapterView<?> parent) {}
-                }
-        );
-
-        // ================= LANGUAGE BOX =================
-        LinearLayout langBox = new LinearLayout(this);
-        langBox.setOrientation(LinearLayout.VERTICAL);
-        langBox.setPadding(dp(12), dp(12), dp(12), dp(12));
-
-        GradientDrawable langBg = new GradientDrawable();
-        langBg.setColor(0xFF1A1A1A);
-        langBg.setCornerRadius(dp(10));
-        langBg.setStroke(dp(3), 0xFFFFD700);
-        langBox.setBackground(langBg);
-
-        langBox.addView(langSpinner);
-
-        LinearLayout.LayoutParams lpLang =
-                new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.WRAP_CONTENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT
-                );
-        lpLang.gravity = Gravity.CENTER;
-        lpLang.setMargins(0, 0, 0, dp(18));
-        langBox.setLayoutParams(lpLang);
-
-        root.addView(langBox);
-
-        // ================= CHECKBOX =================
-        CheckBox cb = new CheckBox(this);
-cb.setText(AppLang.isGreek(this)
-        ? "Να μην εμφανιστεί ξανά"
+// ================= CHECKBOX =================
+CheckBox cb = new CheckBox(this);
+cb.setText(gr ? "Να μην εμφανιστεί ξανά"
         : "Do not show again");
 cb.setTextColor(Color.WHITE);
-cb.setPadding(0, dp(8), 0, dp(8));
+cb.setPadding(0, 0, 0, dp(18));
 root.addView(cb);
 
-        // ================= BUTTON ROW =================
-        LinearLayout btnRow = new LinearLayout(this);
-        btnRow.setOrientation(LinearLayout.HORIZONTAL);
-        btnRow.setGravity(Gravity.CENTER);
-        btnRow.setPadding(0, dp(10), 0, 0);
+// ================= BUTTON ROW =================
+LinearLayout btnRow = new LinearLayout(this);
+btnRow.setOrientation(LinearLayout.HORIZONTAL);
+btnRow.setGravity(Gravity.CENTER);
 
-        LinearLayout.LayoutParams btnLp =
-                new LinearLayout.LayoutParams(
-                        0,
-                        dp(140),
-                        1f
-                );
-        btnLp.setMargins(dp(10), 0, dp(10), 0);
+LinearLayout.LayoutParams btnLp =
+        new LinearLayout.LayoutParams(
+                0,
+                dp(110),
+                1f
+        );
+btnLp.setMargins(dp(8), 0, dp(8), 0);
 
-        Button skipBtn = new Button(this);
-        skipBtn.setText(
-        AppLang.isGreek(this) ? "ΠΑΡΑΛΕΙΨΗ" : "SKIP");
-        skipBtn.setAllCaps(false);
-        skipBtn.setTextColor(Color.WHITE);
-        
-        GradientDrawable skipBg = new GradientDrawable();
-        skipBg.setColor(0xFF0B5F3B);
-        skipBg.setCornerRadius(dp(10));
-        skipBg.setStroke(dp(3), 0xFFFFD700);
-        skipBtn.setBackground(skipBg);
-        skipBtn.setLayoutParams(btnLp);
+// -------- SKIP --------
+Button skipBtn = new Button(this);
+skipBtn.setText(gr ? "ΠΑΡΑΛΕΙΨΗ" : "SKIP");
+skipBtn.setAllCaps(false);
+skipBtn.setTextColor(Color.WHITE);
+skipBtn.setTextSize(16f);
+skipBtn.setTypeface(null, Typeface.BOLD);
+skipBtn.setLayoutParams(btnLp);
 
+GradientDrawable skipBg = new GradientDrawable();
+skipBg.setColor(0xFFC62828); // Κόκκινο
+skipBg.setCornerRadius(dp(12));
+skipBg.setStroke(dp(3), 0xFFFFD700);
+skipBtn.setBackground(skipBg);
 
-        Button continueBtn = new Button(this);
-        continueBtn.setText(
-        AppLang.isGreek(this) ? "ΣΥΝΕΧΕΙΑ" : "CONTINUE");
-        continueBtn.setAllCaps(false);
-        continueBtn.setTextColor(Color.WHITE);
+// -------- CONTINUE --------
+Button continueBtn = new Button(this);
+continueBtn.setText(gr ? "ΣΥΝΕΧΕΙΑ" : "CONTINUE");
+continueBtn.setAllCaps(false);
+continueBtn.setTextColor(Color.WHITE);
+continueBtn.setTextSize(16f);
+continueBtn.setTypeface(null, Typeface.BOLD);
+continueBtn.setLayoutParams(btnLp);
 
-        GradientDrawable contBg = new GradientDrawable();
-        contBg.setColor(0xFF0B5F3B);
-        contBg.setCornerRadius(dp(10));
-        contBg.setStroke(dp(3), 0xFFFFD700);
-        continueBtn.setBackground(contBg);
-        continueBtn.setLayoutParams(btnLp);
+GradientDrawable contBg = new GradientDrawable();
+contBg.setColor(0xFF00E676); // Neon green
+contBg.setCornerRadius(dp(12));
+contBg.setStroke(dp(3), 0xFFFFD700);
+continueBtn.setBackground(contBg);
 
-        btnRow.addView(skipBtn);
-        btnRow.addView(continueBtn);
-        root.addView(btnRow);
+btnRow.addView(skipBtn);
+btnRow.addView(continueBtn);
+
+root.addView(btnRow);
 
         b.setView(root);
 
@@ -868,11 +792,11 @@ if (usagePopupVisible) return;
     String titleText = gr ? "Πρόσβαση Χρήσης" : "Usage Access";
 
     String messageText = gr
-            ? "Για να λειτουργεί σωστά ο καθαρισμός cache,\n"
+            ? "Για να ενεργοποιηθεί ο καθαρισμός cache,  η ανάλυση μεγεθών cache,\n"
             + "και η ανάλυση μεγεθών εφαρμογών,\n"
             + "απαιτείται Πρόσβαση Χρήσης.\n\n"
             + "Θα μεταφερθείς στις Ρυθμίσεις."
-            : "To enable cache cleaning and app size analysis,\n"
+            : "To enable cache cleaning, cache sizes analysis, and apps sizes analysis,\n"
             + "Usage Access is required.\n\n"
             + "You will be redirected to Settings.";
 

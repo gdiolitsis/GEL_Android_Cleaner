@@ -354,22 +354,56 @@ label.setText(
         bg.setStroke(dp(3), 0xFFFFD700);
         root.setBackground(bg);
 
-        // ================= TITLE =================
-       TextView title = new TextView(this);
-        title.setText(gr ? "ΑΠΑΙΤΟΥΜΕΝΕΣ ΑΔΕΙΕΣ" : "REQUIRED PERMISSIONS");
-        title.setTextColor(Color.WHITE);
-        
-        root.addView(title);
+// ================= TITLE =================
+TextView title = new TextView(this);
+title.setText(gr ? "ΑΠΑΙΤΟΥΜΕΝΕΣ ΑΔΕΙΕΣ" : "REQUIRED PERMISSIONS");
+title.setTextColor(Color.WHITE); // Λευκό
+title.setTextSize(18f);
+title.setTypeface(null, Typeface.BOLD);
+title.setGravity(Gravity.CENTER);
+title.setPadding(dp(12), dp(12), dp(12), dp(12));
 
-        // ================= MESSAGE =================
-        TextView msg = new TextView(this);
-        msg.setTextColor(0xFFFFD700);
-        msg.setTextSize(15f);
-        msg.setGravity(Gravity.START);
-        msg.setPadding(0, 0, 0, dp(16));
-        msg.setText(gr ? getPermissionsTextGR()
-                : getPermissionsTextEN());
-        root.addView(msg);
+GradientDrawable titleBg = new GradientDrawable();
+titleBg.setColor(0xFF000000); // Μαύρο background
+titleBg.setCornerRadius(dp(10));
+titleBg.setStroke(dp(3), 0xFFFFD700); // Χρυσό περίγραμμα
+title.setBackground(titleBg);
+
+LinearLayout.LayoutParams titleLp =
+        new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+titleLp.setMargins(0, dp(6), 0, dp(12));
+title.setLayoutParams(titleLp);
+
+root.addView(title);
+
+
+// ================= MESSAGE =================
+TextView msg = new TextView(this);
+msg.setText(gr ? getPermissionsTextGR()
+        : getPermissionsTextEN());
+msg.setTextColor(0xFF00FF9C); // Neon πράσινο
+msg.setTextSize(15f);
+msg.setGravity(Gravity.CENTER);
+msg.setPadding(dp(12), dp(12), dp(12), dp(12));
+
+GradientDrawable msgBg = new GradientDrawable();
+msgBg.setColor(0xFF000000); // Μαύρο background
+msgBg.setCornerRadius(dp(8));
+msgBg.setStroke(dp(3), 0xFFFFD700); // Χρυσό περίγραμμα
+msg.setBackground(msgBg);
+
+LinearLayout.LayoutParams msgLp =
+        new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.Layout_CONTENT
+        );
+msgLp.setMargins(0, 0, 0, dp(16));
+msg.setLayoutParams(msgLp);
+
+root.addView(msg);
 
         // ================= MUTE ROW =================
         root.addView(buildMuteRow());
@@ -462,7 +496,7 @@ root.addView(cb);
         LinearLayout.LayoutParams btnLp =
                 new LinearLayout.LayoutParams(
                         0,
-                        dp(72),
+                        dp(140),
                         1f
                 );
         btnLp.setMargins(dp(10), 0, dp(10), 0);
@@ -474,7 +508,7 @@ root.addView(cb);
         skipBtn.setTextColor(Color.WHITE);
         
         GradientDrawable skipBg = new GradientDrawable();
-        skipBg.setColor(0xFF8B0000);
+        skipBg.setColor(0xFF0B5F3B);
         skipBg.setCornerRadius(dp(10));
         skipBg.setStroke(dp(3), 0xFFFFD700);
         skipBtn.setBackground(skipBg);
@@ -856,7 +890,7 @@ if (usagePopupVisible) return;
     root.setPadding(dp(20), dp(18), dp(20), dp(16));
 
     GradientDrawable bg = new GradientDrawable();
-    bg.setColor(0xFF101010);
+    bg.setColor(0xFF000000);
     bg.setCornerRadius(dp(10));
     bg.setStroke(dp(3), 0xFFFFD700);
     root.setBackground(bg);
@@ -878,7 +912,7 @@ if (usagePopupVisible) return;
     // -------------------------------------------------
     TextView msg = new TextView(this);
     msg.setText(messageText);
-    msg.setTextColor(0xFFFFD700);
+    msg.setTextColor(0xFF00FF9C);
     msg.setTextSize(14f);
     msg.setGravity(Gravity.CENTER);
     msg.setLineSpacing(0f, 1.15f);
@@ -889,46 +923,55 @@ if (usagePopupVisible) return;
     // -------------------------------------------------
     root.addView(buildMuteRow());
 
-    // -------------------------------------------------
-    // BUTTONS ROW
-    // -------------------------------------------------
-    LinearLayout buttons = new LinearLayout(this);
-    buttons.setOrientation(LinearLayout.HORIZONTAL);
-    buttons.setPadding(0, dp(14), 0, 0);
+// -------------------------------------------------
+// BUTTONS ROW
+// -------------------------------------------------
+LinearLayout buttons = new LinearLayout(this);
+buttons.setOrientation(LinearLayout.HORIZONTAL);
+buttons.setGravity(Gravity.CENTER);
+buttons.setPadding(0, dp(18), 0, 0);
 
-    LinearLayout.LayoutParams lp =
-            new LinearLayout.LayoutParams(0, dp(54), 1f);
-    lp.setMargins(dp(6), 0, dp(6), 0);
+LinearLayout.LayoutParams lp =
+        new LinearLayout.LayoutParams(
+                0,
+                dp(144),   // 🔥 ΔΙΠΛΟ ΥΨΟΣ
+                1f
+        );
+lp.setMargins(dp(10), 0, dp(10), 0);
 
-// CONTINUE
+// ================= CONTINUE =================
 Button yes = new Button(this);
-yes.setText(gr ? "ΣΥΝΈΧΕΙΑ" : "CONTINUE");
+yes.setText(gr ? "ΣΥΝΕΧΕΙΑ" : "CONTINUE");
 yes.setAllCaps(false);
 yes.setTextColor(Color.WHITE);
+yes.setTextSize(18f);
+yes.setTypeface(null, Typeface.BOLD);
+yes.setLayoutParams(lp);
 
 GradientDrawable yesBg = new GradientDrawable();
-yesBg.setColor(0xFF00E676); // πιο φωτεινό πράσινο
+yesBg.setColor(0xFF00E676); // neon green
 yesBg.setCornerRadius(dp(10));
-yesBg.setStroke(dp(3), 0xFFFFD700);
+yesBg.setStroke(dp(3), 0xFFFFD700); // GEL gold border
 yes.setBackground(yesBg);
 
-yes.setElevation(dp(4)); // depth effect
+yes.setElevation(dp(6));
 
-    // SKIP
+// ================= SKIP =================
 Button no = new Button(this);
-no.setText(gr ? "ΠΑΡΆΛΕΙΨΗ" : "SKIP");
+no.setText(gr ? "ΠΑΡΑΛΕΙΨΗ" : "SKIP");
 no.setAllCaps(false);
 no.setTextColor(Color.WHITE);
-
+no.setTextSize(18f);
+no.setTypeface(null, Typeface.BOLD);
 no.setLayoutParams(lp);
 
 GradientDrawable noBg = new GradientDrawable();
-noBg.setColor(0xFFC62828); // πιο καθαρό κόκκινο
+noBg.setColor(0xFFC62828);
 noBg.setCornerRadius(dp(10));
-noBg.setStroke(dp(3), 0xFFFFD700);
+noBg.setStroke(dp(3), 0xFFFFD700); // GEL gold border
 no.setBackground(noBg);
 
-no.setElevation(dp(4)); // depth effect
+no.setElevation(dp(6));
 
     buttons.addView(yes);
     buttons.addView(no);
@@ -1046,7 +1089,7 @@ root.postDelayed(() -> {
 
         // ================= MESSAGE =================
         TextView msg = new TextView(MainActivity.this);
-        msg.setTextColor(0xFFFFD700);
+        msg.setTextColor(0xFF00FF9C);
         msg.setTextSize(15f);
         msg.setGravity(Gravity.START);
         msg.setPadding(0, 0, 0, dp(12));

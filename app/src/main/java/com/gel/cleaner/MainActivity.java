@@ -308,37 +308,39 @@ root.addView(msg);
 root.addView(buildMuteRow());
 
 // ================= LANGUAGE SPINNER =================
-Spinner langSpinner = new Spinner(this);
+Spinner langSpinner = new Spinner(MainActivity.this);
 
 ArrayAdapter<String> adapter =
         new ArrayAdapter<String>(
-                this,
+                MainActivity.this,
                 android.R.layout.simple_spinner_item,
                 new String[]{"EN", "GR"}
         ) {
+
             @Override
             public View getView(int position, View convertView, ViewGroup parent) {
                 TextView tv = (TextView) super.getView(position, convertView, parent);
-                tv.setTextColor(Color.WHITE);        // selected: white
-                tv.setTypeface(null, Typeface.BOLD); // bold
-                tv.setGravity(Gravity.CENTER);       // centered
+                tv.setTextColor(Color.WHITE);          // selected text
+                tv.setTypeface(null, Typeface.BOLD);
+                tv.setGravity(Gravity.CENTER);
                 return tv;
             }
 
             @Override
-public View getDropDownView(int position, View convertView, ViewGroup parent) {
-    TextView tv = (TextView) super.getDropDownView(position, convertView, parent);
-    tv.setTextColor(Color.BLACK);      // 🔥 ΜΑΥΡΑ
-    tv.setTypeface(null, Typeface.BOLD);
-    tv.setGravity(Gravity.CENTER);
-    tv.setPadding(dp(14), dp(12), dp(14), dp(12));
-    return tv;
-}
+            public View getDropDownView(int position, View convertView, ViewGroup parent) {
+                TextView tv = (TextView) super.getDropDownView(position, convertView, parent);
+                tv.setTextColor(Color.BLACK);          // 🔥 ΜΑΥΡΑ dropdown
+                tv.setTypeface(null, Typeface.BOLD);
+                tv.setGravity(Gravity.CENTER);
+                tv.setPadding(dp(14), dp(12), dp(14), dp(12));
+                return tv;
+            }
         };
 
 adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+
 langSpinner.setAdapter(adapter);
-langSpinner.setSelection(gr ? 1 : 0);
+langSpinner.setSelection(AppLang.isGreek(this) ? 1 : 0, false);
 
 langSpinner.setOnItemSelectedListener(
         new AdapterView.OnItemSelectedListener() {
@@ -350,16 +352,11 @@ langSpinner.setOnItemSelectedListener(
                     int position,
                     long id
             ) {
+                String code = (position == 0) ? "en" : "el";
 
-                String newLang = (position == 0) ? "en" : "el";
-
-                if (!newLang.equals(LocaleHelper.getLang(MainActivity.this))) {
-
-                    LocaleHelper.set(MainActivity.this, newLang);
-
+                if (!code.equals(LocaleHelper.getLang(MainActivity.this))) {
+                    LocaleHelper.set(MainActivity.this, code);
                     try { AppTTS.stop(); } catch (Throwable ignore) {}
-
-                    d.dismiss();
                     recreate();
                 }
             }
@@ -854,8 +851,17 @@ langSpinner.setOnItemSelectedListener(
                     int position,
                     long id
             ) {
-                String code = (position == 0) ? "en" : "el";
-                changeLang(code);
+
+                String newLang = (position == 0) ? "en" : "el";
+
+                if (!newLang.equals(LocaleHelper.getLang(MainActivity.this))) {
+
+                    LocaleHelper.set(MainActivity.this, newLang);
+
+                    try { AppTTS.stop(); } catch (Throwable ignore) {}
+
+                    recreate();
+                }
             }
 
             @Override

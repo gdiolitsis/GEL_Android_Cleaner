@@ -141,13 +141,11 @@ private boolean returningFromUsageSettings = false;
 protected void onResume() {
     super.onResume();
 
-    // Αν όλα τα runtime permissions έχουν δοθεί
-    if (!hasMissingPermissions()) {
+    // Αν επιστρέψαμε από Usage Settings
+    if (returningFromUsageSettings) {
+        returningFromUsageSettings = false;
 
-        // Αν τώρα υπάρχει Usage access
         if (hasUsageAccess()) {
-
-            // Και δεν έχει εμφανιστεί ακόμα Welcome
             if (!isWelcomeDisabled() && !consumeSkipWelcomeOnce()) {
                 showWelcomePopup();
             }
@@ -792,13 +790,14 @@ if (usagePopupVisible) return;
     String titleText = gr ? "Πρόσβαση Χρήσης" : "Usage Access";
 
     String messageText = gr
-            ? "Για να ενεργοποιηθεί ο καθαρισμός cache,  η ανάλυση μεγεθών cache,\n"
-            + "και η ανάλυση μεγεθών εφαρμογών,\n"
-            + "απαιτείται Πρόσβαση Χρήσης.\n\n"
-            + "Θα μεταφερθείς στις Ρυθμίσεις."
-            : "To enable cache cleaning, cache sizes analysis, and apps sizes analysis,\n"
-            + "Usage Access is required.\n\n"
-            + "You will be redirected to Settings.";
+   ? "Για να ληφθούν πληροφορίες, για τα μεγέθη εφαρμογών και cache,\n"
+  + "απαιτείται Πρόσβαση Χρήσης.\n\n"
+  + "Καμία συλλογή προσωπικών δεδομένων δεν γίνεται, με την παραχώρηση της πρόσβασης Χρήσης.\n\n"
+  + "Θα μεταφερθείς στις Ρυθμίσεις."
+: "To retrieve app and cache sizes information,\n"
+  + "Usage Access is required.\n\n"
+  + "No personal data is collected, when granting Usage Access.\n\n"
+  + "You will be redirected to Settings.";
 
     AlertDialog.Builder b =
             new AlertDialog.Builder(
@@ -916,13 +915,6 @@ no.setElevation(dp(6));
     d.setOnDismissListener(dialog -> {
     usagePopupVisible = false;
     try { AppTTS.stop(); } catch (Throwable ignore) {}
-
-    // Μετά το κλείσιμο, έλεγχος ξανά
-    if (hasUsageAccess()) {
-        if (!isWelcomeDisabled() && !consumeSkipWelcomeOnce()) {
-            showWelcomePopup();
-        }
-    }
 });
 
     // BLOCK BACK BUTTON
@@ -958,17 +950,13 @@ root.postDelayed(() -> {
 
     try { AppTTS.stop(); } catch (Throwable ignore) {}
 
+    returningFromUsageSettings = true;
+
     d.dismiss();
 
     try {
         startActivity(new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS));
-    } catch (Throwable ignored) {
-
-        // Αν για κάποιο λόγο αποτύχει το settings
-        if (!isWelcomeDisabled() && !consumeSkipWelcomeOnce()) {
-            showWelcomePopup();
-        }
-    }
+    } catch (Throwable ignored) {}
 });
 
     no.setOnClickListener(v -> {
@@ -984,6 +972,9 @@ root.postDelayed(() -> {
     // ------------------------------------------------------------
     private void showWelcomePopup() {
 
+if (welcomeShown) return;
+welcomeShown = true;
+
         boolean gr = AppLang.isGreek(this);
 
         AlertDialog.Builder b =
@@ -991,125 +982,134 @@ root.postDelayed(() -> {
 
         b.setCancelable(true);
         
-        // ================= ROOT =================
-        LinearLayout root = new LinearLayout(MainActivity.this);
-        root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(dp(24), dp(20), dp(24), dp(18));
+  // ================= ROOT =================
+LinearLayout root = new LinearLayout(MainActivity.this);
+root.setOrientation(LinearLayout.VERTICAL);
+root.setPadding(dp(24), dp(22), dp(24), dp(20));
 
-        GradientDrawable bg = new GradientDrawable();
-        bg.setColor(0xFFFFD700);
-        bg.setCornerRadius(dp(10));
-        bg.setStroke(dp(3), 0xFFFFD700);
-        root.setBackground(bg);
+GradientDrawable bg = new GradientDrawable();
+bg.setColor(0xFF000000); // Μαύρο
+bg.setCornerRadius(dp(14));
+bg.setStroke(dp(4), 0xFFFFD700); // Χρυσό περίγραμμα
+root.setBackground(bg);
 
-        // ================= TITLE =================
-        TextView title = new TextView(MainActivity.this);
-        title.setText(AppLang.isGreek(this) ? "ΚΑΛΩΣ ΗΡΘΑΤΕ" : "WELCOME");
-        title.setTextColor(Color.WHITE);
-        title.setTypeface(null, Typeface.BOLD);
-        title.setGravity(Gravity.CENTER);
-        
-        root.addView(title);
+// ================= TITLE =================
+TextView title = new TextView(MainActivity.this);
+title.setText(AppLang.isGreek(this) ? "ΚΑΛΩΣ ΗΡΘΑΤΕ" : "WELCOME");
+title.setTextColor(Color.WHITE);
+title.setTextSize(19f);
+title.setTypeface(null, Typeface.BOLD);
+title.setGravity(Gravity.CENTER);
+title.setPadding(0, 0, 0, dp(14));
+root.addView(title);
 
-        // ================= MESSAGE =================
-        TextView msg = new TextView(MainActivity.this);
-        msg.setTextColor(0xFF00FF9C);
-        msg.setTextSize(15f);
-        msg.setGravity(Gravity.START);
-        msg.setPadding(0, 0, 0, dp(12));
-        msg.setText(
-                AppLang.isGreek(this)
-                        ? getWelcomeTextGR()
-                        : getWelcomeTextEN()
+// ================= MESSAGE =================
+TextView msg = new TextView(MainActivity.this);
+msg.setText(
+        AppLang.isGreek(this)
+                ? getWelcomeTextGR()
+                : getWelcomeTextEN()
+);
+msg.setTextColor(0xFF00FF9C); // Neon green
+msg.setTextSize(15f);
+msg.setGravity(Gravity.CENTER);
+msg.setLineSpacing(0f, 1.15f);
+msg.setPadding(dp(6), 0, dp(6), dp(18));
+root.addView(msg);
+
+// ================= MUTE ROW =================
+root.addView(buildMuteRow());
+
+// ================= LANGUAGE SPINNER =================
+Spinner langSpinner = new Spinner(MainActivity.this);
+
+ArrayAdapter<String> adapter =
+        new ArrayAdapter<>(
+                MainActivity.this,
+                android.R.layout.simple_spinner_item,
+                new String[]{"EN", "GR"}
         );
-        root.addView(msg);
+adapter.setDropDownViewResource(
+        android.R.layout.simple_spinner_dropdown_item
+);
+langSpinner.setAdapter(adapter);
+langSpinner.setSelection(AppLang.isGreek(this) ? 1 : 0);
 
-        // ================= MUTE ROW =================
-        root.addView(buildMuteRow());
+langSpinner.setOnItemSelectedListener(
+        new AdapterView.OnItemSelectedListener() {
 
-        // ================= LANGUAGE SPINNER =================
-        Spinner langSpinner = new Spinner(MainActivity.this);
+            @Override
+            public void onItemSelected(
+                    AdapterView<?> parent,
+                    View view,
+                    int position,
+                    long id
+            ) {
+                String code = (position == 0) ? "en" : "el";
+                changeLang(code);
+            }
 
-        ArrayAdapter<String> adapter =
-                new ArrayAdapter<>(
-                        MainActivity.this,
-                        android.R.layout.simple_spinner_item,
-                        new String[]{"EN", "GR"}
-                );
-        adapter.setDropDownViewResource(
-                android.R.layout.simple_spinner_dropdown_item
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {}
+        }
+);
+
+// ================= LANGUAGE BOX =================
+LinearLayout langBox = new LinearLayout(MainActivity.this);
+langBox.setOrientation(LinearLayout.VERTICAL);
+langBox.setPadding(dp(12), dp(12), dp(12), dp(12));
+
+GradientDrawable langBg = new GradientDrawable();
+langBg.setColor(0xFF111111); // Σκούρο μαύρο
+langBg.setCornerRadius(dp(10));
+langBg.setStroke(dp(3), 0xFFFFD700); // Χρυσό
+langBox.setBackground(langBg);
+
+langBox.addView(langSpinner);
+
+LinearLayout.LayoutParams lpLang =
+        new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
         );
-        langSpinner.setAdapter(adapter);
-        langSpinner.setSelection(AppLang.isGreek(this) ? 1 : 0);
+lpLang.gravity = Gravity.CENTER;
+lpLang.setMargins(0, 0, 0, dp(18));
+langBox.setLayoutParams(lpLang);
 
-        langSpinner.setOnItemSelectedListener(
-                new AdapterView.OnItemSelectedListener() {
+root.addView(langBox);
 
-                    @Override
-                    public void onItemSelected(
-                            AdapterView<?> parent,
-                            View view,
-                            int position,
-                            long id
-                    ) {
-
-                        String code = (position == 0) ? "en" : "el";
-                        changeLang(code); 
-
-                    }
-
-                    @Override
-                    public void onNothingSelected(AdapterView<?> parent) {
-                    }
-                }
-        );
-
-        // ================= LANGUAGE BOX =================
-        LinearLayout langBox = new LinearLayout(MainActivity.this);
-        langBox.setOrientation(LinearLayout.VERTICAL);
-        langBox.setPadding(dp(12), dp(12), dp(12), dp(12));
-
-        GradientDrawable langBg = new GradientDrawable();
-        langBg.setColor(0xFFFFD700);
-        langBg.setCornerRadius(dp(10));
-        langBg.setStroke(dp(3), 0xFFFFD700);
-        langBox.setBackground(langBg);
-
-        langBox.addView(langSpinner);
-
-        LinearLayout.LayoutParams lpLang =
-                new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.WRAP_CONTENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT
-                );
-        lpLang.gravity = Gravity.CENTER;
-        lpLang.setMargins(0, 0, 0, dp(18));
-        langBox.setLayoutParams(lpLang);
-
-        root.addView(langBox);
-
-        // ================= CHECKBOX =================
-        CheckBox cb = new CheckBox(this);
+// ================= CHECKBOX =================
+CheckBox cb = new CheckBox(this);
 cb.setText(AppLang.isGreek(this)
         ? "Να μην εμφανιστεί ξανά"
         : "Do not show again");
 cb.setTextColor(Color.WHITE);
-cb.setPadding(0, dp(8), 0, dp(8));
+cb.setPadding(0, dp(8), 0, dp(16));
 root.addView(cb);
 
-        // ================= OK BUTTON =================
-        Button okBtn = new Button(MainActivity.this);
-        okBtn.setText("OK");
-        okBtn.setAllCaps(false);
-        okBtn.setTextColor(Color.WHITE);
+// ================= OK BUTTON =================
+Button okBtn = new Button(MainActivity.this);
+okBtn.setText("OK");
+okBtn.setAllCaps(false);
+okBtn.setTextColor(Color.WHITE);
+okBtn.setTextSize(16f);
+okBtn.setTypeface(null, Typeface.BOLD);
 
-        GradientDrawable okBg = new GradientDrawable();
-        okBg.setColor(0xFFFFD700);
-        okBg.setCornerRadius(dp(10));
-        okBg.setStroke(dp(3), 0xFFFFD700);
-        okBtn.setBackground(okBg);
+GradientDrawable okBg = new GradientDrawable();
+okBg.setColor(0xFF00E676); // Neon green
+okBg.setCornerRadius(dp(12));
+okBg.setStroke(dp(3), 0xFFFFD700); // Χρυσό περίγραμμα
+okBtn.setBackground(okBg);
 
-        root.addView(okBtn);
+LinearLayout.LayoutParams okLp =
+        new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                dp(72)
+        );
+okLp.setMargins(dp(6), dp(6), dp(6), 0);
+okBtn.setLayoutParams(okLp);
+
+root.addView(okBtn);
 
         // ================= SET VIEW =================
         b.setView(root);
@@ -1131,14 +1131,6 @@ root.addView(cb);
         // STOP ALWAYS ON DISMISS
         // --------------------------------------------
         d.setOnDismissListener(dialog -> {
-            try { AppTTS.stop(); } catch (Throwable ignore) {}
-            welcomeShown = false;
-        });
-
-        // --------------------------------------------
-        // STOP ALSO ON CANCEL (BACK BUTTON)
-        // --------------------------------------------
-        d.setOnCancelListener(dialog -> {
             try { AppTTS.stop(); } catch (Throwable ignore) {}
             welcomeShown = false;
         });

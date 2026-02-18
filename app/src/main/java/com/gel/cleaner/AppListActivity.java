@@ -661,6 +661,7 @@ skipBtn.setOnClickListener(v -> {
     try { AppTTS.stop(); } catch (Throwable ignore) {}
     d.dismiss();
 });
+}
 
     private boolean hasUsageAccess() {
     try {

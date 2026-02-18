@@ -347,8 +347,8 @@ label.setText(
         root.setPadding(dp(24), dp(20), dp(24), dp(18));
 
         GradientDrawable bg = new GradientDrawable();
-        bg.setColor(0xFF101010);
-        bg.setCornerRadius(dp(18));
+        bg.setColor(0xFFFFD700);
+        bg.setCornerRadius(dp(10));
         bg.setStroke(dp(4), 0xFFFFD700);
         root.setBackground(bg);
 
@@ -356,15 +356,12 @@ label.setText(
        TextView title = new TextView(this);
         title.setText(gr ? "ΑΠΑΙΤΟΥΜΕΝΕΣ ΑΔΕΙΕΣ" : "REQUIRED PERMISSIONS");
         title.setTextColor(Color.WHITE);
-        title.setTextSize(18f);
-        title.setTypeface(null, Typeface.BOLD);
-        title.setGravity(Gravity.CENTER);
-        title.setPadding(0, 0, 0, dp(12));
+        
         root.addView(title);
 
         // ================= MESSAGE =================
         TextView msg = new TextView(this);
-        msg.setTextColor(0xFF39FF14);
+        msg.setTextColor(0xFFFFD700);
         msg.setTextSize(15f);
         msg.setGravity(Gravity.START);
         msg.setPadding(0, 0, 0, dp(16));
@@ -428,7 +425,7 @@ label.setText(
 
         GradientDrawable langBg = new GradientDrawable();
         langBg.setColor(0xFF1A1A1A);
-        langBg.setCornerRadius(dp(12));
+        langBg.setCornerRadius(dp(10));
         langBg.setStroke(dp(2), 0xFFFFD700);
         langBox.setBackground(langBg);
 
@@ -473,29 +470,24 @@ root.addView(cb);
         AppLang.isGreek(this) ? "ΠΑΡΑΛΕΙΨΗ" : "SKIP");
         skipBtn.setAllCaps(false);
         skipBtn.setTextColor(Color.WHITE);
-        skipBtn.setTextSize(16f);
-        skipBtn.setTypeface(null, Typeface.BOLD);
-        skipBtn.setPadding(dp(12), dp(14), dp(12), dp(14));
-
+        
         GradientDrawable skipBg = new GradientDrawable();
         skipBg.setColor(0xFF8B0000);
-        skipBg.setCornerRadius(dp(16));
-        skipBg.setStroke(dp(3), 0xFFFFD700);
+        skipBg.setCornerRadius(dp(10));
+        .setStroke(dp(3), 0xFFFFD700);
         skipBtn.setBackground(skipBg);
         skipBtn.setLayoutParams(btnLp);
+
 
         Button continueBtn = new Button(this);
         continueBtn.setText(
         AppLang.isGreek(this) ? "ΣΥΝΕΧΕΙΑ" : "CONTINUE");
         continueBtn.setAllCaps(false);
         continueBtn.setTextColor(Color.WHITE);
-        continueBtn.setTextSize(16f);
-        continueBtn.setTypeface(null, Typeface.BOLD);
-        continueBtn.setPadding(dp(12), dp(14), dp(12), dp(14));
 
         GradientDrawable contBg = new GradientDrawable();
         contBg.setColor(0xFF0B5F3B);
-        contBg.setCornerRadius(dp(16));
+        contBg.setCornerRadius(dp(10));
         contBg.setStroke(dp(3), 0xFFFFD700);
         continueBtn.setBackground(contBg);
         continueBtn.setLayoutParams(btnLp);
@@ -852,7 +844,7 @@ if (usagePopupVisible) return;
 
     GradientDrawable bg = new GradientDrawable();
     bg.setColor(0xFF101010);
-    bg.setCornerRadius(dp(18));
+    bg.setCornerRadius(dp(10));
     bg.setStroke(dp(4), 0xFFFFD700);
     root.setBackground(bg);
 
@@ -873,7 +865,7 @@ if (usagePopupVisible) return;
     // -------------------------------------------------
     TextView msg = new TextView(this);
     msg.setText(messageText);
-    msg.setTextColor(0xFF39FF14);
+    msg.setTextColor(0xFFFFD700);
     msg.setTextSize(14f);
     msg.setGravity(Gravity.CENTER);
     msg.setLineSpacing(0f, 1.15f);
@@ -900,10 +892,6 @@ Button yes = new Button(this);
 yes.setText(gr ? "ΣΥΝΈΧΕΙΑ" : "CONTINUE");
 yes.setAllCaps(false);
 yes.setTextColor(Color.WHITE);
-yes.setTextSize(16f);
-yes.setTypeface(null, Typeface.BOLD);
-yes.setPadding(0, dp(12), 0, dp(12));
-yes.setLayoutParams(lp);
 
 GradientDrawable yesBg = new GradientDrawable();
 yesBg.setColor(0xFF00E676); // πιο φωτεινό πράσινο
@@ -914,14 +902,11 @@ yes.setBackground(yesBg);
 yes.setElevation(dp(4)); // depth effect
 
     // SKIP
-    // SKIP
 Button no = new Button(this);
 no.setText(gr ? "ΠΑΡΆΛΕΙΨΗ" : "SKIP");
 no.setAllCaps(false);
 no.setTextColor(Color.WHITE);
-no.setTextSize(16f);
-no.setTypeface(null, Typeface.BOLD);
-no.setPadding(0, dp(12), 0, dp(12));
+
 no.setLayoutParams(lp);
 
 GradientDrawable noBg = new GradientDrawable();
@@ -1022,8 +1007,8 @@ root.postDelayed(() -> {
         root.setPadding(dp(24), dp(20), dp(24), dp(18));
 
         GradientDrawable bg = new GradientDrawable();
-        bg.setColor(0xFF101010);
-        bg.setCornerRadius(dp(18));
+        bg.setColor(0xFFFFD700);
+        bg.setCornerRadius(dp(10));
         bg.setStroke(dp(4), 0xFFFFD700);
         root.setBackground(bg);
 
@@ -1031,15 +1016,14 @@ root.postDelayed(() -> {
         TextView title = new TextView(MainActivity.this);
         title.setText(AppLang.isGreek(this) ? "ΚΑΛΩΣ ΗΡΘΑΤΕ" : "WELCOME");
         title.setTextColor(Color.WHITE);
-        title.setTextSize(18f);
         title.setTypeface(null, Typeface.BOLD);
         title.setGravity(Gravity.CENTER);
-        title.setPadding(0, 0, 0, dp(12));
+        
         root.addView(title);
 
         // ================= MESSAGE =================
         TextView msg = new TextView(MainActivity.this);
-        msg.setTextColor(0xFF39FF14);
+        msg.setTextColor(0xFFFFD700);
         msg.setTextSize(15f);
         msg.setGravity(Gravity.START);
         msg.setPadding(0, 0, 0, dp(12));
@@ -1096,8 +1080,8 @@ root.postDelayed(() -> {
         langBox.setPadding(dp(12), dp(12), dp(12), dp(12));
 
         GradientDrawable langBg = new GradientDrawable();
-        langBg.setColor(0xFF1A1A1A);
-        langBg.setCornerRadius(dp(12));
+        langBg.setColor(0xFFFFD700);
+        langBg.setCornerRadius(dp(10));
         langBg.setStroke(dp(2), 0xFFFFD700);
         langBox.setBackground(langBg);
 
@@ -1128,13 +1112,10 @@ root.addView(cb);
         okBtn.setText("OK");
         okBtn.setAllCaps(false);
         okBtn.setTextColor(Color.WHITE);
-        okBtn.setTextSize(18f);
-        okBtn.setGravity(Gravity.CENTER);
-        okBtn.setPadding(dp(24), dp(18), dp(24), dp(18));
 
         GradientDrawable okBg = new GradientDrawable();
-        okBg.setColor(0xFF0F8A3B);
-        okBg.setCornerRadius(dp(18));
+        okBg.setColor(0xFFFFD700);
+        okBg.setCornerRadius(dp(10));
         okBg.setStroke(dp(3), 0xFFFFD700);
         okBtn.setBackground(okBg);
 
@@ -1223,7 +1204,7 @@ root.addView(cb);
 
         GradientDrawable bg = new GradientDrawable();
         bg.setColor(0xFF101010);
-        bg.setCornerRadius(dp(18));
+        bg.setCornerRadius(dp(10));
         bg.setStroke(dp(4), 0xFFFFD700);
         root.setBackground(bg);
 
@@ -1231,10 +1212,7 @@ root.addView(cb);
         TextView t = new TextView(this);
         t.setText(gr ? "ΕΠΙΛΟΓΗ ΣΥΣΚΕΥΗΣ" : "SELECT DEVICE");
         t.setTextColor(Color.WHITE);
-        t.setTextSize(18f);
-        t.setTypeface(null, Typeface.BOLD);
-        t.setGravity(Gravity.CENTER);
-        t.setPadding(0, dp(4), 0, dp(16));
+      
         root.addView(t);
 
         // ANDROID BUTTON
@@ -1242,15 +1220,11 @@ root.addView(cb);
 androidBtn.setText(gr
         ? "🤖  Η ANDROID ΣΥΣΚΕΥΗ ΜΟΥ"
         : "🤖  MY ANDROID DEVICE");
-        androidBtn.setTextColor(0xFF000000);
-        androidBtn.setTextSize(17f);
-        androidBtn.setTypeface(Typeface.DEFAULT_BOLD);
-        androidBtn.setGravity(Gravity.CENTER);
-        androidBtn.setPadding(dp(18), dp(20), dp(18), dp(20));
+        androidBtn.setTextColor(Color.WHITE));
 
         GradientDrawable bgAndroid = new GradientDrawable();
         bgAndroid.setColor(0xFF3DDC84);
-        bgAndroid.setCornerRadius(dp(6));
+        bgAndroid.setCornerRadius(dp(10));
         bgAndroid.setStroke(dp(3), 0xFFFFD700);
         androidBtn.setBackground(bgAndroid);
 
@@ -1268,14 +1242,11 @@ appleBtn.setText(gr
         ? "🍎  ΑΛΛΗ ΣΥΣΚΕΥΗ APPLE"
         : "🍎  OTHER APPLE DEVICE");
         appleBtn.setTextColor(Color.WHITE);
-        appleBtn.setTextSize(17f);
-        appleBtn.setTypeface(Typeface.DEFAULT_BOLD);
-        appleBtn.setGravity(Gravity.CENTER);
-        appleBtn.setPadding(dp(18), dp(20), dp(18), dp(20));
+
 
         GradientDrawable bgApple = new GradientDrawable();
         bgApple.setColor(0xFF1C1C1E);
-        bgApple.setCornerRadius(dp(6));
+        bgApple.setCornerRadius(dp(10));
         bgApple.setStroke(dp(3), 0xFFFFD700);
         appleBtn.setBackground(bgApple);
 
@@ -1605,7 +1576,7 @@ bind(R.id.btnCpuRamLive,
 
         GradientDrawable bg = new GradientDrawable();
         bg.setColor(0xFF000000);
-        bg.setCornerRadius(dp(18));
+        bg.setCornerRadius(dp(10));
         bg.setStroke(dp(3), 0xFFFFD700);
         root.setBackground(bg);
 
@@ -1630,7 +1601,7 @@ bind(R.id.btnCpuRamLive,
 
         GradientDrawable iphoneBg = new GradientDrawable();
         iphoneBg.setColor(0xFF000000);
-        iphoneBg.setCornerRadius(dp(14));
+        iphoneBg.setCornerRadius(dp(10));
         iphoneBg.setStroke(dp(3), 0xFFFFD700);
         iphoneBtn.setBackground(iphoneBg);
 
@@ -1655,7 +1626,7 @@ bind(R.id.btnCpuRamLive,
 
         GradientDrawable ipadBg = new GradientDrawable();
         ipadBg.setColor(0xFF000000);
-        ipadBg.setCornerRadius(dp(14));
+        ipadBg.setCornerRadius(dp(10));
         ipadBg.setStroke(dp(3), 0xFFFFD700);
         ipadBtn.setBackground(ipadBg);
 
@@ -1743,18 +1714,15 @@ bind(R.id.btnCpuRamLive,
         root.setPadding(dp(18), dp(18), dp(18), dp(18));
 
         GradientDrawable bg = new GradientDrawable();
-        bg.setColor(0xFF000000);
-        bg.setCornerRadius(dp(18));
+        bg.setColor(0xFFFFD700);
+        bg.setCornerRadius(dp(10));
         bg.setStroke(dp(3), 0xFFFFD700);
         root.setBackground(bg);
 
         TextView title = new TextView(this);
         title.setText("Select Apple Model");
-        title.setTextColor(0xFFFFFFFF);
-        title.setTextSize(18f);
-        title.setTypeface(null, Typeface.BOLD);
-        title.setGravity(Gravity.CENTER);
-        title.setPadding(0, 0, 0, dp(12));
+        title.setTextColor(Color.WHITE);
+       
         root.addView(title);
 
         ListView list = new ListView(this);
@@ -1947,7 +1915,7 @@ if (btn != null) {
         if (window != null) {
             GradientDrawable bg = new GradientDrawable();
             bg.setColor(0xFF000000);
-            bg.setCornerRadius(dp(18));
+            bg.setCornerRadius(dp(10));
             bg.setStroke(dp(3), 0xFFFFD700);
             window.setBackgroundDrawable(bg);
         }

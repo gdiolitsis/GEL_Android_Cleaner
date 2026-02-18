@@ -549,13 +549,14 @@ private void showUninstallConfirmDialog() {
     // ================= MESSAGE =================
     TextView msg = new TextView(this);
     msg.setText(gr
-            ? "Για να ενεργοποιηθεί ο καθαρισμός cache,  η ανάλυση μεγεθών cache,\n"
-            + "και η ανάλυση μεγεθών εφαρμογών,\n"
-            + "απαιτείται Πρόσβαση Χρήσης.\n\n"
-            + "Θα μεταφερθείς στις Ρυθμίσεις."
-            : "To enable cache cleaning, cache sizes analysis, and apps sizes analysis,\n"
-            + "Usage Access is required.\n\n"
-            + "You will be redirected to Settings.";
+  ? "Για να ληφθούν πληροφορίες, για τα μεγέθη εφαρμογών και cache,\n"
+  + "απαιτείται Πρόσβαση Χρήσης.\n\n"
+  + "Καμία συλλογή προσωπικών δεδομένων δεν γίνεται, με την παραχώρηση της πρόσβασης Χρήσης.\n\n"
+  + "Θα μεταφερθείς στις Ρυθμίσεις."
+: "To retrieve app and cache sizes information,\n"
+  + "Usage Access is required.\n\n"
+  + "No personal data is collected, when granting Usage Access.\n\n"
+  + "You will be redirected to Settings.";
     msg.setTextColor(0xFF00FF9C); // Neon green
     msg.setTextSize(15f);
     msg.setGravity(Gravity.CENTER);

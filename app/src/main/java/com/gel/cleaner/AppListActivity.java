@@ -546,17 +546,19 @@ private void showUninstallConfirmDialog() {
     title.setPadding(0, 0, 0, dp(14));
     root.addView(title);
 
-    // ================= MESSAGE =================
-    TextView msg = new TextView(this);
-    msg.setText(gr
-  ? "Για να ληφθούν πληροφορίες, για τα μεγέθη εφαρμογών και cache,\n"
-  + "απαιτείται Πρόσβαση Χρήσης.\n\n"
-  + "Καμία συλλογή προσωπικών δεδομένων δεν γίνεται, με την παραχώρηση της πρόσβασης Χρήσης.\n\n"
-  + "Θα μεταφερθείς στις Ρυθμίσεις."
-: "To retrieve app and cache sizes information,\n"
-  + "Usage Access is required.\n\n"
-  + "No personal data is collected, when granting Usage Access.\n\n"
-  + "You will be redirected to Settings.";
+// ================= MESSAGE =================
+TextView msg = new TextView(this);
+
+msg.setText(
+        gr
+                ? "Για να ληφθούν πληροφορίες για τα μεγέθη εφαρμογών και cache,\n"
+                  + "απαιτείται Πρόσβαση Χρήσης.\n\n"
+                  + "Καμία συλλογή προσωπικών δεδομένων δεν γίνεται με την παραχώρηση της Πρόσβασης Χρήσης.\n\n"
+                  + "Θα μεταφερθείς στις Ρυθμίσεις."
+                : "To retrieve app and cache size information,\n"
+                  + "Usage Access is required.\n\n"
+                  + "No personal data is collected when granting Usage Access.\n\n"
+                  + "You will be redirected to Settings.");
     msg.setTextColor(0xFF00FF9C); // Neon green
     msg.setTextSize(15f);
     msg.setGravity(Gravity.CENTER);

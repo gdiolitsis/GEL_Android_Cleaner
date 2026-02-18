@@ -47,6 +47,9 @@ public class MainActivity extends GELAutoActivityHook
     private boolean welcomeShown = false;
     private int permissionIndex = 0;
 
+private TextView welcomeTitle;
+private TextView welcomeMessage;
+
     private static final int REQ_PERMISSIONS = 1001;
     private static final String PREF_PERMISSIONS_DISABLED = "permissions_disabled";
     private boolean permissionsSkippedThisLaunch = false;
@@ -764,6 +767,23 @@ private String getWelcomeTextGR() {
             "τη συσκευή Android σου ή μια άλλη συσκευή Apple.";
 }
 
+private void updateWelcomeTexts() {
+
+    boolean gr = AppLang.isGreek(this);
+
+    if (welcomeTitle != null) {
+        welcomeTitle.setText(
+                gr ? "ΚΑΛΩΣ ΗΡΘΑΤΕ" : "WELCOME"
+        );
+    }
+
+    if (welcomeMessage != null) {
+        welcomeMessage.setText(
+                gr ? getWelcomeTextGR() : getWelcomeTextEN()
+        );
+    }
+}
+
     // =========================================================
     // DIMEN
     // =========================================================
@@ -802,28 +822,30 @@ bg.setStroke(dp(4), 0xFFFFD700); // Χρυσό περίγραμμα
 root.setBackground(bg);
 
 // ================= TITLE =================
-TextView title = new TextView(MainActivity.this);
-title.setText(AppLang.isGreek(this) ? "ΚΑΛΩΣ ΗΡΘΑΤΕ" : "WELCOME");
-title.setTextColor(Color.WHITE);
-title.setTextSize(19f);
-title.setTypeface(null, Typeface.BOLD);
-title.setGravity(Gravity.CENTER);
-title.setPadding(0, 0, 0, dp(14));
-root.addView(title);
+welcomeTitle = new TextView(MainActivity.this);
+welcomeTitle.setText(
+        AppLang.isGreek(this) ? "ΚΑΛΩΣ ΗΡΘΑΤΕ" : "WELCOME"
+);
+welcomeTitle.setTextColor(Color.WHITE);
+welcomeTitle.setTextSize(19f);
+welcomeTitle.setTypeface(null, Typeface.BOLD);
+welcomeTitle.setGravity(Gravity.CENTER);
+welcomeTitle.setPadding(0, 0, 0, dp(14));
+root.addView(welcomeTitle);
 
 // ================= MESSAGE =================
-TextView msg = new TextView(MainActivity.this);
-msg.setText(
+welcomeMessage = new TextView(MainActivity.this);
+welcomeMessage.setText(
         AppLang.isGreek(this)
                 ? getWelcomeTextGR()
                 : getWelcomeTextEN()
 );
-msg.setTextColor(0xFF00FF9C); // Neon green
-msg.setTextSize(15f);
-msg.setGravity(Gravity.CENTER);
-msg.setLineSpacing(0f, 1.15f);
-msg.setPadding(dp(6), 0, dp(6), dp(18));
-root.addView(msg);
+welcomeMessage.setTextColor(0xFF00FF9C); // Neon green
+welcomeMessage.setTextSize(15f);
+welcomeMessage.setGravity(Gravity.CENTER);
+welcomeMessage.setLineSpacing(0f, 1.15f);
+welcomeMessage.setPadding(dp(6), 0, dp(6), dp(18));
+root.addView(welcomeMessage); 
 
 // ================= MUTE ROW =================
 root.addView(buildMuteRow());
@@ -878,11 +900,12 @@ langSpinner.setOnItemSelectedListener(
                 if (!newLang.equals(LocaleHelper.getLang(MainActivity.this))) {
 
                     LocaleHelper.set(MainActivity.this, newLang);
-                    setSkipWelcomeOnce(true);
+setSkipWelcomeOnce(true);
 
-                    try { AppTTS.stop(); } catch (Throwable ignore) {}
+try { AppTTS.stop(); } catch (Throwable ignore) {}
 
-                    recreate();
+// 🔥 Smooth update – no recreate
+updateWelcomeTexts();
                 }
             }
 

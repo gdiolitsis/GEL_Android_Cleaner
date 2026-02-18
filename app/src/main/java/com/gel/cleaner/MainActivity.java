@@ -58,10 +58,15 @@ private boolean returningFromUsageSettings = false;
     // Usage Access continuation
     
     private final String[] REQUIRED_PERMISSIONS = new String[]{
-            Manifest.permission.RECORD_AUDIO,
-            Manifest.permission.ACCESS_FINE_LOCATION,
-            Manifest.permission.BLUETOOTH_CONNECT
-    };
+
+        Manifest.permission.RECORD_AUDIO,          // Mic Labs
+        Manifest.permission.CAMERA,                // Camera Labs
+        Manifest.permission.ACCESS_FINE_LOCATION,  // WiFi / BLE / sensors
+        Manifest.permission.BLUETOOTH_CONNECT,     // Modern BT (API 31+)
+        Manifest.permission.READ_EXTERNAL_STORAGE, // <= Android 12
+        Manifest.permission.READ_MEDIA_IMAGES,     // Android 13+
+        Manifest.permission.READ_MEDIA_VIDEO       // Android 13+
+};
 
     private TextView txtLogs;
     private ScrollView scroll;
@@ -141,7 +146,6 @@ private boolean returningFromUsageSettings = false;
 protected void onResume() {
     super.onResume();
 
-    // Αν επιστρέψαμε από Usage Settings
     if (returningFromUsageSettings) {
         returningFromUsageSettings = false;
 
@@ -339,7 +343,7 @@ label.setText(
                         android.R.style.Theme_Material_Dialog_NoActionBar
                 );
 
-        b.setCancelable(false);
+        b.setCancelable(true);
 
     // ================= ROOT =================
 LinearLayout root = new LinearLayout(this);
@@ -380,21 +384,57 @@ root.addView(buildMuteRow());
 Spinner langSpinner = new Spinner(this);
 
 ArrayAdapter<String> adapter =
-        new ArrayAdapter<>(
+        new ArrayAdapter<String>(
                 this,
                 android.R.layout.simple_spinner_item,
                 new String[]{"EN", "GR"}
-        );
-adapter.setDropDownViewResource(
-        android.R.layout.simple_spinner_dropdown_item
-);
+        ) {
+            @Override
+            public View getView(int position, View convertView, ViewGroup parent) {
+                TextView tv = (TextView) super.getView(position, convertView, parent);
+                tv.setTextColor(Color.WHITE);        // selected: white
+                tv.setTypeface(null, Typeface.BOLD); // bold
+                tv.setGravity(Gravity.CENTER);       // centered
+                return tv;
+            }
+
+            @Override
+            public View getDropDownView(int position, View convertView, ViewGroup parent) {
+                TextView tv = (TextView) super.getDropDownView(position, convertView, parent);
+                tv.setTextColor(0xFF00FF9C);         // dropdown: neon green
+                tv.setTypeface(null, Typeface.BOLD); // bold
+                tv.setGravity(Gravity.CENTER);       // centered
+                tv.setPadding(dp(14), dp(12), dp(14), dp(12));
+                return tv;
+            }
+        };
+
+adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 langSpinner.setAdapter(adapter);
 langSpinner.setSelection(gr ? 1 : 0);
 
+// ================= LANGUAGE BOX (GOLD BORDER) =================
 LinearLayout langBox = new LinearLayout(this);
+langBox.setOrientation(LinearLayout.VERTICAL);
 langBox.setGravity(Gravity.CENTER);
-langBox.setPadding(0, 0, 0, dp(18));
+langBox.setPadding(dp(12), dp(10), dp(12), dp(10));
+
+GradientDrawable langBg = new GradientDrawable();
+langBg.setColor(0xFF111111);          // black-ish
+langBg.setCornerRadius(dp(12));
+langBg.setStroke(dp(3), 0xFFFFD700);  // gold border
+langBox.setBackground(langBg);
+
 langBox.addView(langSpinner);
+
+LinearLayout.LayoutParams lpLang =
+        new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+lpLang.gravity = Gravity.CENTER;
+lpLang.setMargins(0, 0, 0, dp(18));
+langBox.setLayoutParams(lpLang);
 
 root.addView(langBox);
 
@@ -458,6 +498,18 @@ root.addView(btnRow);
 
         final AlertDialog d = b.create();
 
+// 🔊 STOP TTS ON BACK BUTTON
+d.setOnKeyListener((dialog, keyCode, event) -> {
+    if (keyCode == KeyEvent.KEYCODE_BACK
+            && event.getAction() == KeyEvent.ACTION_UP) {
+
+        try { AppTTS.stop(); } catch (Throwable ignore) {}
+        dialog.dismiss();
+        return true;
+    }
+    return false;
+});
+
         if (d.getWindow() != null) {
             d.getWindow().setBackgroundDrawable(
                     new ColorDrawable(Color.TRANSPARENT)
@@ -481,15 +533,16 @@ root.addView(btnRow);
         // ================= ACTIONS =================
         continueBtn.setOnClickListener(v -> {
 
-            try { AppTTS.stop(); } catch (Throwable ignore) {}
+    try { AppTTS.stop(); } catch (Throwable ignore) {}
 
-            if (cb.isChecked()) {
-                disablePermissionsForever();
-            }
+    returningFromUsageSettings = true;   // 🔥 ΑΠΑΡΑΙΤΗΤΟ
 
-            d.dismiss();
-            requestNextPermission();
-        });
+    d.dismiss();
+
+    try {
+        startActivity(new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS));
+    } catch (Throwable ignored) {}
+});
 
         skipBtn.setOnClickListener(v -> {
 
@@ -579,10 +632,12 @@ private String getPermissionsTextEN() {
     }
 
     // Όταν τελειώσουν τα runtime permissions:
-    if (!hasUsageAccess()) {
+if (!hasUsageAccess()) {
+    if (!usagePopupVisible) {
         showUsageAccessPopup();
-        return;
     }
+    return;
+}
 
     // Αν υπάρχει usage access → Welcome
     if (!isWelcomeDisabled() && !consumeSkipWelcomeOnce()) {
@@ -1103,7 +1158,7 @@ okBtn.setBackground(okBg);
 LinearLayout.LayoutParams okLp =
         new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
-                dp(72)
+                dp(140)
         );
 okLp.setMargins(dp(6), dp(6), dp(6), 0);
 okBtn.setLayoutParams(okLp);
@@ -1127,12 +1182,17 @@ root.addView(okBtn);
         welcomeShown = true;
 
         // --------------------------------------------
-        // STOP ALWAYS ON DISMISS
+        // STOP ALWAYS ON DISMISS - CANCEL 
         // --------------------------------------------
         d.setOnDismissListener(dialog -> {
-            try { AppTTS.stop(); } catch (Throwable ignore) {}
-            welcomeShown = false;
-        });
+    try { AppTTS.stop(); } catch (Throwable ignore) {}
+    welcomeShown = false;
+});
+
+d.setOnCancelListener(dialog -> {
+    try { AppTTS.stop(); } catch (Throwable ignore) {}
+    welcomeShown = false;
+});
 
         // --------------------------------------------
         // SPEAK ONLY WHEN DIALOG IS ACTUALLY SHOWN
@@ -1179,68 +1239,79 @@ root.addView(okBtn);
                         android.R.style.Theme_Material_Dialog_NoActionBar
                 );
 
-        LinearLayout root = new LinearLayout(this);
-        root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(dp(24), dp(20), dp(24), dp(18));
+LinearLayout root = new LinearLayout(this);
+root.setOrientation(LinearLayout.VERTICAL);
+root.setGravity(Gravity.CENTER_HORIZONTAL);
+root.setPadding(dp(24), dp(20), dp(24), dp(18));
 
-        GradientDrawable bg = new GradientDrawable();
-        bg.setColor(0xFF101010);
-        bg.setCornerRadius(dp(10));
-        bg.setStroke(dp(3), 0xFFFFD700);
-        root.setBackground(bg);
+GradientDrawable bg = new GradientDrawable();
+bg.setColor(0xFF101010);
+bg.setCornerRadius(dp(10));
+bg.setStroke(dp(3), 0xFFFFD700);
+root.setBackground(bg);
 
-        // TITLE
-        TextView t = new TextView(this);
-        t.setText(gr ? "ΕΠΙΛΟΓΗ ΣΥΣΚΕΥΗΣ" : "SELECT DEVICE");
-        t.setTextColor(Color.WHITE);
-      
-        root.addView(t);
+// ================= TITLE =================
+TextView t = new TextView(this);
+t.setText(gr ? "ΕΠΙΛΟΓΗ ΣΥΣΚΕΥΗΣ" : "SELECT DEVICE");
+t.setTextColor(Color.WHITE);
+t.setTextSize(20f);
+t.setTypeface(null, Typeface.BOLD);
+t.setGravity(Gravity.CENTER);
+t.setPadding(0, 0, 0, dp(18));
+root.addView(t);
 
-        // ANDROID BUTTON
-        TextView androidBtn = new TextView(this);
+// ================= ANDROID BUTTON =================
+TextView androidBtn = new TextView(this);
 androidBtn.setText(gr
         ? "🤖  Η ANDROID ΣΥΣΚΕΥΗ ΜΟΥ"
         : "🤖  MY ANDROID DEVICE");
-        androidBtn.setTextColor(Color.WHITE);
+androidBtn.setTextColor(Color.WHITE);
+androidBtn.setTextSize(18f);
+androidBtn.setTypeface(null, Typeface.BOLD);
+androidBtn.setGravity(Gravity.CENTER);
+androidBtn.setPadding(0, dp(20), 0, dp(20));
 
-        GradientDrawable bgAndroid = new GradientDrawable();
-        bgAndroid.setColor(0xFF3DDC84);
-        bgAndroid.setCornerRadius(dp(10));
-        bgAndroid.setStroke(dp(3), 0xFFFFD700);
-        androidBtn.setBackground(bgAndroid);
+GradientDrawable bgAndroid = new GradientDrawable();
+bgAndroid.setColor(0xFF3DDC84);
+bgAndroid.setCornerRadius(dp(12));
+bgAndroid.setStroke(dp(3), 0xFFFFD700);
+androidBtn.setBackground(bgAndroid);
 
-        LinearLayout.LayoutParams lpBtn =
-                new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        dp(92)
-                );
-        lpBtn.setMargins(dp(8), dp(18), dp(8), 0);
-        androidBtn.setLayoutParams(lpBtn);
+LinearLayout.LayoutParams lpBtn =
+        new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                dp(110)
+        );
+lpBtn.setMargins(dp(8), dp(10), dp(8), 0);
+androidBtn.setLayoutParams(lpBtn);
 
-        // APPLE BUTTON
-        TextView appleBtn = new TextView(this);
+// ================= APPLE BUTTON =================
+TextView appleBtn = new TextView(this);
 appleBtn.setText(gr
         ? "🍎  ΑΛΛΗ ΣΥΣΚΕΥΗ APPLE"
         : "🍎  OTHER APPLE DEVICE");
-        appleBtn.setTextColor(Color.WHITE);
+appleBtn.setTextColor(Color.WHITE);
+appleBtn.setTextSize(18f);
+appleBtn.setTypeface(null, Typeface.BOLD);
+appleBtn.setGravity(Gravity.CENTER);
+appleBtn.setPadding(0, dp(20), 0, dp(20));
 
+GradientDrawable bgApple = new GradientDrawable();
+bgApple.setColor(0xFF1C1C1E);
+bgApple.setCornerRadius(dp(12));
+bgApple.setStroke(dp(3), 0xFFFFD700);
+appleBtn.setBackground(bgApple);
 
-        GradientDrawable bgApple = new GradientDrawable();
-        bgApple.setColor(0xFF1C1C1E);
-        bgApple.setCornerRadius(dp(10));
-        bgApple.setStroke(dp(3), 0xFFFFD700);
-        appleBtn.setBackground(bgApple);
+LinearLayout.LayoutParams lpBtn2 =
+        new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                dp(110)
+        );
+lpBtn2.setMargins(dp(8), dp(14), dp(8), 0);
+appleBtn.setLayoutParams(lpBtn2);
 
-        LinearLayout.LayoutParams lpBtn2 =
-                new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        dp(92)
-                );
-        lpBtn2.setMargins(dp(8), dp(18), dp(8), 0);
-        appleBtn.setLayoutParams(lpBtn2);
-
-        root.addView(androidBtn);
-        root.addView(appleBtn);
+root.addView(androidBtn);
+root.addView(appleBtn);
 
         b.setView(root);
         final AlertDialog d = b.create();

@@ -1045,7 +1045,7 @@ b.setTypeface(null, Typeface.BOLD);
 
 GradientDrawable bg = new GradientDrawable();  
 bg.setColor(0xFF8B0000);  
-bg.setCornerRadius(dp(12));  
+bg.setCornerRadius(dp(10));  
 bg.setStroke(dp(3), 0xFFFFD700);  
 b.setBackground(bg);  
 
@@ -1120,7 +1120,7 @@ private void askUserEarpieceConfirmation() {
 
         GradientDrawable bg = new GradientDrawable();
         bg.setColor(0xFF101010);
-        bg.setCornerRadius(dp(18));
+        bg.setCornerRadius(dp(10));
         bg.setStroke(dp(4), 0xFFFFD700);
         root.setBackground(bg);
 
@@ -1177,7 +1177,7 @@ root.addView(buildMuteRow());
 
         GradientDrawable noBg = new GradientDrawable();
         noBg.setColor(0xFF8B0000);
-        noBg.setCornerRadius(dp(14));
+        noBg.setCornerRadius(dp(10));
         noBg.setStroke(dp(3), 0xFFFFD700);
         noBtn.setBackground(noBg);
         noBtn.setLayoutParams(btnLp);
@@ -1190,7 +1190,7 @@ root.addView(buildMuteRow());
 
         GradientDrawable yesBg = new GradientDrawable();
         yesBg.setColor(0xFF0B5F3B);
-        yesBg.setCornerRadius(dp(14));
+        yesBg.setCornerRadius(dp(10));
         yesBg.setStroke(dp(3), 0xFFFFD700);
         yesBtn.setBackground(yesBg);
         yesBtn.setLayoutParams(btnLp);
@@ -1491,7 +1491,7 @@ private AlertDialog buildInfoDialog(
 
     GradientDrawable bg = new GradientDrawable();
     bg.setColor(0xFF000000);
-    bg.setCornerRadius(dp(18));
+    bg.setCornerRadius(dp(10));
     bg.setStroke(dp(3), 0xFFFFD700);
     root.setBackground(bg);
 
@@ -1519,7 +1519,7 @@ private AlertDialog buildInfoDialog(
 
     GradientDrawable exitBg = new GradientDrawable();
     exitBg.setColor(0xFF8B0000);
-    exitBg.setCornerRadius(dp(14));
+    exitBg.setCornerRadius(dp(10));
     exitBg.setStroke(dp(3), 0xFFFFD700);
     exit.setBackground(exitBg);
 
@@ -3123,7 +3123,7 @@ btn.setElevation(dp(3)); // premium shadow
 // -------------------------------  
 GradientDrawable normalBg = new GradientDrawable();  
 normalBg.setColor(0xFF00FF6A);          // GREEN NEON  
-normalBg.setCornerRadius(dp(18));  
+normalBg.setCornerRadius(dp(10));  
 normalBg.setStroke(dp(3), 0xFFFFD700);  // GOLD BORDER  
 
 // -------------------------------  
@@ -3131,7 +3131,7 @@ normalBg.setStroke(dp(3), 0xFFFFD700);  // GOLD BORDER
 // -------------------------------  
 GradientDrawable pressedBg = new GradientDrawable();  
 pressedBg.setColor(0xFF00CC55);          // darker green (pressed)  
-pressedBg.setCornerRadius(dp(18));  
+pressedBg.setCornerRadius(dp(10));  
 pressedBg.setStroke(dp(3), 0xFFFFD700);  
 
 // -------------------------------  
@@ -3139,7 +3139,7 @@ pressedBg.setStroke(dp(3), 0xFFFFD700);
 // -------------------------------  
 GradientDrawable disabledBg = new GradientDrawable();  
 disabledBg.setColor(0xFF1E3A2A);          // muted green  
-disabledBg.setCornerRadius(dp(18));  
+disabledBg.setCornerRadius(dp(10));  
 disabledBg.setStroke(dp(2), 0xFFBFAE60);  // faded gold  
 
 StateListDrawable states = new StateListDrawable();  
@@ -3582,7 +3582,7 @@ private Button gelButton(Context ctx, String text, int bgColor) {
 
     GradientDrawable bg = new GradientDrawable();
     bg.setColor(bgColor);
-    bg.setCornerRadius(dp(14));
+    bg.setCornerRadius(dp(10));
     bg.setStroke(dp(3), 0xFFFFD700);
 
     b.setBackground(bg);
@@ -3614,7 +3614,7 @@ private LinearLayout buildGELPopupRoot(Context ctx) {
 
     GradientDrawable bg = new GradientDrawable();
     bg.setColor(0xFF101010);        // GEL black
-    bg.setCornerRadius(dp(18));
+    bg.setCornerRadius(dp(10));
     bg.setStroke(dp(4), 0xFFFFD700); // GEL gold
     root.setBackground(bg);
 
@@ -3733,7 +3733,7 @@ private void showLab28Popup() {
 
         GradientDrawable okBg = new GradientDrawable();
         okBg.setColor(0xFF0F8A3B);
-        okBg.setCornerRadius(dp(14));
+        okBg.setCornerRadius(dp(10));
         okBg.setStroke(dp(3), 0xFFFFD700);
         okBtn.setBackground(okBg);
 
@@ -4608,7 +4608,7 @@ private void lab3EarpieceManual() {
 
         GradientDrawable bg = new GradientDrawable();
         bg.setColor(0xFF101010);
-        bg.setCornerRadius(dp(18));
+        bg.setCornerRadius(dp(10));
         bg.setStroke(dp(3), 0xFFFFD700);
         root.setBackground(bg);
 
@@ -4661,7 +4661,7 @@ exitBtn.setTextColor(Color.WHITE);
 
 GradientDrawable exitBg = new GradientDrawable();
 exitBg.setColor(0xFF8B0000);
-exitBg.setCornerRadius(dp(14));
+exitBg.setCornerRadius(dp(10));
 exitBg.setStroke(dp(3), 0xFFFFD700);
 exitBtn.setBackground(exitBg);
 exitBtn.setLayoutParams(btnLp);
@@ -4675,7 +4675,7 @@ start.setTextColor(Color.BLACK);
 
 GradientDrawable startBg = new GradientDrawable();
 startBg.setColor(0xFF39FF14);
-startBg.setCornerRadius(dp(14));
+startBg.setCornerRadius(dp(10));
 startBg.setStroke(dp(3), 0xFFFFD700);
 start.setBackground(startBg);
 start.setLayoutParams(btnLp);
@@ -5017,7 +5017,7 @@ runOnUiThread(() -> {
 
     GradientDrawable bg = new GradientDrawable();
     bg.setColor(0xFF000000);
-    bg.setCornerRadius(dp(18));
+    bg.setCornerRadius(dp(10));
     bg.setStroke(dp(3), 0xFFFFD700);
     root.setBackground(bg);
 
@@ -5051,7 +5051,7 @@ runOnUiThread(() -> {
 
     GradientDrawable exitBg = new GradientDrawable();
     exitBg.setColor(0xFF8B0000);
-    exitBg.setCornerRadius(dp(14));
+    exitBg.setCornerRadius(dp(10));
     exitBg.setStroke(dp(3), 0xFFFFD700);
     exitBtn.setBackground(exitBg);
     exitBtn.setLayoutParams(lp);
@@ -5063,7 +5063,7 @@ runOnUiThread(() -> {
 
     GradientDrawable startBg = new GradientDrawable();
     startBg.setColor(0xFF0B5F3B);
-    startBg.setCornerRadius(dp(14));
+    startBg.setCornerRadius(dp(10));
     startBg.setStroke(dp(3), 0xFFFFD700);
     startBtn.setBackground(startBg);
     startBtn.setLayoutParams(lp);
@@ -5220,7 +5220,7 @@ runOnUiThread(() -> {
 
     GradientDrawable bg = new GradientDrawable();
     bg.setColor(0xFF000000);
-    bg.setCornerRadius(dp(18));
+    bg.setCornerRadius(dp(10));
     bg.setStroke(dp(3), 0xFFFFD700);
     root.setBackground(bg);
 
@@ -5253,7 +5253,7 @@ runOnUiThread(() -> {
 
     GradientDrawable noBg = new GradientDrawable();
     noBg.setColor(0xFF8B0000);
-    noBg.setCornerRadius(dp(14));
+    noBg.setCornerRadius(dp(10));
     noBg.setStroke(dp(3), 0xFFFFD700);
     noBtn.setBackground(noBg);
     noBtn.setLayoutParams(lp);
@@ -5265,7 +5265,7 @@ runOnUiThread(() -> {
 
     GradientDrawable yesBg = new GradientDrawable();
     yesBg.setColor(0xFF0B5F3B);
-    yesBg.setCornerRadius(dp(14));
+    yesBg.setCornerRadius(dp(10));
     yesBg.setStroke(dp(3), 0xFFFFD700);
     yesBtn.setBackground(yesBg);
     yesBtn.setLayoutParams(lp);
@@ -5441,7 +5441,7 @@ runOnUiThread(() -> {
 
     GradientDrawable bg = new GradientDrawable();
     bg.setColor(0xFF000000);
-    bg.setCornerRadius(dp(18));
+    bg.setCornerRadius(dp(10));
     bg.setStroke(dp(3), 0xFFFFD700);
     root.setBackground(bg);
 
@@ -5732,7 +5732,7 @@ final boolean gr = AppLang.isGreek(this);
 
         GradientDrawable bg = new GradientDrawable();
         bg.setColor(0xFF000000);
-        bg.setCornerRadius(dp(18));
+        bg.setCornerRadius(dp(10));
         bg.setStroke(dp(3), 0xFFFFD700);
         root.setBackground(bg);
 
@@ -5764,7 +5764,7 @@ final boolean gr = AppLang.isGreek(this);
 
         GradientDrawable noBg = new GradientDrawable();
         noBg.setColor(0xFF8B0000);
-        noBg.setCornerRadius(dp(14));
+        noBg.setCornerRadius(dp(10));
         noBg.setStroke(dp(3), 0xFFFFD700);
         noBtn.setBackground(noBg);
         noBtn.setLayoutParams(lp);
@@ -5776,7 +5776,7 @@ final boolean gr = AppLang.isGreek(this);
 
         GradientDrawable yesBg = new GradientDrawable();
         yesBg.setColor(0xFF0B5F3B);
-        yesBg.setCornerRadius(dp(14));
+        yesBg.setCornerRadius(dp(10));
         yesBg.setStroke(dp(3), 0xFFFFD700);
         yesBtn.setBackground(yesBg);
         yesBtn.setLayoutParams(lp);
@@ -6037,7 +6037,7 @@ runOnUiThread(() -> {
 
     GradientDrawable bg = new GradientDrawable();
     bg.setColor(0xFF000000);
-    bg.setCornerRadius(dp(18));
+    bg.setCornerRadius(dp(10));
     bg.setStroke(dp(3), 0xFFFFD700);
     root.setBackground(bg);
 
@@ -6076,7 +6076,7 @@ runOnUiThread(() -> {
 
     GradientDrawable noBg = new GradientDrawable();
     noBg.setColor(0xFF8B0000);
-    noBg.setCornerRadius(dp(14));
+    noBg.setCornerRadius(dp(10));
     noBg.setStroke(dp(3), 0xFFFFD700);
     noBtn.setBackground(noBg);
     noBtn.setLayoutParams(btnLp);
@@ -6089,7 +6089,7 @@ runOnUiThread(() -> {
 
     GradientDrawable yesBg = new GradientDrawable();
     yesBg.setColor(0xFF0B5F3B);
-    yesBg.setCornerRadius(dp(14));
+    yesBg.setCornerRadius(dp(10));
     yesBg.setStroke(dp(3), 0xFFFFD700);
     yesBtn.setBackground(yesBg);
     yesBtn.setLayoutParams(btnLp);
@@ -6265,7 +6265,7 @@ root.setPadding(32, 28, 32, 24);
 
 GradientDrawable bg = new GradientDrawable();
 bg.setColor(0xFF101010);
-bg.setCornerRadius(28);
+bg.setCornerRadius(10);
 bg.setStroke(4, 0xFFFFD700);
 root.setBackground(bg);
 
@@ -6309,7 +6309,7 @@ startBtn.setTextSize(16f);
 
 GradientDrawable startBg = new GradientDrawable();
 startBg.setColor(0xFF0F8A3B);
-startBg.setCornerRadius(24);
+startBg.setCornerRadius(10);
 startBg.setStroke(3, 0xFFFFD700);
 startBtn.setBackground(startBg);
 
@@ -6413,7 +6413,7 @@ private void lab7RotationAndProximityManual() {
 
         GradientDrawable bg = new GradientDrawable();
         bg.setColor(0xFF101010);
-        bg.setCornerRadius(dp(18));
+        bg.setCornerRadius(dp(10));
         bg.setStroke(dp(4), 0xFFFFD700);
         root.setBackground(bg);
 
@@ -6774,7 +6774,7 @@ private void showLab8IntroAndStart(
 
     GradientDrawable bg = new GradientDrawable();
     bg.setColor(0xFF101010);
-    bg.setCornerRadius(dp(18));
+    bg.setCornerRadius(dp(10));
     bg.setStroke(dp(4), 0xFFFFD700);
     root.setBackground(bg);
 
@@ -6816,7 +6816,7 @@ root.addView(msg);
 
     GradientDrawable startBg = new GradientDrawable();
     startBg.setColor(0xFF39FF14);
-    startBg.setCornerRadius(dp(14));
+    startBg.setCornerRadius(dp(10));
     startBg.setStroke(dp(3), 0xFFFFD700);
     start.setBackground(startBg);
 
@@ -7077,7 +7077,7 @@ private void lab8ShowPreviewDialogForCamera(
 
     GradientDrawable bg = new GradientDrawable();
     bg.setColor(0xFF101010);
-    bg.setCornerRadius(dp(18));
+    bg.setCornerRadius(dp(10));
     bg.setStroke(dp(4), 0xFFFFD700);
     root.setBackground(bg);
 
@@ -7135,7 +7135,7 @@ root.addView(hint);
     yes.setTextColor(0xFFFFFFFF);
     GradientDrawable yesBg = new GradientDrawable();
     yesBg.setColor(0xFF0F8A3B);
-    yesBg.setCornerRadius(dp(14));
+    yesBg.setCornerRadius(dp(10));
     yesBg.setStroke(dp(3), 0xFFFFD700);
     yes.setBackground(yesBg);
 
@@ -7145,7 +7145,7 @@ root.addView(hint);
     no.setTextColor(0xFFFFFFFF);
     GradientDrawable noBg = new GradientDrawable();
     noBg.setColor(0xFF444444);
-    noBg.setCornerRadius(dp(14));
+    noBg.setCornerRadius(dp(10));
     noBg.setStroke(dp(3), 0xFFFFD700);
     no.setBackground(noBg);
 
@@ -7658,7 +7658,7 @@ private void showLab8_1Prompt() {
 
         GradientDrawable bg = new GradientDrawable();
         bg.setColor(0xFF101010);
-        bg.setCornerRadius(dp(18));
+        bg.setCornerRadius(dp(10));
         bg.setStroke(dp(4), 0xFFFFD700);
         root.setBackground(bg);
 
@@ -7706,7 +7706,7 @@ root.addView(msg);
 
         GradientDrawable yesBg = new GradientDrawable();
         yesBg.setColor(0xFF0F8A3B);
-        yesBg.setCornerRadius(dp(14));
+        yesBg.setCornerRadius(dp(10));
         yesBg.setStroke(dp(3), 0xFFFFD700);
         yes.setBackground(yesBg);
 
@@ -7718,7 +7718,7 @@ root.addView(msg);
 
         GradientDrawable noBg = new GradientDrawable();
         noBg.setColor(0xFF444444);
-        noBg.setCornerRadius(dp(14));
+        noBg.setCornerRadius(dp(10));
         noBg.setStroke(dp(3), 0xFFFFD700);
         no.setBackground(noBg);
 
@@ -8930,7 +8930,7 @@ private void showLab13GatePopup() {
 
     GradientDrawable bg = new GradientDrawable();
     bg.setColor(0xFF101010);
-    bg.setCornerRadius(dp(18));
+    bg.setCornerRadius(dp(10));
     bg.setStroke(dp(4), 0xFFFFD700);
     root.setBackground(bg);
 
@@ -9214,7 +9214,7 @@ root.setPadding(dp(24), dp(20), dp(24), dp(18));
 
 GradientDrawable bg = new GradientDrawable();
 bg.setColor(0xFF101010);
-bg.setCornerRadius(dp(18));
+bg.setCornerRadius(dp(10));
 bg.setStroke(dp(4), 0xFFFFD700);
 root.setBackground(bg);
 
@@ -10015,7 +10015,7 @@ root.setPadding(dp(24), dp(20), dp(24), dp(18));
 
 GradientDrawable bg = new GradientDrawable();
 bg.setColor(0xFF101010);           // GEL dark black
-bg.setCornerRadius(dp(18));
+bg.setCornerRadius(dp(10));
 bg.setStroke(dp(4), 0xFFFFD700);  // GOLD border
 root.setBackground(bg);
 
@@ -10107,7 +10107,7 @@ exitBtn.setTypeface(null, Typeface.BOLD);
 
 GradientDrawable exitBg = new GradientDrawable();
 exitBg.setColor(0xFF8B0000);
-exitBg.setCornerRadius(dp(14));
+exitBg.setCornerRadius(dp(10));
 exitBg.setStroke(dp(3), 0xFFFFD700);
 exitBtn.setBackground(exitBg);
 
@@ -10625,7 +10625,7 @@ root.setPadding(dp(24), dp(20), dp(24), dp(18));
 
 GradientDrawable bg = new GradientDrawable();
 bg.setColor(0xFF101010);           // GEL dark black
-bg.setCornerRadius(dp(18));       // smooth premium corners
+bg.setCornerRadius(dp(10));       // smooth premium corners
 bg.setStroke(dp(4), 0xFFFFD700);  // GOLD border
 root.setBackground(bg);
 
@@ -10762,7 +10762,7 @@ exitBtn.setTypeface(null, Typeface.BOLD);
 
 GradientDrawable exitBg = new GradientDrawable();
 exitBg.setColor(0xFF8B0000);          // dark red
-exitBg.setCornerRadius(dp(14));
+exitBg.setCornerRadius(dp(10));
 exitBg.setStroke(dp(3), 0xFFFFD700);  // gold border
 exitBtn.setBackground(exitBg);
 
@@ -11811,7 +11811,7 @@ private void lab17_showPopup(String titleText, String msgText) {
 
     GradientDrawable bg = new GradientDrawable();
     bg.setColor(0xFF101010);
-    bg.setCornerRadius(dp(18));
+    bg.setCornerRadius(dp(10));
     bg.setStroke(dp(3), 0xFFFFD700);
     root.setBackground(bg);
 

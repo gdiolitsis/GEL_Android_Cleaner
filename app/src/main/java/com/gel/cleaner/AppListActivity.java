@@ -549,7 +549,7 @@ private void showUninstallConfirmDialog() {
 // ================= MESSAGE =================
 TextView msg = new TextView(this);
 
-msg.setText(
+final String messageText =
         gr
                 ? "Για να ληφθούν πληροφορίες για τα μεγέθη εφαρμογών και cache,\n"
                   + "απαιτείται Πρόσβαση Χρήσης.\n\n"

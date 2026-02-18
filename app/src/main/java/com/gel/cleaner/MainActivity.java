@@ -46,13 +46,10 @@ public class MainActivity extends GELAutoActivityHook
     // =========================================================
     private boolean welcomeShown = false;
     private int permissionIndex = 0;
-    private boolean pendingUsageAccess = false;
 
     private static final int REQ_PERMISSIONS = 1001;
     private static final String PREF_PERMISSIONS_DISABLED = "permissions_disabled";
     private boolean permissionsSkippedThisLaunch = false;
-
-    // Usage Access continuation
     
     private final String[] REQUIRED_PERMISSIONS = new String[]{
 
@@ -559,7 +556,6 @@ private String getPermissionsTextEN() {
         permissionIndex++;
     }
 
-    // Αν υπάρχει usage access → Welcome
     if (!isWelcomeDisabled() && !consumeSkipWelcomeOnce()) {
         showWelcomePopup();
         return;

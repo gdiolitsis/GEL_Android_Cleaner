@@ -153,16 +153,18 @@ protected void onResume() {
         // =========================================================
         permissionIndex = 0;
 
-        if (hasMissingPermissions()
-                && !isPermissionsDisabled()
-                && !permissionsSkippedThisLaunch) {
+        boolean skipOnce = consumeSkipWelcomeOnce();
 
-            showPermissionsPopup();
+if (hasMissingPermissions()
+        && !isPermissionsDisabled()
+        && !skipOnce) {
 
-        } else {
+    showPermissionsPopup();
 
-            requestNextPermission();
-        }
+} else {
+
+    requestNextPermission();
+}
 
         // APPLY PLATFORM UI
         if ("apple".equals(getSavedPlatform())) {
@@ -830,14 +832,34 @@ root.addView(buildMuteRow());
 Spinner langSpinner = new Spinner(MainActivity.this);
 
 ArrayAdapter<String> adapter =
-        new ArrayAdapter<>(
+        new ArrayAdapter<String>(
                 MainActivity.this,
                 android.R.layout.simple_spinner_item,
                 new String[]{"EN", "GR"}
-        );
-adapter.setDropDownViewResource(
-        android.R.layout.simple_spinner_dropdown_item
-);
+        ) {
+
+            @Override
+            public View getView(int position, View convertView, ViewGroup parent) {
+                TextView tv = (TextView) super.getView(position, convertView, parent);
+                tv.setTypeface(null, Typeface.BOLD);
+                tv.setGravity(Gravity.CENTER);
+                tv.setTextColor(Color.WHITE);
+                return tv;
+            }
+
+            @Override
+            public View getDropDownView(int position, View convertView, ViewGroup parent) {
+                TextView tv = (TextView) super.getDropDownView(position, convertView, parent);
+                tv.setTypeface(null, Typeface.BOLD);
+                tv.setGravity(Gravity.CENTER);
+                tv.setTextColor(Color.BLACK);   // dropdown μαύρο
+                tv.setPadding(dp(14), dp(12), dp(14), dp(12));
+                return tv;
+            }
+        };
+
+adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+
 langSpinner.setAdapter(adapter);
 langSpinner.setSelection(AppLang.isGreek(this) ? 1 : 0);
 
@@ -851,19 +873,18 @@ langSpinner.setOnItemSelectedListener(
                     int position,
                     long id
             ) {
-
                 String newLang = (position == 0) ? "en" : "el";
 
                 if (!newLang.equals(LocaleHelper.getLang(MainActivity.this))) {
 
                     LocaleHelper.set(MainActivity.this, newLang);
-                    permissionsSkippedThisLaunch = true;
+                    setSkipWelcomeOnce(true);
 
                     try { AppTTS.stop(); } catch (Throwable ignore) {}
 
                     recreate();
                 }
-            }  // 🔥 ΑΥΤΟ ΕΛΕΙΠΕ
+            }
 
             @Override
             public void onNothingSelected(AdapterView<?> parent) {}
@@ -873,6 +894,7 @@ langSpinner.setOnItemSelectedListener(
 // ================= LANGUAGE BOX =================
 LinearLayout langBox = new LinearLayout(MainActivity.this);
 langBox.setOrientation(LinearLayout.VERTICAL);
+langBox.setGravity(Gravity.CENTER);
 langBox.setPadding(dp(12), dp(12), dp(12), dp(12));
 
 GradientDrawable langBg = new GradientDrawable();
@@ -1137,7 +1159,14 @@ root.addView(appleBtn);
             permissionsSkippedThisLaunch = true; 
 
             d.dismiss();
-            recreate();
+
+if ("apple".equals(getSavedPlatform())) {
+    applyAppleModeUI();
+} else {
+    applyAndroidModeUI();
+}
+
+syncReturnButtonText();
         });
 
         // --------------------------------------------

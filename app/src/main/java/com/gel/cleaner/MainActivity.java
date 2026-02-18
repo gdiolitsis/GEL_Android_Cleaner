@@ -85,16 +85,6 @@ public class MainActivity extends GELAutoActivityHook
 @Override
 protected void onResume() {
     super.onResume();
-
-    if (returningFromUsageSettings) {
-        returningFromUsageSettings = false;
-
-        if (hasUsageAccess()) {
-            if (!isWelcomeDisabled() && !consumeSkipWelcomeOnce()) {
-                showWelcomePopup();
-            }
-        }
-    }
 }
 
     // =========================================================
@@ -474,8 +464,6 @@ d.setOnKeyListener((dialog, keyCode, event) -> {
         continueBtn.setOnClickListener(v -> {
 
     try { AppTTS.stop(); } catch (Throwable ignore) {}
-
-    returningFromUsageSettings = true;   // 🔥 ΑΠΑΡΑΙΤΗΤΟ
 
     d.dismiss();
 

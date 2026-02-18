@@ -789,16 +789,15 @@ if (usagePopupVisible) return;
 
     String titleText = gr ? "Πρόσβαση Χρήσης" : "Usage Access";
 
-    String messageText = gr
-   ? "Για να ληφθούν πληροφορίες, για τα μεγέθη εφαρμογών και cache,\n"
-  + "απαιτείται Πρόσβαση Χρήσης.\n\n"
-  + "Καμία συλλογή προσωπικών δεδομένων δεν γίνεται, με την παραχώρηση της πρόσβασης Χρήσης.\n\n"
-  + "Θα μεταφερθείς στις Ρυθμίσεις."
-: "To retrieve app and cache sizes information,\n"
-  + "Usage Access is required.\n\n"
-  + "No personal data is collected, when granting Usage Access.\n\n"
-  + "You will be redirected to Settings.";
-
+String messageText = gr
+        ? "Για να ληφθούν πληροφορίες, για τα μεγέθη εφαρμογών και cache,\n"
+          + "απαιτείται Πρόσβαση Χρήσης.\n\n"
+          + "Καμία συλλογή προσωπικών δεδομένων δεν γίνεται, με την παραχώρηση της Πρόσβασης Χρήσης.\n\n"
+          + "Θα μεταφερθείς στις Ρυθμίσεις."
+        : "To retrieve app and cache sizes information,\n"
+          + "Usage Access is required.\n\n"
+          + "No personal data is collected, when granting Usage Access.\n\n"
+          + "You will be redirected to Settings.";
     AlertDialog.Builder b =
             new AlertDialog.Builder(
                     this,

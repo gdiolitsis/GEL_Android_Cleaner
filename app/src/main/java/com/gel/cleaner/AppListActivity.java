@@ -505,78 +505,188 @@ private void showUninstallConfirmDialog() {
 
     if (!hasUsageAccess()) {
         showUsageAccessDialog();
-    } else {
-        new Thread(this::loadAllApps).start();
     }
+
+    // ΠΑΝΤΑ φορτώνουμε λίστα
+    new Thread(this::loadAllApps).start();
 }
 
     private void showUsageAccessDialog() {
 
-        if (hasUsageAccess()) return;
+    if (hasUsageAccess()) return;
 
-        final boolean gr = AppLang.isGreek(this);
+    final boolean gr = AppLang.isGreek(this);
 
-        AlertDialog.Builder b = new AlertDialog.Builder(this);
+    AlertDialog.Builder b =
+            new AlertDialog.Builder(
+                    this,
+                    android.R.style.Theme_Material_Dialog_NoActionBar
+            );
 
-        LinearLayout root = new LinearLayout(this);
-        root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(dp(22), dp(18), dp(22), dp(16));
+    // ================= ROOT =================
+    LinearLayout root = new LinearLayout(this);
+    root.setOrientation(LinearLayout.VERTICAL);
+    root.setPadding(dp(24), dp(22), dp(24), dp(20));
 
-        GradientDrawable bg = new GradientDrawable();
-        bg.setColor(0xFF101010);
-        bg.setCornerRadius(dp(18));
-        bg.setStroke(dp(3), 0xFFFFD700);
-        root.setBackground(bg);
+    GradientDrawable bg = new GradientDrawable();
+    bg.setColor(0xFF000000); // Μαύρο
+    bg.setCornerRadius(dp(14));
+    bg.setStroke(dp(4), 0xFFFFD700); // Χρυσό περίγραμμα
+    root.setBackground(bg);
 
-        TextView title = new TextView(this);
-        title.setText(gr ? "Απαιτείται Πρόσβαση Χρήσης" : "Usage Access Required");
-        title.setTextColor(Color.WHITE);
-        title.setTextSize(18f);
-        title.setGravity(Gravity.CENTER);
-        title.setPadding(0, 0, 0, dp(10));
+    // ================= TITLE =================
+    TextView title = new TextView(this);
+    title.setText(gr
+            ? "ΑΠΑΙΤΕΙΤΑΙ ΠΡΟΣΒΑΣΗ ΧΡΗΣΗΣ"
+            : "USAGE ACCESS REQUIRED");
+    title.setTextColor(Color.WHITE);
+    title.setTextSize(19f);
+    title.setTypeface(null, Typeface.BOLD);
+    title.setGravity(Gravity.CENTER);
+    title.setPadding(0, 0, 0, dp(14));
+    root.addView(title);
 
-        TextView msg = new TextView(this);
-        msg.setText(gr
-                ? "Για να εμφανίζονται τα μεγέθη εφαρμογών και cache,\nενεργοποίησε «Πρόσβαση Χρήσης».\n\nΧωρίς αυτό, θα δεις λίστα αλλά χωρίς μεγέθη."
-                : "To show app + cache sizes,\nplease enable Usage Access.\n\nWithout it, the list works but sizes stay empty.");
-        msg.setTextColor(0xFFDDDDDD);
-        msg.setTextSize(14.5f);
-        msg.setGravity(Gravity.CENTER);
+    // ================= MESSAGE =================
+    TextView msg = new TextView(this);
+    msg.setText(gr
+            ? "Για να ενεργοποιηθεί ο καθαρισμός cache,  η ανάλυση μεγεθών cache,\n"
+            + "και η ανάλυση μεγεθών εφαρμογών,\n"
+            + "απαιτείται Πρόσβαση Χρήσης.\n\n"
+            + "Θα μεταφερθείς στις Ρυθμίσεις."
+            : "To enable cache cleaning, cache sizes analysis, and apps sizes analysis,\n"
+            + "Usage Access is required.\n\n"
+            + "You will be redirected to Settings.";
+    msg.setTextColor(0xFF00FF9C); // Neon green
+    msg.setTextSize(15f);
+    msg.setGravity(Gravity.CENTER);
+    msg.setLineSpacing(0f, 1.15f);
+    msg.setPadding(dp(6), 0, dp(6), dp(20));
+    root.addView(msg);
 
-        root.addView(title);
-        root.addView(msg);
+// ================= MUTE ROW =================
+root.addView(buildMuteRow());
 
-        b.setView(root);
-        b.setCancelable(false);
+    // ================= BUTTON ROW =================
+    LinearLayout btnRow = new LinearLayout(this);
+    btnRow.setOrientation(LinearLayout.HORIZONTAL);
+    btnRow.setGravity(Gravity.CENTER);
 
-        b.setPositiveButton(gr ? "Enable Usage Access" : "Enable Usage Access", (d, w) -> {
-            try {
-                startActivity(new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS));
-            } catch (Throwable ignored) {}
-        });
+    LinearLayout.LayoutParams btnLp =
+            new LinearLayout.LayoutParams(
+                    0,
+                    dp(110),
+                    1f
+            );
+    btnLp.setMargins(dp(8), 0, dp(8), 0);
 
-        b.setNegativeButton(gr ? "Συνέχεια" : "Continue", (d, w) -> d.dismiss());
+    // -------- CONTINUE --------
+    Button continueBtn = new Button(this);
+    continueBtn.setText(gr ? "ΣΥΝΕΧΕΙΑ" : "CONTINUE");
+    continueBtn.setAllCaps(false);
+    continueBtn.setTextColor(Color.WHITE);
+    continueBtn.setTextSize(16f);
+    continueBtn.setTypeface(null, Typeface.BOLD);
+    continueBtn.setLayoutParams(btnLp);
 
-        b.show();
-    }
+    GradientDrawable contBg = new GradientDrawable();
+    contBg.setColor(0xFF00E676); // Neon green
+    contBg.setCornerRadius(dp(12));
+    contBg.setStroke(dp(3), 0xFFFFD700);
+    continueBtn.setBackground(contBg);
+
+    // -------- SKIP --------
+    Button skipBtn = new Button(this);
+    skipBtn.setText(gr ? "ΠΑΡΑΛΕΙΨΗ" : "SKIP");
+    skipBtn.setAllCaps(false);
+    skipBtn.setTextColor(Color.WHITE);
+    skipBtn.setTextSize(16f);
+    skipBtn.setTypeface(null, Typeface.BOLD);
+    skipBtn.setLayoutParams(btnLp);
+
+    GradientDrawable skipBg = new GradientDrawable();
+    skipBg.setColor(0xFFC62828); // Κόκκινο
+    skipBg.setCornerRadius(dp(12));
+    skipBg.setStroke(dp(3), 0xFFFFD700);
+    skipBtn.setBackground(skipBg);
+
+    btnRow.addView(skipBtn);
+    btnRow.addView(continueBtn);
+    root.addView(btnRow);
+
+b.setView(root);
+b.setCancelable(false);
+
+AlertDialog d = b.create();
+
+if (d.getWindow() != null) {
+    d.getWindow().setBackgroundDrawable(
+            new ColorDrawable(Color.TRANSPARENT)
+    );
+}
+
+// 🔊 STOP TTS ON DISMISS
+d.setOnDismissListener(dialog -> {
+    try { AppTTS.stop(); } catch (Throwable ignore) {}
+});
+
+// 🔊 STOP TTS ON CANCEL
+d.setOnCancelListener(dialog -> {
+    try { AppTTS.stop(); } catch (Throwable ignore) {}
+});
+
+d.show();
+
+// 🔊 SPEAK WHEN SHOWN (ίδιο με MainActivity)
+root.postDelayed(() -> {
+    try {
+        if (!AppTTS.isMuted(this)) {
+            AppTTS.speak(this, messageText);
+        }
+    } catch (Throwable ignore) {}
+}, 220);
+
+// ================= ACTIONS =================
+continueBtn.setOnClickListener(v -> {
+    try { AppTTS.stop(); } catch (Throwable ignore) {}
+    d.dismiss();
+    try {
+        startActivity(new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS));
+    } catch (Throwable ignored) {}
+});
+
+skipBtn.setOnClickListener(v -> {
+    try { AppTTS.stop(); } catch (Throwable ignore) {}
+    d.dismiss();
+});
 
     private boolean hasUsageAccess() {
-        try {
-            AppOpsManager appOps = (AppOpsManager) getSystemService(Context.APP_OPS_SERVICE);
-            if (appOps == null) return false;
+    try {
+        AppOpsManager appOps =
+                (AppOpsManager) getSystemService(Context.APP_OPS_SERVICE);
+        if (appOps == null) return false;
 
-            int mode = appOps.checkOpNoThrow(
+        int mode;
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            mode = appOps.unsafeCheckOpNoThrow(
                     AppOpsManager.OPSTR_GET_USAGE_STATS,
                     Process.myUid(),
                     getPackageName()
             );
-
-            return mode == AppOpsManager.MODE_ALLOWED;
-
-        } catch (Throwable t) {
-            return false;
+        } else {
+            mode = appOps.checkOpNoThrow(
+                    AppOpsManager.OPSTR_GET_USAGE_STATS,
+                    Process.myUid(),
+                    getPackageName()
+            );
         }
+
+        return mode == AppOpsManager.MODE_ALLOWED;
+
+    } catch (Throwable t) {
+        return false;
     }
+}
 
 private void showNextAppToast() {
     Toast.makeText(

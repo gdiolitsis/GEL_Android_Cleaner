@@ -351,7 +351,7 @@ label.setText(
         GradientDrawable bg = new GradientDrawable();
         bg.setColor(0xFFFFD700);
         bg.setCornerRadius(dp(10));
-        bg.setStroke(dp(4), 0xFFFFD700);
+        bg.setStroke(dp(3), 0xFFFFD700);
         root.setBackground(bg);
 
         // ================= TITLE =================
@@ -428,7 +428,7 @@ label.setText(
         GradientDrawable langBg = new GradientDrawable();
         langBg.setColor(0xFF1A1A1A);
         langBg.setCornerRadius(dp(10));
-        langBg.setStroke(dp(2), 0xFFFFD700);
+        langBg.setStroke(dp(3), 0xFFFFD700);
         langBox.setBackground(langBg);
 
         langBox.addView(langSpinner);
@@ -476,7 +476,7 @@ root.addView(cb);
         GradientDrawable skipBg = new GradientDrawable();
         skipBg.setColor(0xFF8B0000);
         skipBg.setCornerRadius(dp(10));
-        .setStroke(dp(3), 0xFFFFD700);
+        setStroke(dp(3), 0xFFFFD700);
         skipBtn.setBackground(skipBg);
         skipBtn.setLayoutParams(btnLp);
 
@@ -858,7 +858,7 @@ if (usagePopupVisible) return;
     GradientDrawable bg = new GradientDrawable();
     bg.setColor(0xFF101010);
     bg.setCornerRadius(dp(10));
-    bg.setStroke(dp(4), 0xFFFFD700);
+    bg.setStroke(dp(3), 0xFFFFD700);
     root.setBackground(bg);
 
     // -------------------------------------------------
@@ -1032,7 +1032,7 @@ root.postDelayed(() -> {
         GradientDrawable bg = new GradientDrawable();
         bg.setColor(0xFFFFD700);
         bg.setCornerRadius(dp(10));
-        bg.setStroke(dp(4), 0xFFFFD700);
+        bg.setStroke(dp(3), 0xFFFFD700);
         root.setBackground(bg);
 
         // ================= TITLE =================
@@ -1105,7 +1105,7 @@ root.postDelayed(() -> {
         GradientDrawable langBg = new GradientDrawable();
         langBg.setColor(0xFFFFD700);
         langBg.setCornerRadius(dp(10));
-        langBg.setStroke(dp(2), 0xFFFFD700);
+        langBg.setStroke(dp(3), 0xFFFFD700);
         langBox.setBackground(langBg);
 
         langBox.addView(langSpinner);
@@ -1228,7 +1228,7 @@ root.addView(cb);
         GradientDrawable bg = new GradientDrawable();
         bg.setColor(0xFF101010);
         bg.setCornerRadius(dp(10));
-        bg.setStroke(dp(4), 0xFFFFD700);
+        bg.setStroke(dp(3), 0xFFFFD700);
         root.setBackground(bg);
 
         // TITLE
@@ -1243,7 +1243,7 @@ root.addView(cb);
 androidBtn.setText(gr
         ? "🤖  Η ANDROID ΣΥΣΚΕΥΗ ΜΟΥ"
         : "🤖  MY ANDROID DEVICE");
-        androidBtn.setTextColor(Color.WHITE));
+        androidBtn.setTextColor(Color.WHITE);
 
         GradientDrawable bgAndroid = new GradientDrawable();
         bgAndroid.setColor(0xFF3DDC84);

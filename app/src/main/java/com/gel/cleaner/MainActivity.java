@@ -56,16 +56,27 @@ private TextView permissionsMsg;
     private static final int REQ_PERMISSIONS = 1001;
     private static final String PREF_PERMISSIONS_DISABLED = "permissions_disabled";
     
-    private final String[] REQUIRED_PERMISSIONS = new String[]{
+    private String[] getRequiredPermissions() {
 
-        Manifest.permission.RECORD_AUDIO,          // Mic Labs
-        Manifest.permission.CAMERA,                // Camera Labs
-        Manifest.permission.ACCESS_FINE_LOCATION,  // WiFi / BLE / sensors
-        Manifest.permission.BLUETOOTH_CONNECT,     // Modern BT (API 31+)
-        Manifest.permission.READ_EXTERNAL_STORAGE, // <= Android 12
-        Manifest.permission.READ_MEDIA_IMAGES,     // Android 13+
-        Manifest.permission.READ_MEDIA_VIDEO       // Android 13+
-};
+    List<String> list = new ArrayList<>();
+
+    list.add(Manifest.permission.RECORD_AUDIO);
+    list.add(Manifest.permission.CAMERA);
+    list.add(Manifest.permission.ACCESS_FINE_LOCATION);
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        list.add(Manifest.permission.BLUETOOTH_CONNECT);
+    }
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        list.add(Manifest.permission.READ_MEDIA_IMAGES);
+        list.add(Manifest.permission.READ_MEDIA_VIDEO);
+    } else {
+        list.add(Manifest.permission.READ_EXTERNAL_STORAGE);
+    }
+
+    return list.toArray(new String[0]);
+}
 
     private TextView txtLogs;
     private ScrollView scroll;
@@ -601,9 +612,11 @@ private String getPermissionsTextEN() {
     // =========================================================
     private void requestNextPermission() {
 
-    while (permissionIndex < REQUIRED_PERMISSIONS.length) {
+String[] perms = getRequiredPermissions();
 
-        String p = REQUIRED_PERMISSIONS[permissionIndex];
+while (permissionIndex < perms.length) {
+
+    String p = perms[permissionIndex];
 
         if (ContextCompat.checkSelfPermission(this, p)
                 != PackageManager.PERMISSION_GRANTED) {

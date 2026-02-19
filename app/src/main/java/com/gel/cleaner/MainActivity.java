@@ -370,6 +370,40 @@ langSpinner.setAdapter(adapter);
 
 langSpinner.setSelection(AppLang.isGreek(this) ? 1 : 0, false);
 
+langSpinner.setOnItemSelectedListener(
+        new AdapterView.OnItemSelectedListener() {
+
+            @Override
+            public void onItemSelected(
+                    AdapterView<?> parent,
+                    View view,
+                    int position,
+                    long id
+            ) {
+
+                String code = (position == 0) ? "en" : "el";
+
+                if (!code.equals(LocaleHelper.getLang(MainActivity.this))) {
+
+                    LocaleHelper.set(MainActivity.this, code);
+
+                    updatePermissionsTexts();
+
+                    try { AppTTS.stop(); } catch (Throwable ignore) {}
+
+                    new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                        if (!AppTTS.isMuted(MainActivity.this)) {
+                            speakPermissionsTTS();
+                        }
+                    }, 120);
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {}
+        }
+);
+
 // ================= LANGUAGE BOX (GOLD BORDER) =================
 LinearLayout langBox = new LinearLayout(this);
 langBox.setOrientation(LinearLayout.VERTICAL);

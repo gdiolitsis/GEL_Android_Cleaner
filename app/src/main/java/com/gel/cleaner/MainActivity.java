@@ -170,7 +170,6 @@ if (!isWelcomeDisabled()) {
 
     showWelcomePopup();
     return;
-}
 
 } else {
 

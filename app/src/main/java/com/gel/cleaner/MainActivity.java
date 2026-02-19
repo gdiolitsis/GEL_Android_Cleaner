@@ -50,6 +50,9 @@ public class MainActivity extends GELAutoActivityHook
 private TextView welcomeTitle;
 private TextView welcomeMessage;
 
+private TextView permissionsTitle;
+private TextView permissionsMsg;
+
     private static final int REQ_PERMISSIONS = 1001;
     private static final String PREF_PERMISSIONS_DISABLED = "permissions_disabled";
     private boolean permissionsSkippedThisLaunch = false;
@@ -189,6 +192,21 @@ if (hasMissingPermissions()
         } catch (Throwable ignore) {}
     }
 
+private void updatePermissionsTexts() {
+
+    if (permissionsTitle == null || permissionsMsg == null) return;
+
+    boolean gr = AppLang.isGreek(this);
+
+    permissionsTitle.setText(
+            gr ? "ΑΠΑΙΤΟΥΜΕΝΕΣ ΑΔΕΙΕΣ" : "REQUIRED PERMISSIONS"
+    );
+
+    permissionsMsg.setText(
+            gr ? getPermissionsTextGR() : getPermissionsTextEN()
+    );
+}
+
     // ------------------------------------------------------------
     // MUTE ROW (UNIFIED - AppTTS HELPER)
     // ------------------------------------------------------------
@@ -309,6 +327,10 @@ msg.setLineSpacing(0f, 1.15f);
 msg.setPadding(dp(6), 0, dp(6), dp(18));
 root.addView(msg);
 
+// 🔥 IMPORTANT
+permissionsTitle = title;
+permissionsMsg   = msg;
+
 // ================= MUTE ROW =================
 root.addView(buildMuteRow());
 
@@ -345,38 +367,8 @@ ArrayAdapter<String> adapter =
 adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
 langSpinner.setAdapter(adapter);
-langSpinner.setSelection(AppLang.isGreek(this) ? 1 : 0, false);
 
-langSpinner.setOnItemSelectedListener(
-        new AdapterView.OnItemSelectedListener() {
-
-            @Override
-            public void onItemSelected(
-                    AdapterView<?> parent,
-                    View view,
-                    int position,
-                    long id
-            ) {
-                String code = (position == 0) ? "en" : "el";
-
-                if (!code.equals(LocaleHelper.getLang(MainActivity.this))) {
-
-                    LocaleHelper.set(MainActivity.this, code);
-
-                    updatePermissionsTexts();   // 👈 αλλάζει title + msg
-
-                    try { AppTTS.stop(); } catch (Throwable ignore) {}
-
-                    if (!AppTTS.isMuted(MainActivity.this)) {
-                        speakPermissionsTTS();  // 👈 μιλάει στη νέα γλώσσα
-                    }
-                }
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {}
-        }
-);
+langSpinner.setSelection(AppLang.isGreek(
 
 // ================= LANGUAGE BOX (GOLD BORDER) =================
 LinearLayout langBox = new LinearLayout(this);

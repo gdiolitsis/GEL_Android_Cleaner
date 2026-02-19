@@ -53,6 +53,8 @@ private TextView welcomeMessage;
 private TextView permissionsTitle;
 private TextView permissionsMsg;
 
+private boolean skipWelcomeThisLaunch = false;
+
     private static final int REQ_PERMISSIONS = 1001;
     private static final String PREF_PERMISSIONS_DISABLED = "permissions_disabled";
     private boolean permissionsSkippedThisLaunch = false;
@@ -102,7 +104,6 @@ protected void onResume() {
         txtLogs = findViewById(R.id.txtLogs);
         scroll  = findViewById(R.id.scrollRoot);
 
-        applySavedLanguage();
         setupLangButtons();
         setupDonate();
         setupButtons();
@@ -159,11 +160,11 @@ protected void onResume() {
         // =========================================================
         permissionIndex = 0;
 
-        boolean skipOnce = consumeSkipWelcomeOnce();
+        skipWelcomeThisLaunch = consumeSkipWelcomeOnce();
 
 if (hasMissingPermissions()
         && !isPermissionsDisabled()
-        && !skipOnce) {
+        && !skipWelcomeThisLaunch) {
 
     showPermissionsPopup();
 
@@ -625,10 +626,10 @@ private String getPermissionsTextEN() {
         permissionIndex++;
     }
 
-    if (!isWelcomeDisabled() && !consumeSkipWelcomeOnce()) {
-        showWelcomePopup();
-        return;
-    }
+    if (!isWelcomeDisabled() && !skipWelcomeThisLaunch) {
+    showWelcomePopup();
+    return;
+}
 
     // Τέλος flow
 }
@@ -1351,11 +1352,6 @@ syncReturnButtonText();
         LocaleHelper.set(this, code);
         setSkipWelcomeOnce(true);
         recreate();
-    }
-
-    private void applySavedLanguage() {
-        String code = LocaleHelper.getLang(this);
-        LocaleHelper.set(this, code);
     }
 
     // =========================================================

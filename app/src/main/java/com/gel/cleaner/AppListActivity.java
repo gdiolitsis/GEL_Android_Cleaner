@@ -82,6 +82,12 @@ public class AppListActivity extends GELAutoActivityHook {
     private final ArrayList<String> guidedQueue = new ArrayList<>();
     private int guidedIndex = 0;
 
+      @Override
+    protected void attachBaseContext(Context base) {
+        super.attachBaseContext(LocaleHelper.apply(base)
+    );
+}
+
     // ============================================================
     // ON CREATE
     // ============================================================

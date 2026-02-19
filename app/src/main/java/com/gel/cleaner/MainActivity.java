@@ -361,11 +361,16 @@ langSpinner.setOnItemSelectedListener(
 
                 if (!code.equals(LocaleHelper.getLang(MainActivity.this))) {
 
-    LocaleHelper.set(MainActivity.this, code);
+                    LocaleHelper.set(MainActivity.this, code);
 
-    updatePermissionsTexts();   // 👈 αλλάζει title + msg
-    speakPermissionsTTS();      // 👈 μιλάει στη νέα γλώσσα
-}
+                    updatePermissionsTexts();   // 👈 αλλάζει title + msg
+
+                    try { AppTTS.stop(); } catch (Throwable ignore) {}
+
+                    if (!AppTTS.isMuted(MainActivity.this)) {
+                        speakPermissionsTTS();  // 👈 μιλάει στη νέα γλώσσα
+                    }
+                }
             }
 
             @Override
@@ -902,17 +907,18 @@ langSpinner.setOnItemSelectedListener(
                 if (!newLang.equals(LocaleHelper.getLang(MainActivity.this))) {
 
                     LocaleHelper.set(MainActivity.this, newLang);
-setSkipWelcomeOnce(true);
+                    setSkipWelcomeOnce(true);
 
-try { AppTTS.stop(); } catch (Throwable ignore) {}
+                    try { AppTTS.stop(); } catch (Throwable ignore) {}
 
-// 🔥 Update texts
-updateWelcomeTexts();
+                    // 🔥 Update texts
+                    updateWelcomeTexts();
 
-// 🔥 Speak again στη νέα γλώσσα
-if (!AppTTS.isMuted(MainActivity.this)) {
-    speakWelcomeTTS();
-}
+                    // 🔥 Speak again στη νέα γλώσσα
+                    if (!AppTTS.isMuted(MainActivity.this)) {
+                        speakWelcomeTTS();
+                    }
+                }
             }
 
             @Override

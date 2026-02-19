@@ -160,13 +160,17 @@ protected void onResume() {
         // =========================================================
         permissionIndex = 0;
 
-        skipWelcomeThisLaunch = consumeSkipWelcomeOnce();
-
-if (hasMissingPermissions()
-        && !isPermissionsDisabled()
-        && !skipWelcomeThisLaunch) {
+if (hasMissingPermissions() && !isPermissionsDisabled()) {
 
     showPermissionsPopup();
+    return;
+}
+
+if (!isWelcomeDisabled()) {
+
+    showWelcomePopup();
+    return;
+}
 
 } else {
 
@@ -193,8 +197,13 @@ if (hasMissingPermissions()
         } catch (Throwable ignore) {}
     }
 
-private void updatePermissionsTexts() {
+private void hardRestart() {
+    Intent i = getIntent();
+    finish();
+    startActivity(i);
+}
 
+private void updatePermissionsTexts() {
     if (permissionsTitle == null || permissionsMsg == null) return;
 
     boolean gr = AppLang.isGreek(this);
@@ -374,31 +383,30 @@ langSpinner.setSelection(AppLang.isGreek(this) ? 1 : 0, false);
 langSpinner.setOnItemSelectedListener(
         new AdapterView.OnItemSelectedListener() {
 
-            @Override
-            public void onItemSelected(
-                    AdapterView<?> parent,
-                    View view,
-                    int position,
-                    long id
-            ) {
+          @Override
+public void onItemSelected(
+        AdapterView<?> parent,
+        View view,
+        int position,
+        long id
+) {
 
-                String code = (position == 0) ? "en" : "el";
+    String code = (position == 0) ? "en" : "el";
 
-                if (!code.equals(LocaleHelper.getLang(MainActivity.this))) {
+    if (!code.equals(LocaleHelper.getLang(MainActivity.this))) {
 
-                    LocaleHelper.set(MainActivity.this, code);
+        LocaleHelper.set(MainActivity.this, code);
+        setSkipWelcomeOnce(true);   // μην ξαναπετάξει welcome
 
-                    updatePermissionsTexts();
+        try { AppTTS.stop(); } catch (Throwable ignore) {}
 
-                    try { AppTTS.stop(); } catch (Throwable ignore) {}
+        d.dismiss();               // κλείσε popup
 
-                    new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                        if (!AppTTS.isMuted(MainActivity.this)) {
-                            speakPermissionsTTS();
-                        }
-                    }, 120);
-                }
-            }
+        Intent i = getIntent();    // hard restart
+        finish();
+        startActivity(i);
+    }
+}
 
             @Override
             public void onNothingSelected(AdapterView<?> parent) {}
@@ -807,23 +815,6 @@ private String getWelcomeTextGR() {
             "τη συσκευή Android σου ή μια άλλη συσκευή Apple.";
 }
 
-private void updateWelcomeTexts() {
-
-    boolean gr = AppLang.isGreek(this);
-
-    if (welcomeTitle != null) {
-        welcomeTitle.setText(
-                gr ? "ΚΑΛΩΣ ΗΡΘΑΤΕ" : "WELCOME"
-        );
-    }
-
-    if (welcomeMessage != null) {
-        welcomeMessage.setText(
-                gr ? getWelcomeTextGR() : getWelcomeTextEN()
-        );
-    }
-}
-
     // =========================================================
     // DIMEN
     // =========================================================
@@ -831,6 +822,7 @@ private void updateWelcomeTexts() {
         return (int) TypedValue.applyDimension(
                 TypedValue.COMPLEX_UNIT_DIP,
                 v,
+
                 getResources().getDisplayMetrics()
         );
     }
@@ -928,31 +920,30 @@ langSpinner.setSelection(AppLang.isGreek(this) ? 1 : 0);
 langSpinner.setOnItemSelectedListener(
         new AdapterView.OnItemSelectedListener() {
 
-            @Override
-            public void onItemSelected(
-                    AdapterView<?> parent,
-                    View view,
-                    int position,
-                    long id
-            ) {
-                String newLang = (position == 0) ? "en" : "el";
+        @Override
+public void onItemSelected(
+        AdapterView<?> parent,
+        View view,
+        int position,
+        long id
+) {
 
-                if (!newLang.equals(LocaleHelper.getLang(MainActivity.this))) {
+    String newLang = (position == 0) ? "en" : "el";
 
-                    LocaleHelper.set(MainActivity.this, newLang);
-                    setSkipWelcomeOnce(true);
+    if (!newLang.equals(LocaleHelper.getLang(MainActivity.this))) {
 
-                    try { AppTTS.stop(); } catch (Throwable ignore) {}
+        LocaleHelper.set(MainActivity.this, newLang);
+        setSkipWelcomeOnce(true);
 
-                    // 🔥 Update texts
-                    updateWelcomeTexts();
+        try { AppTTS.stop(); } catch (Throwable ignore) {}
 
-                    // 🔥 Speak again στη νέα γλώσσα
-                    if (!AppTTS.isMuted(MainActivity.this)) {
-                        speakWelcomeTTS();
-                    }
-                }
-            }
+        d.dismiss();   // κλείσε popup
+
+        Intent i = getIntent();
+        finish();
+        startActivity(i);
+    }
+}
 
             @Override
             public void onNothingSelected(AdapterView<?> parent) {}

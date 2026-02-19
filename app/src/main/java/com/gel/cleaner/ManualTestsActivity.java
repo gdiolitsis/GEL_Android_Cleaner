@@ -13876,499 +13876,395 @@ private String safeStr(String s) {
 return (s == null || s.trim().isEmpty()) ? "(no data)" : s;
 }
 
-// ============================================================
-// LAB 26 — Installed Apps Footprint & System Load Intelligence
-// FINAL — LOCKED — PRODUCTION-GRADE — HUMAN OUTPUT — ROOT AWARE
-//
-//  Honest diagnostics (no lies, no â€œmagicâ€)
-//  Normal vs Risk vs Critical verdicts
-//  Detects: app pressure, background-capable apps, permission load,
-//            redundancy, â€œheavy offendersâ€ (by capabilities),
-//            root-only leftovers (orphan data dirs), cache pressure signals
-//  Root-aware: deeper scan ONLY when rooted, otherwise safe-mode
+// GDiolitsis Engine Lab (GEL) — Author & Developer
+// LAB 26 — Installed Applications Impact Analysis (FINAL v2 • Full Bilingual • Engine-backed)
+// ⚠️ Reminder: Always return the final code ready for copy-paste (no extra explanations / no questions).
 
-// ============================================================
 private void lab26AppsFootprint() {
 
-appendHtml("<br>");  
-logLine();  
-logInfo("LAB 26 — Installed Apps Footprint & System Load");  
-logLine();  
+    appendHtml("<br>");
+    logLine();
 
-final PackageManager pm = getPackageManager();  
-final boolean rooted = isDeviceRooted(); 
+    final boolean gr = AppLang.isGreek(this);
 
-// -----------------------------
-// SAFE GUARDS
-// -----------------------------
-List<ApplicationInfo> apps;
-
-try {
-    apps = pm.getInstalledApplications(PackageManager.GET_META_DATA);
-} catch (Throwable t) {
+    logInfo(gr
+            ? "LAB 26 — Ανάλυση Επιπτώσεων Εγκατεστημένων Εφαρμογών"
+            : "LAB 26 — Installed Applications Impact Analysis");
 
     logLine();
-    logInfo("Applications footprint");
-    logLabelErrorValue(
-            "Status",
-            "Failed to read installed applications list"
-    );
-    logLabelWarnValue(
-            "Reason",
-            "PackageManager access error or permission restriction"
-    );
-    logLine();
-    return;
-}
 
-if (apps == null || apps.isEmpty()) {
+    final boolean rooted = isDeviceRooted();
 
-    logLine();
-    logInfo("Applications footprint");
-    logLabelWarnValue(
-            "Status",
-            "No applications returned"
-    );
-    logLabelWarnValue(
-            "Meaning",
-            "System returned empty app list (OEM / restricted environment)"
-    );
-    logLine();
-    return;
-}
-
-// -----------------------------  
-// COUNTERS / BUCKETS  
-// -----------------------------  
-int totalPkgs  = apps.size();  
-int userApps   = 0;  
-int systemApps = 0;  
-
-// signals (capability-based, not guesses)  
-int bgCapable = 0;            // has background-ish abilities  
-int permHeavy = 0;            // requests many dangerous-ish perms  
-int bootAware = 0;            // has BOOT_COMPLETED receiver declared  
-int adminLike = 0;            // device admin / accessibility / notif listener capabilities (best-effort)  
-int overlayLike = 0;          // SYSTEM_ALERT_WINDOW request  
-int vpnLike = 0;              // BIND_VPN_SERVICE  
-int locationLike = 0;         // ACCESS_FINE/COARSE  
-int micLike = 0;              // RECORD_AUDIO  
-int cameraLike = 0;           // CAMERA  
-int storageLike = 0;          // READ/WRITE external/media  
-int notifLike = 0;            // POST_NOTIFICATIONS (13+), notification listener (best-effort)  
-
-// redundancy buckets (simple + honest)  
-int cleanersLike = 0;  
-int launchersLike = 0;  
-int antivirusLike = 0;  
-int keyboardsLike = 0;  
-
-// top offenders (by capability score, not usage)  
-class Offender {  
-    String label;  
-    String pkg;  
-    int score;  
-    String tags;  
-}  
-ArrayList<Offender> offenders = new ArrayList<>();  
-
-// -----------------------------  
-// SCAN LOOP  
-// -----------------------------  
-for (ApplicationInfo ai : apps) {  
-
-    final boolean isSystem =  
-            (ai.flags & ApplicationInfo.FLAG_SYSTEM) != 0 ||  
-            (ai.flags & ApplicationInfo.FLAG_UPDATED_SYSTEM_APP) != 0;  
-
-    if (isSystem) systemApps++;  
-    else userApps++;  
-
-    final String pkg = (ai.packageName != null ? ai.packageName : "unknown");  
-    String labelStr;  
-    try {  
-        CharSequence cs = pm.getApplicationLabel(ai);  
-        labelStr = (cs != null ? cs.toString() : pkg);  
-    } catch (Throwable ignore) {  
-        labelStr = pkg;  
-    }  
-
-    // ---------  
-    // CAPABILITY SCORE (honest)  
-    // ---------  
-    int score = 0;  
-    StringBuilder tags = new StringBuilder();  
-
-    // Try read requested permissions  
-    String[] reqPerms = null;  
-    try {  
-        PackageInfo pi;  
-        if (android.os.Build.VERSION.SDK_INT >= 33) {  
-            pi = pm.getPackageInfo(pkg, PackageManager.PackageInfoFlags.of(PackageManager.GET_PERMISSIONS));  
-        } else {  
-            pi = pm.getPackageInfo(pkg, PackageManager.GET_PERMISSIONS);  
-        }  
-        if (pi != null) reqPerms = pi.requestedPermissions;  
-    } catch (Throwable ignore) {}  
-
-    // Count danger-is permissions (best-effort, honest)  
-    int dangerCount = 0;  
-    boolean hasBoot = false;  
-
-    boolean hasLocation = false;  
-    boolean hasMic = false;  
-    boolean hasCamera = false;  
-    boolean hasOverlay = false;  
-    boolean hasStorage = false;  
-    boolean hasVpnBind = false;  
-    boolean hasPostNotif = false;  
-
-    if (reqPerms != null) {  
-        for (String p : reqPerms) {  
-            if (p == null) continue;  
-
-            // BOOT receiver isn't a perm, but many apps declare RECEIVE_BOOT_COMPLETED as indicator  
-            if ("android.permission.RECEIVE_BOOT_COMPLETED".equals(p)) hasBoot = true;  
-
-            if ("android.permission.ACCESS_FINE_LOCATION".equals(p) ||  
-                "android.permission.ACCESS_COARSE_LOCATION".equals(p)) hasLocation = true;  
-
-            if ("android.permission.RECORD_AUDIO".equals(p)) hasMic = true;  
-            if ("android.permission.CAMERA".equals(p)) hasCamera = true;  
-
-            if ("android.permission.SYSTEM_ALERT_WINDOW".equals(p)) hasOverlay = true;  
-
-            if ("android.permission.READ_EXTERNAL_STORAGE".equals(p) ||  
-                "android.permission.WRITE_EXTERNAL_STORAGE".equals(p) ||  
-                "android.permission.READ_MEDIA_IMAGES".equals(p) ||  
-                "android.permission.READ_MEDIA_VIDEO".equals(p) ||  
-                "android.permission.READ_MEDIA_AUDIO".equals(p)) hasStorage = true;  
-
-            if ("android.permission.BIND_VPN_SERVICE".equals(p)) hasVpnBind = true;  
-
-            if ("android.permission.POST_NOTIFICATIONS".equals(p)) hasPostNotif = true;  
-
-            // danger-is set (not perfect, but honest enough to show permission load)  
-            if ("android.permission.READ_CONTACTS".equals(p) ||  
-                "android.permission.WRITE_CONTACTS".equals(p) ||  
-                "android.permission.READ_CALL_LOG".equals(p) ||  
-                "android.permission.WRITE_CALL_LOG".equals(p) ||  
-                "android.permission.READ_SMS".equals(p) ||  
-                "android.permission.SEND_SMS".equals(p) ||  
-                "android.permission.RECEIVE_SMS".equals(p) ||  
-                "android.permission.READ_PHONE_STATE".equals(p) ||  
-                "android.permission.CALL_PHONE".equals(p) ||  
-                "android.permission.ACCESS_FINE_LOCATION".equals(p) ||  
-                "android.permission.RECORD_AUDIO".equals(p) ||  
-                "android.permission.CAMERA".equals(p) ||  
-                "android.permission.BODY_SENSORS".equals(p) ||  
-                "android.permission.USE_SIP".equals(p) ||  
-                "android.permission.WRITE_SETTINGS".equals(p) ||  
-                "android.permission.SYSTEM_ALERT_WINDOW".equals(p)) {  
-                dangerCount++;  
-            }  
-        }  
-    }  
-
-    // scoring + tags (capability-based)  
-    if (dangerCount >= 8) { score += 12; tags.append("perm-heavy, "); }  
-    else if (dangerCount >= 5) { score += 8; tags.append("perm-heavy, "); }  
-    else if (dangerCount >= 3) { score += 4; }  
-
-    if (hasBoot) { score += 6; tags.append("boot-aware, "); }  
-    if (hasLocation) { score += 5; tags.append("location, "); }  
-    if (hasMic) { score += 5; tags.append("mic, "); }  
-    if (hasCamera) { score += 4; tags.append("camera, "); }  
-    if (hasOverlay) { score += 7; tags.append("overlay, "); }  
-    if (hasStorage) { score += 3; tags.append("storage, "); }  
-    if (hasVpnBind) { score += 6; tags.append("vpn, "); }  
-    if (hasPostNotif) { score += 2; tags.append("notifications, "); }  
-
-    // background-capable heuristic (honest: capability, not runtime)  
-    boolean bg =  
-            hasBoot || hasLocation || hasVpnBind || hasOverlay || hasPostNotif ||  
-            dangerCount >= 5;  
-
-    if (bg) bgCapable++;  
-
-    if (dangerCount >= 5) permHeavy++;  
-
-    if (hasBoot) bootAware++;  
-    if (hasOverlay) overlayLike++;  
-    if (hasVpnBind) vpnLike++;  
-    if (hasLocation) locationLike++;  
-    if (hasMic) micLike++;  
-    if (hasCamera) cameraLike++;  
-    if (hasStorage) storageLike++;  
-    if (hasPostNotif) notifLike++;  
-
-    // Redundancy (package-name heuristic only — honest)  
-    final String lowPkg = pkg.toLowerCase(Locale.US);  
-    if (lowPkg.contains("clean") || lowPkg.contains("booster") || lowPkg.contains("optimizer"))  
-        cleanersLike++;  
-    if (lowPkg.contains("launcher"))  
-        launchersLike++;  
-    if (lowPkg.contains("avast") || lowPkg.contains("kaspersky") || lowPkg.contains("avg") ||  
-        lowPkg.contains("bitdefender") || lowPkg.contains("eset") || lowPkg.contains("norton"))  
-        antivirusLike++;  
-    if (lowPkg.contains("keyboard") || lowPkg.contains("ime"))  
-        keyboardsLike++;
-
-// Store top offenders — USER APPS ONLY
-// Exclude system apps & Play Store related packages
-if (!isSystem &&
-score >= 14 &&
-!pkg.startsWith("com.android.") &&
-!pkg.startsWith("com.google.android.") &&
-!pkg.equals("com.android.vending")) {
-
-Offender o = new Offender();  
-o.label = labelStr;  
-o.pkg = pkg;  
-o.score = score;  
-
-String tgs = tags.toString().trim();  
-if (tgs.endsWith(",")) tgs = tgs.substring(0, tgs.length() - 1).trim();  
-o.tags = (tgs.length() > 0 ? tgs : "high-capability");  
-
-offenders.add(o);  
-    }  
-}  
-
-// -----------------------------  
-// SORT OFFENDERS (desc by score)  
-// -----------------------------  
-try {  
-    java.util.Collections.sort(offenders, (a, b) -> Integer.compare(b.score, a.score));  
-} catch (Throwable ignore) {}  
-
-// -----------------------------
-// HUMAN SUMMARY
-// -----------------------------
-logInfo("Installed packages");
-logLabelOkValue(
-        "Totals",
-        "All: " + totalPkgs +
-        " | User: " + userApps +
-        " | System: " + systemApps
-);
-
-// -----------------------------
-// PRESSURE METRICS (capability-based)
-// -----------------------------
-int pctBg   = (int) Math.round((bgCapable * 100.0) / Math.max(1, userApps));
-int pctPerm = (int) Math.round((permHeavy * 100.0) / Math.max(1, userApps));
-
-logInfo("System load indicators (capability-based)");
-logLabelOkValue(
-        "Background-capable",
-        bgCapable + " (" + pctBg + "%)"
-);
-logLabelOkValue(
-        "Permission-heavy",
-        permHeavy + " (" + pctPerm + "%)"
-);
-
-logInfo("Capability map (user apps)");
-logLabelOkValue(
-        "Boot / Location / Mic / Camera",
-        bootAware + " | " + locationLike + " | " + micLike + " | " + cameraLike
-);
-logLabelOkValue(
-        "Overlay / VPN / Storage / Notifications",
-        overlayLike + " | " + vpnLike + " | " + storageLike + " | " + notifLike
-);
-
-// -----------------------------
-// REDUNDANCY (honest)
-// -----------------------------
-logInfo("Redundancy signals (heuristic)");
-
-if (cleanersLike >= 2)
-    logLabelWarnValue("Cleaners / Optimizers", String.valueOf(cleanersLike));
-else
-    logLabelOkValue("Cleaners / Optimizers", String.valueOf(cleanersLike));
-
-if (launchersLike >= 2)
-    logLabelWarnValue("Launchers", String.valueOf(launchersLike));
-else
-    logLabelOkValue("Launchers", String.valueOf(launchersLike));
-
-if (antivirusLike >= 2)
-    logLabelWarnValue("Antivirus suites", String.valueOf(antivirusLike));
-else
-    logLabelOkValue("Antivirus suites", String.valueOf(antivirusLike));
-
-if (keyboardsLike >= 2)
-    logLabelWarnValue("Keyboards", String.valueOf(keyboardsLike));
-else
-    logLabelOkValue("Keyboards", String.valueOf(keyboardsLike));
-
-// -----------------------------
-// VERDICT LOGIC (unchanged)
-// -----------------------------
-boolean countHigh = userApps >= 120;
-boolean countMed  = userApps >= 85;
-
-boolean bgHigh = pctBg >= 45 || bgCapable >= 45;
-boolean bgMed  = pctBg >= 30 || bgCapable >= 30;
-
-boolean permHigh = pctPerm >= 25 || permHeavy >= 25;
-boolean permMed  = pctPerm >= 15 || permHeavy >= 15;
-
-boolean redundancy =
-        cleanersLike >= 2 ||
-        launchersLike >= 2 ||
-        antivirusLike >= 2;
-
-int riskPoints = 0;
-if (countHigh) riskPoints += 3;
-else if (countMed) riskPoints += 2;
-
-if (bgHigh) riskPoints += 3;
-else if (bgMed) riskPoints += 2;
-
-if (permHigh) riskPoints += 3;
-else if (permMed) riskPoints += 2;
-
-if (redundancy) riskPoints += 1;
-
-// -----------------------------
-// HUMAN VERDICT
-// -----------------------------
-logInfo("Human verdict");
-
-if (riskPoints >= 8) {
-
-    logLabelWarnValue("Pressure level", "HIGH");
-    logLabelWarnValue(
-            "Meaning",
-            "Many background / high-permission apps detected"
-    );
-    logLabelOkValue(
-            "Note",
-            "Common on power-user devices — NOT a hardware fault"
-    );
-    logLabelOkValue(
-            "Recommendation",
-            "Keep only actively used apps and reduce duplicates for extra smoothness"
-    );
-
-} else if (riskPoints >= 5) {
-
-    logLabelWarnValue("Pressure level", "MODERATE");
-    logLabelOkValue(
-            "Meaning",
-            "Several apps may run or react in background"
-    );
-    logLabelOkValue(
-            "Recommendation",
-            "Review redundant or background-heavy categories"
-    );
-
-} else {
-
-    logLabelOkValue("Pressure level", "NORMAL");
-    logLabelOkValue(
-            "Status",
-            "App footprint looks healthy for daily usage"
-    );
-}
-
-// -----------------------------
-// TOP OFFENDERS (capability-heavy)
-// -----------------------------
-if (!offenders.isEmpty()) {
-
-    logLine();
-    logInfo("Top capability-heavy user apps (flagged, not accused)");
-
-    int limit = Math.min(10, offenders.size());
-    for (int i = 0; i < limit; i++) {
-        Offender o = offenders.get(i);
-        logLabelWarnValue(
-                o.label,
-                o.tags
-        );
-        logInfo(o.pkg);
-    }
-
-    logLabelOkValue(
-            "Note",
-            "These apps are NOT confirmed as bad — they simply have strong capabilities"
-    );
-}
-
-// -----------------------------
-// ROOT AWARE INTELLIGENCE — LEFTOVERS
-// -----------------------------
-int orphanDirs = 0;
-long orphanBytes = 0L;
-
-if (rooted) {
-
-    logLine();
-    logInfo("Advanced (root-aware) inspection");
-
-    java.util.HashSet<String> installed = new java.util.HashSet<>();
-    for (ApplicationInfo ai : apps) {
-        if (ai != null && ai.packageName != null)
-            installed.add(ai.packageName);
-    }
-
+    // ============================================================
+    // ENGINE
+    // ============================================================
+    AppImpactEngine.ImpactResult r;
     try {
-        File base = new File("/data/user/0");
-        if (!base.exists() || !base.isDirectory())
-            base = new File("/data/data");
+        r = AppImpactEngine.analyze(this, rooted);
+    } catch (Throwable t) {
 
-        File[] dirs = base.listFiles();
-        if (dirs != null) {
-            for (File d : dirs) {
-                if (d == null || !d.isDirectory()) continue;
-                String name = d.getName();
-                if (name == null || name.length() < 3) continue;
-
-                if (!installed.contains(name)) {
-                    long sz = dirSizeBestEffortRoot(d);
-                    if (sz > (3L * 1024L * 1024L)) {
-                        orphanDirs++;
-                        orphanBytes += sz;
-                    }
-                }
-            }
-        }
-    } catch (Throwable ignore) {}
-
-    if (orphanDirs > 0) {
-        logLabelWarnValue("Leftover app data", orphanDirs + " folders");
-        logLabelOkValue("Approx size", humanBytes(orphanBytes));
-        logLabelOkValue(
-                "Meaning",
-                "Uninstalled apps may have left data behind (not dangerous)"
+        logLabelErrorValue(
+                gr ? "Κατάσταση" : "Status",
+                gr ? "Αποτυχία ανάλυσης εφαρμογών" : "Failed to analyze applications"
         );
+
+        logLabelWarnValue(
+                gr ? "Αιτία" : "Reason",
+                gr ? "Σφάλμα πρόσβασης PackageManager / UsageStats" : "PackageManager / UsageStats access error"
+        );
+
+        logLine();
+        appendHtml("<br>");
+        logOk(gr ? "Το Lab 26 ολοκληρώθηκε." : "Lab 26 finished.");
+        logLine();
+        return;
+    }
+
+    // ============================================================
+    // OVERVIEW
+    // ============================================================
+    logInfo(gr ? "Επισκόπηση εγκατεστημένων" : "Installed overview");
+
+    logLabelOkValue(
+            gr ? "Σύνολα" : "Totals",
+            (gr
+                    ? "Όλα: " + r.totalPkgs + " | Χρήστη: " + r.userApps + " | Συστήματος: " + r.systemApps
+                    : "All: " + r.totalPkgs + " | User: " + r.userApps + " | System: " + r.systemApps)
+    );
+
+    logLabelOkValue(
+            gr ? "Usage Access" : "Usage Access",
+            r.usageAccessOk
+                    ? (gr ? "Ενεργό (OK)" : "Enabled (OK)")
+                    : (gr ? "Ανενεργό (χωρίς foreground χρόνο)" : "Disabled (no foreground time)")
+    );
+
+    logLabelOkValue(
+            gr ? "Root-aware" : "Root-aware",
+            rooted
+                    ? (gr ? "Ναι (best-effort χωρίς su)" : "Yes (best-effort without su)")
+                    : (gr ? "Όχι" : "No")
+    );
+
+    // ============================================================
+    // CAPABILITY PRESSURE (HONEST)
+    // ============================================================
+    int userApps = Math.max(1, r.userApps);
+    int pctBg   = (int) Math.round((r.bgCapable * 100.0) / userApps);
+    int pctPerm = (int) Math.round((r.permHeavy * 100.0) / userApps);
+
+    logLine();
+    logInfo(gr ? "Ενδείξεις φόρτου (βάσει δυνατοτήτων)" : "Load indicators (capability-based)");
+
+    logLabelOkValue(
+            gr ? "Background-capable" : "Background-capable",
+            r.bgCapable + " (" + pctBg + "%)"
+    );
+
+    logLabelOkValue(
+            gr ? "Permission-heavy" : "Permission-heavy",
+            r.permHeavy + " (" + pctPerm + "%)"
+    );
+
+    logInfo(gr ? "Χάρτης δυνατοτήτων (user apps)" : "Capability map (user apps)");
+
+    logLabelOkValue(
+            gr ? "Boot / Location / Mic / Camera" : "Boot / Location / Mic / Camera",
+            r.bootAware + " | " + r.locationLike + " | " + r.micLike + " | " + r.cameraLike
+    );
+
+    logLabelOkValue(
+            gr ? "Overlay / VPN / Storage / Notifications" : "Overlay / VPN / Storage / Notifications",
+            r.overlayLike + " | " + r.vpnLike + " | " + r.storageLike + " | " + r.notifLike
+    );
+
+    // ============================================================
+    // REDUNDANCY (HONEST / HEURISTIC)
+    // ============================================================
+    logLine();
+    logInfo(gr ? "Ενδείξεις πλεονασμού (heuristic)" : "Redundancy signals (heuristic)");
+
+    if (r.cleanersLike >= 2) {
+        logLabelWarnValue(gr ? "Cleaners / Optimizers" : "Cleaners / Optimizers", String.valueOf(r.cleanersLike));
     } else {
+        logLabelOkValue(gr ? "Cleaners / Optimizers" : "Cleaners / Optimizers", String.valueOf(r.cleanersLike));
+    }
+
+    if (r.launchersLike >= 2) {
+        logLabelWarnValue(gr ? "Launchers" : "Launchers", String.valueOf(r.launchersLike));
+    } else {
+        logLabelOkValue(gr ? "Launchers" : "Launchers", String.valueOf(r.launchersLike));
+    }
+
+    if (r.antivirusLike >= 2) {
+        logLabelWarnValue(gr ? "Antivirus suites" : "Antivirus suites", String.valueOf(r.antivirusLike));
+    } else {
+        logLabelOkValue(gr ? "Antivirus suites" : "Antivirus suites", String.valueOf(r.antivirusLike));
+    }
+
+    if (r.keyboardsLike >= 2) {
+        logLabelWarnValue(gr ? "Keyboards" : "Keyboards", String.valueOf(r.keyboardsLike));
+    } else {
+        logLabelOkValue(gr ? "Keyboards" : "Keyboards", String.valueOf(r.keyboardsLike));
+    }
+
+    // ============================================================
+    // REAL DATA (HONEST) — SINCE BOOT (TrafficStats)
+    // ============================================================
+    logLine();
+    logInfo(gr ? "Κατανάλωση δεδομένων (έντιμο — από boot)" : "Data usage (honest — since boot)");
+
+    if (r.topDataConsumers != null && !r.topDataConsumers.isEmpty()) {
+
+        int limit = Math.min(10, r.topDataConsumers.size());
+        for (int i = 0; i < limit; i++) {
+
+            AppImpactEngine.AppScore a = r.topDataConsumers.get(i);
+            if (a == null) continue;
+
+            String val = humanBytes(a.dataBytesSinceBoot);
+
+            logLabelWarnValue(
+                    a.safeLabel(),
+                    (gr
+                            ? val + " (RX+TX από boot)"
+                            : val + " (RX+TX since boot)")
+            );
+
+            logInfo(a.pkg);
+        }
+
         logLabelOkValue(
-                "Leftover app data",
-                "No significant orphan folders detected"
+                gr ? "Σημείωση" : "Note",
+                gr
+                        ? "Αυτό δεν είναι «τελευταίες 24 ώρες». Είναι συνολικά από την εκκίνηση της συσκευής."
+                        : "This is NOT 'last 24 hours'. It is total since device boot."
+        );
+
+    } else {
+
+        logLabelWarnValue(
+                gr ? "Κατάσταση" : "Status",
+                gr ? "Δεν ήταν δυνατή η κατάταξη δεδομένων" : "Unable to rank data usage"
         );
     }
 
-    logLabelOkValue(
-            "Root-aware note",
-            "Results are best-effort and vendor dependent"
+    // ============================================================
+    // BATTERY EXPOSURE (HONEST HEURISTIC)
+    // ============================================================
+    logLine();
+    logInfo(gr ? "Έκθεση μπαταρίας (heuristic — χωρίς ψεύτικα mAh)" : "Battery exposure (heuristic — no fake mAh)");
+
+    if (!r.usageAccessOk) {
+
+        logLabelWarnValue(
+                gr ? "Περιορισμός" : "Limitation",
+                gr
+                        ? "Δεν υπάρχει Usage Access, άρα δεν έχουμε αξιόπιστο foreground χρόνο."
+                        : "Usage Access is off, so we do not have reliable foreground time."
+        );
+    }
+
+    if (r.topBatteryExposure != null && !r.topBatteryExposure.isEmpty()) {
+
+        int limit = Math.min(10, r.topBatteryExposure.size());
+        for (int i = 0; i < limit; i++) {
+
+            AppImpactEngine.AppScore a = r.topBatteryExposure.get(i);
+            if (a == null) continue;
+
+            long fgMin = a.fgMs24h / 60000L;
+
+            String detail =
+                    (gr
+                            ? "Σκορ: " + a.estImpactScore +
+                              " | FG: " + fgMin + "m/24h" +
+                              " | Δεδομένα: " + humanBytes(a.dataBytesSinceBoot) +
+                              " | Tags: " + a.tags
+                            : "Score: " + a.estImpactScore +
+                              " | FG: " + fgMin + "m/24h" +
+                              " | Data: " + humanBytes(a.dataBytesSinceBoot) +
+                              " | Tags: " + a.tags);
+
+            logLabelWarnValue(a.safeLabel(), detail);
+            logInfo(a.pkg);
+        }
+
+        logLabelOkValue(
+                gr ? "Σημείωση" : "Note",
+                gr
+                        ? "Το «Battery exposure» είναι εκτίμηση βάσει χρήσης/δυνατοτήτων/δεδομένων — όχι πραγματικό mAh."
+                        : "'Battery exposure' is an estimate based on usage/capabilities/data — not real mAh."
+        );
+
+    } else {
+
+        logLabelWarnValue(
+                gr ? "Κατάσταση" : "Status",
+                gr ? "Δεν ήταν δυνατή η κατάταξη έκθεσης μπαταρίας" : "Unable to rank battery exposure"
+        );
+    }
+
+    // ============================================================
+    // TOP CAPABILITY-HEAVY (FLAGGED, NOT ACCUSED)
+    // ============================================================
+    logLine();
+    logInfo(gr
+            ? "Top apps με «ισχυρές δυνατότητες» (flagged, όχι κατηγορούμενα)"
+            : "Top capability-heavy apps (flagged, not accused)");
+
+    if (r.topCapabilityHeavy != null && !r.topCapabilityHeavy.isEmpty()) {
+
+        int limit = Math.min(10, r.topCapabilityHeavy.size());
+        for (int i = 0; i < limit; i++) {
+
+            AppImpactEngine.AppScore a = r.topCapabilityHeavy.get(i);
+            if (a == null) continue;
+
+            String detail =
+                    (gr
+                            ? "Score: " + a.capabilityScore +
+                              " | Danger perms: " + a.dangerPermCount +
+                              " | Tags: " + a.tags
+                            : "Score: " + a.capabilityScore +
+                              " | Danger perms: " + a.dangerPermCount +
+                              " | Tags: " + a.tags);
+
+            logLabelWarnValue(a.safeLabel(), detail);
+            logInfo(a.pkg);
+        }
+
+        logLabelOkValue(
+                gr ? "Σημείωση" : "Note",
+                gr
+                        ? "Δεν σημαίνει ότι οι εφαρμογές είναι «κακές». Σημαίνει ότι έχουν δυνατότητες που αξίζουν έλεγχο."
+                        : "This does not mean apps are 'bad'. It means they have capabilities worth reviewing."
+        );
+    }
+
+    // ============================================================
+    // ROOT-AWARE LEFTOVERS (BEST-EFFORT)
+    // ============================================================
+    if (rooted) {
+
+        logLine();
+        logInfo(gr ? "Advanced (root-aware) inspection" : "Advanced (root-aware) inspection");
+
+        if (!r.orphan.attempted) {
+            logLabelWarnValue(
+                    gr ? "Κατάσταση" : "Status",
+                    gr ? "Δεν έγινε προσπάθεια ανίχνευσης leftovers" : "Leftovers scan not attempted"
+            );
+        } else if (r.orphan.orphanDirs > 0) {
+
+            logLabelWarnValue(
+                    gr ? "Leftover app data" : "Leftover app data",
+                    (gr
+                            ? r.orphan.orphanDirs + " φάκελοι"
+                            : r.orphan.orphanDirs + " folders")
+            );
+
+            logLabelOkValue(
+                    gr ? "Περίπου μέγεθος" : "Approx size",
+                    humanBytes(r.orphan.orphanBytes)
+            );
+
+            logLabelOkValue(
+                    gr ? "Σημαίνει" : "Meaning",
+                    gr
+                            ? "Πιθανό υπόλοιπο δεδομένων από απεγκατεστημένες εφαρμογές (όχι επικίνδυνο)."
+                            : "Possible leftover data from uninstalled apps (not dangerous)."
+            );
+
+        } else {
+
+            logLabelOkValue(
+                    gr ? "Leftover app data" : "Leftover app data",
+                    gr
+                            ? "Δεν βρέθηκαν σημαντικά orphan folders (ή δεν επιτράπηκε πρόσβαση)."
+                            : "No significant orphan folders found (or access was not permitted)."
+            );
+        }
+
+        logLabelOkValue(
+                gr ? "Root-aware note" : "Root-aware note",
+                gr
+                        ? "Best-effort. Χωρίς su, οι vendors μπορεί να μην επιτρέψουν ανάγνωση /data."
+                        : "Best-effort. Without su, vendors may block reading /data."
+        );
+    }
+
+    // ============================================================
+    // HUMAN VERDICT (SAME SPIRIT, FULL BILINGUAL)
+    // ============================================================
+    logLine();
+    logInfo(gr ? "Ανθρώπινο συμπέρασμα" : "Human verdict");
+
+    if (r.riskPoints >= 8) {
+
+        logLabelWarnValue(gr ? "Επίπεδο πίεσης" : "Pressure level", gr ? "ΥΨΗΛΟ" : "HIGH");
+
+        logLabelWarnValue(
+                gr ? "Σημαίνει" : "Meaning",
+                gr
+                        ? "Πολλές εφαρμογές με background/ισχυρά permissions — πιθανή επιβάρυνση σε απόδοση/μπαταρία."
+                        : "Many background/high-permission apps — possible performance/battery pressure."
+        );
+
+        logLabelOkValue(
+                gr ? "Σημείωση" : "Note",
+                gr
+                        ? "Συχνό σε power-user συσκευές — δεν είναι βλάβη hardware."
+                        : "Common on power-user devices — NOT a hardware fault."
+        );
+
+        logLabelOkValue(
+                gr ? "Πρόταση" : "Recommendation",
+                gr
+                        ? "Κράτα μόνο ό,τι χρησιμοποιείς. Μείωσε duplicates (cleaners/antivirus/launchers) για έξτρα ομαλότητα."
+                        : "Keep only what you use. Reduce duplicates (cleaners/antivirus/launchers) for extra smoothness."
+        );
+
+    } else if (r.riskPoints >= 5) {
+
+        logLabelWarnValue(gr ? "Επίπεδο πίεσης" : "Pressure level", gr ? "ΜΕΤΡΙΟ" : "MODERATE");
+
+        logLabelOkValue(
+                gr ? "Σημαίνει" : "Meaning",
+                gr
+                        ? "Αρκετές εφαρμογές μπορούν να τρέχουν ή να αντιδρούν στο background."
+                        : "Several apps may run or react in background."
+        );
+
+        logLabelOkValue(
+                gr ? "Πρόταση" : "Recommendation",
+                gr
+                        ? "Έλεγξε κατηγορίες με redundancy και τις κορυφαίες λίστες δεδομένων/έκθεσης."
+                        : "Review redundancy categories and the top data/exposure lists."
+        );
+
+    } else {
+
+        logLabelOkValue(gr ? "Επίπεδο πίεσης" : "Pressure level", gr ? "ΦΥΣΙΟΛΟΓΙΚΟ" : "NORMAL");
+
+        logLabelOkValue(
+                gr ? "Κατάσταση" : "Status",
+                gr
+                        ? "Το footprint εφαρμογών δείχνει υγιές για καθημερινή χρήση."
+                        : "App footprint looks healthy for daily usage."
+        );
+    }
+
+    // ============================================================
+    // SUMMARY FLAG (LOG)
+    // ============================================================
+    GELServiceLog.info(
+            "SUMMARY: APPS_IMPACT=" + (r.appsImpactHigh ? "HIGH" : "NORMAL")
     );
-}
 
-boolean appsImpactHigh =
-        orphanDirs > 0 || orphanBytes > (200L * 1024L * 1024L);
-
-GELServiceLog.info(
-        "SUMMARY: APPS_IMPACT=" + (appsImpactHigh ? "HIGH" : "NORMAL")
-);
-
-appendHtml("<br>");
-logOk("Lab 26 finished.");
-logLine();
+    appendHtml("<br>");
+    logOk(gr ? "Το Lab 26 ολοκληρώθηκε." : "Lab 26 finished.");
+    logLine();
 }
 
 // ============================================================

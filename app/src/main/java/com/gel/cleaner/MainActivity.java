@@ -368,7 +368,7 @@ adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
 langSpinner.setAdapter(adapter);
 
-langSpinner.setSelection(AppLang.isGreek(
+langSpinner.setSelection(AppLang.isGreek(this) ? 1 : 0, false);
 
 // ================= LANGUAGE BOX (GOLD BORDER) =================
 LinearLayout langBox = new LinearLayout(this);

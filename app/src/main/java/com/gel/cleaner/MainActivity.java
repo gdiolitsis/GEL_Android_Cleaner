@@ -53,11 +53,8 @@ private TextView welcomeMessage;
 private TextView permissionsTitle;
 private TextView permissionsMsg;
 
-private boolean skipWelcomeThisLaunch = false;
-
     private static final int REQ_PERMISSIONS = 1001;
     private static final String PREF_PERMISSIONS_DISABLED = "permissions_disabled";
-    private boolean permissionsSkippedThisLaunch = false;
     
     private final String[] REQUIRED_PERMISSIONS = new String[]{
 
@@ -161,20 +158,11 @@ protected void onResume() {
         permissionIndex = 0;
 
 if (hasMissingPermissions() && !isPermissionsDisabled()) {
-
     showPermissionsPopup();
     return;
 }
 
-if (!isWelcomeDisabled()) {
-
-    showWelcomePopup();
-    return;
-
-} else {
-
-    requestNextPermission();
-}
+requestNextPermission();
 
         // APPLY PLATFORM UI
         if ("apple".equals(getSavedPlatform())) {
@@ -395,7 +383,6 @@ public void onItemSelected(
     if (!code.equals(LocaleHelper.getLang(MainActivity.this))) {
 
  LocaleHelper.set(MainActivity.this, code);
-setSkipWelcomeOnce(true);
 AppTTS.stop();
 
 Intent i = getIntent();
@@ -539,16 +526,15 @@ d.setOnKeyListener((dialog, keyCode, event) -> {
 
         skipBtn.setOnClickListener(v -> {
 
-    permissionsSkippedThisLaunch = true;
-
     try { AppTTS.stop(); } catch (Throwable ignore) {}
 
     d.dismiss();
 
     // 🔥 Continue normal flow
-    if (!isWelcomeDisabled() && !consumeSkipWelcomeOnce()) {
-        showWelcomePopup();
-    }
+    if (!isWelcomeDisabled()) {
+    showWelcomePopup();
+    return;
+}
 });
 
         // -------------------------------------------------
@@ -630,7 +616,7 @@ private String getPermissionsTextEN() {
         permissionIndex++;
     }
 
-    if (!isWelcomeDisabled() && !consumeSkipWelcomeOnce()) {
+    if (!isWelcomeDisabled()) {
     showWelcomePopup();
     return;
 }
@@ -677,21 +663,7 @@ private String getPermissionsTextEN() {
                     : "RETURN TO APPLE MODE");
         }
     }
-
-    private void setSkipWelcomeOnce(boolean v) {
-        getSharedPreferences(PREFS, MODE_PRIVATE)
-                .edit()
-                .putBoolean("skip_welcome_once", v)
-                .apply();
-    }
-
-    private boolean consumeSkipWelcomeOnce() {
-        SharedPreferences sp = getSharedPreferences(PREFS, MODE_PRIVATE);
-        boolean v = sp.getBoolean("skip_welcome_once", false);
-        if (v) sp.edit().remove("skip_welcome_once").apply();
-        return v;
-    }
-
+            
     private boolean isWelcomeDisabled() {
         return getSharedPreferences(PREFS, MODE_PRIVATE)
                 .getBoolean("welcome_disabled", false);
@@ -929,7 +901,6 @@ langSpinner.setOnItemSelectedListener(
                 if (!newLang.equals(LocaleHelper.getLang(MainActivity.this))) {
 
                     LocaleHelper.set(MainActivity.this, newLang);
-                    setSkipWelcomeOnce(true);
 
                     try { AppTTS.stop(); } catch (Throwable ignore) {}
 
@@ -1211,9 +1182,6 @@ root.addView(appleBtn);
 
             savePlatform("android");
 
-            setSkipWelcomeOnce(true);
-            permissionsSkippedThisLaunch = true; 
-
             d.dismiss();
 
 if ("apple".equals(getSavedPlatform())) {
@@ -1235,9 +1203,6 @@ syncReturnButtonText();
             welcomeShown = false;
 
             savePlatform("apple");
-
-            setSkipWelcomeOnce(true);
-            permissionsSkippedThisLaunch = true;  
 
             d.dismiss();
             recreate();
@@ -1340,7 +1305,6 @@ syncReturnButtonText();
     if (code.equals(LocaleHelper.getLang(this))) return;
 
     LocaleHelper.set(this, code);
-    setSkipWelcomeOnce(true);
 
     Intent i = getIntent();
     finish();

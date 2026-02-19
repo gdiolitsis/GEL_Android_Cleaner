@@ -534,13 +534,17 @@ d.setOnKeyListener((dialog, keyCode, event) -> {
 
         skipBtn.setOnClickListener(v -> {
 
-            permissionsSkippedThisLaunch = true;
+    permissionsSkippedThisLaunch = true;
 
-            try { AppTTS.stop(); } catch (Throwable ignore) {}
+    try { AppTTS.stop(); } catch (Throwable ignore) {}
 
-            d.dismiss();
+    d.dismiss();
 
-        });
+    // 🔥 Continue normal flow
+    if (!isWelcomeDisabled() && !consumeSkipWelcomeOnce()) {
+        showWelcomePopup();
+    }
+});
 
         // -------------------------------------------------
         // SHOW
@@ -578,6 +582,7 @@ private String getPermissionsTextGR() {
             + "• Αποθήκευση,\n"
             + "• Τηλέφωνο,\n"
             + "• Μικρόφωνο.\n\n"
+            + "• Κάμερα.\n\n"
             + "Δεν γίνεται καταγραφή ή αποθήκευση προσωπικών δεδομένων.";
 }
 
@@ -593,6 +598,7 @@ private String getPermissionsTextEN() {
             + "• Storage,\n"
             + "• Phone,\n"
             + "• Microphone.\n\n"
+            + "• Camera.\n\n"
             + "No personal data is recorded or stored.";
 }
 

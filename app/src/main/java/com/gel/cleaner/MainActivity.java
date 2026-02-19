@@ -157,9 +157,12 @@ protected void onResume() {
         // =========================================================
         permissionIndex = 0;
 
-if (hasMissingPermissions() && !isPermissionsDisabled()) {
-    showPermissionsPopup();
-    return;
+if (savedInstanceState == null) {
+
+    if (hasMissingPermissions() && !isPermissionsDisabled()) {
+        showPermissionsPopup();
+        return;
+    }
 }
 
 requestNextPermission();
@@ -625,22 +628,27 @@ private String getPermissionsTextEN() {
 }
 
     @Override
-    public void onRequestPermissionsResult(
-            int requestCode,
-            String[] permissions,
-            int[] grantResults
-    ) {
-        super.onRequestPermissionsResult(
-                requestCode,
-                permissions,
-                grantResults
-        );
+public void onRequestPermissionsResult(
+        int requestCode,
+        String[] permissions,
+        int[] grantResults
+) {
+    super.onRequestPermissionsResult(
+            requestCode,
+            permissions,
+            grantResults
+    );
 
-        if (requestCode != REQ_PERMISSIONS) return;
+    if (requestCode != REQ_PERMISSIONS) return;
 
+    if (grantResults.length > 0) {
+
+        // Πηγαίνουμε στο επόμενο permission
         permissionIndex++;
         requestNextPermission();
+
     }
+}
 
     // =========================================================
     // HELPERS

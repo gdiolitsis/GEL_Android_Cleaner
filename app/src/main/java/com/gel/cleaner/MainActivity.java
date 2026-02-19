@@ -360,10 +360,12 @@ langSpinner.setOnItemSelectedListener(
                 String code = (position == 0) ? "en" : "el";
 
                 if (!code.equals(LocaleHelper.getLang(MainActivity.this))) {
-                    LocaleHelper.set(MainActivity.this, code);
-                    try { AppTTS.stop(); } catch (Throwable ignore) {}
-                    recreate();
-                }
+
+    LocaleHelper.set(MainActivity.this, code);
+
+    updatePermissionsTexts();   // 👈 αλλάζει title + msg
+    speakPermissionsTTS();      // 👈 μιλάει στη νέα γλώσσα
+}
             }
 
             @Override
@@ -904,9 +906,13 @@ setSkipWelcomeOnce(true);
 
 try { AppTTS.stop(); } catch (Throwable ignore) {}
 
-// 🔥 Smooth update – no recreate
+// 🔥 Update texts
 updateWelcomeTexts();
-                }
+
+// 🔥 Speak again στη νέα γλώσσα
+if (!AppTTS.isMuted(MainActivity.this)) {
+    speakWelcomeTTS();
+}
             }
 
             @Override

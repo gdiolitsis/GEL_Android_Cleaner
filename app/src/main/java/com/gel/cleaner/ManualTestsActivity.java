@@ -176,33 +176,22 @@ import java.util.Map;
 import java.util.Set;
 
 public class ManualTestsActivity extends AppCompatActivity {
-	
-private static final int REQ_LAB6_TOUCH = 6006;
-private static final int REQ_LAB6_COLOR = 6007;
 
-private static final int REQ_CORE_PERMS = 1001;
-private Runnable pendingAfterPermission = null;
+    // ============================================================
+    // PERMISSION ENGINE (UNIVERSAL)
+    // ============================================================
+    private static final int REQ_CORE_PERMS = 5000;
+    private Runnable pendingAfterPermission = null;
 
-private AlertDialog lab14RunningDialog;
-private static final int REQ_LAB13_BT_CONNECT = 1313;
+    private static final int REQ_LAB6_TOUCH = 6006;
+    private static final int REQ_LAB6_COLOR = 6007;
+    private static final int REQ_LAB13_BT_CONNECT = 1313;
 
-private AlertDialog activeDialog;
-private String pendingTtsText;
+    private AlertDialog lab14RunningDialog;
+    private AlertDialog activeDialog;
+    private String pendingTtsText;
 
-@Override
-protected void onResume() {
-    super.onResume();
-
-    if (activeDialog != null
-        && activeDialog.isShowing()
-        && pendingTtsText != null
-        && !AppTTS.isMuted(this)) {
-
-    AppTTS.ensureSpeak(this, pendingTtsText);
-}
-}
-
-private boolean lab6ProCanceled = false;
+    private boolean lab6ProCanceled = false;
 
 // ============================================================
 // LAB 8.1 — STATE (CLASS FIELDS)
@@ -843,6 +832,32 @@ if (!serviceLogInit) {
 }
 
 }  // onCreate ENDS HERE
+
+private boolean ensurePermissions(String[] permissions, Runnable afterGranted) {
+
+    List<String> missing = new ArrayList<>();
+
+    for (String p : permissions) {
+        if (ContextCompat.checkSelfPermission(this, p)
+                != PackageManager.PERMISSION_GRANTED) {
+            missing.add(p);
+        }
+    }
+
+    if (missing.isEmpty()) {
+        return true;
+    }
+
+    pendingAfterPermission = afterGranted;
+
+    ActivityCompat.requestPermissions(
+            this,
+            missing.toArray(new String[0]),
+            REQ_CORE_PERMS
+    );
+
+    return false;
+}
 
 @Override
 protected void onPause() {
@@ -7134,7 +7149,7 @@ root.addView(hint);
     yes.setAllCaps(false);
     yes.setTextColor(0xFFFFFFFF);
     GradientDrawable yesBg = new GradientDrawable();
-    yesBg.setColor(0xFF0F8A3B);
+    yesBg.setColor(0xFF0B5F3B);
     yesBg.setCornerRadius(dp(10));
     yesBg.setStroke(dp(3), 0xFFFFD700);
     yes.setBackground(yesBg);
@@ -7144,7 +7159,7 @@ root.addView(hint);
     no.setAllCaps(false);
     no.setTextColor(0xFFFFFFFF);
     GradientDrawable noBg = new GradientDrawable();
-    noBg.setColor(0xFF444444);
+    noBg.setColor(0xFF8B0000);
     noBg.setCornerRadius(dp(10));
     noBg.setStroke(dp(3), 0xFFFFD700);
     no.setBackground(noBg);
@@ -7705,7 +7720,7 @@ root.addView(msg);
         yes.setLayoutParams(lp);
 
         GradientDrawable yesBg = new GradientDrawable();
-        yesBg.setColor(0xFF0F8A3B);
+        yesBg.setColor(0xFF0B5F3B);
         yesBg.setCornerRadius(dp(10));
         yesBg.setStroke(dp(3), 0xFFFFD700);
         yes.setBackground(yesBg);
@@ -7717,7 +7732,7 @@ root.addView(msg);
         no.setLayoutParams(lp);
 
         GradientDrawable noBg = new GradientDrawable();
-        noBg.setColor(0xFF444444);
+        noBg.setColor(0xFF8B0000);
         noBg.setCornerRadius(dp(10));
         noBg.setStroke(dp(3), 0xFFFFD700);
         no.setBackground(noBg);
@@ -8335,40 +8350,41 @@ public void onRequestPermissionsResult(
 
     super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
-    // =====================================================
-    // CORE PERMISSIONS (MIC / LOCATION / etc)
-    // =====================================================
-    if (requestCode == REQ_CORE_PERMS) {
+    if (requestCode != REQ_CORE_PERMS) return;
 
-        boolean allGranted = true;
+    boolean allGranted = true;
 
+    if (grantResults.length == 0) {
+        allGranted = false;
+    } else {
         for (int r : grantResults) {
             if (r != PackageManager.PERMISSION_GRANTED) {
                 allGranted = false;
                 break;
             }
         }
+    }
 
-        if (allGranted) {
-            logOk("Core permissions granted.");
+    if (allGranted) {
 
-            if (pendingAfterPermission != null) {
-                Runnable r = pendingAfterPermission;
-                pendingAfterPermission = null;
-                r.run();
-            }
+        logOk("Required permissions granted.");
 
-        } else {
-
-            logLabelErrorValue(
-                    "Permissions",
-                    "Required permissions denied"
-            );
+        if (pendingAfterPermission != null) {
+            Runnable action = pendingAfterPermission;
             pendingAfterPermission = null;
+            action.run();
         }
 
-        return;
+    } else {
+
+        logLabelErrorValue(
+                "Permissions",
+                "Required permissions denied"
+        );
+
+        pendingAfterPermission = null;
     }
+}
 
     // =====================================================
     // LAB 13 — BLUETOOTH CONNECT PERMISSION

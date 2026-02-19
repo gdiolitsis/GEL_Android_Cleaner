@@ -575,7 +575,7 @@ private String getPermissionsTextGR() {
             + "• Τοποθεσία,\n"
             + "• Αποθήκευση,\n"
             + "• Τηλέφωνο,\n"
-            + "• Μικρόφωνο.\n\n"
+            + "• Μικρόφωνο.\n"
             + "• Κάμερα.\n\n"
             + "Δεν γίνεται καταγραφή ή αποθήκευση προσωπικών δεδομένων.";
 }
@@ -591,7 +591,7 @@ private String getPermissionsTextEN() {
             + "• Location,\n"
             + "• Storage,\n"
             + "• Phone,\n"
-            + "• Microphone.\n\n"
+            + "• Microphone.\n"
             + "• Camera.\n\n"
             + "No personal data is recorded or stored.";
 }

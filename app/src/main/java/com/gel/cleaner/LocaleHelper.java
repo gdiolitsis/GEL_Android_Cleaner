@@ -22,7 +22,6 @@ public final class LocaleHelper {
     // APPLY — called from attachBaseContext()
     // =========================================================
     public static Context apply(Context base) {
-
         String lang = getLang(base);
         return update(base, lang);
     }
@@ -34,8 +33,9 @@ public final class LocaleHelper {
 
         if (context == null) return;
 
-        if (!"el".equals(code)) {
-            code = "en"; // safety fallback
+        // accept ONLY "el" or "en"
+        if (!"el".equals(code) && !"en".equals(code)) {
+            code = "en";
         }
 
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
@@ -60,15 +60,17 @@ public final class LocaleHelper {
     // GET CURRENT LOCALE OBJECT
     // =========================================================
     public static Locale getLocale(Context context) {
-
-        String code = getLang(context);
-        return new Locale(code);
+        return new Locale(getLang(context));
     }
 
     // =========================================================
     // INTERNAL UPDATE
     // =========================================================
     private static Context update(Context context, String code) {
+
+        if (!"el".equals(code) && !"en".equals(code)) {
+            code = "en";
+        }
 
         Locale locale = new Locale(code);
         Locale.setDefault(locale);
@@ -78,6 +80,7 @@ public final class LocaleHelper {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             config.setLocale(locale);
+            config.setLayoutDirection(locale);
             return context.createConfigurationContext(config);
         } else {
             config.locale = locale;

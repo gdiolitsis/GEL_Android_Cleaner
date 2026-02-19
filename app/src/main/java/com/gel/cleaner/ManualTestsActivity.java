@@ -8350,45 +8350,50 @@ public void onRequestPermissionsResult(
 
     super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
-    if (requestCode != REQ_CORE_PERMS) return;
+    // =========================
+    // CORE PERMISSIONS
+    // =========================
+    if (requestCode == REQ_CORE_PERMS) {
 
-    boolean allGranted = true;
+        boolean allGranted = true;
 
-    if (grantResults.length == 0) {
-        allGranted = false;
-    } else {
-        for (int r : grantResults) {
-            if (r != PackageManager.PERMISSION_GRANTED) {
-                allGranted = false;
-                break;
+        if (grantResults.length == 0) {
+            allGranted = false;
+        } else {
+            for (int r : grantResults) {
+                if (r != PackageManager.PERMISSION_GRANTED) {
+                    allGranted = false;
+                    break;
+                }
             }
         }
-    }
 
-    if (allGranted) {
+        if (allGranted) {
 
-        logOk("Required permissions granted.");
+            logOk("Required permissions granted.");
 
-        if (pendingAfterPermission != null) {
-            Runnable action = pendingAfterPermission;
+            if (pendingAfterPermission != null) {
+                Runnable action = pendingAfterPermission;
+                pendingAfterPermission = null;
+                action.run();
+            }
+
+        } else {
+
+            logLabelErrorValue(
+                    "Permissions",
+                    "Required permissions denied"
+            );
+
             pendingAfterPermission = null;
-            action.run();
         }
 
-    } else {
-
-        logLabelErrorValue(
-                "Permissions",
-                "Required permissions denied"
-        );
-
-        pendingAfterPermission = null;
+        return; // ✅ σταματά εδώ ΜΟΝΟ για CORE
     }
-}
 
-    // =====================================================
-    // LAB 13 — BLUETOOTH CONNECT PERMISSION
-    // =====================================================
+    // =========================
+    // LAB 13 BLUETOOTH
+    // =========================
     if (requestCode == REQ_LAB13_BT_CONNECT) {
 
         if (grantResults.length > 0 &&

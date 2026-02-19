@@ -1348,11 +1348,16 @@ syncReturnButtonText();
     }
 
     private void changeLang(String code) {
-        if (code.equals(LocaleHelper.getLang(this))) return;
-        LocaleHelper.set(this, code);
-        setSkipWelcomeOnce(true);
-        recreate();
-    }
+
+    if (code.equals(LocaleHelper.getLang(this))) return;
+
+    LocaleHelper.set(this, code);
+    setSkipWelcomeOnce(true);
+
+    Intent i = getIntent();
+    finish();
+    startActivity(i);
+}
 
     // =========================================================
     // DONATE

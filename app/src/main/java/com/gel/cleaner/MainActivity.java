@@ -594,25 +594,11 @@ return "The application requires permissions to perform "
 }
 
 private String[] getRequiredPermissions() {
-
-List < String > list = new ArrayList<>();
-
-list.add(Manifest.permission.RECORD_AUDIO);
-list.add(Manifest.permission.CAMERA);
-list.add(Manifest.permission.ACCESS_FINE_LOCATION);
-
-if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-list.add(Manifest.permission.BLUETOOTH_CONNECT);
-}
-
-if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-list.add(Manifest.permission.READ_MEDIA_IMAGES);
-list.add(Manifest.permission.READ_MEDIA_VIDEO);
-} else {
-list.add(Manifest.permission.READ_EXTERNAL_STORAGE);
-}
-
-return list.toArray(new String[0]);
+    return new String[]{
+            Manifest.permission.RECORD_AUDIO,
+            Manifest.permission.CAMERA,
+            Manifest.permission.ACCESS_FINE_LOCATION
+    };
 }
 
 // =========================================================

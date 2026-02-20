@@ -5,7 +5,7 @@
 // NOTE (GEL RULE): Whole file ready for copy-paste.
 // IMPORTANT (Lab 11 SSID SAFE MODE):
 //   Add in AndroidManifest.xml:
-//     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
+//     <uses-permission android:name=".permission.ACCESS_WIFI_STATE"/>
 //     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
 //     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
 //     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
@@ -278,6 +278,33 @@ private SharedPreferences p;
 // GEL DIAG — GLOBAL PREFS (CLASS LEVEL)
 // ============================================================
 private SharedPreferences prefs;
+
+    // PERMISSION ENGINE (UNIVERSAL)
+    // ============================================================
+    private static final int REQ_CORE_PERMS = 5000;
+    private Runnable pendingAfterPermission = null;
+
+    private static final int REQ_LAB6_TOUCH = 6006;
+    private static final int REQ_LAB6_COLOR = 6007;
+    private static final int REQ_LAB13_BT_CONNECT = 1313;
+
+    private AlertDialog lab14RunningDialog;
+    private AlertDialog activeDialog;
+    private String pendingTtsText;
+
+    private boolean lab6ProCanceled = false; permission)
+            != PackageManager.PERMISSION_GRANTED) {
+
+        ActivityCompat.requestPermissions(
+                this,
+                new String[]{permission},
+                code
+        );
+        return false;
+    }
+
+    return true;
+}
 
 // ============================================================
 // LAB 3 — STATE (CLASS LEVEL)
@@ -6608,16 +6635,17 @@ private void lab8CameraHardwareCheck() {
 
     // Permission check (Android 6+). (You said: strict, no lies.)
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-        if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-            logWarn("Camera permission not granted.");
-            logWarn("Grant CAMERA permission and re-run Lab 8.");
-            appendHtml("<br>");
-            logOk("Lab 8 finished.");
-            logLine();
-            enableSingleExportButton();
-            return;
-        }
+
+    if (checkSelfPermission(Manifest.permission.CAMERA)
+            != PackageManager.PERMISSION_GRANTED) {
+
+        requestPermissions(
+                new String[]{Manifest.permission.CAMERA},
+                2001
+        );
+        return;
     }
+}
 
     // ------------------------------------------------------------
     // Collect camera IDs
@@ -8198,60 +8226,55 @@ private void lab10WifiConnectivityCheck() {
         return;
     }
 
-    // ------------------------------------------------------------
-    // 1) Location permission (SSID policy)
-    // ------------------------------------------------------------
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+// ------------------------------------------------------------
+// 1) Location permission (SSID policy)
+// ------------------------------------------------------------
+if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 
-        boolean fineGranted =
-                ContextCompat.checkSelfPermission(
-                        this, Manifest.permission.ACCESS_FINE_LOCATION)
-                        == PackageManager.PERMISSION_GRANTED;
+    boolean fineGranted =
+            ContextCompat.checkSelfPermission(
+                    this, Manifest.permission.ACCESS_FINE_LOCATION)
+                    == PackageManager.PERMISSION_GRANTED;
 
-        boolean coarseGranted =
-                ContextCompat.checkSelfPermission(
-                        this, Manifest.permission.ACCESS_COARSE_LOCATION)
-                        == PackageManager.PERMISSION_GRANTED;
+    boolean coarseGranted =
+            ContextCompat.checkSelfPermission(
+                    this, Manifest.permission.ACCESS_COARSE_LOCATION)
+                    == PackageManager.PERMISSION_GRANTED;
 
-        if (!fineGranted && !coarseGranted) {
+    if (!fineGranted && !coarseGranted) {
 
-            logWarn("Location permission required to read SSID/BSSID.");
-            pendingLab10AfterPermission =
-                    this::lab10WifiConnectivityCheck;
+        pendingLab10AfterPermission =
+                this::lab10WifiConnectivityCheck;
 
-            ActivityCompat.requestPermissions(
-                    this,
-                    new String[]{
-                            Manifest.permission.ACCESS_FINE_LOCATION,
-                            Manifest.permission.ACCESS_COARSE_LOCATION
-                    },
-                    REQ_LOCATION_LAB10
-            );
+        ActivityCompat.requestPermissions(
+                this,
+                new String[]{
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.ACCESS_COARSE_LOCATION
+                },
+                REQ_LOCATION_LAB10
+        );
 
-            logOk("Grant permission, then Lab 10 will auto-retry.");
-            return;
-        }
-
-        try {
-            LocationManager lm =
-                    (LocationManager) getSystemService(LOCATION_SERVICE);
-
-            boolean gpsOn =
-                    lm != null &&
-                    (lm.isProviderEnabled(LocationManager.GPS_PROVIDER)
-                     || lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER));
-
-            if (!gpsOn) {
-                logWarn("Location services are OFF. SSID may be UNKNOWN.");
-                startActivity(
-                        new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
-                return;
-            }
-
-        } catch (Exception e) {
-            logWarn("Location services check failed: " + e.getMessage());
-        }
+        return;
     }
+
+    try {
+        LocationManager lm =
+                (LocationManager) getSystemService(LOCATION_SERVICE);
+
+        boolean gpsOn =
+                lm != null &&
+                (lm.isProviderEnabled(LocationManager.GPS_PROVIDER)
+                 || lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER));
+
+        if (!gpsOn) {
+            logWarn("Location services are OFF. SSID may be UNKNOWN.");
+        }
+
+    } catch (Exception e) {
+        logWarn("Location services check failed: " + e.getMessage());
+    }
+}
 
 // ------------------------------------------------------------
 // 2) Wi-Fi snapshot
@@ -8341,7 +8364,6 @@ try {
     // ------------------------------------------------------------
     runWifiDeepScan(wm);
 }
-
 @Override
 public void onRequestPermissionsResult(
         int requestCode,
@@ -8392,27 +8414,62 @@ public void onRequestPermissionsResult(
     }
 
     // =========================
-    // LAB 13 BLUETOOTH
+    // LAB 10 - LOCATION (WiFi SSID)
     // =========================
-    if (requestCode == REQ_LAB13_BT_CONNECT) {
+    if (requestCode == REQ_LOCATION_LAB10) {
 
-        if (grantResults.length > 0 &&
-            grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+        boolean granted =
+                grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED;
 
-            lab13Running = true;
+        if (granted && pendingLab10AfterPermission != null) {
+
+            Runnable action = pendingLab10AfterPermission;
+            pendingLab10AfterPermission = null;
+            action.run();
 
         } else {
 
-            lab13Running = false;
+            logLabelErrorValue(
+                    "Location Permission",
+                    "Denied"
+            );
 
-            logWarn("BLUETOOTH_CONNECT permission denied.");
-            logWarn("External Bluetooth device monitoring skipped.");
-
-            appendHtml("<br>");
-            logOk("Lab 13 finished.");
-            logLine();
+            pendingLab10AfterPermission = null;
         }
+
+        return;
     }
+}
+
+// =========================
+// LAB 13 BLUETOOTH
+// =========================
+if (requestCode == REQ_LAB13_BT_CONNECT) {
+
+    if (grantResults.length > 0 &&
+        grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+        lab13Running = true;
+
+        // 🔁 Επανεκκίνηση Lab 13 μετά το permission
+        lab13BluetoothCheck();
+
+    } else {
+
+        lab13Running = false;
+
+        logLabelErrorValue(
+                "Bluetooth Permission",
+                "Denied"
+        );
+
+        appendHtml("<br>");
+        logOk("Lab 13 finished.");
+        logLine();
+    }
+
+    return;
 }
 
 // ============================================================
@@ -8540,25 +8597,25 @@ try {
     PackageManager pm2 = getPackageManager();
     ApplicationInfo ai = getApplicationInfo();
 
-    // ----------------------------------------------------
-    // INTERNET PERMISSION
-    // ----------------------------------------------------
-    boolean hasInternetPerm =
-            pm2.checkPermission(
-                    Manifest.permission.INTERNET,
-                    ai.packageName
-            ) == PackageManager.PERMISSION_GRANTED;
+// ----------------------------------------------------
+// INTERNET PERMISSION
+// ----------------------------------------------------
+boolean hasInternetPerm =
+        pm2.checkPermission(
+                Manifest.permission.INTERNET,
+                ai.packageName
+        ) == PackageManager.PERMISSION_GRANTED;
 
-    if (hasInternetPerm)
-        logLabelWarnValue(
-                "Internet capability",
-                "INTERNET permission present"
-        );
-    else
-        logLabelOkValue(
-                "Internet capability",
-                "No INTERNET permission detected"
-        );
+if (hasInternetPerm)
+    logLabelValue(
+            "Internet capability",
+            "INTERNET permission declared"
+    );
+else
+    logLabelValue(
+            "Internet capability",
+            "No INTERNET permission declared"
+    );
 
     // ----------------------------------------------------
     // CLEARTEXT TRAFFIC
@@ -8584,25 +8641,25 @@ try {
                 "Not allowed (encrypted traffic enforced)"
         );
 
-    // ----------------------------------------------------
-    // BACKGROUND NETWORK (BOOT)
-    // ----------------------------------------------------
-    boolean bgPossible =
-            pm2.checkPermission(
-                    Manifest.permission.RECEIVE_BOOT_COMPLETED,
-                    ai.packageName
-            ) == PackageManager.PERMISSION_GRANTED;
+// ----------------------------------------------------
+// BACKGROUND NETWORK (BOOT)
+// ----------------------------------------------------
+boolean bgPossible =
+        pm2.checkPermission(
+                Manifest.permission.RECEIVE_BOOT_COMPLETED,
+                ai.packageName
+        ) == PackageManager.PERMISSION_GRANTED;
 
-    if (bgPossible)
-        logLabelWarnValue(
-                "Background network",
-                "Possible after boot"
-        );
-    else
-        logLabelOkValue(
-                "Background network",
-                "No boot-time network capability"
-        );
+if (bgPossible)
+    logLabelValue(
+            "Background network capability",
+            "RECEIVE_BOOT_COMPLETED declared"
+    );
+else
+    logLabelValue(
+            "Background network capability",
+            "No boot-time receiver declared"
+    );
 
     // ----------------------------------------------------
     // SUMMARY
@@ -9377,35 +9434,22 @@ new Handler(Looper.getMainLooper()).postDelayed(() -> {
 if (Build.VERSION.SDK_INT >= 31 &&
         checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT)
                 != PackageManager.PERMISSION_GRANTED) {
-                    
-    final String permText =
-            gr
-                    ? "Απαιτείται άδεια Bluetooth.\n\n"
-                      + "Παραχώρησε την άδεια, για να συνεχιστεί το τεστ."
-                    : "Bluetooth permission is required.\n\n"
-                      + "Please grant the permission to continue the test.";
-
-    if (lab13StatusText != null) {
-        lab13StatusText.setText(
-                gr
-                        ? "Απαιτείται άδεια Bluetooth."
-                        : "Bluetooth permission required."
-        );
-    }
-
-    // TTS — μία φορά, αν δεν είναι muted
-    new Handler(Looper.getMainLooper()).postDelayed(() -> {
-        if (!AppTTS.isMuted(this)) {
-            AppTTS.ensureSpeak(this, permText);
-        }
-    }, 120);
 
     requestPermissions(
-            new String[]{ Manifest.permission.BLUETOOTH_CONNECT },
+            new String[]{Manifest.permission.BLUETOOTH_CONNECT},
             REQ_LAB13_BT_CONNECT
     );
 
     return;
+}
+
+// ANDROID 12+ BLUETOOTH PERMISSION
+requestPermissions(
+        new String[]{Manifest.permission.BLUETOOTH_CONNECT},
+        REQ_LAB13_BT_CONNECT
+);
+
+return;
 }
 
     // ------------------------------------------------------------

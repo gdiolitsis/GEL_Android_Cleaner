@@ -40,13 +40,13 @@ import java.util.Map;
 import java.util.LinkedHashMap;
 
 public class MainActivity extends GELAutoActivityHook
-        implements GELCleaner.LogCallback {
+implements GELCleaner.LogCallback {
 
-    // =========================================================
-    // STATE
-    // =========================================================
-    private boolean welcomeShown = false;
-    private int permissionIndex = 0;
+// =========================================================
+// STATE
+// =========================================================
+private boolean welcomeShown = false;
+private int permissionIndex = 0;
 
 private TextView welcomeTitle;
 private TextView welcomeMessage;
@@ -54,249 +54,254 @@ private TextView welcomeMessage;
 private TextView permissionsTitle;
 private TextView permissionsMsg;
 
-    private static final int REQ_PERMISSIONS = 1001;
-    private static final String PREF_PERMISSIONS_DISABLED = "permissions_disabled";
-    
-    private final String[] REQUIRED_PERMISSIONS = new String[]{
+private static final int REQ_PERMISSIONS = 1001;
+private static final String PREF_PERMISSIONS_DISABLED = "permissions_disabled";
 
-        Manifest.permission.RECORD_AUDIO,          // Mic Labs
-        Manifest.permission.CAMERA,                // Camera Labs
-        Manifest.permission.ACCESS_FINE_LOCATION,  // WiFi / BLE / sensors
-        Manifest.permission.BLUETOOTH_CONNECT,     // Modern BT (API 31+)
-        Manifest.permission.READ_EXTERNAL_STORAGE, // <= Android 12
-        Manifest.permission.READ_MEDIA_IMAGES,     // Android 13+
-        Manifest.permission.READ_MEDIA_VIDEO       // Android 13+
+private final String[] REQUIRED_PERMISSIONS = new String[]{
+
+Manifest.permission.RECORD_AUDIO, // Mic Labs
+Manifest.permission.CAMERA, // Camera Labs
+Manifest.permission.ACCESS_FINE_LOCATION, // WiFi / BLE / sensors
+Manifest.permission.BLUETOOTH_CONNECT, // Modern BT (API 31+)
+Manifest.permission.READ_EXTERNAL_STORAGE, // <= Android 12
+Manifest.permission.READ_MEDIA_IMAGES, // Android 13+
+Manifest.permission.READ_MEDIA_VIDEO // Android 13+
 };
 
-    private TextView txtLogs;
-    private ScrollView scroll;
+private TextView txtLogs;
+private ScrollView scroll;
 
-    // =========================================================
-    // PREFS
-    // =========================================================
-    private static final String PREFS = "gel_prefs";
-    private static final String KEY_PLATFORM = "platform_mode";
+// =========================================================
+// PREFS
+// =========================================================
+private static final String PREFS = "gel_prefs";
+private static final String KEY_PLATFORM = "platform_mode";
 
-    // =========================================================
-    // LOCALE
-    // =========================================================
-    @Override
-    protected void attachBaseContext(Context base) {
-        super.attachBaseContext(LocaleHelper.apply(base));
-    }
+// =========================================================
+// LOCALE
+// =========================================================
+@Override
+protected void attachBaseContext(Context base) {
+super.attachBaseContext(LocaleHelper.apply(base));
+}
 
 @Override
 protected void onResume() {
-    super.onResume();
+super.onResume();
 }
 
-    // =========================================================
-    // ON CREATE
-    // =========================================================
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+// =========================================================
+// ON CREATE
+// =========================================================
+@Override
+protected void onCreate(Bundle savedInstanceState) {
+super.onCreate(savedInstanceState);
+setContentView(R.layout.activity_main);
 
-        // BASIC BINDS
-        txtLogs = findViewById(R.id.txtLogs);
-        scroll  = findViewById(R.id.scrollRoot);
+// BASIC BINDS
+txtLogs = findViewById(R.id.txtLogs);
+scroll = findViewById(R.id.scrollRoot);
 
-        setupLangButtons();
-        setupDonate();
-        setupButtons();
+setupLangButtons();
+setupDonate();
+setupButtons();
 
-        // RETURN BUTTON
-        Button btnReturnAndroid = findViewById(R.id.btnReturnAndroid);
-        if (btnReturnAndroid != null) {
-            btnReturnAndroid.setSaveEnabled(false);
-            btnReturnAndroid.setOnClickListener(v -> {
-                if ("apple".equals(getSavedPlatform())) {
-                    savePlatform("android");
-                    applyAndroidModeUI();
-                } else {
-                    savePlatform("apple");
-                    applyAppleModeUI();
-                }
-                syncReturnButtonText();
-            });
-        }
+// RETURN BUTTON
+Button btnReturnAndroid = findViewById(R.id.btnReturnAndroid);
+if (btnReturnAndroid != null) {
+btnReturnAndroid.setSaveEnabled(false);
+btnReturnAndroid.setOnClickListener(v -> {
+if ("apple".equals(getSavedPlatform())) {
+savePlatform("android");
+applyAndroidModeUI();
+} else {
+savePlatform("apple");
+applyAppleModeUI();
+}
+syncReturnButtonText();
+});
+}
 
-        Button btnUninstall = findViewById(R.id.btnAppManager);
+Button btnUninstall = findViewById(R.id.btnAppManager);
 
-        if (btnUninstall != null) {
-            btnUninstall.setOnClickListener(v -> {
+if (btnUninstall != null) {
+btnUninstall.setOnClickListener(v -> {
 
-                Intent i = new Intent(this, AppListActivity.class);
-                i.putExtra("mode", "uninstall");
-                startActivity(i);
+Intent i = new Intent(this, AppListActivity.class);
+i.putExtra("mode", "uninstall");
+startActivity(i);
 
-            });
-        }
+});
+}
 
-        View appManager = findViewById(R.id.btnAppManager);
+View appManager = findViewById(R.id.btnAppManager);
 
-        if (appManager != null) {
+if (appManager != null) {
 
-            appManager.setOnClickListener(v -> {
-                try {
+appManager.setOnClickListener(v -> {
+try {
 
-                    Intent i = new Intent(this, AppListActivity.class);
-                    i.putExtra("mode", "uninstall");  
-                    startActivity(i);
+Intent i = new Intent(this, AppListActivity.class);
+i.putExtra("mode", "uninstall");
+startActivity(i);
 
-                } catch (Exception e) {
-                    Toast.makeText(this,
-                            "Cannot open App Manager",
-                            Toast.LENGTH_SHORT).show();
-                }
-            });
-        }
+} catch (Exception e) {
+Toast.makeText(this,
+"Cannot open App Manager",
+Toast.LENGTH_SHORT).show();
+}
+});
+}
 
-        // =========================================================
-        // ENTRY FLOW (FIXED)
-        // =========================================================
-        permissionIndex = 0;
+// =========================================================
+// ENTRY FLOW (FIXED)
+// =========================================================
+permissionIndex = 0;
 
-if (savedInstanceState == null) {
-
-    if (hasMissingPermissions() && !isPermissionsDisabled()) {
-        showPermissionsPopup();
-        return;
-    }
+if (hasMissingPermissions() && !isPermissionsDisabled()) {
+    showPermissionsPopup();
+    return;
 }
 
 requestNextPermission();
 
-        // APPLY PLATFORM UI
-        if ("apple".equals(getSavedPlatform())) {
-            applyAppleModeUI();
-        } else {
-            applyAndroidModeUI();
-        }
+if (hasMissingPermissions() && !isPermissionsDisabled()) {
+showPermissionsPopup();
+return;
+}
+}
 
-        syncReturnButtonText();
+requestNextPermission();
 
-        log("📱 Device ready", false);
-    }
+// APPLY PLATFORM UI
+if ("apple".equals(getSavedPlatform())) {
+applyAppleModeUI();
+} else {
+applyAndroidModeUI();
+}
 
-    @Override
-    protected void onPause() {
-        super.onPause();
-        try {
-            AppTTS.stop();
-        } catch (Throwable ignore) {}
-    }
+syncReturnButtonText();
+
+log("📱 Device ready", false);
+}
+
+@Override
+protected void onPause() {
+super.onPause();
+try {
+AppTTS.stop();
+} catch (Throwable ignore) {}
+}
 
 private void hardRestart() {
-    Intent i = getIntent();
-    finish();
-    startActivity(i);
+Intent i = getIntent();
+finish();
+startActivity(i);
 }
 
 private void updatePermissionsTexts() {
-    if (permissionsTitle == null || permissionsMsg == null) return;
+if (permissionsTitle == null || permissionsMsg == null) return;
 
-    boolean gr = AppLang.isGreek(this);
+boolean gr = AppLang.isGreek(this);
 
-    permissionsTitle.setText(
-            gr ? "ΑΠΑΙΤΟΥΜΕΝΕΣ ΑΔΕΙΕΣ" : "REQUIRED PERMISSIONS"
-    );
+permissionsTitle.setText(
+gr ? "ΑΠΑΙΤΟΥΜΕΝΕΣ ΑΔΕΙΕΣ" : "REQUIRED PERMISSIONS"
+);
 
-    permissionsMsg.setText(
-            gr ? getPermissionsTextGR() : getPermissionsTextEN()
-    );
+permissionsMsg.setText(
+gr ? getPermissionsTextGR() : getPermissionsTextEN()
+);
 }
 
-    // ------------------------------------------------------------
-    // MUTE ROW (UNIFIED - AppTTS HELPER)
-    // ------------------------------------------------------------
+// ------------------------------------------------------------
+// MUTE ROW (UNIFIED - AppTTS HELPER)
+// ------------------------------------------------------------
 
-    private LinearLayout buildMuteRow() {
-        final boolean gr = AppLang.isGreek(this);
-        LinearLayout row = new LinearLayout(this);
+private LinearLayout buildMuteRow() {
+final boolean gr = AppLang.isGreek(this);
+LinearLayout row = new LinearLayout(this);
 
-        row.setOrientation(LinearLayout.HORIZONTAL);
+row.setOrientation(LinearLayout.HORIZONTAL);
 
-        row.setGravity(Gravity.CENTER_VERTICAL);
+row.setGravity(Gravity.CENTER_VERTICAL);
 
-        row.setPadding(0, dp(8), 0, dp(16));
+row.setPadding(0, dp(8), 0, dp(16));
 
-        CheckBox muteCheck = new CheckBox(this);
+CheckBox muteCheck = new CheckBox(this);
 muteCheck.setChecked(AppTTS.isMuted(this));
 muteCheck.setPadding(0, 0, dp(6), 0);
 
 TextView label = new TextView(this);
 label.setText(
-        gr ? "Σίγαση φωνητικών οδηγιών"
-           : "Mute voice instructions"
+gr ? "Σίγαση φωνητικών οδηγιών"
+: "Mute voice instructions"
 );
 
-        label.setTextColor(Color.WHITE);
-        label.setTextSize(14f);
+label.setTextColor(Color.WHITE);
+label.setTextSize(14f);
 
-        // --------------------------------------------------------
-        // TOGGLE (ROW + LABEL CLICK)
-        // --------------------------------------------------------
+// --------------------------------------------------------
+// TOGGLE (ROW + LABEL CLICK)
+// --------------------------------------------------------
 
-        View.OnClickListener toggle = v -> {
-            boolean newState = !AppTTS.isMuted(this);
-            AppTTS.setMuted(this, newState);
-            muteCheck.setChecked(newState);
+View.OnClickListener toggle = v -> {
+boolean newState = !AppTTS.isMuted(this);
+AppTTS.setMuted(this, newState);
+muteCheck.setChecked(newState);
 
-            //  Immediate hard stop when muting
-            if (newState) {
-                try { AppTTS.stop(); } catch (Throwable ignore) {}
-            }
-        };
+//  Immediate hard stop when muting
+if (newState) {
+try { AppTTS.stop(); } catch (Throwable ignore) {}
+}
+};
 
-        label.setOnClickListener(toggle);
+label.setOnClickListener(toggle);
 
-        // --------------------------------------------------------
-        // CHECKBOX DIRECT CHANGE
-        // --------------------------------------------------------
+// --------------------------------------------------------
+// CHECKBOX DIRECT CHANGE
+// --------------------------------------------------------
 
-        muteCheck.setOnCheckedChangeListener((button, checked) -> {
-            if (checked == AppTTS.isMuted(this)) return;
-            AppTTS.setMuted(this, checked);
-            if (checked) {
-                try { AppTTS.stop(); } catch (Throwable ignore) {}
-            }
-        });
+muteCheck.setOnCheckedChangeListener((button, checked) -> {
+if (checked == AppTTS.isMuted(this)) return;
+AppTTS.setMuted(this, checked);
+if (checked) {
+try { AppTTS.stop(); } catch (Throwable ignore) {}
+}
+});
 
-        row.addView(muteCheck);
-        row.addView(label);
-        return row;
-    }
+row.addView(muteCheck);
+row.addView(label);
+return row;
+}
 
-    private boolean isPermissionsDisabled() {
-        return getSharedPreferences(PREFS, MODE_PRIVATE)
-                .getBoolean(PREF_PERMISSIONS_DISABLED, false);
-    }
+private boolean isPermissionsDisabled() {
+return getSharedPreferences(PREFS, MODE_PRIVATE)
+.getBoolean(PREF_PERMISSIONS_DISABLED, false);
+}
 
-    private void disablePermissionsForever() {
-        getSharedPreferences(PREFS, MODE_PRIVATE)
-                .edit()
-                .putBoolean(PREF_PERMISSIONS_DISABLED, true)
-                .apply();
-    }
+private void disablePermissionsForever() {
+getSharedPreferences(PREFS, MODE_PRIVATE)
+.edit()
+.putBoolean(PREF_PERMISSIONS_DISABLED, true)
+.apply();
+}
 
-    // ============================================================
-    // PERMISSIONS POPUP - GEL STYLE (GLOBAL MUTE + LANG + TTS)
-    // ============================================================
-    private void showPermissionsPopup() {
+// ============================================================
+// PERMISSIONS POPUP - GEL STYLE (GLOBAL MUTE + LANG + TTS)
+// ============================================================
+private void showPermissionsPopup() {
 
-        boolean gr = AppLang.isGreek(this);
+boolean gr = AppLang.isGreek(this);
 
-        AlertDialog.Builder b =
-                new AlertDialog.Builder(
-                        this,
-                        android.R.style.Theme_Material_Dialog_NoActionBar
-                );
+AlertDialog.Builder b =
+new AlertDialog.Builder(
+this,
+android.R.style.Theme_Material_Dialog_NoActionBar
+);
 
-        b.setCancelable(true);
+b.setCancelable(true);
 
-    // ================= ROOT =================
+// ================= ROOT =================
 LinearLayout root = new LinearLayout(this);
 root.setOrientation(LinearLayout.VERTICAL);
 root.setPadding(dp(24), dp(22), dp(24), dp(20));
@@ -320,7 +325,7 @@ root.addView(title);
 // ================= MESSAGE =================
 TextView msg = new TextView(this);
 msg.setText(gr ? getPermissionsTextGR()
-        : getPermissionsTextEN());
+: getPermissionsTextEN());
 msg.setTextColor(0xFF00FF9C); // Neon green
 msg.setTextSize(15f);
 msg.setGravity(Gravity.CENTER);
@@ -330,7 +335,7 @@ root.addView(msg);
 
 // 🔥 IMPORTANT
 permissionsTitle = title;
-permissionsMsg   = msg;
+permissionsMsg = msg;
 
 // ================= MUTE ROW =================
 root.addView(buildMuteRow());
@@ -338,32 +343,32 @@ root.addView(buildMuteRow());
 // ================= LANGUAGE SPINNER =================
 Spinner langSpinner = new Spinner(MainActivity.this);
 
-ArrayAdapter<String> adapter =
-        new ArrayAdapter<String>(
-                MainActivity.this,
-                android.R.layout.simple_spinner_item,
-                new String[]{"EN", "GR"}
-        ) {
+ArrayAdapter < String > adapter =
+new ArrayAdapter < String > (
+MainActivity.this,
+android.R.layout.simple_spinner_item,
+new String[]{"EN", "GR"}
+) {
 
-            @Override
-            public View getView(int position, View convertView, ViewGroup parent) {
-                TextView tv = (TextView) super.getView(position, convertView, parent);
-                tv.setTextColor(Color.WHITE);          // selected text
-                tv.setTypeface(null, Typeface.BOLD);
-                tv.setGravity(Gravity.CENTER);
-                return tv;
-            }
+@Override
+public View getView(int position, View convertView, ViewGroup parent) {
+TextView tv = (TextView) super.getView(position, convertView, parent);
+tv.setTextColor(Color.WHITE); // selected text
+tv.setTypeface(null, Typeface.BOLD);
+tv.setGravity(Gravity.CENTER);
+return tv;
+}
 
-            @Override
-            public View getDropDownView(int position, View convertView, ViewGroup parent) {
-                TextView tv = (TextView) super.getDropDownView(position, convertView, parent);
-                tv.setTextColor(Color.BLACK);          // 🔥 ΜΑΥΡΑ dropdown
-                tv.setTypeface(null, Typeface.BOLD);
-                tv.setGravity(Gravity.CENTER);
-                tv.setPadding(dp(14), dp(12), dp(14), dp(12));
-                return tv;
-            }
-        };
+@Override
+public View getDropDownView(int position, View convertView, ViewGroup parent) {
+TextView tv = (TextView) super.getDropDownView(position, convertView, parent);
+tv.setTextColor(Color.BLACK); // 🔥 ΜΑΥΡΑ dropdown
+tv.setTypeface(null, Typeface.BOLD);
+tv.setGravity(Gravity.CENTER);
+tv.setPadding(dp(14), dp(12), dp(14), dp(12));
+return tv;
+}
+};
 
 adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
@@ -372,32 +377,32 @@ langSpinner.setAdapter(adapter);
 langSpinner.setSelection(AppLang.isGreek(this) ? 1 : 0, false);
 
 langSpinner.setOnItemSelectedListener(
-        new AdapterView.OnItemSelectedListener() {
+new AdapterView.OnItemSelectedListener() {
 
-          @Override
+@Override
 public void onItemSelected(
-        AdapterView<?> parent,
-        View view,
-        int position,
-        long id
+AdapterView<?> parent,
+View view,
+int position,
+long id
 ) {
 
-    String code = (position == 0) ? "en" : "el";
+String code = (position == 0) ? "en" : "el";
 
-    if (!code.equals(LocaleHelper.getLang(MainActivity.this))) {
+if (!code.equals(LocaleHelper.getLang(MainActivity.this))) {
 
- LocaleHelper.set(MainActivity.this, code);
+LocaleHelper.set(MainActivity.this, code);
 AppTTS.stop();
 
 Intent i = getIntent();
 finish();
 startActivity(i);
-    }
+}
 }
 
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {}
-        }
+@Override
+public void onNothingSelected(AdapterView<?> parent) {}
+}
 );
 
 // ================= LANGUAGE BOX (GOLD BORDER) =================
@@ -407,18 +412,18 @@ langBox.setGravity(Gravity.CENTER);
 langBox.setPadding(dp(12), dp(10), dp(12), dp(10));
 
 GradientDrawable langBg = new GradientDrawable();
-langBg.setColor(0xFF111111);          // black-ish
+langBg.setColor(0xFF111111); // black-ish
 langBg.setCornerRadius(dp(12));
-langBg.setStroke(dp(3), 0xFFFFD700);  // gold border
+langBg.setStroke(dp(3), 0xFFFFD700); // gold border
 langBox.setBackground(langBg);
 
 langBox.addView(langSpinner);
 
 LinearLayout.LayoutParams lpLang =
-        new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-        );
+new LinearLayout.LayoutParams(
+LinearLayout.LayoutParams.WRAP_CONTENT,
+LinearLayout.LayoutParams.WRAP_CONTENT
+);
 lpLang.gravity = Gravity.CENTER;
 lpLang.setMargins(0, 0, 0, dp(18));
 langBox.setLayoutParams(lpLang);
@@ -428,7 +433,7 @@ root.addView(langBox);
 // ================= CHECKBOX =================
 CheckBox cb = new CheckBox(this);
 cb.setText(gr ? "Να μην εμφανιστεί ξανά"
-        : "Do not show again");
+: "Do not show again");
 cb.setTextColor(Color.WHITE);
 cb.setPadding(0, 0, 0, dp(18));
 root.addView(cb);
@@ -439,11 +444,11 @@ btnRow.setOrientation(LinearLayout.HORIZONTAL);
 btnRow.setGravity(Gravity.CENTER);
 
 LinearLayout.LayoutParams btnLp =
-        new LinearLayout.LayoutParams(
-                0,
-                dp(110),
-                1f
-        );
+new LinearLayout.LayoutParams(
+0,
+dp(110),
+1f
+);
 btnLp.setMargins(dp(8), 0, dp(8), 0);
 
 // -------- SKIP --------
@@ -481,370 +486,367 @@ btnRow.addView(continueBtn);
 
 root.addView(btnRow);
 
-        b.setView(root);
+b.setView(root);
 
-        final AlertDialog d = b.create();
+final AlertDialog d = b.create();
 
 // 🔊 STOP TTS ON BACK BUTTON
 d.setOnKeyListener((dialog, keyCode, event) -> {
-    if (keyCode == KeyEvent.KEYCODE_BACK
-            && event.getAction() == KeyEvent.ACTION_UP) {
+if (keyCode == KeyEvent.KEYCODE_BACK && event.getAction() == KeyEvent.ACTION_UP) {
 
-        try { AppTTS.stop(); } catch (Throwable ignore) {}
-        dialog.dismiss();
-        return true;
-    }
-    return false;
+try { AppTTS.stop(); } catch (Throwable ignore) {}
+dialog.dismiss();
+return true;
+}
+return false;
 });
 
-        if (d.getWindow() != null) {
-            d.getWindow().setBackgroundDrawable(
-                    new ColorDrawable(Color.TRANSPARENT)
-            );
-        }
+if (d.getWindow() != null) {
+d.getWindow().setBackgroundDrawable(
+new ColorDrawable(Color.TRANSPARENT)
+);
+}
 
-        // -------------------------------------------------
-        // STOP TTS ON DISMISS
-        // -------------------------------------------------
-        d.setOnDismissListener(dialog -> {
-            try { AppTTS.stop(); } catch (Throwable ignore) {}
-        });
-
-        // -------------------------------------------------
-        // STOP TTS ON BACK / CANCEL
-        // -------------------------------------------------
-        d.setOnCancelListener(dialog -> {
-            try { AppTTS.stop(); } catch (Throwable ignore) {}
-        });
-
-        // ================= ACTIONS =================
-        continueBtn.setOnClickListener(v -> {
-
-    try { AppTTS.stop(); } catch (Throwable ignore) {}
-
-    d.dismiss();
-
-    permissionIndex = 0;
-    requestNextPermission();
+// -------------------------------------------------
+// STOP TTS ON DISMISS
+// -------------------------------------------------
+d.setOnDismissListener(dialog -> {
+try { AppTTS.stop(); } catch (Throwable ignore) {}
 });
 
-        skipBtn.setOnClickListener(v -> {
+// -------------------------------------------------
+// STOP TTS ON BACK / CANCEL
+// -------------------------------------------------
+d.setOnCancelListener(dialog -> {
+try { AppTTS.stop(); } catch (Throwable ignore) {}
+});
 
-    try { AppTTS.stop(); } catch (Throwable ignore) {}
+// ================= ACTIONS =================
+continueBtn.setOnClickListener(v -> {
 
-    d.dismiss();
+try { AppTTS.stop(); } catch (Throwable ignore) {}
 
-    // 🔥 Continue normal flow
-    if (!isWelcomeDisabled()) {
-    showWelcomePopup();
-    return;
+d.dismiss();
+
+permissionIndex = 0;
+requestNextPermission();
+});
+
+skipBtn.setOnClickListener(v -> {
+
+try { AppTTS.stop(); } catch (Throwable ignore) {}
+
+d.dismiss();
+
+// 🔥 Continue normal flow
+if (!isWelcomeDisabled()) {
+showWelcomePopup();
+return;
 }
 });
 
-        // -------------------------------------------------
-        // SHOW
-        // -------------------------------------------------
-        if (!isFinishing() && !isDestroyed()) {
+// -------------------------------------------------
+// SHOW
+// -------------------------------------------------
+if (!isFinishing() && !isDestroyed()) {
 
-            d.setOnShowListener(dialog -> {
-                if (!AppTTS.isMuted(MainActivity.this)) {
-                    speakPermissionsTTS();
-                }
-            });
+d.setOnShowListener(dialog -> {
+if (!AppTTS.isMuted(MainActivity.this)) {
+speakPermissionsTTS();
+}
+});
 
-            d.show();
+d.show();
 
-            Window w = d.getWindow();
-            if (w != null) {
-                w.setLayout(
-                        ViewGroup.LayoutParams.MATCH_PARENT,
-                        ViewGroup.LayoutParams.WRAP_CONTENT
-                );
-                w.getDecorView().setPadding(dp(16), 0, dp(16), 0);
-            }
-        }
-    }
+Window w = d.getWindow();
+if (w != null) {
+w.setLayout(
+ViewGroup.LayoutParams.MATCH_PARENT,
+ViewGroup.LayoutParams.WRAP_CONTENT
+);
+w.getDecorView().setPadding(dp(16), 0, dp(16), 0);
+}
+}
+}
 
 // ============================================================
 // PERMISSIONS TEXT - GR
 // ============================================================
 private String getPermissionsTextGR() {
-    return "Η εφαρμογή χρειάζεται άδειες, για να πραγματοποιήσει "
-            + "ελέγχους στη συσκευή σου.\n\n"
-            + "Οι άδειες θα σου ζητηθούν μία-μία από το σύστημα Android.\n\n"
-            + "Το σύστημα ενδέχεται να ζητήσει πρόσβαση σε:\n"
-            + "• Τοποθεσία,\n"
-            + "• Αποθήκευση,\n"
-            + "• Τηλέφωνο,\n"
-            + "• Μικρόφωνο.\n"
-            + "• Κάμερα.\n\n"
-            + "Δεν γίνεται καταγραφή ή αποθήκευση προσωπικών δεδομένων.";
+return "Η εφαρμογή χρειάζεται άδειες, για να πραγματοποιήσει "
++ "ελέγχους στη συσκευή σου.\n\n"
++ "Οι άδειες θα σου ζητηθούν μία-μία από το σύστημα Android.\n\n"
++ "Το σύστημα ενδέχεται να ζητήσει πρόσβαση σε:\n"
++ "• Τοποθεσία,\n"
++ "• Αποθήκευση,\n"
++ "• Τηλέφωνο,\n"
++ "• Μικρόφωνο.\n"
++ "• Κάμερα.\n\n"
++ "Δεν γίνεται καταγραφή ή αποθήκευση προσωπικών δεδομένων.";
 }
 
 // ============================================================
 // PERMISSIONS TEXT - EN
 // ============================================================
 private String getPermissionsTextEN() {
-    return "The application requires permissions to perform "
-            + "diagnostic checks on your device.\n\n"
-            + "Permissions will be requested one by one by the Android system.\n\n"
-            + "The system may request access to:\n"
-            + "• Location,\n"
-            + "• Storage,\n"
-            + "• Phone,\n"
-            + "• Microphone.\n"
-            + "• Camera.\n\n"
-            + "No personal data is recorded or stored.";
+return "The application requires permissions to perform "
++ "diagnostic checks on your device.\n\n"
++ "Permissions will be requested one by one by the Android system.\n\n"
++ "The system may request access to:\n"
++ "• Location,\n"
++ "• Storage,\n"
++ "• Phone,\n"
++ "• Microphone.\n"
++ "• Camera.\n\n"
++ "No personal data is recorded or stored.";
 }
 
 private String[] getRequiredPermissions() {
 
-    List<String> list = new ArrayList<>();
+List < String > list = new ArrayList<>();
 
-    list.add(Manifest.permission.RECORD_AUDIO);
-    list.add(Manifest.permission.CAMERA);
-    list.add(Manifest.permission.ACCESS_FINE_LOCATION);
+list.add(Manifest.permission.RECORD_AUDIO);
+list.add(Manifest.permission.CAMERA);
+list.add(Manifest.permission.ACCESS_FINE_LOCATION);
 
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-        list.add(Manifest.permission.BLUETOOTH_CONNECT);
-    }
-
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        list.add(Manifest.permission.READ_MEDIA_IMAGES);
-        list.add(Manifest.permission.READ_MEDIA_VIDEO);
-    } else {
-        list.add(Manifest.permission.READ_EXTERNAL_STORAGE);
-    }
-
-    return list.toArray(new String[0]);
+if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+list.add(Manifest.permission.BLUETOOTH_CONNECT);
 }
 
-    // =========================================================
-    // REQUEST FLOW
-    // =========================================================
-    private void requestNextPermission() {
-
-    String[] perms = getRequiredPermissions();
-
-    while (permissionIndex < perms.length) {
-
-        String p = perms[permissionIndex];
-
-        if (ContextCompat.checkSelfPermission(this, p)
-                != PackageManager.PERMISSION_GRANTED) {
-
-            ActivityCompat.requestPermissions(
-                    this,
-                    new String[]{p},
-                    REQ_PERMISSIONS
-            );
-            return;
-        }
-
-        permissionIndex++;
-    }
-
-    // Όταν τελειώσουν όλα
-    if (!isWelcomeDisabled()) {
-        showWelcomePopup();
-        return;
-    }
-
-    // End of flow
+if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+list.add(Manifest.permission.READ_MEDIA_IMAGES);
+list.add(Manifest.permission.READ_MEDIA_VIDEO);
+} else {
+list.add(Manifest.permission.READ_EXTERNAL_STORAGE);
 }
 
-    @Override
+return list.toArray(new String[0]);
+}
+
+// =========================================================
+// REQUEST FLOW
+// =========================================================
+private void requestNextPermission() {
+
+String[] perms = getRequiredPermissions();
+
+while (permissionIndex < perms.length) {
+
+String p = perms[permissionIndex];
+
+if (ContextCompat.checkSelfPermission(this, p) != PackageManager.PERMISSION_GRANTED) {
+
+ActivityCompat.requestPermissions(
+this,
+new String[]{p},
+REQ_PERMISSIONS
+);
+return;
+}
+
+permissionIndex++;
+}
+
+// Όταν τελειώσουν όλα
+if (!isWelcomeDisabled()) {
+showWelcomePopup();
+return;
+}
+
+// End of flow
+}
+
+@Override
 public void onRequestPermissionsResult(
-        int requestCode,
-        String[] permissions,
-        int[] grantResults
+int requestCode,
+String[] permissions,
+int[] grantResults
 ) {
-    super.onRequestPermissionsResult(
-            requestCode,
-            permissions,
-            grantResults
-    );
+super.onRequestPermissionsResult(
+requestCode,
+permissions,
+grantResults
+);
 
-    if (requestCode != REQ_PERMISSIONS) return;
+if (requestCode != REQ_PERMISSIONS) return;
 
-    if (grantResults.length > 0) {
+if (grantResults.length > 0) {
 
-        // Πηγαίνουμε στο επόμενο permission
-        permissionIndex++;
-        requestNextPermission();
+// Πηγαίνουμε στο επόμενο permission
+permissionIndex++;
+requestNextPermission();
 
-    }
+}
 }
 
-    // =========================================================
-    // HELPERS
-    // =========================================================
-    private boolean hasMissingPermissions() {
-        for (String p : getRequiredPermissions()) {
-            if (ContextCompat.checkSelfPermission(this, p)
-                    != PackageManager.PERMISSION_GRANTED) {
-                return true;
-            }
-        }
-        return false;
-    }
+// =========================================================
+// HELPERS
+// =========================================================
+private boolean hasMissingPermissions() {
+for (String p : getRequiredPermissions()) {
+if (ContextCompat.checkSelfPermission(this, p) != PackageManager.PERMISSION_GRANTED) {
+return true;
+}
+}
+return false;
+}
 
-    private void syncReturnButtonText() {
-        Button b = findViewById(R.id.btnReturnAndroid);
-        if (b != null) {
-            b.setText("apple".equals(getSavedPlatform())
-                    ? "RETURN TO ANDROID MODE"
-                    : "RETURN TO APPLE MODE");
-        }
-    }
-            
-    private boolean isWelcomeDisabled() {
-        return getSharedPreferences(PREFS, MODE_PRIVATE)
-                .getBoolean("welcome_disabled", false);
-    }
+private void syncReturnButtonText() {
+Button b = findViewById(R.id.btnReturnAndroid);
+if (b != null) {
+b.setText("apple".equals(getSavedPlatform())
+? "RETURN TO ANDROID MODE"
+: "RETURN TO APPLE MODE");
+}
+}
 
-    private void disableWelcomeForever() {
-        getSharedPreferences(PREFS, MODE_PRIVATE)
-                .edit()
-                .putBoolean("welcome_disabled", true)
-                .apply();
-    }
+private boolean isWelcomeDisabled() {
+return getSharedPreferences(PREFS, MODE_PRIVATE)
+.getBoolean("welcome_disabled", false);
+}
 
-    private void savePlatform(String mode) {
-        getSharedPreferences(PREFS, MODE_PRIVATE)
-                .edit().putString(KEY_PLATFORM, mode).apply();
-    }
+private void disableWelcomeForever() {
+getSharedPreferences(PREFS, MODE_PRIVATE)
+.edit()
+.putBoolean("welcome_disabled", true)
+.apply();
+}
 
-    private String getSavedPlatform() {
-        return getSharedPreferences(PREFS, MODE_PRIVATE)
-                .getString(KEY_PLATFORM, "android");
-    }
+private void savePlatform(String mode) {
+getSharedPreferences(PREFS, MODE_PRIVATE)
+.edit().putString(KEY_PLATFORM, mode).apply();
+}
 
-    private boolean isAppleMode() {
-        return "apple".equals(getSavedPlatform());
-    }
+private String getSavedPlatform() {
+return getSharedPreferences(PREFS, MODE_PRIVATE)
+.getString(KEY_PLATFORM, "android");
+}
 
-    private AlertDialog.Builder buildNeonDialog() {
-        AlertDialog.Builder b = new AlertDialog.Builder(this);
-        return b;
-    }
+private boolean isAppleMode() {
+return "apple".equals(getSavedPlatform());
+}
 
-    private ArrayAdapter<String> neonAdapter(String[] names) {
-        return new ArrayAdapter<String>(
-                this,
-                android.R.layout.simple_list_item_1,
-                names
-        );
-    }
+private AlertDialog.Builder buildNeonDialog() {
+AlertDialog.Builder b = new AlertDialog.Builder(this);
+return b;
+}
 
-    // =========================================================
-    // TTS - Permissions
-    // =========================================================
-    private void speakPermissionsTTS() {
+private ArrayAdapter < String > neonAdapter(String[] names) {
+return new ArrayAdapter < String > (
+this,
+android.R.layout.simple_list_item_1,
+names
+);
+}
 
-        if (AppTTS.isMuted(this)) return;
+// =========================================================
+// TTS - Permissions
+// =========================================================
+private void speakPermissionsTTS() {
 
-        if (AppLang.isGreek(this)) {
+if (AppTTS.isMuted(this)) return;
 
-            AppTTS.speak(
-                    this,
-                    getPermissionsTextGR()
-            );
+if (AppLang.isGreek(this)) {
 
-        } else {
+AppTTS.speak(
+this,
+getPermissionsTextGR()
+);
 
-            AppTTS.speak(
-                    this,
-                    getPermissionsTextEN()
-            );
-        }
-    }
+} else {
 
-    // =========================================================
-    // TTS - WELCOME
-    // =========================================================
-    private void speakWelcomeTTS() {
+AppTTS.speak(
+this,
+getPermissionsTextEN()
+);
+}
+}
 
-        if (!welcomeShown) return;
-        if (AppTTS.isMuted(this)) return;
+// =========================================================
+// TTS - WELCOME
+// =========================================================
+private void speakWelcomeTTS() {
 
-        if (AppLang.isGreek(this)) {
+if (!welcomeShown) return;
+if (AppTTS.isMuted(this)) return;
 
-            AppTTS.speak(
-                    this,
-                    getWelcomeTextGR()
-            );
+if (AppLang.isGreek(this)) {
 
-        } else {
+AppTTS.speak(
+this,
+getWelcomeTextGR()
+);
 
-            AppTTS.speak(
-                    this,
-                    getWelcomeTextEN()
-            );
-        }
-    }
+} else {
 
-    // =========================================================
-    // WELCOME TEXT
-    // =========================================================
-    private String getWelcomeTextEN() {
-    return
-            "Although this is an Android application, " +
-            "it is the only tool on the market that can also help you " +
-            "understand problems on Apple devices.\n\n" +
-            "By importing panic logs from your iPhone or iPad, " +
-            "we analyze what really happened inside your device.\n\n" +
-            "You will understand:\n" +
-            "• what your panic logs mean.\n" +
-            "• what caused the issue,\n" +
-            "• and how you can solve it.\n\n" +
-            "Choose what you want to explore:\n" +
-            "your Android device or another Apple device.";
+AppTTS.speak(
+this,
+getWelcomeTextEN()
+);
+}
+}
+
+// =========================================================
+// WELCOME TEXT
+// =========================================================
+private String getWelcomeTextEN() {
+return
+"Although this is an Android application, " +
+"it is the only tool on the market that can also help you " +
+"understand problems on Apple devices.\n\n" +
+"By importing panic logs from your iPhone or iPad, " +
+"we analyze what really happened inside your device.\n\n" +
+"You will understand:\n" +
+"• what your panic logs mean.\n" +
+"• what caused the issue,\n" +
+"• and how you can solve it.\n\n" +
+"Choose what you want to explore:\n" +
+"your Android device or another Apple device.";
 }
 
 private String getWelcomeTextGR() {
-    return
-            "Παρότι αυτή είναι εφαρμογή Android, " +
-            "είναι το μοναδικό εργαλείο στην αγορά που μπορεί να σε βοηθήσει " +
-            "να καταλάβεις προβλήματα και σε συσκευές Apple.\n\n" +
-            "Με την εισαγωγή panic logs από iPhone ή iPad, " +
-            "αναλύουμε τι συνέβη πραγματικά μέσα στη συσκευή σου.\n\n" +
-            "Θα καταλάβεις:\n" +
-            "• τι σημαίνουν τα panic logs.\n" +
-            "• τι προκάλεσε το πρόβλημα,\n" +
-            "• και πώς μπορείς να το λύσεις.\n\n" +
-            "Διάλεξε τι θέλεις να εξερευνήσεις:\n" +
-            "τη συσκευή Android σου ή μια άλλη συσκευή Apple.";
+return
+"Παρότι αυτή είναι εφαρμογή Android, " +
+"είναι το μοναδικό εργαλείο στην αγορά που μπορεί να σε βοηθήσει " +
+"να καταλάβεις προβλήματα και σε συσκευές Apple.\n\n" +
+"Με την εισαγωγή panic logs από iPhone ή iPad, " +
+"αναλύουμε τι συνέβη πραγματικά μέσα στη συσκευή σου.\n\n" +
+"Θα καταλάβεις:\n" +
+"• τι σημαίνουν τα panic logs.\n" +
+"• τι προκάλεσε το πρόβλημα,\n" +
+"• και πώς μπορείς να το λύσεις.\n\n" +
+"Διάλεξε τι θέλεις να εξερευνήσεις:\n" +
+"τη συσκευή Android σου ή μια άλλη συσκευή Apple.";
 }
 
-    // =========================================================
-    // DIMEN
-    // =========================================================
-    private int dp(float v) {
-        return (int) TypedValue.applyDimension(
-                TypedValue.COMPLEX_UNIT_DIP,
-                v,
+// =========================================================
+// DIMEN
+// =========================================================
+private int dp(float v) {
+return (int) TypedValue.applyDimension(
+TypedValue.COMPLEX_UNIT_DIP,
+v,
 
-                getResources().getDisplayMetrics()
-        );
-    }
+getResources().getDisplayMetrics()
+);
+}
 
-    // ------------------------------------------------------------
-    // SHOW POPUP
-    // ------------------------------------------------------------
-    private void showWelcomePopup() {
+// ------------------------------------------------------------
+// SHOW POPUP
+// ------------------------------------------------------------
+private void showWelcomePopup() {
 
 if (welcomeShown) return;
 welcomeShown = true;
 
-        boolean gr = AppLang.isGreek(this);
+boolean gr = AppLang.isGreek(this);
 
-        AlertDialog.Builder b =
-                new AlertDialog.Builder(MainActivity.this);
+AlertDialog.Builder b =
+new AlertDialog.Builder(MainActivity.this);
 
-        b.setCancelable(true);
-        
-  // ================= ROOT =================
+b.setCancelable(true);
+
+// ================= ROOT =================
 LinearLayout root = new LinearLayout(MainActivity.this);
 root.setOrientation(LinearLayout.VERTICAL);
 root.setPadding(dp(24), dp(22), dp(24), dp(20));
@@ -858,7 +860,7 @@ root.setBackground(bg);
 // ================= TITLE =================
 welcomeTitle = new TextView(MainActivity.this);
 welcomeTitle.setText(
-        AppLang.isGreek(this) ? "ΚΑΛΩΣ ΗΡΘΑΤΕ" : "WELCOME"
+AppLang.isGreek(this) ? "ΚΑΛΩΣ ΗΡΘΑΤΕ" : "WELCOME"
 );
 welcomeTitle.setTextColor(Color.WHITE);
 welcomeTitle.setTextSize(19f);
@@ -870,16 +872,16 @@ root.addView(welcomeTitle);
 // ================= MESSAGE =================
 welcomeMessage = new TextView(MainActivity.this);
 welcomeMessage.setText(
-        AppLang.isGreek(this)
-                ? getWelcomeTextGR()
-                : getWelcomeTextEN()
+AppLang.isGreek(this)
+? getWelcomeTextGR()
+: getWelcomeTextEN()
 );
 welcomeMessage.setTextColor(0xFF00FF9C); // Neon green
 welcomeMessage.setTextSize(15f);
 welcomeMessage.setGravity(Gravity.CENTER);
 welcomeMessage.setLineSpacing(0f, 1.15f);
 welcomeMessage.setPadding(dp(6), 0, dp(6), dp(18));
-root.addView(welcomeMessage); 
+root.addView(welcomeMessage);
 
 // ================= MUTE ROW =================
 root.addView(buildMuteRow());
@@ -887,32 +889,32 @@ root.addView(buildMuteRow());
 // ================= LANGUAGE SPINNER =================
 Spinner langSpinner = new Spinner(MainActivity.this);
 
-ArrayAdapter<String> adapter =
-        new ArrayAdapter<String>(
-                MainActivity.this,
-                android.R.layout.simple_spinner_item,
-                new String[]{"EN", "GR"}
-        ) {
+ArrayAdapter < String > adapter =
+new ArrayAdapter < String > (
+MainActivity.this,
+android.R.layout.simple_spinner_item,
+new String[]{"EN", "GR"}
+) {
 
-            @Override
-            public View getView(int position, View convertView, ViewGroup parent) {
-                TextView tv = (TextView) super.getView(position, convertView, parent);
-                tv.setTypeface(null, Typeface.BOLD);
-                tv.setGravity(Gravity.CENTER);
-                tv.setTextColor(Color.WHITE);
-                return tv;
-            }
+@Override
+public View getView(int position, View convertView, ViewGroup parent) {
+TextView tv = (TextView) super.getView(position, convertView, parent);
+tv.setTypeface(null, Typeface.BOLD);
+tv.setGravity(Gravity.CENTER);
+tv.setTextColor(Color.WHITE);
+return tv;
+}
 
-            @Override
-            public View getDropDownView(int position, View convertView, ViewGroup parent) {
-                TextView tv = (TextView) super.getDropDownView(position, convertView, parent);
-                tv.setTypeface(null, Typeface.BOLD);
-                tv.setGravity(Gravity.CENTER);
-                tv.setTextColor(Color.BLACK);
-                tv.setPadding(dp(14), dp(12), dp(14), dp(12));
-                return tv;
-            }
-        };
+@Override
+public View getDropDownView(int position, View convertView, ViewGroup parent) {
+TextView tv = (TextView) super.getDropDownView(position, convertView, parent);
+tv.setTypeface(null, Typeface.BOLD);
+tv.setGravity(Gravity.CENTER);
+tv.setTextColor(Color.BLACK);
+tv.setPadding(dp(14), dp(12), dp(14), dp(12));
+return tv;
+}
+};
 
 adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
@@ -920,36 +922,36 @@ langSpinner.setAdapter(adapter);
 langSpinner.setSelection(AppLang.isGreek(this) ? 1 : 0);
 
 langSpinner.setOnItemSelectedListener(
-        new AdapterView.OnItemSelectedListener() {
+new AdapterView.OnItemSelectedListener() {
 
-            @Override
-            public void onItemSelected(
-                    AdapterView<?> parent,
-                    View view,
-                    int position,
-                    long id
-            ) {
+@Override
+public void onItemSelected(
+AdapterView<?> parent,
+View view,
+int position,
+long id
+) {
 
-                String newLang = (position == 0) ? "en" : "el";
+String newLang = (position == 0) ? "en" : "el";
 
-                if (!newLang.equals(LocaleHelper.getLang(MainActivity.this))) {
+if (!newLang.equals(LocaleHelper.getLang(MainActivity.this))) {
 
-                    LocaleHelper.set(MainActivity.this, newLang);
+LocaleHelper.set(MainActivity.this, newLang);
 
-                    try { AppTTS.stop(); } catch (Throwable ignore) {}
+try { AppTTS.stop(); } catch (Throwable ignore) {}
 
-                    // 🔥 Hard restart activity (clean rebuild with new locale)
-                    Intent i = getIntent();
-                    finish();
-                    overridePendingTransition(0, 0);
-                    startActivity(i);
-                    overridePendingTransition(0, 0);
-                }
-            }  
+// 🔥 Hard restart activity (clean rebuild with new locale)
+Intent i = getIntent();
+finish();
+overridePendingTransition(0, 0);
+startActivity(i);
+overridePendingTransition(0, 0);
+}
+}
 
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {}
-        }
+@Override
+public void onNothingSelected(AdapterView<?> parent) {}
+}
 );
 
 // ================= LANGUAGE BOX =================
@@ -967,10 +969,10 @@ langBox.setBackground(langBg);
 langBox.addView(langSpinner);
 
 LinearLayout.LayoutParams lpLang =
-        new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-        );
+new LinearLayout.LayoutParams(
+LinearLayout.LayoutParams.WRAP_CONTENT,
+LinearLayout.LayoutParams.WRAP_CONTENT
+);
 lpLang.gravity = Gravity.CENTER;
 lpLang.setMargins(0, 0, 0, dp(18));
 langBox.setLayoutParams(lpLang);
@@ -980,8 +982,8 @@ root.addView(langBox);
 // ================= CHECKBOX =================
 CheckBox cb = new CheckBox(this);
 cb.setText(AppLang.isGreek(this)
-        ? "Να μην εμφανιστεί ξανά"
-        : "Do not show again");
+? "Να μην εμφανιστεί ξανά"
+: "Do not show again");
 cb.setTextColor(Color.WHITE);
 cb.setPadding(0, dp(8), 0, dp(16));
 root.addView(cb);
@@ -1001,88 +1003,87 @@ okBg.setStroke(dp(3), 0xFFFFD700); // Χρυσό περίγραμμα
 okBtn.setBackground(okBg);
 
 LinearLayout.LayoutParams okLp =
-        new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                dp(140)
-        );
+new LinearLayout.LayoutParams(
+LinearLayout.LayoutParams.MATCH_PARENT,
+dp(140)
+);
 okLp.setMargins(dp(6), dp(6), dp(6), 0);
 okBtn.setLayoutParams(okLp);
 
 root.addView(okBtn);
 
-        // ================= SET VIEW =================
-        b.setView(root);
+// ================= SET VIEW =================
+b.setView(root);
 
-        final AlertDialog d = b.create();
+final AlertDialog d = b.create();
 
-        if (d.getWindow() != null) {
-            d.getWindow().setBackgroundDrawable(
-                    new ColorDrawable(Color.TRANSPARENT)
-            );
-        }
+if (d.getWindow() != null) {
+d.getWindow().setBackgroundDrawable(
+new ColorDrawable(Color.TRANSPARENT)
+);
+}
 
-        // --------------------------------------------
-        // STATE BEFORE SHOW
-        // --------------------------------------------
-        welcomeShown = true;
+// --------------------------------------------
+// STATE BEFORE SHOW
+// --------------------------------------------
+welcomeShown = true;
 
-        // --------------------------------------------
-        // STOP ALWAYS ON DISMISS - CANCEL 
-        // --------------------------------------------
-        d.setOnDismissListener(dialog -> {
-    try { AppTTS.stop(); } catch (Throwable ignore) {}
-    welcomeShown = false;
+// --------------------------------------------
+// STOP ALWAYS ON DISMISS - CANCEL
+// --------------------------------------------
+d.setOnDismissListener(dialog -> {
+try { AppTTS.stop(); } catch (Throwable ignore) {}
+welcomeShown = false;
 });
 
 d.setOnCancelListener(dialog -> {
-    try { AppTTS.stop(); } catch (Throwable ignore) {}
-    welcomeShown = false;
+try { AppTTS.stop(); } catch (Throwable ignore) {}
+welcomeShown = false;
 });
 
-        // --------------------------------------------
-        // SPEAK ONLY WHEN DIALOG IS ACTUALLY SHOWN
-        // --------------------------------------------
-        d.setOnShowListener(dialog -> {
-            if (!AppTTS.isMuted(MainActivity.this)
-                    && welcomeShown) {
-                speakWelcomeTTS();
-            }
-        });
+// --------------------------------------------
+// SPEAK ONLY WHEN DIALOG IS ACTUALLY SHOWN
+// --------------------------------------------
+d.setOnShowListener(dialog -> {
+if (!AppTTS.isMuted(MainActivity.this) && welcomeShown) {
+speakWelcomeTTS();
+}
+});
 
-        // --------------------------------------------
-        // SHOW
-        // --------------------------------------------
-        d.show();
+// --------------------------------------------
+// SHOW
+// --------------------------------------------
+d.show();
 
-        // --------------------------------------------
-        // OK BUTTON
-        // --------------------------------------------
-        okBtn.setOnClickListener(v -> {
-            try { AppTTS.stop(); } catch (Throwable ignore) {}
+// --------------------------------------------
+// OK BUTTON
+// --------------------------------------------
+okBtn.setOnClickListener(v -> {
+try { AppTTS.stop(); } catch (Throwable ignore) {}
 
-            welcomeShown = false;
+welcomeShown = false;
 
-            if (cb.isChecked()) {
-                disableWelcomeForever();
-            }
+if (cb.isChecked()) {
+disableWelcomeForever();
+}
 
-            d.dismiss();
-            showPlatformSelectPopup();
-        });
-    }
+d.dismiss();
+showPlatformSelectPopup();
+});
+}
 
-    // =========================================================
-    // PLATFORM SELECT - FINAL, CLEAN
-    // =========================================================
-    private void showPlatformSelectPopup() {
+// =========================================================
+// PLATFORM SELECT - FINAL, CLEAN
+// =========================================================
+private void showPlatformSelectPopup() {
 
-        boolean gr = AppLang.isGreek(this); 
+boolean gr = AppLang.isGreek(this);
 
-        AlertDialog.Builder b =
-                new AlertDialog.Builder(
-                        MainActivity.this,
-                        android.R.style.Theme_Material_Dialog_NoActionBar
-                );
+AlertDialog.Builder b =
+new AlertDialog.Builder(
+MainActivity.this,
+android.R.style.Theme_Material_Dialog_NoActionBar
+);
 
 LinearLayout root = new LinearLayout(this);
 root.setOrientation(LinearLayout.VERTICAL);
@@ -1108,8 +1109,8 @@ root.addView(t);
 // ================= ANDROID BUTTON =================
 TextView androidBtn = new TextView(this);
 androidBtn.setText(gr
-        ? "🤖  Η ANDROID ΣΥΣΚΕΥΗ ΜΟΥ"
-        : "🤖  MY ANDROID DEVICE");
+? "🤖  Η ANDROID ΣΥΣΚΕΥΗ ΜΟΥ"
+: "🤖  MY ANDROID DEVICE");
 androidBtn.setTextColor(Color.WHITE);
 androidBtn.setTextSize(18f);
 androidBtn.setTypeface(null, Typeface.BOLD);
@@ -1123,18 +1124,18 @@ bgAndroid.setStroke(dp(3), 0xFFFFD700);
 androidBtn.setBackground(bgAndroid);
 
 LinearLayout.LayoutParams lpBtn =
-        new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                dp(110)
-        );
+new LinearLayout.LayoutParams(
+LinearLayout.LayoutParams.MATCH_PARENT,
+dp(110)
+);
 lpBtn.setMargins(dp(8), dp(10), dp(8), 0);
 androidBtn.setLayoutParams(lpBtn);
 
 // ================= APPLE BUTTON =================
 TextView appleBtn = new TextView(this);
 appleBtn.setText(gr
-        ? "🍎  ΑΛΛΗ ΣΥΣΚΕΥΗ APPLE"
-        : "🍎  OTHER APPLE DEVICE");
+? "🍎  ΑΛΛΗ ΣΥΣΚΕΥΗ APPLE"
+: "🍎  OTHER APPLE DEVICE");
 appleBtn.setTextColor(Color.WHITE);
 appleBtn.setTextSize(18f);
 appleBtn.setTypeface(null, Typeface.BOLD);
@@ -1148,703 +1149,703 @@ bgApple.setStroke(dp(3), 0xFFFFD700);
 appleBtn.setBackground(bgApple);
 
 LinearLayout.LayoutParams lpBtn2 =
-        new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                dp(110)
-        );
+new LinearLayout.LayoutParams(
+LinearLayout.LayoutParams.MATCH_PARENT,
+dp(110)
+);
 lpBtn2.setMargins(dp(8), dp(14), dp(8), 0);
 appleBtn.setLayoutParams(lpBtn2);
 
 root.addView(androidBtn);
 root.addView(appleBtn);
 
-        b.setView(root);
-        final AlertDialog d = b.create();
+b.setView(root);
+final AlertDialog d = b.create();
 
-        if (d.getWindow() != null) {
-            d.getWindow().setBackgroundDrawable(
-                    new ColorDrawable(Color.TRANSPARENT)
-            );
-        }
+if (d.getWindow() != null) {
+d.getWindow().setBackgroundDrawable(
+new ColorDrawable(Color.TRANSPARENT)
+);
+}
 
-        // --------------------------------------------
-        // STATE
-        // --------------------------------------------
-        welcomeShown = true;
+// --------------------------------------------
+// STATE
+// --------------------------------------------
+welcomeShown = true;
 
-        // --------------------------------------------
-        // STOP ON DISMISS
-        // --------------------------------------------
-        d.setOnDismissListener(dialog -> {
-            try { AppTTS.stop(); } catch (Throwable ignore) {}
-            welcomeShown = false;
-        });
+// --------------------------------------------
+// STOP ON DISMISS
+// --------------------------------------------
+d.setOnDismissListener(dialog -> {
+try { AppTTS.stop(); } catch (Throwable ignore) {}
+welcomeShown = false;
+});
 
-        // --------------------------------------------
-        // STOP ON BACK (CANCEL)
-        // --------------------------------------------
-        d.setOnCancelListener(dialog -> {
-            try { AppTTS.stop(); } catch (Throwable ignore) {}
-            welcomeShown = false;
-        });
+// --------------------------------------------
+// STOP ON BACK (CANCEL)
+// --------------------------------------------
+d.setOnCancelListener(dialog -> {
+try { AppTTS.stop(); } catch (Throwable ignore) {}
+welcomeShown = false;
+});
 
-        // --------------------------------------------
-        // SHOW
-        // --------------------------------------------
-        d.show();
+// --------------------------------------------
+// SHOW
+// --------------------------------------------
+d.show();
 
-        // --------------------------------------------
-        // WINDOW LAYOUT AFTER SHOW
-        // --------------------------------------------
-        Window w = d.getWindow();
-        if (w != null) {
-            w.setLayout(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT
-            );
-            w.getDecorView().setPadding(dp(16), 0, dp(16), 0);
-        }
+// --------------------------------------------
+// WINDOW LAYOUT AFTER SHOW
+// --------------------------------------------
+Window w = d.getWindow();
+if (w != null) {
+w.setLayout(
+ViewGroup.LayoutParams.MATCH_PARENT,
+ViewGroup.LayoutParams.WRAP_CONTENT
+);
+w.getDecorView().setPadding(dp(16), 0, dp(16), 0);
+}
 
-        // --------------------------------------------
-        // ANDROID BUTTON
-        // --------------------------------------------
-        androidBtn.setOnClickListener(v -> {
+// --------------------------------------------
+// ANDROID BUTTON
+// --------------------------------------------
+androidBtn.setOnClickListener(v -> {
 
-            try { AppTTS.stop(); } catch (Throwable ignore) {}
+try { AppTTS.stop(); } catch (Throwable ignore) {}
 
-            welcomeShown = false;
+welcomeShown = false;
 
-            savePlatform("android");
+savePlatform("android");
 
-            d.dismiss();
+d.dismiss();
 
 if ("apple".equals(getSavedPlatform())) {
-    applyAppleModeUI();
+applyAppleModeUI();
 } else {
-    applyAndroidModeUI();
+applyAndroidModeUI();
 }
 
 syncReturnButtonText();
-        });
+});
 
-        // --------------------------------------------
-        // APPLE BUTTON
-        // --------------------------------------------
-        appleBtn.setOnClickListener(v -> {
+// --------------------------------------------
+// APPLE BUTTON
+// --------------------------------------------
+appleBtn.setOnClickListener(v -> {
 
-            try { AppTTS.stop(); } catch (Throwable ignore) {}
+try { AppTTS.stop(); } catch (Throwable ignore) {}
 
-            welcomeShown = false;
+welcomeShown = false;
 
-            savePlatform("apple");
+savePlatform("apple");
 
-            d.dismiss();
-            recreate();
-        });
-    }
-
-    // =========================================================
-    // APPLE ENTRY POINT
-    // =========================================================
-    private void openAppleInternalPeripherals() {
-    applyAppleModeUI();
+d.dismiss();
+recreate();
+});
 }
 
-    // =========================================================
-    // ANDROID MODE UI FILTER
-    // =========================================================
-    private void applyAndroidModeUI() {
-
-        hide(R.id.btnAppleDeviceDeclaration);
-
-        show(R.id.section_system);
-        show(R.id.section_clean);
-        show(R.id.section_junk);
-        show(R.id.section_performance);
-
-        show(R.id.btnCpuRamLive);
-        show(R.id.btnCleanAll);
-        show(R.id.btnBrowserCache);
-        show(R.id.btnAppCache);
-
-        show(R.id.btnDonate);
-        show(R.id.btnPhoneInfoInternal);
-        show(R.id.btnPhoneInfoPeripherals);
-        show(R.id.btnDiagnostics);
-
-        // ANDROID DIAGNOSTICS - LOCALIZED + RESET STYLE
-        View diagBtn = findViewById(R.id.btnDiagnostics);
-        if (diagBtn instanceof TextView) {
-            TextView tv = (TextView) diagBtn;
-            tv.setText(R.string.diagnostics_android);
-            tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20f); 
-        }
-    }
-
-    // =========================================================
-    // APPLE MODE UI FILTER
-    // =========================================================
-    private void applyAppleModeUI() {
-
-        hide(R.id.section_system);
-        hide(R.id.section_clean);
-        hide(R.id.section_junk);
-        hide(R.id.section_performance);
-
-        hide(R.id.btnCpuRamLive);
-        hide(R.id.btnCleanAll);
-        hide(R.id.btnBrowserCache);
-        hide(R.id.btnAppCache);
-
-        hide(R.id.txtLogs);
-
-        show(R.id.btnDonate);
-        show(R.id.btnPhoneInfoInternal);
-        show(R.id.btnPhoneInfoPeripherals);
-        show(R.id.btnDiagnostics);
-        show(R.id.btnAppleDeviceDeclaration);
-
-        // APPLE DIAGNOSTICS - LOCALIZED + EMPHASIZED
-        View v = findViewById(R.id.btnDiagnostics);
-        if (v instanceof TextView) {
-            TextView tv = (TextView) v;
-            tv.setText(R.string.diagnostics_apple);
-            tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f);
-        }
-    }
-
-    private void hide(int id){
-        View v = findViewById(id);
-        if(v!=null) v.setVisibility(View.GONE);
-    }
-
-    private void show(int id){
-        View v = findViewById(id);
-        if(v!=null) v.setVisibility(View.VISIBLE);
-    }
-
-    // =========================================================
-    // LANGUAGE SYSTEM
-    // =========================================================
-    private void setupLangButtons() {
-        View bGR = findViewById(R.id.btnLangGR);
-        View bEN = findViewById(R.id.btnLangEN);
-
-        if (bGR != null) bGR.setOnClickListener(v -> changeLang("el"));
-        if (bEN != null) bEN.setOnClickListener(v -> changeLang("en"));
-    }
-
-    private void changeLang(String code) {
-
-    if (code.equals(LocaleHelper.getLang(this))) return;
-
-    LocaleHelper.set(this, code);
-
-    Intent i = getIntent();
-    finish();
-    startActivity(i);
+// =========================================================
+// APPLE ENTRY POINT
+// =========================================================
+private void openAppleInternalPeripherals() {
+applyAppleModeUI();
 }
 
-    // =========================================================
-    // DONATE
-    // =========================================================
-    private void setupDonate() {
-        View b = findViewById(R.id.btnDonate);
-        if (b != null) {
-            b.setOnClickListener(v -> {
-                try {
-                    startActivity(new Intent(Intent.ACTION_VIEW,
-                            Uri.parse("https://www.paypal.com/paypalme/gdiolitsis")));
-                } catch (Exception e) {
-                    Toast.makeText(this,"Cannot open browser",Toast.LENGTH_SHORT).show();
-                }
-            });
-        }
-    }
+// =========================================================
+// ANDROID MODE UI FILTER
+// =========================================================
+private void applyAndroidModeUI() {
 
-    // =========================================================
-    // BUTTONS - PLATFORM AWARE
-    // =========================================================
-    private void setupButtons() {
+hide(R.id.btnAppleDeviceDeclaration);
 
-        bind(R.id.btnAppleDeviceDeclaration,
-                this::showAppleDeviceDeclarationPopup);
+show(R.id.section_system);
+show(R.id.section_clean);
+show(R.id.section_junk);
+show(R.id.section_performance);
 
-        // ==========================
-        //  INTERNAL INFO
-        // ==========================
-        bind(R.id.btnPhoneInfoInternal, () -> {
-            if (isAppleMode()) {
-                startActivity(new Intent(
-                        this,
-                        AppleDeviceInfoInternalActivity.class
-                ));
-            } else {
-                startActivity(new Intent(
-                        this,
-                        DeviceInfoInternalActivity.class
-                ));
-            }
-        });
+show(R.id.btnCpuRamLive);
+show(R.id.btnCleanAll);
+show(R.id.btnBrowserCache);
+show(R.id.btnAppCache);
 
-        // ==========================
-        //  PERIPHERALS INFO
-        // ==========================
-        bind(R.id.btnPhoneInfoPeripherals, () -> {
-            if (isAppleMode()) {
-                startActivity(new Intent(
-                        this,
-                        AppleDeviceInfoPeripheralsActivity.class
-                ));
-            } else {
-                startActivity(new Intent(
-                        this,
-                        DeviceInfoPeripheralsActivity.class
-                ));
-            }
-        });
+show(R.id.btnDonate);
+show(R.id.btnPhoneInfoInternal);
+show(R.id.btnPhoneInfoPeripherals);
+show(R.id.btnDiagnostics);
+
+// ANDROID DIAGNOSTICS - LOCALIZED + RESET STYLE
+View diagBtn = findViewById(R.id.btnDiagnostics);
+if (diagBtn instanceof TextView) {
+TextView tv = (TextView) diagBtn;
+tv.setText(R.string.diagnostics_android);
+tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20f);
+}
+}
+
+// =========================================================
+// APPLE MODE UI FILTER
+// =========================================================
+private void applyAppleModeUI() {
+
+hide(R.id.section_system);
+hide(R.id.section_clean);
+hide(R.id.section_junk);
+hide(R.id.section_performance);
+
+hide(R.id.btnCpuRamLive);
+hide(R.id.btnCleanAll);
+hide(R.id.btnBrowserCache);
+hide(R.id.btnAppCache);
+
+hide(R.id.txtLogs);
+
+show(R.id.btnDonate);
+show(R.id.btnPhoneInfoInternal);
+show(R.id.btnPhoneInfoPeripherals);
+show(R.id.btnDiagnostics);
+show(R.id.btnAppleDeviceDeclaration);
+
+// APPLE DIAGNOSTICS - LOCALIZED + EMPHASIZED
+View v = findViewById(R.id.btnDiagnostics);
+if (v instanceof TextView) {
+TextView tv = (TextView) v;
+tv.setText(R.string.diagnostics_apple);
+tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f);
+}
+}
+
+private void hide(int id){
+View v = findViewById(id);
+if (v != null) v.setVisibility(View.GONE);
+}
+
+private void show(int id){
+View v = findViewById(id);
+if (v != null) v.setVisibility(View.VISIBLE);
+}
+
+// =========================================================
+// LANGUAGE SYSTEM
+// =========================================================
+private void setupLangButtons() {
+View bGR = findViewById(R.id.btnLangGR);
+View bEN = findViewById(R.id.btnLangEN);
+
+if (bGR != null) bGR.setOnClickListener(v -> changeLang("el"));
+if (bEN != null) bEN.setOnClickListener(v -> changeLang("en"));
+}
+
+private void changeLang(String code) {
+
+if (code.equals(LocaleHelper.getLang(this))) return;
+
+LocaleHelper.set(this, code);
+
+Intent i = getIntent();
+finish();
+startActivity(i);
+}
+
+// =========================================================
+// DONATE
+// =========================================================
+private void setupDonate() {
+View b = findViewById(R.id.btnDonate);
+if (b != null) {
+b.setOnClickListener(v -> {
+try {
+startActivity(new Intent(Intent.ACTION_VIEW,
+Uri.parse("https://www.paypal.com/paypalme/gdiolitsis")));
+} catch (Exception e) {
+Toast.makeText(this,"Cannot open browser",Toast.LENGTH_SHORT).show();
+}
+});
+}
+}
+
+// =========================================================
+// BUTTONS - PLATFORM AWARE
+// =========================================================
+private void setupButtons() {
+
+bind(R.id.btnAppleDeviceDeclaration,
+this::showAppleDeviceDeclarationPopup);
+
+// ==========================
+//  INTERNAL INFO
+// ==========================
+bind(R.id.btnPhoneInfoInternal, () -> {
+if (isAppleMode()) {
+startActivity(new Intent(
+this,
+AppleDeviceInfoInternalActivity.class
+));
+} else {
+startActivity(new Intent(
+this,
+DeviceInfoInternalActivity.class
+));
+}
+});
+
+// ==========================
+//  PERIPHERALS INFO
+// ==========================
+bind(R.id.btnPhoneInfoPeripherals, () -> {
+if (isAppleMode()) {
+startActivity(new Intent(
+this,
+AppleDeviceInfoPeripheralsActivity.class
+));
+} else {
+startActivity(new Intent(
+this,
+DeviceInfoPeripheralsActivity.class
+));
+}
+});
 
 // ==========================
 // ⚙️ ΥΠΟΛΟΙΠΑ ΚΟΥΜΠΙΑ
 // ==========================
 bind(R.id.btnCpuRamLive,
-        () -> startActivity(new Intent(this, CpuRamLiveActivity.class)));
+() -> startActivity(new Intent(this, CpuRamLiveActivity.class)));
 
-        bind(R.id.btnCleanAll,
-                () -> GELCleaner.deepClean(this,this));
+bind(R.id.btnCleanAll,
+() -> GELCleaner.deepClean(this,this));
 
-        bind(R.id.btnBrowserCache,
-                this::showBrowserPicker);
+bind(R.id.btnBrowserCache,
+this::showBrowserPicker);
 
-        View appCache = findViewById(R.id.btnAppCache);
-        if (appCache != null) {
+View appCache = findViewById(R.id.btnAppCache);
+if (appCache != null) {
 
-            appCache.setOnClickListener(v -> {
-                try {
+appCache.setOnClickListener(v -> {
+try {
 
-                    Intent i = new Intent(this, AppListActivity.class);
-                    i.putExtra("mode", "cache");   // CACHE MODE
-                    startActivity(i);
+Intent i = new Intent(this, AppListActivity.class);
+i.putExtra("mode", "cache"); // CACHE MODE
+startActivity(i);
 
-                } catch (Exception e) {
-                    Toast.makeText(this, "Cannot open App List", Toast.LENGTH_SHORT).show();
-                }
-            });
-        }
-
-        bind(R.id.btnDiagnostics, () -> {
-            startActivity(new Intent(
-                    this,
-                    DiagnosisMenuActivity.class
-            ));
-        });
-
-    }
-
-    // =========================================================
-    // BIND HELPER
-    // =========================================================
-    private void bind(int id, Runnable fn){
-        View b = findViewById(id);
-        if(b!=null){
-            b.setOnClickListener(v -> {
-                try { fn.run(); }
-                catch(Throwable t){
-                    Toast.makeText(this,
-                            "Action failed: "+t.getMessage(),
-                            Toast.LENGTH_SHORT).show();
-                }
-            });
-        }
-    }
-
-    // =========================================================
-    //  APPLE DEVICE DECLARATION
-    // =========================================================
-    private void showAppleDeviceDeclarationPopup() {
-
-        AlertDialog.Builder b =
-                new AlertDialog.Builder(this,
-                        android.R.style.Theme_Material_Dialog_Alert);
-
-        LinearLayout root = new LinearLayout(this);
-        root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(dp(20), dp(20), dp(20), dp(20));
-
-        GradientDrawable bg = new GradientDrawable();
-        bg.setColor(0xFF000000);
-        bg.setCornerRadius(dp(10));
-        bg.setStroke(dp(3), 0xFFFFD700);
-        root.setBackground(bg);
-
-        TextView title = new TextView(this);
-        title.setText("Select your Apple device");
-        title.setTextColor(Color.WHITE);
-        title.setTextSize(20f);
-        title.setTypeface(null, Typeface.BOLD);
-        title.setGravity(Gravity.CENTER);
-        title.setPadding(0, 0, 0, dp(16));
-        root.addView(title);
-
-        // ==========================
-        // ðŸ“± iPHONE BUTTON
-        // ==========================
-        Button iphoneBtn = new Button(this);
-        iphoneBtn.setIncludeFontPadding(false);
-        iphoneBtn.setText("📱  iPHONE");
-        iphoneBtn.setAllCaps(false);
-        iphoneBtn.setTextColor(Color.WHITE);
-        iphoneBtn.setTextSize(16f);
-
-        GradientDrawable iphoneBg = new GradientDrawable();
-        iphoneBg.setColor(0xFF000000);
-        iphoneBg.setCornerRadius(dp(10));
-        iphoneBg.setStroke(dp(3), 0xFFFFD700);
-        iphoneBtn.setBackground(iphoneBg);
-
-        LinearLayout.LayoutParams lpIphone =
-                new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        dp(72)
-                );
-        lpIphone.setMargins(0, dp(12), 0, 0);
-        iphoneBtn.setLayoutParams(lpIphone);
-        iphoneBtn.setPadding(dp(16), dp(14), dp(16), dp(14));
-
-        // ==========================
-        // ðŸ“² iPAD BUTTON
-        // ==========================
-        Button ipadBtn = new Button(this);
-        ipadBtn.setIncludeFontPadding(false);
-        ipadBtn.setText("📲  iPAD");
-        ipadBtn.setAllCaps(false);
-        ipadBtn.setTextColor(Color.WHITE);
-        ipadBtn.setTextSize(16f);
-
-        GradientDrawable ipadBg = new GradientDrawable();
-        ipadBg.setColor(0xFF000000);
-        ipadBg.setCornerRadius(dp(10));
-        ipadBg.setStroke(dp(3), 0xFFFFD700);
-        ipadBtn.setBackground(ipadBg);
-
-        LinearLayout.LayoutParams lpIpad =
-                new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        dp(72)
-                );
-        lpIpad.setMargins(0, dp(12), 0, 0);
-        ipadBtn.setLayoutParams(lpIpad);
-        ipadBtn.setPadding(dp(16), dp(14), dp(16), dp(14));
-
-        // ==========================
-        // ADD TO BOX
-        // ==========================
-        root.addView(iphoneBtn);
-        root.addView(ipadBtn);
-
-        b.setView(root);
-        AlertDialog d = b.create();
-        if (d.getWindow() != null)
-            d.getWindow().setBackgroundDrawable(
-                    new ColorDrawable(Color.TRANSPARENT));
-
-        d.show();
-
-        // ==========================
-        // ACTIONS
-        // ==========================
-        iphoneBtn.setOnClickListener(v -> {
-            d.dismiss();
-            showAppleModelPicker("iphone");
-        });
-
-        ipadBtn.setOnClickListener(v -> {
-            d.dismiss();
-            showAppleModelPicker("ipad");
-        });
-    }
-
-    // =========================================================
-    //  MODEL PICKER - GEL STYLE (FINAL)
-    // =========================================================
-    private void showAppleModelPicker(String type) {
-
-        String[] models = "iphone".equals(type)
-                ? new String[]{
-                "iPhone 15",
-                "iPhone 15 Pro",
-                "iPhone 15 Pro Max",
-
-                "iPhone 14",
-                "iPhone 14 Pro",
-                "iPhone 14 Pro Max",
-
-                "iPhone 13",
-                "iPhone 13 Pro",
-                "iPhone 13 Pro Max",
-
-                "iPhone 12",
-                "iPhone 12 Pro",
-                "iPhone 12 Pro Max",
-
-                "iPhone 11",
-                "iPhone 11 Pro",
-                "iPhone 11 Pro Max"
-        }
-                : new String[]{
-                "iPad Pro 11 (M2)",
-                "iPad Pro 12.9 (M2)",
-                "iPad Pro 11 (M1)",
-                "iPad Pro 12.9 (M1)",
-                "iPad Air 11 (M2)",
-                "iPad Air 13 (M2)",
-                "iPad Air (M1)",
-                "iPad mini 6"
-        };
-
-        AlertDialog.Builder b =
-                new AlertDialog.Builder(this,
-                        android.R.style.Theme_Material_Dialog_Alert);
-
-        LinearLayout root = new LinearLayout(this);
-        root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(dp(18), dp(18), dp(18), dp(18));
-
-        GradientDrawable bg = new GradientDrawable();
-        bg.setColor(0xFFFFD700);
-        bg.setCornerRadius(dp(10));
-        bg.setStroke(dp(3), 0xFFFFD700);
-        root.setBackground(bg);
-
-        TextView title = new TextView(this);
-        title.setText("Select Apple Model");
-        title.setTextColor(Color.WHITE);
-       
-        root.addView(title);
-
-        ListView list = new ListView(this);
-        list.setDivider(null);
-        list.setDividerHeight(0);
-
-        ArrayAdapter<String> adapter =
-                new ArrayAdapter<String>(
-                        this,
-                        android.R.layout.simple_list_item_1,
-                        models
-                ) {
-                    @Override
-                    public View getView(int position, View convertView, ViewGroup parent) {
-                        TextView tv = (TextView) super.getView(position, convertView, parent);
-                        tv.setTextColor(0xFF00FF9C);
-                        tv.setTextSize(16f);
-                        tv.setTypeface(Typeface.MONOSPACE, Typeface.BOLD);
-                        tv.setPadding(dp(14), dp(14), dp(14), dp(14));
-                        tv.setBackground(null);
-                        return tv;
-                    }
-                };
-
-        list.setAdapter(adapter);
-        root.addView(list);
-        b.setView(root);
-
-        AlertDialog d = b.create();
-        if (d.getWindow() != null)
-            d.getWindow().setBackgroundDrawable(
-                    new ColorDrawable(Color.TRANSPARENT));
-
-        d.show();
-
-        // =========================
-        // ACTION
-        // =========================
-        list.setOnItemClickListener((parent, view, position, id) -> {
-
-            String rawModel = models[position];
-            String normalizedModel = normalizeAppleModel(rawModel);
-
-            saveAppleDevice(type, normalizedModel);
-
-            TextView btn = findViewById(R.id.btnAppleDeviceDeclaration);
-if (btn != null) {
-    btn.setText("🍎 " + type.toUpperCase(Locale.US)
-            + " — " + rawModel);
+} catch (Exception e) {
+Toast.makeText(this, "Cannot open App List", Toast.LENGTH_SHORT).show();
+}
+});
 }
 
-            Toast.makeText(
-                    this,
-                    "Selected: " + rawModel,
-                    Toast.LENGTH_SHORT
-            ).show();
+bind(R.id.btnDiagnostics, () -> {
+startActivity(new Intent(
+this,
+DiagnosisMenuActivity.class
+));
+});
 
-            d.dismiss();
-        });
-    }
+}
 
-    // =========================================================
-    // NORMALIZE APPLE MODEL - MATCH iPadSpecs / AppleSpecs
-    // =========================================================
-    private String normalizeAppleModel(String raw) {
+// =========================================================
+// BIND HELPER
+// =========================================================
+private void bind(int id, Runnable fn){
+View b = findViewById(id);
+if (b != null){
+b.setOnClickListener(v -> {
+try { fn.run(); }
+catch(Throwable t){
+Toast.makeText(this,
+"Action failed: "+t.getMessage(),
+Toast.LENGTH_SHORT).show();
+}
+});
+}
+}
 
-        if (raw == null) return null;
+// =========================================================
+//  APPLE DEVICE DECLARATION
+// =========================================================
+private void showAppleDeviceDeclarationPopup() {
 
-        String m = raw.trim();
+AlertDialog.Builder b =
+new AlertDialog.Builder(this,
+android.R.style.Theme_Material_Dialog_Alert);
 
-        // iPad Pro
-        if (m.equals("iPad Pro 11 (M2)"))    return "iPad Pro 11 M2";
-        if (m.equals("iPad Pro 12.9 (M2)"))  return "iPad Pro 12.9 M2";
-        if (m.equals("iPad Pro 11 (M1)"))    return "iPad Pro 11 M1";
-        if (m.equals("iPad Pro 12.9 (M1)"))  return "iPad Pro 12.9 M1";
+LinearLayout root = new LinearLayout(this);
+root.setOrientation(LinearLayout.VERTICAL);
+root.setPadding(dp(20), dp(20), dp(20), dp(20));
 
-        // iPad Air
-        if (m.equals("iPad Air 11 (M2)"))    return "iPad Air 11 M2";
-        if (m.equals("iPad Air 13 (M2)"))    return "iPad Air 13 M2";
-        if (m.equals("iPad Air (M1)"))       return "iPad Air M1";
+GradientDrawable bg = new GradientDrawable();
+bg.setColor(0xFF000000);
+bg.setCornerRadius(dp(10));
+bg.setStroke(dp(3), 0xFFFFD700);
+root.setBackground(bg);
 
-        // iPad mini
-        if (m.equals("iPad mini 6"))         return "iPad mini 6";
+TextView title = new TextView(this);
+title.setText("Select your Apple device");
+title.setTextColor(Color.WHITE);
+title.setTextSize(20f);
+title.setTypeface(null, Typeface.BOLD);
+title.setGravity(Gravity.CENTER);
+title.setPadding(0, 0, 0, dp(16));
+root.addView(title);
 
-        // iPhones are already correct
-        return m;
-    }
+// ==========================
+// ðŸ“± iPHONE BUTTON
+// ==========================
+Button iphoneBtn = new Button(this);
+iphoneBtn.setIncludeFontPadding(false);
+iphoneBtn.setText("📱  iPHONE");
+iphoneBtn.setAllCaps(false);
+iphoneBtn.setTextColor(Color.WHITE);
+iphoneBtn.setTextSize(16f);
 
-    // =========================================================
-    // SAVE SELECTION (LOCKED KEYS)
-    // =========================================================
-    private void saveAppleDevice(String type, String model) {
+GradientDrawable iphoneBg = new GradientDrawable();
+iphoneBg.setColor(0xFF000000);
+iphoneBg.setCornerRadius(dp(10));
+iphoneBg.setStroke(dp(3), 0xFFFFD700);
+iphoneBtn.setBackground(iphoneBg);
 
-        getSharedPreferences(PREFS, MODE_PRIVATE)
-                .edit()
-                .putString("apple_type", type)
-                .putString("apple_model", model)
-                .apply();
-    }
+LinearLayout.LayoutParams lpIphone =
+new LinearLayout.LayoutParams(
+LinearLayout.LayoutParams.MATCH_PARENT,
+dp(72)
+);
+lpIphone.setMargins(0, dp(12), 0, 0);
+iphoneBtn.setLayoutParams(lpIphone);
+iphoneBtn.setPadding(dp(16), dp(14), dp(16), dp(14));
 
-    // =========================================================
-    // BROWSER PICKER - DYNAMIC (REAL BROWSERS ONLY)
-    // =========================================================
-    private void showBrowserPicker() {
+// ==========================
+// ðŸ“² iPAD BUTTON
+// ==========================
+Button ipadBtn = new Button(this);
+ipadBtn.setIncludeFontPadding(false);
+ipadBtn.setText("📲  iPAD");
+ipadBtn.setAllCaps(false);
+ipadBtn.setTextColor(Color.WHITE);
+ipadBtn.setTextSize(16f);
 
-        PackageManager pm = getPackageManager();
+GradientDrawable ipadBg = new GradientDrawable();
+ipadBg.setColor(0xFF000000);
+ipadBg.setCornerRadius(dp(10));
+ipadBg.setStroke(dp(3), 0xFFFFD700);
+ipadBtn.setBackground(ipadBg);
 
-        // -----------------------------------------------------
-        // FIND REAL BROWSERS
-        // -----------------------------------------------------
-        Map<String, String> apps = new LinkedHashMap<>();
+LinearLayout.LayoutParams lpIpad =
+new LinearLayout.LayoutParams(
+LinearLayout.LayoutParams.MATCH_PARENT,
+dp(72)
+);
+lpIpad.setMargins(0, dp(12), 0, 0);
+ipadBtn.setLayoutParams(lpIpad);
+ipadBtn.setPadding(dp(16), dp(14), dp(16), dp(14));
 
-        Intent browserIntent = new Intent(Intent.ACTION_MAIN);
-        browserIntent.addCategory(Intent.CATEGORY_APP_BROWSER);
+// ==========================
+// ADD TO BOX
+// ==========================
+root.addView(iphoneBtn);
+root.addView(ipadBtn);
 
-        List<ResolveInfo> browsers =
-                pm.queryIntentActivities(browserIntent, 0);
+b.setView(root);
+AlertDialog d = b.create();
+if (d.getWindow() != null)
+d.getWindow().setBackgroundDrawable(
+new ColorDrawable(Color.TRANSPARENT));
 
-        if (browsers != null) {
-            for (ResolveInfo ri : browsers) {
+d.show();
 
-                if (ri.activityInfo == null) continue;
+// ==========================
+// ACTIONS
+// ==========================
+iphoneBtn.setOnClickListener(v -> {
+d.dismiss();
+showAppleModelPicker("iphone");
+});
 
-                String pkg = ri.activityInfo.packageName;
-                CharSequence label = ri.loadLabel(pm);
+ipadBtn.setOnClickListener(v -> {
+d.dismiss();
+showAppleModelPicker("ipad");
+});
+}
 
-                if (pkg == null || label == null) continue;
+// =========================================================
+//  MODEL PICKER - GEL STYLE (FINAL)
+// =========================================================
+private void showAppleModelPicker(String type) {
 
-                // verify http support
-                Intent httpTest = new Intent(Intent.ACTION_VIEW,
-                        Uri.parse("http://www.example.com"));
-                httpTest.setPackage(pkg);
+String[] models = "iphone".equals(type)
+? new String[]{
+"iPhone 15",
+"iPhone 15 Pro",
+"iPhone 15 Pro Max",
 
-                List<ResolveInfo> httpHandlers =
-                        pm.queryIntentActivities(httpTest, 0);
+"iPhone 14",
+"iPhone 14 Pro",
+"iPhone 14 Pro Max",
 
-                if (httpHandlers == null || httpHandlers.isEmpty())
-                    continue;
+"iPhone 13",
+"iPhone 13 Pro",
+"iPhone 13 Pro Max",
 
-                apps.put(label.toString(), pkg);
-            }
-        }
+"iPhone 12",
+"iPhone 12 Pro",
+"iPhone 12 Pro Max",
 
-        // -----------------------------------------------------
-        // HANDLE RESULTS
-        // -----------------------------------------------------
-        if (apps.isEmpty()) {
-            Toast.makeText(this, "No browsers found.", Toast.LENGTH_SHORT).show();
-            return;
-        }
+"iPhone 11",
+"iPhone 11 Pro",
+"iPhone 11 Pro Max"
+}
+: new String[]{
+"iPad Pro 11 (M2)",
+"iPad Pro 12.9 (M2)",
+"iPad Pro 11 (M1)",
+"iPad Pro 12.9 (M1)",
+"iPad Air 11 (M2)",
+"iPad Air 13 (M2)",
+"iPad Air (M1)",
+"iPad mini 6"
+};
 
-        if (apps.size() == 1) {
-            openAppInfo(apps.values().iterator().next());
-            return;
-        }
+AlertDialog.Builder b =
+new AlertDialog.Builder(this,
+android.R.style.Theme_Material_Dialog_Alert);
 
-        String[] names = apps.keySet().toArray(new String[0]);
+LinearLayout root = new LinearLayout(this);
+root.setOrientation(LinearLayout.VERTICAL);
+root.setPadding(dp(18), dp(18), dp(18), dp(18));
 
-        // -----------------------------------------------------
-        // POPUP 
-        // -----------------------------------------------------
-        AlertDialog.Builder builder = buildNeonDialog();
+GradientDrawable bg = new GradientDrawable();
+bg.setColor(0xFFFFD700);
+bg.setCornerRadius(dp(10));
+bg.setStroke(dp(3), 0xFFFFD700);
+root.setBackground(bg);
 
-        TextView title = new TextView(this);
-        title.setText("Select Browser");
-        title.setTextColor(0xFFFFFFFF);
-        title.setTextSize(18f);
-        title.setTypeface(null, Typeface.BOLD);
-        title.setGravity(Gravity.CENTER); 
-        title.setPadding(dp(16), dp(14), dp(16), dp(10));
+TextView title = new TextView(this);
+title.setText("Select Apple Model");
+title.setTextColor(Color.WHITE);
 
-        title.setLayoutParams(
-                new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT
-                )
-        );
+root.addView(title);
 
-        builder.setCustomTitle(title);
+ListView list = new ListView(this);
+list.setDivider(null);
+list.setDividerHeight(0);
 
-        builder.setAdapter(neonAdapter(names), (d, w) -> {
-            String pkg = apps.get(names[w]);
-            openAppInfo(pkg);
-        });
+ArrayAdapter < String > adapter =
+new ArrayAdapter < String > (
+this,
+android.R.layout.simple_list_item_1,
+models
+) {
+@Override
+public View getView(int position, View convertView, ViewGroup parent) {
+TextView tv = (TextView) super.getView(position, convertView, parent);
+tv.setTextColor(0xFF00FF9C);
+tv.setTextSize(16f);
+tv.setTypeface(Typeface.MONOSPACE, Typeface.BOLD);
+tv.setPadding(dp(14), dp(14), dp(14), dp(14));
+tv.setBackground(null);
+return tv;
+}
+};
 
-        AlertDialog dialog = builder.create();
-        dialog.show();
+list.setAdapter(adapter);
+root.addView(list);
+b.setView(root);
 
-        Window window = dialog.getWindow();
-        if (window != null) {
-            GradientDrawable bg = new GradientDrawable();
-            bg.setColor(0xFF000000);
-            bg.setCornerRadius(dp(10));
-            bg.setStroke(dp(3), 0xFFFFD700);
-            window.setBackgroundDrawable(bg);
-        }
-    }
+AlertDialog d = b.create();
+if (d.getWindow() != null)
+d.getWindow().setBackgroundDrawable(
+new ColorDrawable(Color.TRANSPARENT));
 
-    // =========================================================
-    // LOGGING,
-    // =========================================================
-    @Override
-    public void log(String msg, boolean isError) {
-        runOnUiThread(() -> {
-            if (txtLogs == null) return;
+d.show();
 
-            String prev = txtLogs.getText()==null ? "" : txtLogs.getText().toString();
-            txtLogs.setText(prev.isEmpty()?msg:prev+"\n"+msg);
+// =========================
+// ACTION
+// =========================
+list.setOnItemClickListener((parent, view, position, id) -> {
 
-            if (scroll != null)
-                scroll.post(() -> scroll.fullScroll(ScrollView.FOCUS_DOWN));
-        });
-    }
+String rawModel = models[position];
+String normalizedModel = normalizeAppleModel(rawModel);
 
-    // =========================================================
-    // OPEN APP INFO (for Browser Picker)
-    // =========================================================
-    private void openAppInfo(String pkg) {
-        try {
-            Intent i = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-            i.setData(Uri.parse("package:" + pkg));
-            startActivity(i);
-        } catch (Exception e) {
-            Toast.makeText(this, "Cannot open App Info", Toast.LENGTH_SHORT).show();
-        }
-    }
+saveAppleDevice(type, normalizedModel);
+
+TextView btn = findViewById(R.id.btnAppleDeviceDeclaration);
+if (btn != null) {
+btn.setText("🍎 " + type.toUpperCase(Locale.US)
++ " — " + rawModel);
+}
+
+Toast.makeText(
+this,
+"Selected: " + rawModel,
+Toast.LENGTH_SHORT
+).show();
+
+d.dismiss();
+});
+}
+
+// =========================================================
+// NORMALIZE APPLE MODEL - MATCH iPadSpecs / AppleSpecs
+// =========================================================
+private String normalizeAppleModel(String raw) {
+
+if (raw == null) return null;
+
+String m = raw.trim();
+
+// iPad Pro
+if (m.equals("iPad Pro 11 (M2)")) return "iPad Pro 11 M2";
+if (m.equals("iPad Pro 12.9 (M2)")) return "iPad Pro 12.9 M2";
+if (m.equals("iPad Pro 11 (M1)")) return "iPad Pro 11 M1";
+if (m.equals("iPad Pro 12.9 (M1)")) return "iPad Pro 12.9 M1";
+
+// iPad Air
+if (m.equals("iPad Air 11 (M2)")) return "iPad Air 11 M2";
+if (m.equals("iPad Air 13 (M2)")) return "iPad Air 13 M2";
+if (m.equals("iPad Air (M1)")) return "iPad Air M1";
+
+// iPad mini
+if (m.equals("iPad mini 6")) return "iPad mini 6";
+
+// iPhones are already correct
+return m;
+}
+
+// =========================================================
+// SAVE SELECTION (LOCKED KEYS)
+// =========================================================
+private void saveAppleDevice(String type, String model) {
+
+getSharedPreferences(PREFS, MODE_PRIVATE)
+.edit()
+.putString("apple_type", type)
+.putString("apple_model", model)
+.apply();
+}
+
+// =========================================================
+// BROWSER PICKER - DYNAMIC (REAL BROWSERS ONLY)
+// =========================================================
+private void showBrowserPicker() {
+
+PackageManager pm = getPackageManager();
+
+// -----------------------------------------------------
+// FIND REAL BROWSERS
+// -----------------------------------------------------
+Map < String, String > apps = new LinkedHashMap<>();
+
+Intent browserIntent = new Intent(Intent.ACTION_MAIN);
+browserIntent.addCategory(Intent.CATEGORY_APP_BROWSER);
+
+List < ResolveInfo > browsers =
+pm.queryIntentActivities(browserIntent, 0);
+
+if (browsers != null) {
+for (ResolveInfo ri : browsers) {
+
+if (ri.activityInfo == null) continue;
+
+String pkg = ri.activityInfo.packageName;
+CharSequence label = ri.loadLabel(pm);
+
+if (pkg == null || label == null) continue;
+
+// verify http support
+Intent httpTest = new Intent(Intent.ACTION_VIEW,
+Uri.parse("http://www.example.com"));
+httpTest.setPackage(pkg);
+
+List < ResolveInfo > httpHandlers =
+pm.queryIntentActivities(httpTest, 0);
+
+if (httpHandlers == null || httpHandlers.isEmpty())
+continue;
+
+apps.put(label.toString(), pkg);
+}
+}
+
+// -----------------------------------------------------
+// HANDLE RESULTS
+// -----------------------------------------------------
+if (apps.isEmpty()) {
+Toast.makeText(this, "No browsers found.", Toast.LENGTH_SHORT).show();
+return;
+}
+
+if (apps.size() == 1) {
+openAppInfo(apps.values().iterator().next());
+return;
+}
+
+String[] names = apps.keySet().toArray(new String[0]);
+
+// -----------------------------------------------------
+// POPUP
+// -----------------------------------------------------
+AlertDialog.Builder builder = buildNeonDialog();
+
+TextView title = new TextView(this);
+title.setText("Select Browser");
+title.setTextColor(0xFFFFFFFF);
+title.setTextSize(18f);
+title.setTypeface(null, Typeface.BOLD);
+title.setGravity(Gravity.CENTER);
+title.setPadding(dp(16), dp(14), dp(16), dp(10));
+
+title.setLayoutParams(
+new LinearLayout.LayoutParams(
+LinearLayout.LayoutParams.MATCH_PARENT,
+LinearLayout.LayoutParams.WRAP_CONTENT
+)
+);
+
+builder.setCustomTitle(title);
+
+builder.setAdapter(neonAdapter(names), (d, w) -> {
+String pkg = apps.get(names[w]);
+openAppInfo(pkg);
+});
+
+AlertDialog dialog = builder.create();
+dialog.show();
+
+Window window = dialog.getWindow();
+if (window != null) {
+GradientDrawable bg = new GradientDrawable();
+bg.setColor(0xFF000000);
+bg.setCornerRadius(dp(10));
+bg.setStroke(dp(3), 0xFFFFD700);
+window.setBackgroundDrawable(bg);
+}
+}
+
+// =========================================================
+// LOGGING,
+// =========================================================
+@Override
+public void log(String msg, boolean isError) {
+runOnUiThread(() -> {
+if (txtLogs == null) return;
+
+String prev = txtLogs.getText() == null ? "" : txtLogs.getText().toString();
+txtLogs.setText(prev.isEmpty()?msg:prev+"\n"+msg);
+
+if (scroll != null)
+scroll.post(() -> scroll.fullScroll(ScrollView.FOCUS_DOWN));
+});
+}
+
+// =========================================================
+// OPEN APP INFO (for Browser Picker)
+// =========================================================
+private void openAppInfo(String pkg) {
+try {
+Intent i = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+i.setData(Uri.parse("package:" + pkg));
+startActivity(i);
+} catch (Exception e) {
+Toast.makeText(this, "Cannot open App Info", Toast.LENGTH_SHORT).show();
+}
+}
 
 }

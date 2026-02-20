@@ -8422,7 +8422,7 @@ if (requestCode == REQ_LAB13_BT_CONNECT) {
         lab13Running = true;
 
         // 🔁 Επανεκκίνηση Lab 13 μετά το permission
-        lab13BluetoothCheck();
+        lab13BluetoothConnectivityCheck();
 
     } else {
 

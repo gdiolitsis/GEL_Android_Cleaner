@@ -9713,25 +9713,16 @@ private void lab13FinishAndReport(boolean adapterStable) {
     // report header
     logLine();
     logInfo("LAB 13 — Results (60s monitor)");
-    logLabelValue(
-        "Adapter stable",
-        adapterStable ? "Yes" : "No"
-);
-
-logLabelValue(
-        "Disconnect events",
-        String.valueOf(lab13DisconnectEvents)
-);
-
-logLabelValue(
-        "Reconnect events",
-        String.valueOf(lab13ReconnectEvents)
-);
+    logLabelValue("Adapter stable", adapterStable ? "Yes" : "No");
+    logLabelValue("Disconnect events", String.valueOf(lab13DisconnectEvents));
+    logLabelValue("Reconnect events", String.valueOf(lab13ReconnectEvents));
 
     // list connected devices now
     for (int p : profiles) {
         try {
-            List<BluetoothDevice> list = (lab13Bm != null) ? lab13Bm.getConnectedDevices(p) : null;
+            List<BluetoothDevice> list =
+                    (lab13Bm != null) ? lab13Bm.getConnectedDevices(p) : null;
+
             if (list != null && !list.isEmpty()) {
                 anyActive = true;
                 logOk(lab13ProfileName(p) + " connected devices:");
@@ -9746,15 +9737,19 @@ logLabelValue(
 
     if (anyActive) {
 
-    logOk("External Bluetooth connectivity detected at finish.");
+        logOk("External Bluetooth connectivity detected at finish.");
 
-} else if (lab13HadAnyConnection) {
+    } else if (lab13HadAnyConnection) {
 
         logInfo(
-    "An external Bluetooth device was connected during the test, " +
-    "but it is currently not in active use."
-    );
+                "An external Bluetooth device was connected during the test, " +
+                "but it is currently not in active use."
+        );
+    }
 
+    appendHtml("<br>");
+    logOk("Lab 13 finished.");
+    logLine();
 }
 
     // ------------------------------------------------------------

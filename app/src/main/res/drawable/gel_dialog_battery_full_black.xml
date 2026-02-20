@@ -11,7 +11,7 @@
         android:color="#FFD700" />
 
     <!-- Rounded Corners -->
-    <corners android:radius="18dp" />
+    <corners android:radius="10dp" />
 
     <!-- Inner Padding -->
     <padding

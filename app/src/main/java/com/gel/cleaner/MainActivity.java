@@ -165,14 +165,6 @@ if (hasMissingPermissions() && !isPermissionsDisabled()) {
 
 requestNextPermission();
 
-if (hasMissingPermissions() && !isPermissionsDisabled()) {
-showPermissionsPopup();
-return;
-}
-}
-
-requestNextPermission();
-
 // APPLY PLATFORM UI
 if ("apple".equals(getSavedPlatform())) {
 applyAppleModeUI();

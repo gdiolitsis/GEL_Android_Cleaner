@@ -33,6 +33,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import java.util.ArrayList;
 import java.util.Locale;
 import java.util.List;
 import java.util.Map;
@@ -56,27 +57,16 @@ private TextView permissionsMsg;
     private static final int REQ_PERMISSIONS = 1001;
     private static final String PREF_PERMISSIONS_DISABLED = "permissions_disabled";
     
-    private String[] getRequiredPermissions() {
+    private final String[] REQUIRED_PERMISSIONS = new String[]{
 
-    List<String> list = new ArrayList<>();
-
-    list.add(Manifest.permission.RECORD_AUDIO);
-    list.add(Manifest.permission.CAMERA);
-    list.add(Manifest.permission.ACCESS_FINE_LOCATION);
-
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-        list.add(Manifest.permission.BLUETOOTH_CONNECT);
-    }
-
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        list.add(Manifest.permission.READ_MEDIA_IMAGES);
-        list.add(Manifest.permission.READ_MEDIA_VIDEO);
-    } else {
-        list.add(Manifest.permission.READ_EXTERNAL_STORAGE);
-    }
-
-    return list.toArray(new String[0]);
-}
+        Manifest.permission.RECORD_AUDIO,          // Mic Labs
+        Manifest.permission.CAMERA,                // Camera Labs
+        Manifest.permission.ACCESS_FINE_LOCATION,  // WiFi / BLE / sensors
+        Manifest.permission.BLUETOOTH_CONNECT,     // Modern BT (API 31+)
+        Manifest.permission.READ_EXTERNAL_STORAGE, // <= Android 12
+        Manifest.permission.READ_MEDIA_IMAGES,     // Android 13+
+        Manifest.permission.READ_MEDIA_VIDEO       // Android 13+
+};
 
     private TextView txtLogs;
     private ScrollView scroll;
@@ -612,11 +602,11 @@ private String getPermissionsTextEN() {
     // =========================================================
     private void requestNextPermission() {
 
-String[] perms = getRequiredPermissions();
+    String[] perms = getRequiredPermissions();
 
-while (permissionIndex < perms.length) {
+    while (permissionIndex < perms.length) {
 
-    String p = perms[permissionIndex];
+        String p = perms[permissionIndex];
 
         if (ContextCompat.checkSelfPermission(this, p)
                 != PackageManager.PERMISSION_GRANTED) {
@@ -632,12 +622,13 @@ while (permissionIndex < perms.length) {
         permissionIndex++;
     }
 
+    // Όταν τελειώσουν όλα
     if (!isWelcomeDisabled()) {
-    showWelcomePopup();
-    return;
-}
+        showWelcomePopup();
+        return;
+    }
 
-    // Τέλος flow
+    // End of flow
 }
 
     @Override
@@ -667,7 +658,7 @@ public void onRequestPermissionsResult(
     // HELPERS
     // =========================================================
     private boolean hasMissingPermissions() {
-        for (String p : REQUIRED_PERMISSIONS) {
+        for (String p : getRequiredPermissions()) {
             if (ContextCompat.checkSelfPermission(this, p)
                     != PackageManager.PERMISSION_GRANTED) {
                 return true;

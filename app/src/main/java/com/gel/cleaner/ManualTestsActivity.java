@@ -8410,7 +8410,6 @@ public void onRequestPermissionsResult(
 
         return;
     }
-}
 
 // =========================
 // LAB 13 BLUETOOTH

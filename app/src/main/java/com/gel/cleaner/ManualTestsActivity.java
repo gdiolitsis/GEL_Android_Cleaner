@@ -193,142 +193,112 @@ public class ManualTestsActivity extends AppCompatActivity {
 
     private boolean lab6ProCanceled = false;
 
-// ============================================================
-// LAB 8.1 — STATE (CLASS FIELDS)
-// ============================================================
-private ArrayList<Lab8Cam> lab8CamsFor81 = null;
-private CameraManager lab8CmFor81 = null;
-private final Map<String, Integer> lab8CameraLogAnchors = new HashMap<>();
+    // ============================================================
+    // LAB 8.1 — STATE (CLASS FIELDS)
+    // ============================================================
+    private ArrayList<Lab8Cam> lab8CamsFor81 = null;
+    private CameraManager lab8CmFor81 = null;
+    private final Map<String, Integer> lab8CameraLogAnchors = new HashMap<>();
 
-// ============================================================
-// LAB 13 — BLUETOOTH RECEIVER (FINAL / AUTHORITATIVE)
-// ============================================================
-private final BroadcastReceiver lab13BtReceiver = new BroadcastReceiver() {
-    @Override
-    public void onReceive(Context c, Intent i) {
+    // ============================================================
+    // LAB 13 — BLUETOOTH RECEIVER (FINAL / AUTHORITATIVE)
+    // ============================================================
+    private final BroadcastReceiver lab13BtReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context c, Intent i) {
 
-        if (!lab13Running && !lab13MonitoringStarted) {
+            if (!lab13Running && !lab13MonitoringStarted) {
 
-            String a = i.getAction();
+                String a = i.getAction();
 
-            if (BluetoothDevice.ACTION_ACL_CONNECTED.equals(a)) {
+                if (BluetoothDevice.ACTION_ACL_CONNECTED.equals(a)) {
 
-                lab13ReceiverSawConnection = true;
-                lab13HadAnyConnection = true;
+                    lab13ReceiverSawConnection = true;
+                    lab13HadAnyConnection = true;
 
-                final boolean gr = AppLang.isGreek(c);
+                    final boolean gr = AppLang.isGreek(c);
 
-                if (lab13StatusText != null) {
-                    lab13StatusText.setText(
-                            gr
-                                    ? "Συνδέθηκε εξωτερική συσκευή Bluetooth. Εκκίνηση παρακολούθησης..."
-                                    : "External Bluetooth device connected. Starting monitor..."
-                    );
+                    if (lab13StatusText != null) {
+                        lab13StatusText.setText(
+                                gr
+                                        ? "Συνδέθηκε εξωτερική συσκευή Bluetooth. Εκκίνηση παρακολούθησης..."
+                                        : "External Bluetooth device connected. Starting monitor..."
+                        );
+                    }
+
+                    if (!lab13WaitTtsPlayed && !AppTTS.isMuted(c)) {
+                        lab13WaitTtsPlayed = true;
+                        AppTTS.ensureSpeak(
+                                c,
+                                gr
+                                        ? "Εντοπίστηκε σύνδεση Bluetooth. Ξεκινά η παρακολούθηση."
+                                        : "Bluetooth connection detected. Monitoring started."
+                        );
+                    }
+
+                    startLab13Monitor60s();
                 }
-
-                // 🔊 OPTIONAL TTS (once)
-                if (!lab13WaitTtsPlayed && !AppTTS.isMuted(c)) {
-                    lab13WaitTtsPlayed = true;
-                    AppTTS.ensureSpeak(
-                            c,
-                            gr
-                                    ? "Εντοπίστηκε σύνδεση Bluetooth. Ξεκινά η παρακολούθηση."
-                                    : "Bluetooth connection detected. Monitoring started."
-                    );
-                }
-
-                // 🚀 START MONITOR
-                startLab13Monitor60s();
             }
         }
-    }
-};
+    };
 
-// ✅ Activity field (NOT inside receiver)
-private boolean lab13WaitTtsPlayed = false;
+    // ✅ Activity field (NOT inside receiver)
+    private boolean lab13WaitTtsPlayed = false;
 
-// ============================================================
-// GLOBAL TTS (for labs that need shared access)
-// ============================================================
-private TextToSpeech[] tts = new TextToSpeech[1];
-private boolean[] ttsReady = { false };
-
-// ============================================================
-// GLOBAL TTS PREF — WRAPPER TO AppTTS (SINGLE AUTHORITY)
-// ============================================================
-
-private void loadTtsMuted() {
-    // handled centrally by AppTTS
-}
-
-private boolean isTtsMuted() {
-    return AppTTS.isMuted(this);
-}
-
-private void setTtsMuted(boolean muted) {
-    AppTTS.setMuted(this, muted);
-}
-
-// ============================================================
-// GLOBAL PREFS ALIAS (used by labs + helpers)
-// ============================================================
-private SharedPreferences p;
-
-// ============================================================
-// GEL DIAG — GLOBAL PREFS (CLASS LEVEL)
-// ============================================================
-private SharedPreferences prefs;
-
-    // PERMISSION ENGINE (UNIVERSAL)
     // ============================================================
-    private static final int REQ_CORE_PERMS = 5000;
-    private Runnable pendingAfterPermission = null;
+    // GLOBAL TTS (for labs that need shared access)
+    // ============================================================
+    private TextToSpeech[] tts = new TextToSpeech[1];
+    private boolean[] ttsReady = { false };
 
-    private static final int REQ_LAB6_TOUCH = 6006;
-    private static final int REQ_LAB6_COLOR = 6007;
-    private static final int REQ_LAB13_BT_CONNECT = 1313;
-
-    private AlertDialog lab14RunningDialog;
-    private AlertDialog activeDialog;
-    private String pendingTtsText;
-
-    private boolean lab6ProCanceled = false; permission)
-            != PackageManager.PERMISSION_GRANTED) {
-
-        ActivityCompat.requestPermissions(
-                this,
-                new String[]{permission},
-                code
-        );
-        return false;
+    // ============================================================
+    // GLOBAL TTS PREF — WRAPPER TO AppTTS (SINGLE AUTHORITY)
+    // ============================================================
+    private void loadTtsMuted() {
+        // handled centrally by AppTTS
     }
 
-    return true;
-}
+    private boolean isTtsMuted() {
+        return AppTTS.isMuted(this);
+    }
 
-// ============================================================
-// LAB 3 — STATE (CLASS LEVEL)
-// ============================================================
-private volatile boolean lab3WaitingUser = false;
-private int lab3OldMode = AudioManager.MODE_NORMAL;
-private boolean lab3OldSpeaker = false;
-private boolean lab3OldMicMute = false;
+    private void setTtsMuted(boolean muted) {
+        AppTTS.setMuted(this, muted);
+    }
 
-private volatile boolean lab4HumanFallbackUsed = false;
+    // ============================================================
+    // GLOBAL PREFS ALIAS (used by labs + helpers)
+    // ============================================================
+    private SharedPreferences p;
 
-// ============================================================  
-// SERVICE LOG SESSION FLAG (CRITICAL)  
-// ============================================================  
-private boolean serviceLogInit = false;  
+    // ============================================================
+    // GEL DIAG — GLOBAL PREFS (CLASS LEVEL)
+    // ============================================================
+    private SharedPreferences prefs;
 
-// ============================================================  
-// GLOBAL FINAL SCORE FIELDS (used by Lab 29 PDF Report)  
-// ============================================================  
-private String lastScoreHealth      = "N/A";  
-private String lastScorePerformance = "N/A";  
-private String lastScoreSecurity    = "N/A";  
-private String lastScorePrivacy     = "N/A";  
-private String lastFinalVerdict     = "N/A";  
+    // ============================================================
+    // LAB 3 — STATE (CLASS LEVEL)
+    // ============================================================
+    private volatile boolean lab3WaitingUser = false;
+    private int lab3OldMode = AudioManager.MODE_NORMAL;
+    private boolean lab3OldSpeaker = false;
+    private boolean lab3OldMicMute = false;
+
+    private volatile boolean lab4HumanFallbackUsed = false;
+
+    // ============================================================
+    // SERVICE LOG SESSION FLAG (CRITICAL)
+    // ============================================================
+    private boolean serviceLogInit = false;
+
+    // ============================================================
+    // GLOBAL FINAL SCORE FIELDS (used by Lab 29 PDF Report)
+    // ============================================================
+    private String lastScoreHealth      = "N/A";
+    private String lastScorePerformance = "N/A";
+    private String lastScoreSecurity    = "N/A";
+    private String lastScorePrivacy     = "N/A";
+    private String lastFinalVerdict     = "N/A";
 
 // ============================================================
 // LAB 13 — STATE / FIELDS (FINAL)

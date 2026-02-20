@@ -9781,37 +9781,6 @@ private void lab13FinishAndReport(boolean adapterStable) {
     logLine();
 }
 
-    // ------------------------------------------------------------
-    // CONNECTED DEVICE VERDICT — FINAL (UNIFIED)
-    // ------------------------------------------------------------
-
-    logLine();
-logInfo("LAB 13 — Final Verdict");
-
-if (!lab13MonitoringStarted) {
-
-    logWarn(
-        "No valid external Bluetooth monitoring session was completed."
-    );
-
-} else if (lab13DisconnectEvents > 0) {
-
-    logWarn(
-        "Bluetooth connectivity shows instability during the test period."
-    );
-
-} else {
-
-    logOk(
-        "Bluetooth connectivity is stable."
-    );
-}
-
-    appendHtml("<br>");
-    logOk("Lab 13 finished.");
-    logLine();
-}
-
 // ============================================================
 // PROFILE NAME (small internal helper)
 // ============================================================

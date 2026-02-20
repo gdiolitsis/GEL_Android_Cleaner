@@ -9701,7 +9701,6 @@ private void lab13FinishAndReport(boolean adapterStable) {
         return;
     }
 
-    // snapshot: connected devices list per profile (for report)
     boolean anyActive = false;
 
     final int[] profiles = new int[]{
@@ -9710,14 +9709,12 @@ private void lab13FinishAndReport(boolean adapterStable) {
             BluetoothProfile.GATT
     };
 
-    // report header
     logLine();
     logInfo("LAB 13 — Results (60s monitor)");
     logLabelValue("Adapter stable", adapterStable ? "Yes" : "No");
     logLabelValue("Disconnect events", String.valueOf(lab13DisconnectEvents));
     logLabelValue("Reconnect events", String.valueOf(lab13ReconnectEvents));
 
-    // list connected devices now
     for (int p : profiles) {
         try {
             List<BluetoothDevice> list =
@@ -9736,31 +9733,21 @@ private void lab13FinishAndReport(boolean adapterStable) {
     }
 
     if (anyActive) {
-
         logOk("External Bluetooth connectivity detected at finish.");
-
     } else if (lab13HadAnyConnection) {
-
         logInfo(
                 "An external Bluetooth device was connected during the test, " +
                 "but it is currently not in active use."
         );
     }
 
-    appendHtml("<br>");
-    logOk("Lab 13 finished.");
-    logLine();
-}
-
     // ------------------------------------------------------------
     // DIAGNOSIS LOGIC (LOCKED MESSAGE)
     // ------------------------------------------------------------
-    // "Frequent disconnects" threshold: >=3 disconnect events within 60s
     boolean frequentDisconnects = (lab13DisconnectEvents >= 3);
 
     if (adapterStable && lab13HadAnyConnection && frequentDisconnects) {
 
-        // LOCKED DIAGNOSIS MESSAGE
         logWarn(
                 "The Bluetooth connection shows frequent disconnections,\n" +
                 "while the phone’s Bluetooth subsystem remains stable.\n" +
@@ -9776,17 +9763,22 @@ private void lab13FinishAndReport(boolean adapterStable) {
         logOk("Bluetooth connection appears stable during the 60s monitor.");
     }
 
-    // root note (optional)
-        if (isDeviceRooted()) {
-    logLabelValue(
-            "Root access",
-            "Available (advanced diagnostics possible)"
-    );
-} else {
-    logLabelValue(
-            "Root access",
-            "Not available"
-    );
+    // root note
+    if (isDeviceRooted()) {
+        logLabelValue(
+                "Root access",
+                "Available (advanced diagnostics possible)"
+        );
+    } else {
+        logLabelValue(
+                "Root access",
+                "Not available"
+        );
+    }
+
+    appendHtml("<br>");
+    logOk("Lab 13 finished.");
+    logLine();
 }
 
     // ------------------------------------------------------------

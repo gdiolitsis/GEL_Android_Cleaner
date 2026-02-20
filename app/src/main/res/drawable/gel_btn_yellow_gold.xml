@@ -4,7 +4,7 @@
     <solid android:color="#FFF200"/>  <!-- Κίτρινο -->
 
     <stroke
-        android:width="4dp"
+        android:width="3dp"
         android:color="#FFD700"/>     <!-- Χρυσό περίβλημα -->
 
     <corners android:radius="10dp"/>

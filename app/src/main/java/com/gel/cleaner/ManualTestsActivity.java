@@ -8440,6 +8440,7 @@ if (requestCode == REQ_LAB13_BT_CONNECT) {
 
     return;
 }
+}
 
 // ============================================================
 // LAB 10 — DEEPSCAN v3.0 (Internet + Exposure included)

@@ -9418,9 +9418,7 @@ requestPermissions(
         new String[]{Manifest.permission.BLUETOOTH_CONNECT},
         REQ_LAB13_BT_CONNECT
 );
-
 return;
-}
 
     // ------------------------------------------------------------
     // SNAPSHOT CHECK — already connected device (AFTER UI READY)

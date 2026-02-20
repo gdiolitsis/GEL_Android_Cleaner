@@ -9399,48 +9399,43 @@ new Handler(Looper.getMainLooper()).postDelayed(() -> {
     lab13LastConnected = false;
 
 // ------------------------------------------------------------
-// ANDROID 12+ PERMISSION — MUST BE FIRST
+// ANDROID 12+ PERMISSION — MUST NOT STOP FLOW WHEN ALREADY GRANTED
+// (FIX: remove unreachable code)
 // ------------------------------------------------------------
-if (Build.VERSION.SDK_INT >= 31 &&
-        checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT)
-                != PackageManager.PERMISSION_GRANTED) {
+if (Build.VERSION.SDK_INT >= 31) {
+    if (checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT)
+            != PackageManager.PERMISSION_GRANTED) {
 
-    requestPermissions(
-            new String[]{Manifest.permission.BLUETOOTH_CONNECT},
-            REQ_LAB13_BT_CONNECT
-    );
-
-    return;
-}
-
-// ANDROID 12+ BLUETOOTH PERMISSION
-requestPermissions(
-        new String[]{Manifest.permission.BLUETOOTH_CONNECT},
-        REQ_LAB13_BT_CONNECT
-);
-return;
-
-    // ------------------------------------------------------------
-    // SNAPSHOT CHECK — already connected device (AFTER UI READY)
-    // ------------------------------------------------------------
-    if (lab13IsAnyExternalConnected()) {
-
-        lab13HadAnyConnection = true;
-
-        if (lab13StatusText != null) {
-            lab13StatusText.setText(
-                    "External device already connected. Starting stability monitor..."
-            );
-        }
-
-        startLab13Monitor60s();
+        requestPermissions(
+                new String[]{Manifest.permission.BLUETOOTH_CONNECT},
+                REQ_LAB13_BT_CONNECT
+        );
         return;
     }
+}
+
+// ------------------------------------------------------------
+// SNAPSHOT CHECK — already connected device (AFTER UI READY)
+// ------------------------------------------------------------
+if (lab13IsAnyExternalConnected()) {
+
+    lab13HadAnyConnection = true;
+
+    if (lab13StatusText != null) {
+        lab13StatusText.setText(
+                gr
+                        ? "Εξωτερική συσκευή ήδη συνδεδεμένη. Εκκίνηση παρακολούθησης..."
+                        : "External device already connected. Starting stability monitor..."
+        );
+    }
+
+    startLab13Monitor60s();
+    return;
+}
 
 // ------------------------------------------------------------
 // WAIT FOR EXTERNAL DEVICE — RECEIVER-BASED (MODERN)
 // ------------------------------------------------------------
-
 if (!lab13MonitoringStarted && lab13StatusText != null) {
     lab13StatusText.setText(
             gr
@@ -9455,7 +9450,6 @@ if (lab13CounterText != null) {
                     ? "Παρακολούθηση: σε αναμονή…"
                     : "Monitoring: waiting…"
     );
-}
 }
 
 // ============================================================

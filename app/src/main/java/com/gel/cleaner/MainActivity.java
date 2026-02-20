@@ -256,12 +256,21 @@ AlertDialog.Builder b = new AlertDialog.Builder(this);
 return b;
 }
 
-private ArrayAdapter < String > neonAdapter(String[] names) {
-return new ArrayAdapter < String > (
-this,
-android.R.layout.simple_list_item_1,
-names
-);
+private ArrayAdapter<String> neonAdapter(String[] names) {
+
+    return new ArrayAdapter<String>(
+            this,
+            android.R.layout.simple_list_item_1,
+            names
+    ) {
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            TextView tv = (TextView) super.getView(position, convertView, parent);
+            tv.setTextColor(0xFF00FF9C); // neon green
+            tv.setTypeface(null, Typeface.BOLD);
+            return tv;
+        }
+    };
 }
 
 // =========================================================

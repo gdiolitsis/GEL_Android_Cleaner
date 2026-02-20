@@ -409,7 +409,7 @@ root.addView(buildMuteRow());
 
     GradientDrawable exitBg = new GradientDrawable();
     exitBg.setColor(0xFF8B0000);
-    exitBg.setCornerRadius(dp(14));
+    exitBg.setCornerRadius(dp(10));
     exitBg.setStroke(dp(3), 0xFFFFD700);
     exitBtn.setBackground(exitBg);
     exitBtn.setLayoutParams(lp);
@@ -465,7 +465,7 @@ private void updateStartButtonUI() {
 
         GradientDrawable bg = new GradientDrawable();
         bg.setColor(0xFFD00000); // GEL red
-        bg.setCornerRadius(dp(14));
+        bg.setCornerRadius(dp(10));
         bg.setStroke(dp(3), 0xFFFFD700);
 
         startBtn.setBackground(bg);
@@ -481,7 +481,7 @@ private void updateStartButtonUI() {
 
         GradientDrawable bg = new GradientDrawable();
         bg.setColor(0xFF39FF14); // neon green
-        bg.setCornerRadius(dp(14));
+        bg.setCornerRadius(dp(10));
         bg.setStroke(dp(3), 0xFFFFD700);
 
         startBtn.setBackground(bg);
@@ -536,8 +536,8 @@ private void showUninstallConfirmDialog() {
 
     GradientDrawable bg = new GradientDrawable();
     bg.setColor(0xFF000000); // Μαύρο
-    bg.setCornerRadius(dp(14));
-    bg.setStroke(dp(4), 0xFFFFD700); // Χρυσό περίγραμμα
+    bg.setCornerRadius(dp(10));
+    bg.setStroke(dp(3), 0xFFFFD700); // Χρυσό περίγραμμα
     root.setBackground(bg);
 
     // ================= TITLE =================
@@ -601,7 +601,7 @@ root.addView(buildMuteRow());
 
     GradientDrawable contBg = new GradientDrawable();
     contBg.setColor(0xFF00E676); // Neon green
-    contBg.setCornerRadius(dp(12));
+    contBg.setCornerRadius(dp(10));
     contBg.setStroke(dp(3), 0xFFFFD700);
     continueBtn.setBackground(contBg);
 
@@ -616,7 +616,7 @@ root.addView(buildMuteRow());
 
     GradientDrawable skipBg = new GradientDrawable();
     skipBg.setColor(0xFFC62828); // Κόκκινο
-    skipBg.setCornerRadius(dp(12));
+    skipBg.setCornerRadius(dp(10));
     skipBg.setStroke(dp(3), 0xFFFFD700);
     skipBtn.setBackground(skipBg);
 
@@ -1089,7 +1089,7 @@ private void showGelDialog(String message) {
 
     GradientDrawable bg = new GradientDrawable();
     bg.setColor(0xFF101010);          // Dark background
-    bg.setCornerRadius(dp(18));
+    bg.setCornerRadius(dp(10));
     bg.setStroke(dp(3), 0xFFFFD700);  // Gold border
     root.setBackground(bg);
 
@@ -1111,8 +1111,8 @@ private void showGelDialog(String message) {
 
     GradientDrawable neonBg = new GradientDrawable();
     neonBg.setColor(0xFF39FF14);      // Neon green
-    neonBg.setCornerRadius(dp(14));
-    neonBg.setStroke(dp(2), 0xFFFFD700);
+    neonBg.setCornerRadius(dp(10));
+    neonBg.setStroke(dp(3), 0xFFFFD700);
 
     neonBox.setBackground(neonBg);
 
@@ -1140,8 +1140,8 @@ private void showGelDialog(String message) {
 
     GradientDrawable okBg = new GradientDrawable();
     okBg.setColor(0xFF0F8A3B);       // Dark green
-    okBg.setCornerRadius(dp(14));
-    okBg.setStroke(dp(2), 0xFFFFD700);
+    okBg.setCornerRadius(dp(10));
+    okBg.setStroke(dp(3), 0xFFFFD700);
 
     okBtn.setBackground(okBg);
 

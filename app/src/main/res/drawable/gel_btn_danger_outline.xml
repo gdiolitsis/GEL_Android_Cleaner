@@ -5,10 +5,10 @@
     <solid android:color="#B00000"/>   <!-- Red background -->
 
     <stroke
-        android:width="2dp"
+        android:width="3dp"
         android:color="#FFD700" />     <!-- Gold outline -->
 
-    <corners android:radius="14dp" />
+    <corners android:radius="10dp" />
 
     <padding
         android:left="16dp"

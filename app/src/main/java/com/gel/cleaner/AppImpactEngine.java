@@ -58,6 +58,9 @@ public final class AppImpactEngine {
         public long fgMs24h;
         public long dataBytesSinceBoot; // honest fallback
         public long estImpactScore;     // combined ranking score (not mAh)
+        // root-aware dumpsys fields (advanced)
+        public long dumpRxBytes;
+        public long dumpTxBytes;
 
         // helpers
         public String safeLabel() {

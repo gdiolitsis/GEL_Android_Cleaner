@@ -3453,7 +3453,7 @@ return Integer.parseInt(line.replaceAll("\\D+", ""));
 }
 }
 br.close();
-} catch (Throwable ignore) {}
+} catch (Throwable ignore) {}k
 return -1;
 }
 
@@ -3715,6 +3715,164 @@ AppTTS.ensureSpeak(this, text);
 }
 
 // ============================================================
+// USAGE ACCESS GATE — ManualTestsActivity
+// ============================================================
+
+private boolean ensureUsageAccessOrShowDialog() {
+
+    if (hasUsageAccess()) return true;
+
+    showUsageAccessDialogManual();
+    return false;
+}
+
+private void showUsageAccessDialogManual() {
+
+    if (hasUsageAccess()) return;
+
+    final boolean gr = AppLang.isGreek(this);
+
+    AlertDialog.Builder b =
+            new AlertDialog.Builder(
+                    this,
+                    android.R.style.Theme_Material_Dialog_NoActionBar
+            );
+
+    LinearLayout root = new LinearLayout(this);
+    root.setOrientation(LinearLayout.VERTICAL);
+    root.setPadding(dp(24), dp(22), dp(24), dp(20));
+
+    GradientDrawable bg = new GradientDrawable();
+    bg.setColor(0xFF000000);
+    bg.setCornerRadius(dp(10));
+    bg.setStroke(dp(3), 0xFFFFD700);
+    root.setBackground(bg);
+
+    TextView title = new TextView(this);
+    title.setText(gr
+            ? "ΑΠΑΙΤΕΙΤΑΙ ΠΡΟΣΒΑΣΗ ΧΡΗΣΗΣ"
+            : "USAGE ACCESS REQUIRED");
+    title.setTextColor(Color.WHITE);
+    title.setTextSize(19f);
+    title.setTypeface(null, Typeface.BOLD);
+    title.setGravity(Gravity.CENTER);
+    title.setPadding(0, 0, 0, dp(14));
+    root.addView(title);
+
+    TextView msg = new TextView(this);
+
+    final String messageText =
+            gr
+                    ? "Το LAB 26 χρειάζεται Πρόσβαση Χρήσης για αξιόπιστη ανάλυση εφαρμογών.\n\n"
+                      + "Δεν συλλέγονται προσωπικά δεδομένα.\n\n"
+                      + "Θα μεταφερθείς στις Ρυθμίσεις."
+                    : "LAB 26 requires Usage Access for reliable app analysis.\n\n"
+                      + "No personal data is collected.\n\n"
+                      + "You will be redirected to Settings.";
+
+    msg.setText(messageText);
+    msg.setTextColor(0xFF00FF9C);
+    msg.setTextSize(15f);
+    msg.setGravity(Gravity.CENTER);
+    msg.setLineSpacing(0f, 1.15f);
+    msg.setPadding(dp(6), 0, dp(6), dp(20));
+    root.addView(msg);
+
+    root.addView(buildMuteRow());
+
+    LinearLayout btnRow = new LinearLayout(this);
+    btnRow.setOrientation(LinearLayout.HORIZONTAL);
+    btnRow.setGravity(Gravity.CENTER);
+
+    LinearLayout.LayoutParams btnLp =
+            new LinearLayout.LayoutParams(
+                    0,
+                    dp(110),
+                    1f
+            );
+    btnLp.setMargins(dp(8), 0, dp(8), 0);
+
+    Button continueBtn = new Button(this);
+    continueBtn.setText(gr ? "ΣΥΝΕΧΕΙΑ" : "CONTINUE");
+    continueBtn.setAllCaps(false);
+    continueBtn.setTextColor(Color.WHITE);
+    continueBtn.setTextSize(16f);
+    continueBtn.setTypeface(null, Typeface.BOLD);
+    continueBtn.setLayoutParams(btnLp);
+
+    GradientDrawable contBg = new GradientDrawable();
+    contBg.setColor(0xFF00E676);
+    contBg.setCornerRadius(dp(10));
+    contBg.setStroke(dp(3), 0xFFFFD700);
+    continueBtn.setBackground(contBg);
+
+    btnRow.addView(continueBtn);
+    root.addView(btnRow);
+
+    b.setView(root);
+    b.setCancelable(false);
+
+    AlertDialog d = b.create();
+
+    if (d.getWindow() != null) {
+        d.getWindow().setBackgroundDrawable(
+                new ColorDrawable(Color.TRANSPARENT)
+        );
+    }
+
+    d.setOnDismissListener(dialog -> {
+        try { AppTTS.stop(); } catch (Throwable ignore) {}
+    });
+
+    d.show();
+
+    root.postDelayed(() -> {
+        try {
+            if (!AppTTS.isMuted(this)) {
+                AppTTS.speak(this, messageText);
+            }
+        } catch (Throwable ignore) {}
+    }, 220);
+
+    continueBtn.setOnClickListener(v -> {
+        try { AppTTS.stop(); } catch (Throwable ignore) {}
+        d.dismiss();
+        try {
+            startActivity(new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS));
+        } catch (Throwable ignored) {}
+    });
+}
+
+private boolean hasUsageAccess() {
+    try {
+        AppOpsManager appOps =
+                (AppOpsManager) getSystemService(Context.APP_OPS_SERVICE);
+        if (appOps == null) return false;
+
+        int mode;
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            mode = appOps.unsafeCheckOpNoThrow(
+                    AppOpsManager.OPSTR_GET_USAGE_STATS,
+                    Process.myUid(),
+                    getPackageName()
+            );
+        } else {
+            mode = appOps.checkOpNoThrow(
+                    AppOpsManager.OPSTR_GET_USAGE_STATS,
+                    Process.myUid(),
+                    getPackageName()
+            );
+        }
+
+        return mode == AppOpsManager.MODE_ALLOWED;
+
+    } catch (Throwable t) {
+        return false;
+    }
+}
+
+// ============================================================
 // LAB 28 — TECHNICIAN POPUP (FINAL / CHECKBOX MUTE)
 // ============================================================
 private void showLab28Popup() {
@@ -3836,6 +3994,142 @@ if (!isFinishing() && !isDestroyed()) {
             AppTTS.stop();
             d.dismiss();
         });
+    });
+}
+
+// ============================================================
+// USAGE ACCESS GATE — ManualTestsActivity
+// ============================================================
+
+private boolean ensureUsageAccessOrShowDialog() {
+
+    if (hasUsageAccess()) {
+        return true;
+    }
+
+    showUsageAccessDialogManual();
+    return false;
+}
+
+private void showUsageAccessDialogManual() {
+
+    if (hasUsageAccess()) return;
+
+    final boolean gr = AppLang.isGreek(this);
+
+    AlertDialog.Builder b =
+            new AlertDialog.Builder(
+                    this,
+                    android.R.style.Theme_Material_Dialog_NoActionBar
+            );
+
+    // ================= ROOT =================
+    LinearLayout root = new LinearLayout(this);
+    root.setOrientation(LinearLayout.VERTICAL);
+    root.setPadding(dp(24), dp(22), dp(24), dp(20));
+
+    GradientDrawable bg = new GradientDrawable();
+    bg.setColor(0xFF000000);
+    bg.setCornerRadius(dp(10));
+    bg.setStroke(dp(3), 0xFFFFD700);
+    root.setBackground(bg);
+
+    // ================= TITLE =================
+    TextView title = new TextView(this);
+    title.setText(gr
+            ? "ΑΠΑΙΤΕΙΤΑΙ ΠΡΟΣΒΑΣΗ ΧΡΗΣΗΣ"
+            : "USAGE ACCESS REQUIRED");
+    title.setTextColor(Color.WHITE);
+    title.setTextSize(19f);
+    title.setTypeface(null, Typeface.BOLD);
+    title.setGravity(Gravity.CENTER);
+    title.setPadding(0, 0, 0, dp(14));
+    root.addView(title);
+
+    // ================= MESSAGE =================
+    TextView msg = new TextView(this);
+
+    final String messageText =
+            gr
+                    ? "Το LAB 26 χρειάζεται Πρόσβαση Χρήσης για αξιόπιστη ανάλυση εφαρμογών.\n\n"
+                      + "Δεν συλλέγονται προσωπικά δεδομένα.\n\n"
+                      + "Θα μεταφερθείς στις Ρυθμίσεις."
+                    : "LAB 26 requires Usage Access for reliable app analysis.\n\n"
+                      + "No personal data is collected.\n\n"
+                      + "You will be redirected to Settings.";
+
+    msg.setText(messageText);
+    msg.setTextColor(0xFF00FF9C);
+    msg.setTextSize(15f);
+    msg.setGravity(Gravity.CENTER);
+    msg.setLineSpacing(0f, 1.15f);
+    msg.setPadding(dp(6), 0, dp(6), dp(20));
+    root.addView(msg);
+
+    // ================= MUTE ROW =================
+    root.addView(buildMuteRow());
+
+    // ================= BUTTON ROW =================
+    LinearLayout btnRow = new LinearLayout(this);
+    btnRow.setOrientation(LinearLayout.HORIZONTAL);
+    btnRow.setGravity(Gravity.CENTER);
+
+    LinearLayout.LayoutParams btnLp =
+            new LinearLayout.LayoutParams(
+                    0,
+                    dp(110),
+                    1f
+            );
+    btnLp.setMargins(dp(8), 0, dp(8), 0);
+
+    Button continueBtn = new Button(this);
+    continueBtn.setText(gr ? "ΣΥΝΕΧΕΙΑ" : "CONTINUE");
+    continueBtn.setAllCaps(false);
+    continueBtn.setTextColor(Color.WHITE);
+    continueBtn.setTextSize(16f);
+    continueBtn.setTypeface(null, Typeface.BOLD);
+    continueBtn.setLayoutParams(btnLp);
+
+    GradientDrawable contBg = new GradientDrawable();
+    contBg.setColor(0xFF00E676);
+    contBg.setCornerRadius(dp(10));
+    contBg.setStroke(dp(3), 0xFFFFD700);
+    continueBtn.setBackground(contBg);
+
+    btnRow.addView(continueBtn);
+    root.addView(btnRow);
+
+    b.setView(root);
+    b.setCancelable(false);
+
+    AlertDialog d = b.create();
+
+    if (d.getWindow() != null) {
+        d.getWindow().setBackgroundDrawable(
+                new ColorDrawable(Color.TRANSPARENT)
+        );
+    }
+
+    d.setOnDismissListener(dialog -> {
+        try { AppTTS.stop(); } catch (Throwable ignore) {}
+    });
+
+    d.show();
+
+    root.postDelayed(() -> {
+        try {
+            if (!AppTTS.isMuted(this)) {
+                AppTTS.speak(this, messageText);
+            }
+        } catch (Throwable ignore) {}
+    }, 220);
+
+    continueBtn.setOnClickListener(v -> {
+        try { AppTTS.stop(); } catch (Throwable ignore) {}
+        d.dismiss();
+        try {
+            startActivity(new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS));
+        } catch (Throwable ignored) {}
     });
 }
 
@@ -13871,38 +14165,16 @@ return (s == null || s.trim().isEmpty()) ? "(no data)" : s;
 
 // ============================================================
 // LAB 26 — Installed Applications Impact Analysis (FINAL v2 • Full Bilingual • Engine-backed)
-// ⚠️ Reminder: Always return the final code ready for copy-paste (no extra explanations / no questions).
 // ============================================================
 
 private void lab26AppsFootprint() {
-    
+
     // ============================================================
-// USAGE ACCESS — MANDATORY GATE (LAB 26)
-// ============================================================
-
-if (!hasUsageAccess()) {
-
-    final boolean gr = AppLang.isGreek(this);
-
-    new android.app.AlertDialog.Builder(this)
-            .setCancelable(false)
-            .setTitle(gr
-                    ? "Απαιτείται Πρόσβαση Χρήσης"
-                    : "Usage Access Required")
-            .setMessage(gr
-                    ? "Το LAB 26 χρειάζεται πρόσβαση στα στατιστικά χρήσης για ακριβή ανάλυση.\n\nΠατήστε ΟΚ για να ενεργοποιήσετε την πρόσβαση."
-                    : "LAB 26 requires Usage Access for accurate analysis.\n\nPress OK to enable access.")
-            .setPositiveButton("OK", (d, w) -> {
-                try {
-                    startActivity(new android.content.Intent(
-                            android.provider.Settings.ACTION_USAGE_ACCESS_SETTINGS
-                    ));
-                } catch (Throwable ignore) {}
-            })
-            .show();
-
-    return;
-}
+    // USAGE ACCESS — MANDATORY GATE
+    // ============================================================
+    if (!ensureUsageAccessOrShowDialog()) {
+        return;
+    }
 
     appendHtml("<br>");
     logLine();

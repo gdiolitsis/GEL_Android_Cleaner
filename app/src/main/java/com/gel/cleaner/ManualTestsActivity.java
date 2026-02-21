@@ -1,4 +1,4 @@
-// ============================================================
+	// ============================================================
 // ManualTestsActivity
 // GEL Manual Tests — Hospital Edition (30 Manual Labs)
 // Single-screen Accordion UI + detailed English service logs
@@ -3366,6 +3366,36 @@ return apk.exists() ? apk.length() : -1;
 } catch (Throwable t) {
 return -1;
 }
+}
+
+private boolean hasUsageAccess() {
+    try {
+        android.app.AppOpsManager appOps =
+                (android.app.AppOpsManager) getSystemService(android.content.Context.APP_OPS_SERVICE);
+
+        if (appOps == null) return false;
+
+        int mode;
+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+            mode = appOps.unsafeCheckOpNoThrow(
+                    android.app.AppOpsManager.OPSTR_GET_USAGE_STATS,
+                    android.os.Process.myUid(),
+                    getPackageName()
+            );
+        } else {
+            mode = appOps.checkOpNoThrow(
+                    android.app.AppOpsManager.OPSTR_GET_USAGE_STATS,
+                    android.os.Process.myUid(),
+                    getPackageName()
+            );
+        }
+
+        return mode == android.app.AppOpsManager.MODE_ALLOWED;
+
+    } catch (Throwable ignore) {
+        return false;
+    }
 }
 
 // ============================================================
@@ -13840,11 +13870,39 @@ return (s == null || s.trim().isEmpty()) ? "(no data)" : s;
 }
 
 // ============================================================
-// LAB 26 — Installed Applications Impact Analysis (FINAL v2 • Full Bilingual • Engine-backed • Root-Aware)
+// LAB 26 — Installed Applications Impact Analysis (FINAL v2 • Full Bilingual • Engine-backed)
 // ⚠️ Reminder: Always return the final code ready for copy-paste (no extra explanations / no questions).
 // ============================================================
 
 private void lab26AppsFootprint() {
+    
+    // ============================================================
+// USAGE ACCESS — MANDATORY GATE (LAB 26)
+// ============================================================
+
+if (!hasUsageAccess()) {
+
+    final boolean gr = AppLang.isGreek(this);
+
+    new android.app.AlertDialog.Builder(this)
+            .setCancelable(false)
+            .setTitle(gr
+                    ? "Απαιτείται Πρόσβαση Χρήσης"
+                    : "Usage Access Required")
+            .setMessage(gr
+                    ? "Το LAB 26 χρειάζεται πρόσβαση στα στατιστικά χρήσης για ακριβή ανάλυση.\n\nΠατήστε ΟΚ για να ενεργοποιήσετε την πρόσβαση."
+                    : "LAB 26 requires Usage Access for accurate analysis.\n\nPress OK to enable access.")
+            .setPositiveButton("OK", (d, w) -> {
+                try {
+                    startActivity(new android.content.Intent(
+                            android.provider.Settings.ACTION_USAGE_ACCESS_SETTINGS
+                    ));
+                } catch (Throwable ignore) {}
+            })
+            .show();
+
+    return;
+}
 
     appendHtml("<br>");
     logLine();
@@ -13920,15 +13978,8 @@ private void lab26AppsFootprint() {
     logLabelOkValue(
             gr ? "Root-aware" : "Root-aware",
             rooted
-                    ? (gr ? "Ναι" : "Yes")
+                    ? (gr ? "Ναι (best-effort χωρίς su)" : "Yes (best-effort without su)")
                     : (gr ? "Όχι" : "No")
-    );
-
-    logLabelOkValue(
-            gr ? "Root dumpsys" : "Root dumpsys",
-            (rooted && r.rootDumpsysOk)
-                    ? (gr ? "Διαθέσιμο (su OK)" : "Available (su OK)")
-                    : (gr ? "Μη διαθέσιμο" : "Not available")
     );
 
     // ============================================================
@@ -13941,15 +13992,11 @@ private void lab26AppsFootprint() {
     logLine();
     logInfo(gr ? "Ενδείξεις φόρτου (βάσει δυνατοτήτων)" : "Load indicators (capability-based)");
 
-    logLabelOkValue(
-            gr ? "Background-capable" : "Background-capable",
-            r.bgCapable + " (" + pctBg + "%)"
-    );
+    logLabelOkValue(gr ? "Background-capable" : "Background-capable",
+            r.bgCapable + " (" + pctBg + "%)");
 
-    logLabelOkValue(
-            gr ? "Permission-heavy" : "Permission-heavy",
-            r.permHeavy + " (" + pctPerm + "%)"
-    );
+    logLabelOkValue(gr ? "Permission-heavy" : "Permission-heavy",
+            r.permHeavy + " (" + pctPerm + "%)");
 
     logInfo(gr ? "Χάρτης δυνατοτήτων (user apps)" : "Capability map (user apps)");
 
@@ -13975,7 +14022,7 @@ private void lab26AppsFootprint() {
     logLabelOkValue(gr ? "Keyboards" : "Keyboards", String.valueOf(r.keyboardsLike));
 
     // ============================================================
-    // REAL DATA (TrafficStats) — SINCE BOOT (HONEST)
+    // REAL DATA (HONEST) — SINCE BOOT (TrafficStats)
     // ============================================================
     logLine();
     logInfo(gr ? "Κατανάλωση δεδομένων (έντιμο — από boot)" : "Data usage (honest — since boot)");
@@ -14013,43 +14060,6 @@ private void lab26AppsFootprint() {
                 gr ? "Κατάσταση" : "Status",
                 gr ? "Δεν ήταν δυνατή η κατάταξη δεδομένων" : "Unable to rank data usage"
         );
-    }
-
-    // ============================================================
-    // ROOT DATA (netstats via su) — BEST EFFORT
-    // ============================================================
-    if (rooted && r.rootDumpsysOk) {
-
-        logLine();
-        logInfo(gr ? "Root δεδομένα δικτύου (dumpsys netstats — best effort)" : "Root network (dumpsys netstats — best effort)");
-
-        if (r.topNetByDumpsys != null && !r.topNetByDumpsys.isEmpty()) {
-
-            int limit = Math.min(10, r.topNetByDumpsys.size());
-            for (int i = 0; i < limit; i++) {
-
-                AppImpactEngine.AppScore a = r.topNetByDumpsys.get(i);
-                if (a == null) continue;
-
-                long total = Math.max(0L, a.dumpRxBytes) + Math.max(0L, a.dumpTxBytes);
-
-                logLabelWarnValue(
-                        a.safeLabel(),
-                        (gr
-                                ? humanBytes(total) + " (netstats)"
-                                : humanBytes(total) + " (netstats)")
-                );
-
-                logInfo(a.pkg);
-            }
-
-        } else {
-
-            logLabelWarnValue(
-                    gr ? "Κατάσταση" : "Status",
-                    gr ? "Δεν βρέθηκαν netstats γραμμές για ranking" : "No netstats lines found for ranking"
-            );
-        }
     }
 
     // ============================================================
@@ -14109,51 +14119,7 @@ private void lab26AppsFootprint() {
     }
 
     // ============================================================
-    // ROOT BATTERY (batterystats via su) — BEST EFFORT
-    // ============================================================
-    if (rooted && r.rootDumpsysOk) {
-
-        logLine();
-        logInfo(gr ? "Root μπαταρία (dumpsys batterystats — best effort)" : "Root battery (dumpsys batterystats — best effort)");
-
-        if (r.topBatteryByDumpsys != null && !r.topBatteryByDumpsys.isEmpty()) {
-
-            int limit = Math.min(10, r.topBatteryByDumpsys.size());
-            for (int i = 0; i < limit; i++) {
-
-                AppImpactEngine.AppScore a = r.topBatteryByDumpsys.get(i);
-                if (a == null) continue;
-
-                double mah = a.dumpEstMah / 1000.0;
-
-                logLabelWarnValue(
-                        a.safeLabel(),
-                        (gr
-                                ? String.format(java.util.Locale.US, "%.2f mAh (batterystats)", mah)
-                                : String.format(java.util.Locale.US, "%.2f mAh (batterystats)", mah))
-                );
-
-                logInfo(a.pkg);
-            }
-
-            logLabelOkValue(
-                    gr ? "Σημείωση" : "Note",
-                    gr
-                            ? "Best-effort parsing. Σε κάποια ROMs το batterystats δεν δίνει per-UID mAh."
-                            : "Best-effort parsing. Some ROMs do not expose per-UID mAh in batterystats."
-            );
-
-        } else {
-
-            logLabelWarnValue(
-                    gr ? "Κατάσταση" : "Status",
-                    gr ? "Δεν βρέθηκαν per-UID mAh γραμμές" : "No per-UID mAh lines found"
-            );
-        }
-    }
-
-    // ============================================================
-    // TOP CAPABILITY-HEAVY (FLAGGED, NOT ACCUSED)
+    // TOP CAPABILITY-HEAVY
     // ============================================================
     logLine();
     logInfo(gr
@@ -14180,126 +14146,20 @@ private void lab26AppsFootprint() {
             logLabelWarnValue(a.safeLabel(), detail);
             logInfo(a.pkg);
         }
-
-        logLabelOkValue(
-                gr ? "Σημείωση" : "Note",
-                gr
-                        ? "Δεν σημαίνει ότι οι εφαρμογές είναι «κακές». Σημαίνει ότι έχουν δυνατότητες που αξίζουν έλεγχο."
-                        : "This does not mean apps are 'bad'. It means they have capabilities worth reviewing."
-        );
     }
 
     // ============================================================
-    // ROOT-AWARE LEFTOVERS (BEST-EFFORT SAFE)
-    // ============================================================
-    if (rooted && r.orphan != null) {
-
-        logLine();
-        logInfo(gr ? "Advanced (root-aware) inspection" : "Advanced (root-aware) inspection");
-
-        if (!r.orphan.attempted) {
-            logLabelWarnValue(
-                    gr ? "Κατάσταση" : "Status",
-                    gr ? "Δεν έγινε προσπάθεια ανίχνευσης leftovers" : "Leftovers scan not attempted"
-            );
-        } else if (r.orphan.orphanDirs > 0) {
-
-            logLabelWarnValue(
-                    gr ? "Leftover app data" : "Leftover app data",
-                    (gr
-                            ? r.orphan.orphanDirs + " φάκελοι"
-                            : r.orphan.orphanDirs + " folders")
-            );
-
-            logLabelOkValue(
-                    gr ? "Περίπου μέγεθος" : "Approx size",
-                    humanBytes(r.orphan.orphanBytes)
-            );
-
-            logLabelOkValue(
-                    gr ? "Σημαίνει" : "Meaning",
-                    gr
-                            ? "Πιθανό υπόλοιπο δεδομένων από απεγκατεστημένες εφαρμογές (όχι επικίνδυνο)."
-                            : "Possible leftover data from uninstalled apps (not dangerous)."
-            );
-
-        } else {
-
-            logLabelOkValue(
-                    gr ? "Leftover app data" : "Leftover app data",
-                    gr
-                            ? "Δεν βρέθηκαν σημαντικά orphan folders (ή δεν επιτράπηκε πρόσβαση)."
-                            : "No significant orphan folders found (or access was not permitted)."
-            );
-        }
-
-        logLabelOkValue(
-                gr ? "Root-aware note" : "Root-aware note",
-                gr
-                        ? "Best-effort. Χωρίς su / ή με vendor blocks μπορεί να μη διαβάζεται /data."
-                        : "Best-effort. Without su / or with vendor blocks, /data may be unreadable."
-        );
-    }
-
-    // ============================================================
-    // HUMAN VERDICT (FULL BILINGUAL)
+    // HUMAN VERDICT
     // ============================================================
     logLine();
     logInfo(gr ? "Ανθρώπινο συμπέρασμα" : "Human verdict");
 
     if (r.riskPoints >= 8) {
-
         logLabelWarnValue(gr ? "Επίπεδο πίεσης" : "Pressure level", gr ? "ΥΨΗΛΟ" : "HIGH");
-
-        logLabelWarnValue(
-                gr ? "Σημαίνει" : "Meaning",
-                gr
-                        ? "Πολλές εφαρμογές με background/ισχυρά permissions — πιθανή επιβάρυνση σε απόδοση/μπαταρία."
-                        : "Many background/high-permission apps — possible performance/battery pressure."
-        );
-
-        logLabelOkValue(
-                gr ? "Σημείωση" : "Note",
-                gr
-                        ? "Δεν είναι βλάβη hardware. Είναι footprint εφαρμογών."
-                        : "Not a hardware fault. This is app footprint."
-        );
-
-        logLabelOkValue(
-                gr ? "Πρόταση" : "Recommendation",
-                gr
-                        ? "Μείωσε ό,τι δεν χρειάζεσαι και έλεγξε τις κορυφαίες λίστες (Data / Battery / Root)."
-                        : "Reduce what you don't need and review the top lists (Data / Battery / Root)."
-        );
-
     } else if (r.riskPoints >= 5) {
-
         logLabelWarnValue(gr ? "Επίπεδο πίεσης" : "Pressure level", gr ? "ΜΕΤΡΙΟ" : "MODERATE");
-
-        logLabelOkValue(
-                gr ? "Σημαίνει" : "Meaning",
-                gr
-                        ? "Αρκετές εφαρμογές μπορούν να τρέχουν ή να αντιδρούν στο background."
-                        : "Several apps may run or react in background."
-        );
-
-        logLabelOkValue(
-                gr ? "Πρόταση" : "Recommendation",
-                gr
-                        ? "Έλεγξε redundancy και τις κορυφαίες λίστες για candidates."
-                        : "Review redundancy and the top lists for candidates."
-        );
-
     } else {
-
         logLabelOkValue(gr ? "Επίπεδο πίεσης" : "Pressure level", gr ? "ΦΥΣΙΟΛΟΓΙΚΟ" : "NORMAL");
-
-        logLabelOkValue(
-                gr ? "Κατάσταση" : "Status",
-                gr
-                        ? "Το footprint εφαρμογών δείχνει υγιές για καθημερινή χρήση."
-                        : "App footprint looks healthy for daily usage."
-        );
     }
 
     GELServiceLog.info(
@@ -14350,7 +14210,7 @@ private long dirSizeBestEffortRoot(File dir) {
 
     return total;
 }
-    
+
 // ============================================================
 // LAB 27 — App Permissions & Privacy (FULL AUTO + RISK SCORE)
 // ============================================================
@@ -16027,4 +15887,3 @@ if (requestCode == 8008) {
 // ============================================================
 }
     
-

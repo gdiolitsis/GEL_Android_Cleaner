@@ -103,6 +103,12 @@ public final class AppImpactEngine {
         public ArrayList<AppScore> topDataConsumers   = new ArrayList<>();
         public ArrayList<AppScore> topBatteryExposure = new ArrayList<>();
 
+        // root-aware advanced rankings (dumpsys based)
+        public ArrayList<AppScore> topBatteryByDumpsys = new ArrayList<>();
+        public ArrayList<AppScore> topNetByDumpsys     = new ArrayList<>();
+
+        public boolean rootDumpsysOk;
+        
         public OrphanResult orphan = new OrphanResult();
 
         // verdict points (same logic as before, but stored)

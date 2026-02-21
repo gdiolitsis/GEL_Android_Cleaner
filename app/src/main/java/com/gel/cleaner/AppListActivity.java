@@ -658,11 +658,19 @@ root.postDelayed(() -> {
 
 // ================= ACTIONS =================
 continueBtn.setOnClickListener(v -> {
+
     try { AppTTS.stop(); } catch (Throwable ignore) {}
+
     d.dismiss();
+
     try {
+        Intent intent = new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS);
+        intent.setData(Uri.parse("package:" + getPackageName()));
+        startActivity(intent);
+    } catch (Throwable e) {
+        // Fallback
         startActivity(new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS));
-    } catch (Throwable ignored) {}
+    }
 });
 
 skipBtn.setOnClickListener(v -> {

@@ -574,4 +574,203 @@ public final class AppImpactEngine {
         }
         return total;
     }
+
+// ============================================================
+// ROOT-AWARE (ADVANCED) — dumpsys batterystats / netstats
+// ⚠️ NOT Play-Store safe. Use ONLY in advanced/root mode.
+// ============================================================
+
+// Add inside ImpactResult:
+public boolean rootDumpsysOk;
+public ArrayList<AppScore> topBatteryByDumpsys = new ArrayList<>();
+public ArrayList<AppScore> topNetByDumpsys     = new ArrayList<>();
+
+// Add inside AppScore:
+public long dumpEstMah;      // best-effort from batterystats (if present)
+public long dumpRxBytes;     // best-effort from netstats
+public long dumpTxBytes;     // best-effort from netstats
+
+// ============================================================
+// ROOT EXEC — su -c
+// ============================================================
+private static String execSu(String cmd) {
+    if (cmd == null || cmd.trim().isEmpty()) return null;
+
+    java.io.BufferedReader br = null;
+    try {
+        Process p = new ProcessBuilder("su", "-c", cmd).redirectErrorStream(true).start();
+        br = new java.io.BufferedReader(new java.io.InputStreamReader(p.getInputStream()));
+        StringBuilder sb = new StringBuilder();
+        String line;
+        while ((line = br.readLine()) != null) sb.append(line).append("\n");
+        try { p.waitFor(); } catch (Throwable ignore) {}
+        String out = sb.toString();
+        return (out.trim().length() > 0 ? out : null);
+    } catch (Throwable t) {
+        return null;
+    } finally {
+        try { if (br != null) br.close(); } catch (Throwable ignore) {}
+    }
+}
+
+// ============================================================
+// ROOT CHECK — quick verify su works
+// ============================================================
+private static boolean canUseSu() {
+    String out = execSu("id");
+    return out != null && out.contains("uid=0");
+}
+
+// ============================================================
+// BATTERYSTATS PARSER (best-effort)
+// - We try to extract per-UID/app estimated power if ROM exposes it.
+// - Many ROMs output sections differently. We parse loosely.
+// ============================================================
+private static void fillFromBatteryStats(
+        Context c,
+        PackageManager pm,
+        Map<Integer, AppScore> uidToScore,
+        ImpactResult out
+) {
+    if (c == null || pm == null || uidToScore == null || out == null) return;
+
+    // Try common variants (some devices accept --charged, some not)
+    String txt = execSu("dumpsys batterystats --charged");
+    if (txt == null) txt = execSu("dumpsys batterystats");
+    if (txt == null) return;
+
+    // Heuristic:
+    // Look for lines that contain "Uid" and "mAh" (vendor dependent).
+    // Examples seen in the wild:
+    // "Uid u0a123: 12.34 mAh"
+    // "UID 10123: ... 12.34 (mAh)"
+    java.util.regex.Pattern p1 = java.util.regex.Pattern.compile(
+            "(?i)\\bUid\\s+u0a(\\d+)\\b.*?([0-9]+\\.?[0-9]*)\\s*mAh"
+    );
+    java.util.regex.Pattern p2 = java.util.regex.Pattern.compile(
+            "(?i)\\bUID\\s+(\\d+)\\b.*?([0-9]+\\.?[0-9]*)\\s*\\(?mAh\\)?"
+    );
+
+    java.util.HashMap<Integer, Double> uidMah = new java.util.HashMap<>();
+
+    java.util.regex.Matcher m = p1.matcher(txt);
+    while (m.find()) {
+        try {
+            int appId = Integer.parseInt(m.group(1));     // u0aXYZ -> appId
+            double mah = Double.parseDouble(m.group(2));
+            // Convert appId to UID range? best-effort: try both common user offsets
+            // We cannot know userId always; so we’ll store appId-only for mapping later.
+            // We'll resolve by checking all uidToScore keys ending with that appId.
+            uidMah.put(-appId, mah); // negative key means appId placeholder
+        } catch (Throwable ignore) {}
+    }
+
+    m = p2.matcher(txt);
+    while (m.find()) {
+        try {
+            int uid = Integer.parseInt(m.group(1));
+            double mah = Double.parseDouble(m.group(2));
+            uidMah.put(uid, mah);
+        } catch (Throwable ignore) {}
+    }
+
+    if (uidMah.isEmpty()) return;
+
+    // Apply to AppScores:
+    for (Map.Entry<Integer, Double> e : uidMah.entrySet()) {
+        int key = e.getKey();
+        double mah = e.getValue();
+        long mahMilli = (long) Math.round(mah * 1000.0); // store as milli-mAh to avoid float
+
+        if (key > 0) {
+            AppScore s = uidToScore.get(key);
+            if (s != null) s.dumpEstMah = mahMilli;
+        } else {
+            // appId placeholder: match any UID ending with that appId (best-effort)
+            int appId = -key;
+            for (Integer uid : uidToScore.keySet()) {
+                if (uid == null) continue;
+                // typical: UID = 10000 + appId (for primary user)
+                if ((uid - 10000) == appId) {
+                    AppScore s = uidToScore.get(uid);
+                    if (s != null) s.dumpEstMah = mahMilli;
+                    break;
+                }
+            }
+        }
+    }
+
+    // Build TOP list by dumpsys mAh
+    java.util.ArrayList<AppScore> tmp = new java.util.ArrayList<>();
+    for (AppScore s : uidToScore.values()) {
+        if (s == null) continue;
+        if (s.isSystem) continue;
+        if (s.dumpEstMah > 0) tmp.add(s);
+    }
+
+    java.util.Collections.sort(tmp, (a, b) -> Long.compare(b.dumpEstMah, a.dumpEstMah));
+
+    out.topBatteryByDumpsys.clear();
+    int limit = Math.min(10, tmp.size());
+    for (int i = 0; i < limit; i++) out.topBatteryByDumpsys.add(tmp.get(i));
+}
+
+// ============================================================
+// NETSTATS PARSER (best-effort)
+// - Output varies a LOT. We try simple UID rx/tx aggregations if present.
+// - If no stable pattern: we silently skip.
+// ============================================================
+private static void fillFromNetStats(
+        Map<Integer, AppScore> uidToScore,
+        ImpactResult out
+) {
+    if (uidToScore == null || out == null) return;
+
+    String txt = execSu("dumpsys netstats");
+    if (txt == null) return;
+
+    // Heuristic patterns found on some ROMs:
+    // "uid=10123 ... rxBytes=12345 txBytes=6789"
+    java.util.regex.Pattern p = java.util.regex.Pattern.compile(
+            "(?i)\\buid\\s*=\\s*(\\d+)\\b.*?\\brxBytes\\s*=\\s*(\\d+)\\b.*?\\btxBytes\\s*=\\s*(\\d+)\\b"
+    );
+
+    java.util.regex.Matcher m = p.matcher(txt);
+    boolean any = false;
+
+    while (m.find()) {
+        try {
+            int uid = Integer.parseInt(m.group(1));
+            long rx = Long.parseLong(m.group(2));
+            long tx = Long.parseLong(m.group(3));
+            AppScore s = uidToScore.get(uid);
+            if (s != null) {
+                s.dumpRxBytes = Math.max(s.dumpRxBytes, rx);
+                s.dumpTxBytes = Math.max(s.dumpTxBytes, tx);
+                any = true;
+            }
+        } catch (Throwable ignore) {}
+    }
+
+    if (!any) return;
+
+    java.util.ArrayList<AppScore> tmp = new java.util.ArrayList<>();
+    for (AppScore s : uidToScore.values()) {
+        if (s == null) continue;
+        if (s.isSystem) continue;
+        long total = Math.max(0L, s.dumpRxBytes) + Math.max(0L, s.dumpTxBytes);
+        if (total > 0) tmp.add(s);
+    }
+
+    java.util.Collections.sort(tmp, (a, b) -> {
+        long ta = Math.max(0L, a.dumpRxBytes) + Math.max(0L, a.dumpTxBytes);
+        long tb = Math.max(0L, b.dumpRxBytes) + Math.max(0L, b.dumpTxBytes);
+        return Long.compare(tb, ta);
+    });
+
+    out.topNetByDumpsys.clear();
+    int limit = Math.min(10, tmp.size());
+    for (int i = 0; i < limit; i++) out.topNetByDumpsys.add(tmp.get(i));
+}
+    
 }

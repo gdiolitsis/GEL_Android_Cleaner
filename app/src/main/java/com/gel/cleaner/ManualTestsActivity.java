@@ -13658,7 +13658,7 @@ return out;
 }
 
 private boolean lab24_canExecSu() {
-Process p = null;
+java.lang.Process p = null;
 try {
 p = Runtime.getRuntime().exec(new String[]{"su", "-c", "id"});
 BufferedReader br =
@@ -13676,7 +13676,7 @@ if (p != null) try { p.destroy(); } catch (Throwable ignore) {}
 }
 
 private String lab24_execFirstLine(String cmd) {
-Process p = null;
+java.lang.Process p = null;
 try {
 p = Runtime.getRuntime().exec(cmd);
 BufferedReader br =

@@ -14086,18 +14086,60 @@ if (!hasUsageAccess()) {
             AppImpactEngine.AppScore a = r.topBatteryExposure.get(i);
             if (a == null) continue;
 
-            long fgMin = a.fgMs24h / 60000L;
+// =======================
+// DATA SAFETY (EXPLAINED)
+// =======================
 
-            String detail =
-                    (gr
-                            ? "Σκορ: " + a.estImpactScore +
-                              " | FG: " + fgMin + "m/24h" +
-                              " | Δεδομένα: " + humanBytes(a.dataBytesSinceBoot) +
-                              " | Tags: " + a.tags
-                            : "Score: " + a.estImpactScore +
-                              " | FG: " + fgMin + "m/24h" +
-                              " | Data: " + humanBytes(a.dataBytesSinceBoot) +
-                              " | Tags: " + a.tags);
+long fgMin = a.fgMs24h / 60000L;
+
+// ---------- Usage text ----------
+String usageText;
+
+if (!r.usageAccessOk) {
+
+    usageText = gr
+            ? "Χρήση (24h): δεν υπάρχουν δεδομένα (δεν έχει δοθεί Usage Access)"
+            : "Usage (24h): no data (Usage Access not granted)";
+
+} else if (fgMin <= 0) {
+
+    usageText = gr
+            ? "Χρήση (24h): δεν καταγράφηκε χρήση το τελευταίο 24ωρο"
+            : "Usage (24h): no recorded usage in the last 24h";
+
+} else {
+
+    usageText = gr
+            ? "Χρήση (24h): " + fgMin + " λεπτά"
+            : "Usage (24h): " + fgMin + " min";
+}
+
+// ---------- Data text (TrafficStats since boot) ----------
+String dataText;
+
+if (a.dataBytesSinceBoot <= 0) {
+
+    dataText = gr
+            ? "Δεδομένα: δεν υπάρχουν διαθέσιμα στοιχεία (πιθανός περιορισμός συστήματος/ROM)"
+            : "Data: not available (possible system/ROM limitation)";
+
+} else {
+
+    dataText = gr
+            ? "Δεδομένα: " + humanBytes(a.dataBytesSinceBoot)
+            : "Data: " + humanBytes(a.dataBytesSinceBoot);
+}
+
+// ---------- Final detail ----------
+String detail = gr
+        ? "Δείκτης Επιρροής: " + a.estImpactScore +
+          " | " + usageText +
+          " | " + dataText +
+          " | Tags: " + a.tags
+        : "Impact Index: " + a.estImpactScore +
+          " | " + usageText +
+          " | " + dataText +
+          " | Tags: " + a.tags;
 
             logLabelWarnValue(a.safeLabel(), detail);
             logInfo(a.pkg);

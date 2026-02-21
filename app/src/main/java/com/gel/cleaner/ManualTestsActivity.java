@@ -3717,18 +3717,19 @@ AppTTS.ensureSpeak(this, text);
 }
 
 // ============================================================
-// USAGE ACCESS GATE — ManualTestsActivity
+// USAGE ACCESS
 // ============================================================
 
-private boolean ensureUsageAccessOrShowDialog() {
+private void checkUsageAccessGate() {
 
-    if (hasUsageAccess()) return true;
-
-    showUsageAccessDialogManual();
-    return false;
+    if (!hasUsageAccess()) {
+        showUsageAccessDialog();
+    }
 }
 
-private void showUsageAccessDialogManual() {
+// ============================================================
+
+private void showUsageAccessDialog() {
 
     if (hasUsageAccess()) return;
 
@@ -3765,10 +3766,9 @@ private void showUsageAccessDialogManual() {
 
     final String messageText =
             gr
-                    ? "Το LAB 26 χρειάζεται Πρόσβαση Χρήσης για αξιόπιστη ανάλυση εφαρμογών.\n\n"
-                      + "Δεν συλλέγονται προσωπικά δεδομένα.\n\n"
+                    ? "Καμία συλλογή προσωπικών δεδομένων δεν γίνεται με την παραχώρηση της Πρόσβασης Χρήσης.\n\n"
                       + "Θα μεταφερθείς στις Ρυθμίσεις."
-                    : "LAB 26 requires Usage Access for reliable app analysis.\n\n"
+                    : "Usage Access is required for certain analysis features.\n\n"
                       + "No personal data is collected.\n\n"
                       + "You will be redirected to Settings.";
 
@@ -3787,11 +3787,7 @@ private void showUsageAccessDialogManual() {
     btnRow.setGravity(Gravity.CENTER);
 
     LinearLayout.LayoutParams btnLp =
-            new LinearLayout.LayoutParams(
-                    0,
-                    dp(110),
-                    1f
-            );
+            new LinearLayout.LayoutParams(0, dp(110), 1f);
     btnLp.setMargins(dp(8), 0, dp(8), 0);
 
     Button continueBtn = new Button(this);
@@ -3808,6 +3804,21 @@ private void showUsageAccessDialogManual() {
     contBg.setStroke(dp(3), 0xFFFFD700);
     continueBtn.setBackground(contBg);
 
+    Button skipBtn = new Button(this);
+    skipBtn.setText(gr ? "ΠΑΡΑΛΕΙΨΗ" : "SKIP");
+    skipBtn.setAllCaps(false);
+    skipBtn.setTextColor(Color.WHITE);
+    skipBtn.setTextSize(16f);
+    skipBtn.setTypeface(null, Typeface.BOLD);
+    skipBtn.setLayoutParams(btnLp);
+
+    GradientDrawable skipBg = new GradientDrawable();
+    skipBg.setColor(0xFFC62828);
+    skipBg.setCornerRadius(dp(10));
+    skipBg.setStroke(dp(3), 0xFFFFD700);
+    skipBtn.setBackground(skipBg);
+
+    btnRow.addView(skipBtn);
     btnRow.addView(continueBtn);
     root.addView(btnRow);
 
@@ -3826,6 +3837,10 @@ private void showUsageAccessDialogManual() {
         try { AppTTS.stop(); } catch (Throwable ignore) {}
     });
 
+    d.setOnCancelListener(dialog -> {
+        try { AppTTS.stop(); } catch (Throwable ignore) {}
+    });
+
     d.show();
 
     root.postDelayed(() -> {
@@ -3837,12 +3852,57 @@ private void showUsageAccessDialogManual() {
     }, 220);
 
     continueBtn.setOnClickListener(v -> {
-        try { AppTTS.stop(); } catch (Throwable ignore) {}
-        d.dismiss();
-        try {
-            startActivity(new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS));
-        } catch (Throwable ignored) {}
-    });
+
+    try { AppTTS.stop(); } catch (Throwable ignore) {}
+
+    d.dismiss();
+
+    try {
+        Intent intent = new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS);
+        intent.setData(Uri.parse("package:" + getPackageName()));
+        startActivity(intent);
+    } catch (Throwable e) {
+        // Fallback
+        startActivity(new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS));
+    }
+});
+
+skipBtn.setOnClickListener(v -> {
+    try { AppTTS.stop(); } catch (Throwable ignore) {}
+    d.dismiss();
+});
+
+}
+
+// ============================================================
+
+private boolean hasUsageAccess() {
+    try {
+        AppOpsManager appOps =
+                (AppOpsManager) getSystemService(Context.APP_OPS_SERVICE);
+        if (appOps == null) return false;
+
+        int mode;
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            mode = appOps.unsafeCheckOpNoThrow(
+                    AppOpsManager.OPSTR_GET_USAGE_STATS,
+                    android.os.Process.myUid(),
+                    getPackageName()
+            );
+        } else {
+            mode = appOps.checkOpNoThrow(
+                    AppOpsManager.OPSTR_GET_USAGE_STATS,
+                    android.os.Process.myUid(),
+                    getPackageName()
+            );
+        }
+
+        return mode == AppOpsManager.MODE_ALLOWED;
+
+    } catch (Throwable t) {
+        return false;
+    }
 }
 
 // ============================================================
@@ -14006,12 +14066,13 @@ return (s == null || s.trim().isEmpty()) ? "(no data)" : s;
 
 private void lab26AppsFootprint() {
 
-    // ============================================================
-    // USAGE ACCESS — MANDATORY GATE
-    // ============================================================
-    if (!ensureUsageAccessOrShowDialog()) {
-        return;
-    }
+// ============================================================
+// USAGE ACCESS — MANDATORY GATE
+// ============================================================
+if (!hasUsageAccess()) {
+    showUsageAccessDialog();
+    return;
+}
 
     appendHtml("<br>");
     logLine();
@@ -14068,7 +14129,10 @@ private void lab26AppsFootprint() {
     // ============================================================
     // OVERVIEW
     // ============================================================
-    logInfo(gr ? "Επισκόπηση εγκατεστημένων" : "Installed overview");
+    
+appendHtml("<br>");
+logInfo(gr ? "Επισκόπηση εγκατεστημένων" : "Installed overview");
+logLine();
 
     logLabelOkValue(
             gr ? "Σύνολα" : "Totals",
@@ -14098,16 +14162,19 @@ private void lab26AppsFootprint() {
     int pctBg   = (int) Math.round((r.bgCapable * 100.0) / userApps);
     int pctPerm = (int) Math.round((r.permHeavy * 100.0) / userApps);
 
-    logLine();
+    appendHtml("<br>");
     logInfo(gr ? "Ενδείξεις φόρτου (βάσει δυνατοτήτων)" : "Load indicators (capability-based)");
+    logLine();
 
     logLabelOkValue(gr ? "Background-capable" : "Background-capable",
             r.bgCapable + " (" + pctBg + "%)");
 
     logLabelOkValue(gr ? "Permission-heavy" : "Permission-heavy",
             r.permHeavy + " (" + pctPerm + "%)");
-
+            
+   appendHtml("<br>");
     logInfo(gr ? "Χάρτης δυνατοτήτων (user apps)" : "Capability map (user apps)");
+    logLine();
 
     logLabelOkValue(
             gr ? "Boot / Location / Mic / Camera" : "Boot / Location / Mic / Camera",
@@ -14122,60 +14189,93 @@ private void lab26AppsFootprint() {
     // ============================================================
     // REDUNDANCY (HONEST / HEURISTIC)
     // ============================================================
-    logLine();
+    appendHtml("<br>");
     logInfo(gr ? "Ενδείξεις πλεονασμού (heuristic)" : "Redundancy signals (heuristic)");
+    logLine();
 
     logLabelOkValue(gr ? "Cleaners / Optimizers" : "Cleaners / Optimizers", String.valueOf(r.cleanersLike));
     logLabelOkValue(gr ? "Launchers" : "Launchers", String.valueOf(r.launchersLike));
     logLabelOkValue(gr ? "Antivirus suites" : "Antivirus suites", String.valueOf(r.antivirusLike));
     logLabelOkValue(gr ? "Keyboards" : "Keyboards", String.valueOf(r.keyboardsLike));
 
-    // ============================================================
-    // REAL DATA (HONEST) — SINCE BOOT (TrafficStats)
-    // ============================================================
-    logLine();
-    logInfo(gr ? "Κατανάλωση δεδομένων (έντιμο — από boot)" : "Data usage (honest — since boot)");
+// ============================================================
+// REAL DATA (HONEST) — SINCE BOOT (TrafficStats)
+// ============================================================
+appendHtml("<br>");
+logInfo(gr ? "Κατανάλωση δεδομένων (από boot)" : "Data usage (since boot)");
+logLine();
 
-    if (r.topDataConsumers != null && !r.topDataConsumers.isEmpty()) {
+if (r.topDataConsumers != null && !r.topDataConsumers.isEmpty()) {
 
-        int limit = Math.min(10, r.topDataConsumers.size());
-        for (int i = 0; i < limit; i++) {
+    int limit = Math.min(10, r.topDataConsumers.size());
+    boolean foundRealData = false;
 
-            AppImpactEngine.AppScore a = r.topDataConsumers.get(i);
-            if (a == null) continue;
+    for (int i = 0; i < limit; i++) {
 
-            String val = humanBytes(a.dataBytesSinceBoot);
+        AppImpactEngine.AppScore a = r.topDataConsumers.get(i);
+        if (a == null) continue;
 
-            logLabelWarnValue(
-                    a.safeLabel(),
-                    (gr
-                            ? val + " (RX+TX από boot)"
-                            : val + " (RX+TX since boot)")
-            );
-
-            logInfo(a.pkg);
+        if (a.dataBytesSinceBoot <= 0) {
+            continue; // εξαφανίζουμε τα μηδενικά
         }
 
-        logLabelOkValue(
-                gr ? "Σημείωση" : "Note",
+        foundRealData = true;
+
+        String val = humanBytes(a.dataBytesSinceBoot);
+
+        logLabelWarnValue(
+                a.safeLabel(),
+                (gr
+        ? val + " (Συνολική κίνηση δεδομένων από εκκίνηση)"
+        : val + " (Total data traffic since boot)")
+);
+
+        logInfo(a.pkg);
+    }
+
+    if (!foundRealData) {
+
+        logLabelWarnValue(
+                gr ? "Κατάσταση" : "Status",
                 gr
-                        ? "Αυτό δεν είναι «τελευταίες 24 ώρες». Είναι συνολικά από την εκκίνηση της συσκευής."
-                        : "This is NOT 'last 24 hours'. It is total since device boot."
+                        ? "Δεν υπάρχουν διαθέσιμα δεδομένα κατανάλωσης.\n\n"
+                          + "Πιθανές αιτίες:\n"
+                          + "• Πρόσφατη επανεκκίνηση συσκευής\n"
+                          + "• Περιορισμοί κατασκευαστή (OEM)\n"
+                          + "• Μη διαθέσιμα UID counters στο Android"
+                        : "No data usage available.\n\n"
+                          + "Possible reasons:\n"
+                          + "• Device was recently rebooted\n"
+                          + "• OEM restrictions\n"
+                          + "• UID traffic counters not exposed by Android"
         );
 
     } else {
 
-        logLabelWarnValue(
-                gr ? "Κατάσταση" : "Status",
-                gr ? "Δεν ήταν δυνατή η κατάταξη δεδομένων" : "Unable to rank data usage"
+        logLabelOkValue(
+                gr ? "Σημείωση" : "Note",
+                gr
+                        ? "Τα δεδομένα είναι συνολικά από την τελευταία εκκίνηση της συσκευής."
+                        : "Data is cumulative since last device boot."
         );
     }
+
+} else {
+
+    logLabelWarnValue(
+            gr ? "Κατάσταση" : "Status",
+            gr
+                    ? "Δεν ήταν δυνατή η ανάκτηση στατιστικών κατανάλωσης."
+                    : "Unable to retrieve usage statistics."
+    );
+}
 
     // ============================================================
     // BATTERY EXPOSURE (HONEST HEURISTIC)
     // ============================================================
+    appendHtml("<br>");
+    logInfo(gr ? "Έκθεση μπαταρίας (heuristic — no mAh)" : "Battery exposure (heuristic — no mAh)");
     logLine();
-    logInfo(gr ? "Έκθεση μπαταρίας (heuristic — χωρίς ψεύτικα mAh)" : "Battery exposure (heuristic — no fake mAh)");
 
     if (!r.usageAccessOk) {
 
@@ -14244,11 +14344,11 @@ String detail = gr
         ? "Δείκτης Επιρροής: " + a.estImpactScore +
           " | " + usageText +
           " | " + dataText +
-          " | Tags: " + a.tags
+          " | Ενδείξεις: " + a.tags
         : "Impact Index: " + a.estImpactScore +
           " | " + usageText +
           " | " + dataText +
-          " | Tags: " + a.tags;
+          " | Indicators: " + a.tags;
 
             logLabelWarnValue(a.safeLabel(), detail);
             logInfo(a.pkg);
@@ -14272,10 +14372,11 @@ String detail = gr
     // ============================================================
     // TOP CAPABILITY-HEAVY
     // ============================================================
-    logLine();
+    appendHtml("<br>");
     logInfo(gr
-            ? "Top apps με «ισχυρές δυνατότητες» (flagged, όχι κατηγορούμενα)"
+            ? "Top εφαρμογές με ισχυρές δυνατότητες (επισήμανση, όχι κατηγορούμενα)"
             : "Top capability-heavy apps (flagged, not accused)");
+            logLine();
 
     if (r.topCapabilityHeavy != null && !r.topCapabilityHeavy.isEmpty()) {
 
@@ -14287,12 +14388,12 @@ String detail = gr
 
             String detail =
                     (gr
-                            ? "Score: " + a.capabilityScore +
-                              " | Danger perms: " + a.dangerPermCount +
-                              " | Tags: " + a.tags
-                            : "Score: " + a.capabilityScore +
-                              " | Danger perms: " + a.dangerPermCount +
-                              " | Tags: " + a.tags);
+        ? "Δείκτης Δυνατοτήτων: " + a.capabilityScore +
+          " | Επικίνδυνες Άδειες: " + a.dangerPermCount +
+          " | Παράγοντες Επιρροής: " + a.tags
+        : "Capability Index: " + a.capabilityScore +
+          " | Dangerous Permissions: " + a.dangerPermCount +
+          " | Impact Factors: " + a.tags);
 
             logLabelWarnValue(a.safeLabel(), detail);
             logInfo(a.pkg);
@@ -14302,8 +14403,9 @@ String detail = gr
     // ============================================================
     // HUMAN VERDICT
     // ============================================================
+    appendHtml("<br>");
+    logOk(gr ? "ΓΕΝΙΚΟ ΣΥΜΠΕΡΑΣΜΑ" : "TOTAL VERDICT");
     logLine();
-    logInfo(gr ? "Ανθρώπινο συμπέρασμα" : "Human verdict");
 
     if (r.riskPoints >= 8) {
         logLabelWarnValue(gr ? "Επίπεδο πίεσης" : "Pressure level", gr ? "ΥΨΗΛΟ" : "HIGH");
@@ -14367,249 +14469,281 @@ private long dirSizeBestEffortRoot(File dir) {
 // ============================================================
 private void lab27PermissionsPrivacy() {
 
-appendHtml("<br>");
-logLine();
-logInfo("LAB 27 — App Permissions & Privacy (AUTO scan)");
-logLine();
-
-PackageManager pm = getPackageManager();
-if (pm == null) {
-logError("PackageManager not available.");
-return;
-}
-
-List<String> details = new ArrayList<>();
-Map<String, Integer> appRisk = new HashMap<>();
-
-int totalApps = 0;
-int flaggedApps = 0;
-
-// Risk totals
-int riskTotal = 0;
-int dangTotal = 0;
-
-try {
-List<android.content.pm.PackageInfo> packs;
-
-if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {    
-    packs = pm.getInstalledPackages(    
-            PackageManager.PackageInfoFlags.of(PackageManager.GET_PERMISSIONS));    
-} else {    
-    //noinspection deprecation    
-    packs = pm.getInstalledPackages(PackageManager.GET_PERMISSIONS);    
-}    
-
-if (packs == null) packs = new ArrayList<>();    
-
-for (android.content.pm.PackageInfo p : packs) {    
-    if (p == null || p.packageName == null) continue;    
-    totalApps++;    
-      
-    String pkg = p.packageName;
-
-// ============================================================
-// EXCLUDE SYSTEM / GOOGLE / PLAY STORE APPS (LAB 27)
-// ============================================================
-boolean isSystem =
-(p.applicationInfo != null) &&
-((p.applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0 ||
-(p.applicationInfo.flags & ApplicationInfo.FLAG_UPDATED_SYSTEM_APP) != 0);
-
-if (isSystem ||
-pkg.startsWith("com.android.") ||
-pkg.startsWith("com.google.android.") ||
-pkg.equals("com.android.vending")) {
-continue;
-}
-
-String[] req = p.requestedPermissions;    
-    int[] grant = p.requestedPermissionsFlags;    
-
-    if (req == null || req.length == 0) continue;    
-
-    int appScore = 0;    
-    int appDangerCount = 0;    
-    StringBuilder sb = new StringBuilder();    
-
-    for (int i = 0; i < req.length; i++) {    
-        String perm = req[i];    
-        if (perm == null) continue;    
-
-        boolean granted = isGrantedFlag(grant, i);    
-
-        int weight = permissionWeight(perm);    
-        if (weight <= 0) continue; // ignore harmless    
-
-        // count dangerous only if granted    
-        if (granted) {    
-            appDangerCount++;    
-            appScore += weight;    
-            sb.append("• ").append(shortPerm(perm)).append(" (granted)\n");    
-        }    
-    }    
-
-    if (appScore > 0) {    
-        dangTotal += appDangerCount;    
-        riskTotal += appScore;    
-
-        // system apps threshold higher    
-        int threshold = isSystem ? 25 : 10;    
-
-        if (appScore >= threshold) {    
-            flaggedApps++;    
-            appRisk.put(p.packageName, appScore);    
-
-            String appLabel = safeLabel(pm, p.packageName);    
-            String color =    
-                    (appScore >= 60) ? "" :    
-                    (appScore >= 30) ? "" :    
-                    (appScore >= 15) ? "" : "";    
-
-            details.add(color + " " + appLabel + " (" + p.packageName + ")"    
-                    + " — Risk=" + appScore + "\n" + sb.toString());    
-        }    
-    }    
-}
-
-} catch (SecurityException se) {
-logWarn("Permissions scan limited by Android package visibility policy.");
-logWarn("Tip: add QUERY_ALL_PACKAGES if you want full scan on Android 11+.");
-} catch (Exception e) {
-logError("Permissions scan error: " + e.getMessage());
-}
-
-// ============================================================
-// SUMMARY + FINAL RISK SCORE
-// ============================================================
-int maxRiskRef = 300; // theoretical max
-int riskPct = Math.min(100, (riskTotal * 100) / maxRiskRef);
-
-logInfo("Scan summary");
-
-logLabelOkValue(
-        "Apps scanned",
-        String.valueOf(totalApps)
-);
-
-// ------------------------------------------------------------
-// Dangerous permissions
-// ------------------------------------------------------------
-if (dangTotal == 0) {
-    logLabelOkValue(
-            "Dangerous permissions granted",
-            String.valueOf(dangTotal)
-    );
-} else if (dangTotal <= 5) {
-    logLabelWarnValue(
-            "Dangerous permissions granted",
-            String.valueOf(dangTotal)
-    );
-} else {
-    logLabelErrorValue(
-            "Dangerous permissions granted",
-            String.valueOf(dangTotal)
-    );
-}
-
-// ------------------------------------------------------------
-// Flagged apps
-// ------------------------------------------------------------
-if (flaggedApps == 0) {
-    logLabelOkValue(
-            "Flagged apps",
-            String.valueOf(flaggedApps)
-    );
-} else if (flaggedApps <= 2) {
-    logLabelWarnValue(
-            "Flagged apps",
-            String.valueOf(flaggedApps)
-    );
-} else {
-    logLabelErrorValue(
-            "Flagged apps",
-            String.valueOf(flaggedApps)
-    );
-}
-
-// ------------------------------------------------------------
-// Privacy Risk Score
-// ------------------------------------------------------------
-logInfo("Privacy risk score");
-
-if (riskPct >= 70) {
-    logLabelErrorValue("Risk", riskPct + "%");
-} else if (riskPct >= 30) {
-    logLabelWarnValue("Risk", riskPct + "%");
-} else {
-    logLabelOkValue("Risk", riskPct + "%");
-}
-
-// ============================================================
-// TOP OFFENDERS
-// ============================================================
-if (!appRisk.isEmpty()) {
-
-    logLine();
-    logInfo("Top privacy offenders (highest risk)");
-
-    appRisk.entrySet()
-            .stream()
-            .sorted((a, b) -> b.getValue() - a.getValue())
-            .limit(8)
-            .forEach(e -> {
-
-                String label = safeLabel(pm, e.getKey());
-                String riskVal = e.getValue() + "";
-
-                if (e.getValue() >= 60) {
-                    logLabelErrorValue(label, "Risk " + riskVal);
-                } else if (e.getValue() >= 30) {
-                    logLabelWarnValue(label, "Risk " + riskVal);
-                } else {
-                    logLabelOkValue(label, "Risk " + riskVal);
-                }
-            });
-}
-
-// ============================================================
-// FULL DETAILS
-// ============================================================
-if (!details.isEmpty()) {
-
-    logLine();
-    logInfo("Permission details (flagged apps)");
-
-    for (String d : details) {
-        logLabelWarnValue("Finding", d.trim());
+    // ============================================================
+    // USAGE ACCESS — MANDATORY GATE
+    // ============================================================
+    if (!ensureUsageAccessOrShowDialog()) {
+        return;
     }
 
-} else {
+    final boolean gr = AppLang.isGreek(this);
 
-    logLabelOkValue(
-            "Permission patterns",
-            "No high-risk permission combinations detected"
-    );
-}
+    appendHtml("<br>");
+    logLine();
+    logInfo(gr
+            ? "LAB 27 — Άδειες Εφαρμογών & Ιδιωτικότητα (Αυτόματη Σάρωση)"
+            : "LAB 27 — App Permissions & Privacy (Auto Scan)");
+    logLine();
 
-// ============================================================
-// PRIVACY CONTEXT NOTE (SERVICE REPORT SAFE)
-// ============================================================
-logLine();
-logInfo("Privacy analysis note");
+    PackageManager pm = getPackageManager();
+    if (pm == null) {
+        logError(gr
+                ? "Το PackageManager δεν είναι διαθέσιμο."
+                : "PackageManager not available.");
+        return;
+    }
 
-logLabelOkValue(
-        "Clarification",
-        "Granted permissions do not imply malicious behavior"
-);
-logLabelOkValue(
-        "Scope",
-        "This result does NOT indicate hardware or system failure"
-);
+    List<String> details = new ArrayList<>();
+    Map<String, Integer> appRisk = new HashMap<>();
+
+    int totalApps = 0;
+    int flaggedApps = 0;
+
+    int riskTotal = 0;
+    int dangTotal = 0;
+
+    try {
+
+        List<android.content.pm.PackageInfo> packs;
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            packs = pm.getInstalledPackages(
+                    PackageManager.PackageInfoFlags.of(PackageManager.GET_PERMISSIONS));
+        } else {
+            //noinspection deprecation
+            packs = pm.getInstalledPackages(PackageManager.GET_PERMISSIONS);
+        }
+
+        if (packs == null) packs = new ArrayList<>();
+
+        for (android.content.pm.PackageInfo p : packs) {
+
+            if (p == null || p.packageName == null) continue;
+            totalApps++;
+
+            String pkg = p.packageName;
+
+            // ============================================================
+            // EXCLUDE SYSTEM / GOOGLE / PLAY STORE APPS
+            // ============================================================
+            boolean isSystem =
+                    (p.applicationInfo != null) &&
+                    ((p.applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0 ||
+                     (p.applicationInfo.flags & ApplicationInfo.FLAG_UPDATED_SYSTEM_APP) != 0);
+
+            if (isSystem ||
+                    pkg.startsWith("com.android.") ||
+                    pkg.startsWith("com.google.android.") ||
+                    pkg.equals("com.android.vending")) {
+                continue;
+            }
+
+            String[] req = p.requestedPermissions;
+            int[] grant = p.requestedPermissionsFlags;
+
+            if (req == null || req.length == 0) continue;
+
+            int appScore = 0;
+            int appDangerCount = 0;
+            StringBuilder sb = new StringBuilder();
+
+            for (int i = 0; i < req.length; i++) {
+
+                String perm = req[i];
+                if (perm == null) continue;
+
+                boolean granted = isGrantedFlag(grant, i);
+
+                int weight = permissionWeight(perm);
+                if (weight <= 0) continue;
+
+                if (granted) {
+                    appDangerCount++;
+                    appScore += weight;
+
+                    sb.append("• ")
+                      .append(shortPerm(perm))
+                      .append(gr ? " (χορηγήθηκε)\n" : " (granted)\n");
+                }
+            }
+
+            if (appScore > 0) {
+
+                dangTotal += appDangerCount;
+                riskTotal += appScore;
+
+                int threshold = 10;
+
+                if (appScore >= threshold) {
+
+                    flaggedApps++;
+                    appRisk.put(pkg, appScore);
+
+                    String appLabel = safeLabel(pm, pkg);
+
+                    details.add(
+                            appLabel + " (" + pkg + ")" +
+                            (gr ? " — Κίνδυνος=" : " — Risk=") +
+                            appScore + "\n" + sb.toString()
+                    );
+                }
+            }
+        }
+
+    } catch (SecurityException se) {
+
+        logWarn(gr
+                ? "Η σάρωση περιορίστηκε από την πολιτική ορατότητας πακέτων Android."
+                : "Permissions scan limited by Android package visibility policy.");
+
+    } catch (Exception e) {
+
+        logError(gr
+                ? "Σφάλμα σάρωσης αδειών: " + e.getMessage()
+                : "Permissions scan error: " + e.getMessage());
+    }
+
+    // ============================================================
+    // SUMMARY
+    // ============================================================
+    int maxRiskRef = 300;
+    int riskPct = Math.min(100, (riskTotal * 100) / maxRiskRef);
 
 appendHtml("<br>");
-logOk("Lab 27 finished.");
-logLine();
+    logInfo(gr ? "Σύνοψη Σάρωσης" : "Scan Summary");
+    logLine();
 
+    logLabelOkValue(
+            gr ? "Εφαρμογές που ελέγχθηκαν" : "Apps scanned",
+            String.valueOf(totalApps)
+    );
+
+    if (dangTotal == 0) {
+        logLabelOkValue(
+                gr ? "Επικίνδυνες άδειες (χορηγημένες)" : "Dangerous permissions granted",
+                String.valueOf(dangTotal)
+        );
+    } else if (dangTotal <= 5) {
+        logLabelWarnValue(
+                gr ? "Επικίνδυνες άδειες (χορηγημένες)" : "Dangerous permissions granted",
+                String.valueOf(dangTotal)
+        );
+    } else {
+        logLabelErrorValue(
+                gr ? "Επικίνδυνες άδειες (χορηγημένες)" : "Dangerous permissions granted",
+                String.valueOf(dangTotal)
+        );
+    }
+
+    if (flaggedApps == 0) {
+        logLabelOkValue(
+                gr ? "Εφαρμογές με αυξημένο ρίσκο" : "Flagged apps",
+                String.valueOf(flaggedApps)
+        );
+    } else if (flaggedApps <= 2) {
+        logLabelWarnValue(
+                gr ? "Εφαρμογές με αυξημένο ρίσκο" : "Flagged apps",
+                String.valueOf(flaggedApps)
+        );
+    } else {
+        logLabelErrorValue(
+                gr ? "Εφαρμογές με αυξημένο ρίσκο" : "Flagged apps",
+                String.valueOf(flaggedApps)
+        );
+    }
+
+    // ============================================================
+    // PRIVACY RISK SCORE
+    // ============================================================
+    logInfo(gr ? "Δείκτης Ρίσκου Ιδιωτικότητας" : "Privacy Risk Score");
+
+    if (riskPct >= 70) {
+        logLabelErrorValue(gr ? "Ρίσκο" : "Risk", riskPct + "%");
+    } else if (riskPct >= 30) {
+        logLabelWarnValue(gr ? "Ρίσκο" : "Risk", riskPct + "%");
+    } else {
+        logLabelOkValue(gr ? "Ρίσκο" : "Risk", riskPct + "%");
+    }
+
+    // ============================================================
+    // TOP OFFENDERS
+    // ============================================================
+    if (!appRisk.isEmpty()) {
+
+        appendHtml("<br>");
+        logInfo(gr
+                ? "Εφαρμογές με τον υψηλότερο δείκτη ρίσκου"
+                : "Top privacy offenders");
+                 logLine();
+
+        appRisk.entrySet()
+                .stream()
+                .sorted((a, b) -> b.getValue() - a.getValue())
+                .limit(8)
+                .forEach(e -> {
+
+                    String label = safeLabel(pm, e.getKey());
+                    String riskVal = String.valueOf(e.getValue());
+
+                    if (e.getValue() >= 60) {
+                        logLabelErrorValue(label, (gr ? "Ρίσκο " : "Risk ") + riskVal);
+                    } else if (e.getValue() >= 30) {
+                        logLabelWarnValue(label, (gr ? "Ρίσκο " : "Risk ") + riskVal);
+                    } else {
+                        logLabelOkValue(label, (gr ? "Ρίσκο " : "Risk ") + riskVal);
+                    }
+                });
+    }
+
+    // ============================================================
+    // FULL DETAILS
+    // ============================================================
+    if (!details.isEmpty()) {
+
+        appendHtml("<br>");
+        logInfo(gr
+                ? "Αναλυτικές Πληροφορίες (Εφαρμογές με ρίσκο)"
+                : "Permission details (flagged apps)");
+                logLine();
+
+        for (String d : details) {
+            logLabelWarnValue(gr ? "Εύρημα" : "Finding", d.trim());
+        }
+
+    } else {
+
+        logLabelOkValue(
+                gr ? "Συνδυασμοί αδειών" : "Permission patterns",
+                gr
+                        ? "Δεν εντοπίστηκαν συνδυασμοί υψηλού ρίσκου"
+                        : "No high-risk permission combinations detected"
+        );
+    }
+
+    // ============================================================
+    // CONTEXT NOTE
+    // ============================================================
+    appendHtml("<br>");
+    logInfo(gr ? "Σημείωση Ανάλυσης Ιδιωτικότητας" : "Privacy Analysis Note");
+    logLine();
+
+    logLabelOkValue(
+            gr ? "Διευκρίνιση" : "Clarification",
+            gr
+                    ? "Η χορήγηση αδειών δεν σημαίνει κακόβουλη συμπεριφορά."
+                    : "Granted permissions do not imply malicious behavior."
+    );
+
+    logLabelOkValue(
+            gr ? "Πεδίο Ανάλυσης" : "Scope",
+            gr
+                    ? "Το αποτέλεσμα ΔΕΝ υποδεικνύει βλάβη υλικού ή συστήματος."
+                    : "This result does NOT indicate hardware or system failure."
+    );
+
+    appendHtml("<br>");
+    logOk(gr ? "Το Lab 27 ολοκληρώθηκε." : "Lab 27 finished.");
+    logLine();
 }
 
 // ============================================================

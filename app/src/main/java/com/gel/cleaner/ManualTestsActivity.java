@@ -12980,7 +12980,7 @@ return out != null && out.contains("OK");
 private String runSu(String command) {
 java.io.BufferedReader br = null;
 try {
-Process p = Runtime.getRuntime().exec(new String[]{"su", "-c", command});
+java.lang.Process p = Runtime.getRuntime().exec(new String[]{"su", "-c", command});
 br = new java.io.BufferedReader(new java.io.InputStreamReader(p.getInputStream()));
 StringBuilder sb = new StringBuilder();
 String line;

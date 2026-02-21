@@ -13934,15 +13934,11 @@ private void lab26AppsFootprint() {
     logLine();
     logInfo(gr ? "Ενδείξεις φόρτου (βάσει δυνατοτήτων)" : "Load indicators (capability-based)");
 
-    logLabelOkValue(
-            gr ? "Background-capable" : "Background-capable",
-            r.bgCapable + " (" + pctBg + "%)"
-    );
+    logLabelOkValue(gr ? "Background-capable" : "Background-capable",
+            r.bgCapable + " (" + pctBg + "%)");
 
-    logLabelOkValue(
-            gr ? "Permission-heavy" : "Permission-heavy",
-            r.permHeavy + " (" + pctPerm + "%)"
-    );
+    logLabelOkValue(gr ? "Permission-heavy" : "Permission-heavy",
+            r.permHeavy + " (" + pctPerm + "%)");
 
     logInfo(gr ? "Χάρτης δυνατοτήτων (user apps)" : "Capability map (user apps)");
 
@@ -14065,7 +14061,7 @@ private void lab26AppsFootprint() {
     }
 
     // ============================================================
-    // TOP CAPABILITY-HEAVY (FLAGGED, NOT ACCUSED)
+    // TOP CAPABILITY-HEAVY
     // ============================================================
     logLine();
     logInfo(gr
@@ -14092,126 +14088,20 @@ private void lab26AppsFootprint() {
             logLabelWarnValue(a.safeLabel(), detail);
             logInfo(a.pkg);
         }
-
-        logLabelOkValue(
-                gr ? "Σημείωση" : "Note",
-                gr
-                        ? "Δεν σημαίνει ότι οι εφαρμογές είναι «κακές». Σημαίνει ότι έχουν δυνατότητες που αξίζουν έλεγχο."
-                        : "This does not mean apps are 'bad'. It means they have capabilities worth reviewing."
-        );
     }
 
     // ============================================================
-    // ROOT-AWARE LEFTOVERS (BEST-EFFORT SAFE)
-    // ============================================================
-    if (rooted && r.orphan != null) {
-
-        logLine();
-        logInfo(gr ? "Advanced (root-aware) inspection" : "Advanced (root-aware) inspection");
-
-        if (!r.orphan.attempted) {
-            logLabelWarnValue(
-                    gr ? "Κατάσταση" : "Status",
-                    gr ? "Δεν έγινε προσπάθεια ανίχνευσης leftovers" : "Leftovers scan not attempted"
-            );
-        } else if (r.orphan.orphanDirs > 0) {
-
-            logLabelWarnValue(
-                    gr ? "Leftover app data" : "Leftover app data",
-                    (gr
-                            ? r.orphan.orphanDirs + " φάκελοι"
-                            : r.orphan.orphanDirs + " folders")
-            );
-
-            logLabelOkValue(
-                    gr ? "Περίπου μέγεθος" : "Approx size",
-                    humanBytes(r.orphan.orphanBytes)
-            );
-
-            logLabelOkValue(
-                    gr ? "Σημαίνει" : "Meaning",
-                    gr
-                            ? "Πιθανό υπόλοιπο δεδομένων από απεγκατεστημένες εφαρμογές (όχι επικίνδυνο)."
-                            : "Possible leftover data from uninstalled apps (not dangerous)."
-            );
-
-        } else {
-
-            logLabelOkValue(
-                    gr ? "Leftover app data" : "Leftover app data",
-                    gr
-                            ? "Δεν βρέθηκαν σημαντικά orphan folders (ή δεν επιτράπηκε πρόσβαση)."
-                            : "No significant orphan folders found (or access was not permitted)."
-            );
-        }
-
-        logLabelOkValue(
-                gr ? "Root-aware note" : "Root-aware note",
-                gr
-                        ? "Best-effort. Χωρίς su, οι vendors μπορεί να μην επιτρέψουν ανάγνωση /data."
-                        : "Best-effort. Without su, vendors may block reading /data."
-        );
-    }
-
-    // ============================================================
-    // HUMAN VERDICT (FULL BILINGUAL)
+    // HUMAN VERDICT
     // ============================================================
     logLine();
     logInfo(gr ? "Ανθρώπινο συμπέρασμα" : "Human verdict");
 
     if (r.riskPoints >= 8) {
-
         logLabelWarnValue(gr ? "Επίπεδο πίεσης" : "Pressure level", gr ? "ΥΨΗΛΟ" : "HIGH");
-
-        logLabelWarnValue(
-                gr ? "Σημαίνει" : "Meaning",
-                gr
-                        ? "Πολλές εφαρμογές με background/ισχυρά permissions — πιθανή επιβάρυνση σε απόδοση/μπαταρία."
-                        : "Many background/high-permission apps — possible performance/battery pressure."
-        );
-
-        logLabelOkValue(
-                gr ? "Σημείωση" : "Note",
-                gr
-                        ? "Συχνό σε power-user συσκευές — δεν είναι βλάβη hardware."
-                        : "Common on power-user devices — NOT a hardware fault."
-        );
-
-        logLabelOkValue(
-                gr ? "Πρόταση" : "Recommendation",
-                gr
-                        ? "Κράτα μόνο ό,τι χρησιμοποιείς. Μείωσε duplicates (cleaners/antivirus/launchers) για έξτρα ομαλότητα."
-                        : "Keep only what you use. Reduce duplicates (cleaners/antivirus/launchers) for extra smoothness."
-        );
-
     } else if (r.riskPoints >= 5) {
-
         logLabelWarnValue(gr ? "Επίπεδο πίεσης" : "Pressure level", gr ? "ΜΕΤΡΙΟ" : "MODERATE");
-
-        logLabelOkValue(
-                gr ? "Σημαίνει" : "Meaning",
-                gr
-                        ? "Αρκετές εφαρμογές μπορούν να τρέχουν ή να αντιδρούν στο background."
-                        : "Several apps may run or react in background."
-        );
-
-        logLabelOkValue(
-                gr ? "Πρόταση" : "Recommendation",
-                gr
-                        ? "Έλεγξε κατηγορίες με redundancy και τις κορυφαίες λίστες δεδομένων/έκθεσης."
-                        : "Review redundancy categories and the top data/exposure lists."
-        );
-
     } else {
-
         logLabelOkValue(gr ? "Επίπεδο πίεσης" : "Pressure level", gr ? "ΦΥΣΙΟΛΟΓΙΚΟ" : "NORMAL");
-
-        logLabelOkValue(
-                gr ? "Κατάσταση" : "Status",
-                gr
-                        ? "Το footprint εφαρμογών δείχνει υγιές για καθημερινή χρήση."
-                        : "App footprint looks healthy for daily usage."
-        );
     }
 
     GELServiceLog.info(

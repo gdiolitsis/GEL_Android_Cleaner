@@ -139,10 +139,15 @@ Toast.LENGTH_SHORT).show();
 // ENTRY FLOW
 // =========================================================
 
-if (!isWelcomeDisabled()) {
+SharedPreferences prefs = getSharedPreferences("gel_prefs", MODE_PRIVATE);
+boolean welcomeShown = prefs.getBoolean("welcome_shown", false);
+
+if (!welcomeShown && !isWelcomeDisabled()) {
     showWelcomePopup();
+    prefs.edit().putBoolean("welcome_shown", true).apply();
     return;
 }
+
 // APPLY PLATFORM UI
 if ("apple".equals(getSavedPlatform())) {
 applyAppleModeUI();

@@ -1,5 +1,5 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// AppImpactEngine.java — FINAL (Play-Store Safe • Root-Aware • Honest • Bilingual-ready consumer)
+// AppImpactEngine.java — FINAL (Root-Aware • su-based • Best-Effort • Honest)
 // ⚠️ Reminder: Always return the final code ready for copy-paste (no extra explanations / no questions).
 
 package com.gel.cleaner;
@@ -14,10 +14,11 @@ import android.content.pm.PackageManager;
 import android.net.TrafficStats;
 import android.os.Build;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -56,11 +57,13 @@ public final class AppImpactEngine {
 
         // usage heuristics
         public long fgMs24h;
-        public long dataBytesSinceBoot; // honest fallback
-        public long estImpactScore;     // combined ranking score (not mAh)
-        // root-aware dumpsys fields (advanced)
-        public long dumpRxBytes;
-        public long dumpTxBytes;
+        public long dataBytesSinceBoot; // TrafficStats (honest fallback)
+        public long estImpactScore;     // combined ranking score (NOT mAh)
+
+        // ROOT (dumpsys best-effort via su)
+        public long dumpRxBytes;        // netstats-derived (best-effort)
+        public long dumpTxBytes;        // netstats-derived (best-effort)
+        public long dumpEstMah;         // batterystats-derived (best-effort, may be 0)
 
         // helpers
         public String safeLabel() {
@@ -97,21 +100,22 @@ public final class AppImpactEngine {
         public int keyboardsLike;
 
         public boolean usageAccessOk; // for foreground time (UsageStats)
-        public boolean rooted;        // device rooted flag input (no su used)
+        public boolean rooted;        // device rooted flag input
+
+        // ROOT status
+        public boolean rootDumpsysOk;
 
         public ArrayList<AppScore> topCapabilityHeavy = new ArrayList<>();
         public ArrayList<AppScore> topDataConsumers   = new ArrayList<>();
         public ArrayList<AppScore> topBatteryExposure = new ArrayList<>();
 
-        // root-aware advanced rankings (dumpsys based)
+        // ROOT top lists
         public ArrayList<AppScore> topBatteryByDumpsys = new ArrayList<>();
         public ArrayList<AppScore> topNetByDumpsys     = new ArrayList<>();
 
-        public boolean rootDumpsysOk;
-        
         public OrphanResult orphan = new OrphanResult();
 
-        // verdict points (same logic as before, but stored)
+        // verdict points
         public int riskPoints;
         public boolean appsImpactHigh;
     }
@@ -148,7 +152,6 @@ public final class AppImpactEngine {
         // -----------------------------
         out.usageAccessOk = hasUsageAccess(c);
 
-        // 24h range
         long end = System.currentTimeMillis();
         long start = end - 24L * 60L * 60L * 1000L;
 
@@ -165,6 +168,7 @@ public final class AppImpactEngine {
                             if (u == null) continue;
                             String pkg = u.getPackageName();
                             if (pkg == null) continue;
+
                             long fg = 0L;
                             try {
                                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -174,6 +178,7 @@ public final class AppImpactEngine {
                                     fg = u.getTotalTimeInForeground();
                                 }
                             } catch (Throwable ignore) {}
+
                             if (fg > 0) {
                                 Long prev = fgMsMap24h.get(pkg);
                                 fgMsMap24h.put(pkg, (prev == null ? fg : (prev + fg)));
@@ -189,6 +194,7 @@ public final class AppImpactEngine {
         // -----------------------------
         ArrayList<AppScore> allUser = new ArrayList<>();
         HashSet<String> installedPkgs = new HashSet<>();
+        HashMap<Integer, AppScore> uidMap = new HashMap<>();
 
         for (ApplicationInfo ai : apps) {
 
@@ -231,6 +237,7 @@ public final class AppImpactEngine {
                             PackageManager.PackageInfoFlags.of(PackageManager.GET_PERMISSIONS)
                     );
                 } else {
+                    //noinspection deprecation
                     pi = pm.getPackageInfo(pkg, PackageManager.GET_PERMISSIONS);
                 }
                 if (pi != null) reqPerms = pi.requestedPermissions;
@@ -360,8 +367,7 @@ public final class AppImpactEngine {
             }
 
             // -----------------------------
-            // DATA (honest, Play Store safe)
-            // TrafficStats gives totals since boot (may be UNSUPPORTED = -1)
+            // DATA (TrafficStats, honest, since boot)
             // -----------------------------
             long rx = -1L, tx = -1L;
             try { rx = TrafficStats.getUidRxBytes(ai.uid); } catch (Throwable ignore) {}
@@ -379,49 +385,56 @@ public final class AppImpactEngine {
             s.fgMs24h = (fg != null ? fg : 0L);
 
             // -----------------------------
-            // BATTERY EXPOSURE SCORE (honest heuristic, NOT mAh)
-            // - foreground minutes weight
-            // - capability score weight
-            // - data weight
+            // BATTERY EXPOSURE SCORE (heuristic, NOT mAh)
             // -----------------------------
             long fgMin = s.fgMs24h / 60000L;
             long dataMb = s.dataBytesSinceBoot / (1024L * 1024L);
 
             long impact = 0L;
-            impact += fgMin * 8L;              // visible usage tends to correlate with drain
+            impact += fgMin * 8L;
             impact += (long) s.capabilityScore * 6L;
-            impact += (long) Math.min(500, dataMb) * 2L; // cap influence to avoid extreme dominance
+            impact += (long) Math.min(500, dataMb) * 2L;
             if (s.bgCapable) impact += 35L;
 
             s.estImpactScore = impact;
 
-            // keep user apps for top lists
             if (!isSystem) {
                 allUser.add(s);
+                uidMap.put(s.uid, s);
             }
         }
 
         // -----------------------------
-        // TOP LISTS
+        // ROOT-AWARE (dumpsys via su) — BEST EFFORT
+        // -----------------------------
+        out.rootDumpsysOk = false;
+        out.topBatteryByDumpsys.clear();
+        out.topNetByDumpsys.clear();
+
+        if (deviceRooted && canUseSu()) {
+            out.rootDumpsysOk = true;
+            try { fillFromBatteryStats(uidMap); } catch (Throwable ignore) {}
+            try { fillFromNetStats(uidMap); } catch (Throwable ignore) {}
+            try { buildRootTopLists(allUser, out); } catch (Throwable ignore) {}
+        }
+
+        // -----------------------------
+        // TOP LISTS (non-root)
         // -----------------------------
         ArrayList<AppScore> capSorted = new ArrayList<>(allUser);
         ArrayList<AppScore> dataSorted = new ArrayList<>(allUser);
         ArrayList<AppScore> battSorted = new ArrayList<>(allUser);
 
-        // capability heavy
         Collections.sort(capSorted, (a, b) -> Integer.compare(b.capabilityScore, a.capabilityScore));
-        // data heavy
         Collections.sort(dataSorted, (a, b) -> Long.compare(b.dataBytesSinceBoot, a.dataBytesSinceBoot));
-        // battery exposure (heuristic)
         Collections.sort(battSorted, (a, b) -> Long.compare(b.estImpactScore, a.estImpactScore));
 
-        // filter: exclude core system + google + play store packages
         out.topCapabilityHeavy = takeTopFiltered(capSorted, 10);
         out.topDataConsumers   = takeTopFiltered(dataSorted, 10);
         out.topBatteryExposure = takeTopFiltered(battSorted, 10);
 
         // -----------------------------
-        // ROOT-AWARE ORPHANS (no su, best-effort)
+        // ROOT-AWARE ORPHANS (no su needed; will fail safely without access)
         // -----------------------------
         out.orphan.attempted = false;
         out.orphan.orphanDirs = 0;
@@ -431,7 +444,6 @@ public final class AppImpactEngine {
 
             out.orphan.attempted = true;
 
-            // try scan typical data roots (will fail safely without access)
             File base = new File("/data/user/0");
             try {
                 if (!base.exists() || !base.isDirectory()) base = new File("/data/data");
@@ -463,10 +475,12 @@ public final class AppImpactEngine {
         }
 
         out.appsImpactHigh =
-                (out.orphan.orphanDirs > 0) || (out.orphan.orphanBytes > (200L * 1024L * 1024L));
+                (out.orphan.orphanDirs > 0) ||
+                (out.orphan.orphanBytes > (200L * 1024L * 1024L)) ||
+                (out.rootDumpsysOk && (!out.topBatteryByDumpsys.isEmpty() || !out.topNetByDumpsys.isEmpty()));
 
         // -----------------------------
-        // RISK POINTS (same spirit as your logic)
+        // RISK POINTS
         // -----------------------------
         int userApps = Math.max(1, out.userApps);
 
@@ -500,13 +514,15 @@ public final class AppImpactEngine {
 
         if (redundancy) risk += 1;
 
+        if (out.rootDumpsysOk) risk += 1;
+
         out.riskPoints = risk;
 
         return out;
     }
 
     // ============================================================
-    // HELPERS
+    // HELPERS (Usage Access)
     // ============================================================
 
     private static boolean hasUsageAccess(Context c) {
@@ -522,6 +538,7 @@ public final class AppImpactEngine {
                         c.getPackageName()
                 );
             } else {
+                //noinspection deprecation
                 mode = appOps.checkOpNoThrow(
                         AppOpsManager.OPSTR_GET_USAGE_STATS,
                         android.os.Process.myUid(),
@@ -535,14 +552,16 @@ public final class AppImpactEngine {
         }
     }
 
+    // ============================================================
+    // HELPERS (Top filtered user apps)
+    // ============================================================
+
     private static ArrayList<AppScore> takeTopFiltered(List<AppScore> src, int limit) {
         ArrayList<AppScore> out = new ArrayList<>();
         if (src == null) return out;
 
         for (AppScore s : src) {
             if (s == null) continue;
-
-            // strict: user apps only already, but keep safety
             if (s.isSystem) continue;
 
             String pkg = (s.pkg != null ? s.pkg : "");
@@ -555,6 +574,303 @@ public final class AppImpactEngine {
         }
         return out;
     }
+
+    // ============================================================
+    // ROOT (su)
+    // ============================================================
+
+    private static boolean canUseSu() {
+        try {
+            String out = runSuGetOutput("id");
+            if (out == null) return false;
+            out = out.toLowerCase(Locale.US);
+            return out.contains("uid=0") || out.contains("uid=0(root)");
+        } catch (Throwable ignore) {
+            return false;
+        }
+    }
+
+    private static String runSuGetOutput(String cmd) {
+        if (cmd == null) return null;
+        BufferedReader br = null;
+        Process p = null;
+        try {
+            p = new ProcessBuilder("su", "-c", cmd).redirectErrorStream(true).start();
+            br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+            StringBuilder sb = new StringBuilder();
+            String line;
+            int lines = 0;
+            while ((line = br.readLine()) != null) {
+                if (line.length() > 0) {
+                    sb.append(line).append('\n');
+                    lines++;
+                    if (lines > 40000) break;
+                }
+            }
+            try { p.waitFor(); } catch (Throwable ignore) {}
+            return sb.toString();
+        } catch (Throwable t) {
+            return null;
+        } finally {
+            try { if (br != null) br.close(); } catch (Throwable ignore) {}
+            try { if (p != null) p.destroy(); } catch (Throwable ignore) {}
+        }
+    }
+
+    // ============================================================
+    // ROOT (dumpsys batterystats) — best effort
+    // Parses common "Estimated power use (mAh):" uid lines if present
+    // ============================================================
+
+    private static void fillFromBatteryStats(HashMap<Integer, AppScore> uidMap) {
+
+        if (uidMap == null || uidMap.isEmpty()) return;
+
+        String txt = runSuGetOutput("dumpsys batterystats");
+        if (txt == null || txt.length() < 20) return;
+
+        String[] lines = txt.split("\n");
+        boolean inEstimated = false;
+
+        for (String raw : lines) {
+
+            if (raw == null) continue;
+            String line = raw.trim();
+            if (line.length() == 0) continue;
+
+            // detect section
+            String low = line.toLowerCase(Locale.US);
+            if (low.startsWith("estimated power use") || low.startsWith("estimated power consumption")) {
+                inEstimated = true;
+                continue;
+            }
+            if (inEstimated) {
+                // end section heuristics
+                if (low.startsWith("per-app") || low.startsWith("per app") || low.startsWith("battery history") ||
+                    low.startsWith("statistics") || low.startsWith("discharge step") || low.startsWith("wifi") ||
+                    low.startsWith("cellular") || low.startsWith("bluetooth") || low.startsWith("camera") ||
+                    low.startsWith("screen") || low.startsWith("uid") && low.contains("cpu")) {
+                    // not a strict end; keep going
+                }
+            }
+
+            if (!inEstimated) {
+                // still allow direct uid lines in some formats
+                // e.g. "Uid u0a123: 12.34"
+                // e.g. "u0a123: 12.34 (mAh)"
+            }
+
+            // try patterns that appear in many builds
+            // Pattern A: "Uid u0a123: 12.34"
+            if (line.startsWith("Uid ")) {
+                // "Uid u0a123: 12.34"
+                int c1 = line.indexOf(' ');
+                int c2 = line.indexOf(':');
+                if (c2 > c1) {
+                    String uidToken = line.substring(c1 + 1, c2).trim();
+                    String rest = line.substring(c2 + 1).trim();
+
+                    long mahMilli = parseMahToMilli(rest);
+                    int uid = parseUidTokenToInt(uidToken);
+                    if (uid > 0 && mahMilli > 0) {
+                        AppScore s = uidMap.get(uid);
+                        if (s != null) s.dumpEstMah = Math.max(s.dumpEstMah, mahMilli);
+                    }
+                }
+                continue;
+            }
+
+            // Pattern B: "u0a123: 12.34"
+            int c = line.indexOf(':');
+            if (c > 1 && c < 20) {
+                String left = line.substring(0, c).trim();
+                String rest = line.substring(c + 1).trim();
+
+                int uid = parseUidTokenToInt(left);
+                if (uid > 0) {
+                    long mahMilli = parseMahToMilli(rest);
+                    if (mahMilli > 0) {
+                        AppScore s = uidMap.get(uid);
+                        if (s != null) s.dumpEstMah = Math.max(s.dumpEstMah, mahMilli);
+                    }
+                }
+            }
+        }
+    }
+
+    private static long parseMahToMilli(String s) {
+        if (s == null) return 0L;
+        s = s.trim();
+        if (s.length() == 0) return 0L;
+
+        // extract first number
+        StringBuilder num = new StringBuilder();
+        boolean dot = false;
+        boolean started = false;
+
+        for (int i = 0; i < s.length(); i++) {
+            char ch = s.charAt(i);
+            if ((ch >= '0' && ch <= '9')) {
+                num.append(ch);
+                started = true;
+                continue;
+            }
+            if (ch == '.' && !dot) {
+                num.append(ch);
+                dot = true;
+                started = true;
+                continue;
+            }
+            if (started) break;
+        }
+
+        if (num.length() == 0) return 0L;
+
+        try {
+            double mah = Double.parseDouble(num.toString());
+            if (mah <= 0) return 0L;
+            return (long) Math.round(mah * 1000.0);
+        } catch (Throwable ignore) {
+            return 0L;
+        }
+    }
+
+    private static int parseUidTokenToInt(String token) {
+        if (token == null) return -1;
+        token = token.trim();
+        if (token.length() == 0) return -1;
+
+        // u0a123 => 10000 + 123
+        // u10a123 => 10*100000 + 10000 + 123 (best-effort)
+        // uid=10123 => 10123
+        try {
+            if (token.startsWith("uid=")) token = token.substring(4).trim();
+        } catch (Throwable ignore) {}
+
+        if (token.startsWith("u")) {
+            // u{user}{a|i}{id}
+            int aPos = token.indexOf('a');
+            int iPos = token.indexOf('i');
+            int pos = (aPos > 0 ? aPos : (iPos > 0 ? iPos : -1));
+            if (pos > 1 && pos < token.length() - 1) {
+                String userStr = token.substring(1, pos).trim();
+                String appIdStr = token.substring(pos + 1).trim();
+                int user = 0;
+                int appId = -1;
+                try { user = Integer.parseInt(userStr); } catch (Throwable ignore) { user = 0; }
+                try { appId = Integer.parseInt(appIdStr); } catch (Throwable ignore) { appId = -1; }
+
+                if (appId >= 0) {
+                    // Android uid formula (best-effort)
+                    // base per user: user * 100000
+                    // app base: 10000
+                    return (user * 100000) + 10000 + appId;
+                }
+            }
+        }
+
+        try {
+            return Integer.parseInt(token);
+        } catch (Throwable ignore) {
+            return -1;
+        }
+    }
+
+    // ============================================================
+    // ROOT (dumpsys netstats) — best effort
+    // Parses common "uid=... rxBytes=... txBytes=..." lines if present
+    // ============================================================
+
+    private static void fillFromNetStats(HashMap<Integer, AppScore> uidMap) {
+
+        if (uidMap == null || uidMap.isEmpty()) return;
+
+        String txt = runSuGetOutput("dumpsys netstats detail");
+        if (txt == null || txt.length() < 20) return;
+
+        String[] lines = txt.split("\n");
+
+        for (String raw : lines) {
+            if (raw == null) continue;
+            String line = raw.trim();
+            if (line.length() == 0) continue;
+
+            int uid = extractIntAfter(line, "uid=");
+            if (uid <= 0) continue;
+
+            long rx = extractLongAfter(line, "rxBytes=");
+            long tx = extractLongAfter(line, "txBytes=");
+
+            if (rx <= 0 && tx <= 0) continue;
+
+            AppScore s = uidMap.get(uid);
+            if (s == null) continue;
+
+            if (rx > 0) s.dumpRxBytes += rx;
+            if (tx > 0) s.dumpTxBytes += tx;
+        }
+    }
+
+    private static int extractIntAfter(String line, String key) {
+        if (line == null || key == null) return -1;
+        int p = line.indexOf(key);
+        if (p < 0) return -1;
+        p += key.length();
+        int end = p;
+        while (end < line.length()) {
+            char ch = line.charAt(end);
+            if (ch < '0' || ch > '9') break;
+            end++;
+        }
+        if (end <= p) return -1;
+        try { return Integer.parseInt(line.substring(p, end)); } catch (Throwable ignore) { return -1; }
+    }
+
+    private static long extractLongAfter(String line, String key) {
+        if (line == null || key == null) return -1L;
+        int p = line.indexOf(key);
+        if (p < 0) return -1L;
+        p += key.length();
+        int end = p;
+        while (end < line.length()) {
+            char ch = line.charAt(end);
+            if (ch < '0' || ch > '9') break;
+            end++;
+        }
+        if (end <= p) return -1L;
+        try { return Long.parseLong(line.substring(p, end)); } catch (Throwable ignore) { return -1L; }
+    }
+
+    private static void buildRootTopLists(ArrayList<AppScore> allUser, ImpactResult out) {
+        if (allUser == null || out == null) return;
+
+        ArrayList<AppScore> batt = new ArrayList<>();
+        ArrayList<AppScore> net  = new ArrayList<>();
+
+        for (AppScore s : allUser) {
+            if (s == null) continue;
+            if (s.isSystem) continue;
+
+            if (s.dumpEstMah > 0) batt.add(s);
+
+            long totalNet = Math.max(0L, s.dumpRxBytes) + Math.max(0L, s.dumpTxBytes);
+            if (totalNet > 0) net.add(s);
+        }
+
+        Collections.sort(batt, (a, b) -> Long.compare(b.dumpEstMah, a.dumpEstMah));
+        Collections.sort(net, (a, b) -> {
+            long ta = Math.max(0L, a.dumpRxBytes) + Math.max(0L, a.dumpTxBytes);
+            long tb = Math.max(0L, b.dumpRxBytes) + Math.max(0L, b.dumpTxBytes);
+            return Long.compare(tb, ta);
+        });
+
+        out.topBatteryByDumpsys = takeTopFiltered(batt, 10);
+        out.topNetByDumpsys     = takeTopFiltered(net, 10);
+    }
+
+    // ============================================================
+    // DIR SIZE (safe)
+    // ============================================================
 
     private static long dirSizeBestEffort(File dir) {
         if (dir == null) return 0L;
@@ -583,203 +899,4 @@ public final class AppImpactEngine {
         }
         return total;
     }
-
-// ============================================================
-// ROOT-AWARE (ADVANCED) — dumpsys batterystats / netstats
-// ⚠️ NOT Play-Store safe. Use ONLY in advanced/root mode.
-// ============================================================
-
-// Add inside ImpactResult:
-public boolean rootDumpsysOk;
-public ArrayList<AppScore> topBatteryByDumpsys = new ArrayList<>();
-public ArrayList<AppScore> topNetByDumpsys     = new ArrayList<>();
-
-// Add inside AppScore:
-public long dumpEstMah;      // best-effort from batterystats (if present)
-public long dumpRxBytes;     // best-effort from netstats
-public long dumpTxBytes;     // best-effort from netstats
-
-// ============================================================
-// ROOT EXEC — su -c
-// ============================================================
-private static String execSu(String cmd) {
-    if (cmd == null || cmd.trim().isEmpty()) return null;
-
-    java.io.BufferedReader br = null;
-    try {
-        Process p = new ProcessBuilder("su", "-c", cmd).redirectErrorStream(true).start();
-        br = new java.io.BufferedReader(new java.io.InputStreamReader(p.getInputStream()));
-        StringBuilder sb = new StringBuilder();
-        String line;
-        while ((line = br.readLine()) != null) sb.append(line).append("\n");
-        try { p.waitFor(); } catch (Throwable ignore) {}
-        String out = sb.toString();
-        return (out.trim().length() > 0 ? out : null);
-    } catch (Throwable t) {
-        return null;
-    } finally {
-        try { if (br != null) br.close(); } catch (Throwable ignore) {}
-    }
-}
-
-// ============================================================
-// ROOT CHECK — quick verify su works
-// ============================================================
-private static boolean canUseSu() {
-    String out = execSu("id");
-    return out != null && out.contains("uid=0");
-}
-
-// ============================================================
-// BATTERYSTATS PARSER (best-effort)
-// - We try to extract per-UID/app estimated power if ROM exposes it.
-// - Many ROMs output sections differently. We parse loosely.
-// ============================================================
-private static void fillFromBatteryStats(
-        Context c,
-        PackageManager pm,
-        Map<Integer, AppScore> uidToScore,
-        ImpactResult out
-) {
-    if (c == null || pm == null || uidToScore == null || out == null) return;
-
-    // Try common variants (some devices accept --charged, some not)
-    String txt = execSu("dumpsys batterystats --charged");
-    if (txt == null) txt = execSu("dumpsys batterystats");
-    if (txt == null) return;
-
-    // Heuristic:
-    // Look for lines that contain "Uid" and "mAh" (vendor dependent).
-    // Examples seen in the wild:
-    // "Uid u0a123: 12.34 mAh"
-    // "UID 10123: ... 12.34 (mAh)"
-    java.util.regex.Pattern p1 = java.util.regex.Pattern.compile(
-            "(?i)\\bUid\\s+u0a(\\d+)\\b.*?([0-9]+\\.?[0-9]*)\\s*mAh"
-    );
-    java.util.regex.Pattern p2 = java.util.regex.Pattern.compile(
-            "(?i)\\bUID\\s+(\\d+)\\b.*?([0-9]+\\.?[0-9]*)\\s*\\(?mAh\\)?"
-    );
-
-    java.util.HashMap<Integer, Double> uidMah = new java.util.HashMap<>();
-
-    java.util.regex.Matcher m = p1.matcher(txt);
-    while (m.find()) {
-        try {
-            int appId = Integer.parseInt(m.group(1));     // u0aXYZ -> appId
-            double mah = Double.parseDouble(m.group(2));
-            // Convert appId to UID range? best-effort: try both common user offsets
-            // We cannot know userId always; so we’ll store appId-only for mapping later.
-            // We'll resolve by checking all uidToScore keys ending with that appId.
-            uidMah.put(-appId, mah); // negative key means appId placeholder
-        } catch (Throwable ignore) {}
-    }
-
-    m = p2.matcher(txt);
-    while (m.find()) {
-        try {
-            int uid = Integer.parseInt(m.group(1));
-            double mah = Double.parseDouble(m.group(2));
-            uidMah.put(uid, mah);
-        } catch (Throwable ignore) {}
-    }
-
-    if (uidMah.isEmpty()) return;
-
-    // Apply to AppScores:
-    for (Map.Entry<Integer, Double> e : uidMah.entrySet()) {
-        int key = e.getKey();
-        double mah = e.getValue();
-        long mahMilli = (long) Math.round(mah * 1000.0); // store as milli-mAh to avoid float
-
-        if (key > 0) {
-            AppScore s = uidToScore.get(key);
-            if (s != null) s.dumpEstMah = mahMilli;
-        } else {
-            // appId placeholder: match any UID ending with that appId (best-effort)
-            int appId = -key;
-            for (Integer uid : uidToScore.keySet()) {
-                if (uid == null) continue;
-                // typical: UID = 10000 + appId (for primary user)
-                if ((uid - 10000) == appId) {
-                    AppScore s = uidToScore.get(uid);
-                    if (s != null) s.dumpEstMah = mahMilli;
-                    break;
-                }
-            }
-        }
-    }
-
-    // Build TOP list by dumpsys mAh
-    java.util.ArrayList<AppScore> tmp = new java.util.ArrayList<>();
-    for (AppScore s : uidToScore.values()) {
-        if (s == null) continue;
-        if (s.isSystem) continue;
-        if (s.dumpEstMah > 0) tmp.add(s);
-    }
-
-    java.util.Collections.sort(tmp, (a, b) -> Long.compare(b.dumpEstMah, a.dumpEstMah));
-
-    out.topBatteryByDumpsys.clear();
-    int limit = Math.min(10, tmp.size());
-    for (int i = 0; i < limit; i++) out.topBatteryByDumpsys.add(tmp.get(i));
-}
-
-// ============================================================
-// NETSTATS PARSER (best-effort)
-// - Output varies a LOT. We try simple UID rx/tx aggregations if present.
-// - If no stable pattern: we silently skip.
-// ============================================================
-private static void fillFromNetStats(
-        Map<Integer, AppScore> uidToScore,
-        ImpactResult out
-) {
-    if (uidToScore == null || out == null) return;
-
-    String txt = execSu("dumpsys netstats");
-    if (txt == null) return;
-
-    // Heuristic patterns found on some ROMs:
-    // "uid=10123 ... rxBytes=12345 txBytes=6789"
-    java.util.regex.Pattern p = java.util.regex.Pattern.compile(
-            "(?i)\\buid\\s*=\\s*(\\d+)\\b.*?\\brxBytes\\s*=\\s*(\\d+)\\b.*?\\btxBytes\\s*=\\s*(\\d+)\\b"
-    );
-
-    java.util.regex.Matcher m = p.matcher(txt);
-    boolean any = false;
-
-    while (m.find()) {
-        try {
-            int uid = Integer.parseInt(m.group(1));
-            long rx = Long.parseLong(m.group(2));
-            long tx = Long.parseLong(m.group(3));
-            AppScore s = uidToScore.get(uid);
-            if (s != null) {
-                s.dumpRxBytes = Math.max(s.dumpRxBytes, rx);
-                s.dumpTxBytes = Math.max(s.dumpTxBytes, tx);
-                any = true;
-            }
-        } catch (Throwable ignore) {}
-    }
-
-    if (!any) return;
-
-    java.util.ArrayList<AppScore> tmp = new java.util.ArrayList<>();
-    for (AppScore s : uidToScore.values()) {
-        if (s == null) continue;
-        if (s.isSystem) continue;
-        long total = Math.max(0L, s.dumpRxBytes) + Math.max(0L, s.dumpTxBytes);
-        if (total > 0) tmp.add(s);
-    }
-
-    java.util.Collections.sort(tmp, (a, b) -> {
-        long ta = Math.max(0L, a.dumpRxBytes) + Math.max(0L, a.dumpTxBytes);
-        long tb = Math.max(0L, b.dumpRxBytes) + Math.max(0L, b.dumpTxBytes);
-        return Long.compare(tb, ta);
-    });
-
-    out.topNetByDumpsys.clear();
-    int limit = Math.min(10, tmp.size());
-    for (int i = 0; i < limit; i++) out.topNetByDumpsys.add(tmp.get(i));
-}
-    
 }

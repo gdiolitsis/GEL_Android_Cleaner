@@ -10,7 +10,7 @@
 //     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
 //     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
 //   On Android 8.1+ / 10+ SSID requires:
-//     1) Location permission granted
+//     1) Location permission granted {}{{}anted
 //     2) Location services ON (GPS/Location toggle)
 //   Lab 11 will auto-send user to Location Settings if needed.
 // ============================================================
@@ -13839,9 +13839,10 @@ private String safeStr(String s) {
 return (s == null || s.trim().isEmpty()) ? "(no data)" : s;
 }
 
-// GDiolitsis Engine Lab (GEL) — Author & Developer
+// ============================================================
 // LAB 26 — Installed Applications Impact Analysis (FINAL v2 • Full Bilingual • Engine-backed)
 // ⚠️ Reminder: Always return the final code ready for copy-paste (no extra explanations / no questions).
+// ============================================================
 
 private void lab26AppsFootprint() {
 
@@ -13874,6 +13875,20 @@ private void lab26AppsFootprint() {
         logLabelWarnValue(
                 gr ? "Αιτία" : "Reason",
                 gr ? "Σφάλμα πρόσβασης PackageManager / UsageStats" : "PackageManager / UsageStats access error"
+        );
+
+        logLine();
+        appendHtml("<br>");
+        logOk(gr ? "Το Lab 26 ολοκληρώθηκε." : "Lab 26 finished.");
+        logLine();
+        return;
+    }
+
+    if (r == null) {
+
+        logLabelErrorValue(
+                gr ? "Κατάσταση" : "Status",
+                gr ? "Το αποτέλεσμα ανάλυσης είναι κενό" : "Engine result is null"
         );
 
         logLine();
@@ -13947,29 +13962,10 @@ private void lab26AppsFootprint() {
     logLine();
     logInfo(gr ? "Ενδείξεις πλεονασμού (heuristic)" : "Redundancy signals (heuristic)");
 
-    if (r.cleanersLike >= 2) {
-        logLabelWarnValue(gr ? "Cleaners / Optimizers" : "Cleaners / Optimizers", String.valueOf(r.cleanersLike));
-    } else {
-        logLabelOkValue(gr ? "Cleaners / Optimizers" : "Cleaners / Optimizers", String.valueOf(r.cleanersLike));
-    }
-
-    if (r.launchersLike >= 2) {
-        logLabelWarnValue(gr ? "Launchers" : "Launchers", String.valueOf(r.launchersLike));
-    } else {
-        logLabelOkValue(gr ? "Launchers" : "Launchers", String.valueOf(r.launchersLike));
-    }
-
-    if (r.antivirusLike >= 2) {
-        logLabelWarnValue(gr ? "Antivirus suites" : "Antivirus suites", String.valueOf(r.antivirusLike));
-    } else {
-        logLabelOkValue(gr ? "Antivirus suites" : "Antivirus suites", String.valueOf(r.antivirusLike));
-    }
-
-    if (r.keyboardsLike >= 2) {
-        logLabelWarnValue(gr ? "Keyboards" : "Keyboards", String.valueOf(r.keyboardsLike));
-    } else {
-        logLabelOkValue(gr ? "Keyboards" : "Keyboards", String.valueOf(r.keyboardsLike));
-    }
+    logLabelOkValue(gr ? "Cleaners / Optimizers" : "Cleaners / Optimizers", String.valueOf(r.cleanersLike));
+    logLabelOkValue(gr ? "Launchers" : "Launchers", String.valueOf(r.launchersLike));
+    logLabelOkValue(gr ? "Antivirus suites" : "Antivirus suites", String.valueOf(r.antivirusLike));
+    logLabelOkValue(gr ? "Keyboards" : "Keyboards", String.valueOf(r.keyboardsLike));
 
     // ============================================================
     // REAL DATA (HONEST) — SINCE BOOT (TrafficStats)
@@ -14106,9 +14102,9 @@ private void lab26AppsFootprint() {
     }
 
     // ============================================================
-    // ROOT-AWARE LEFTOVERS (BEST-EFFORT)
+    // ROOT-AWARE LEFTOVERS (BEST-EFFORT SAFE)
     // ============================================================
-    if (rooted) {
+    if (rooted && r.orphan != null) {
 
         logLine();
         logInfo(gr ? "Advanced (root-aware) inspection" : "Advanced (root-aware) inspection");
@@ -14158,7 +14154,7 @@ private void lab26AppsFootprint() {
     }
 
     // ============================================================
-    // HUMAN VERDICT (SAME SPIRIT, FULL BILINGUAL)
+    // HUMAN VERDICT (FULL BILINGUAL)
     // ============================================================
     logLine();
     logInfo(gr ? "Ανθρώπινο συμπέρασμα" : "Human verdict");
@@ -14218,9 +14214,6 @@ private void lab26AppsFootprint() {
         );
     }
 
-    // ============================================================
-    // SUMMARY FLAG (LOG)
-    // ============================================================
     GELServiceLog.info(
             "SUMMARY: APPS_IMPACT=" + (r.appsImpactHigh ? "HIGH" : "NORMAL")
     );
@@ -14231,36 +14224,43 @@ private void lab26AppsFootprint() {
 }
 
 // ============================================================
-// ROOT HELPER — BEST EFFORT DIRECTORY SIZE
-// (Safe: if cannot read -> returns 0)
+// ROOT HELPER — BEST EFFORT DIRECTORY SIZE (SAFE)
 // ============================================================
 private long dirSizeBestEffortRoot(File dir) {
-if (dir == null) return 0L;
-try {
-if (!dir.exists() || !dir.isDirectory()) return 0L;
-} catch (Throwable ignore) { return 0L; }
 
-long total = 0L;  
-File[] files;  
-try {  
-    files = dir.listFiles();  
-} catch (Throwable t) {  
-    return 0L;  
-}  
-if (files == null) return 0L;  
+    if (dir == null) return 0L;
 
-for (File f : files) {  
-    if (f == null) continue;  
-    try {  
-        if (f.isFile()) {  
-            total += Math.max(0L, f.length());  
-        } else if (f.isDirectory()) {  
-            total += dirSizeBestEffortRoot(f);  
-        }  
-    } catch (Throwable ignore) {}  
-}  
-return total;
+    try {
+        if (!dir.exists() || !dir.isDirectory()) return 0L;
+    } catch (Throwable ignore) {
+        return 0L;
+    }
 
+    long total = 0L;
+
+    File[] files;
+    try {
+        files = dir.listFiles();
+    } catch (Throwable t) {
+        return 0L;
+    }
+
+    if (files == null) return 0L;
+
+    for (File f : files) {
+
+        if (f == null) continue;
+
+        try {
+            if (f.isFile()) {
+                total += Math.max(0L, f.length());
+            } else if (f.isDirectory()) {
+                total += dirSizeBestEffortRoot(f);
+            }
+        } catch (Throwable ignore) {}
+    }
+
+    return total;
 }
 
 // ============================================================
@@ -15938,3 +15938,4 @@ if (requestCode == 8008) {
 // END OF CLASS
 // ============================================================
 }
+    

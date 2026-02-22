@@ -3875,37 +3875,6 @@ skipBtn.setOnClickListener(v -> {
 }
 
 // ============================================================
-
-private boolean hasUsageAccess() {
-    try {
-        AppOpsManager appOps =
-                (AppOpsManager) getSystemService(Context.APP_OPS_SERVICE);
-        if (appOps == null) return false;
-
-        int mode;
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            mode = appOps.unsafeCheckOpNoThrow(
-                    AppOpsManager.OPSTR_GET_USAGE_STATS,
-                    android.os.Process.myUid(),
-                    getPackageName()
-            );
-        } else {
-            mode = appOps.checkOpNoThrow(
-                    AppOpsManager.OPSTR_GET_USAGE_STATS,
-                    android.os.Process.myUid(),
-                    getPackageName()
-            );
-        }
-
-        return mode == AppOpsManager.MODE_ALLOWED;
-
-    } catch (Throwable t) {
-        return false;
-    }
-}
-
-// ============================================================
 // LAB 28 — TECHNICIAN POPUP (FINAL / CHECKBOX MUTE)
 // ============================================================
 private void showLab28Popup() {
@@ -3938,22 +3907,23 @@ private void showLab28Popup() {
         root.addView(header);
 
         // ==========================
-        // MUTE ROW (CHECKBOX)
-        // ==========================
-        root.addView(buildMuteRow());
-
-        // ==========================
         // MESSAGE
         // ==========================
         final String text = gr ? getLab28TextGR() : getLab28TextEN();
 
         TextView msg = new TextView(this);
         msg.setText(text);
-        msg.setTextColor(0xFFDDDDDD);
+        msg.setTextColor(0xFF00FF9C);
         msg.setTextSize(15f);
         msg.setLineSpacing(0f, 1.15f);
         msg.setPadding(0, 0, 0, dp(8));
         root.addView(msg);
+        
+        // ==========================
+        // MUTE ROW (CHECKBOX)
+        // ==========================
+        root.addView(buildMuteRow());
+
 
         // ==========================
         // OK BUTTON
@@ -13780,254 +13750,308 @@ if (br != null) try { br.close(); } catch (Throwable ignore) {}
 // ============================================================
 private void lab25CrashHistory() {
 
-appendHtml("<br>");
-logLine();
-logInfo("LAB 25 — GEL Crash Intelligence (AUTO)");
-logLine();
+    final boolean gr = AppLang.isGreek(this);
 
-int crashCount = 0;
-int anrCount = 0;
-int systemCount = 0;
+    appendHtml("<br>");
+    logLine();
+    logInfo(gr
+            ? "LAB 25 — GEL Ανάλυση Σφαλμάτων (ΑΥΤΟΜΑΤΗ)"
+            : "LAB 25 — GEL Crash Intelligence (AUTO)");
+    logLine();
 
-Map<String, Integer> appEvents = new HashMap<>(); // Group per app
-List<String> details = new ArrayList<>();
+    int crashCount = 0;
+    int anrCount = 0;
+    int systemCount = 0;
 
-// ============================================================
-// (A) Android 11+ — REALTIME ERROR SNAPSHOT (NOT HISTORY)
-// ============================================================
+    Map<String, Integer> appEvents = new HashMap<>();
+    List<String> details = new ArrayList<>();
 
-try {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+    // ============================================================
+    // (A) Android 11+ — REALTIME ERROR SNAPSHOT
+    // ============================================================
+    try {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
 
-        ActivityManager am =
-                (ActivityManager) getSystemService(ACTIVITY_SERVICE);
+            ActivityManager am =
+                    (ActivityManager) getSystemService(ACTIVITY_SERVICE);
 
-        if (am != null) {
+            if (am != null) {
 
-            List<ActivityManager.ProcessErrorStateInfo> errs =
-                    am.getProcessesInErrorState();
+                List<ActivityManager.ProcessErrorStateInfo> errs =
+                        am.getProcessesInErrorState();
 
-            if (errs != null && !errs.isEmpty()) {
+                if (errs != null && !errs.isEmpty()) {
 
-                logInfo("Realtime error snapshot");
+                    logInfo(gr
+                            ? "Στιγμιότυπο τρεχόντων σφαλμάτων"
+                            : "Realtime error snapshot");
 
-                for (ActivityManager.ProcessErrorStateInfo e : errs) {
+                    for (ActivityManager.ProcessErrorStateInfo e : errs) {
 
-                    String app =
-                            (e != null && e.processName != null)
-                                    ? e.processName
-                                    : "(unknown)";
+                        String app =
+                                (e != null && e.processName != null)
+                                        ? e.processName
+                                        : "(unknown)";
 
-                    // Group snapshot per process
-                    appEvents.put(app, appEvents.getOrDefault(app, 0) + 1);
+                        appEvents.put(app, appEvents.getOrDefault(app, 0) + 1);
 
-                    if (e.condition == ActivityManager.ProcessErrorStateInfo.CRASHED) {
+                        if (e.condition ==
+                                ActivityManager.ProcessErrorStateInfo.CRASHED) {
 
-                        logLabelErrorValue(
-                                "CRASH",
-                                app + " — " + safeStr(e.shortMsg)
-                        );
+                            logLabelErrorValue(
+                                    "CRASH",
+                                    app + " — " + safeStr(e.shortMsg)
+                            );
 
-                    } else if (e.condition ==
-                            ActivityManager.ProcessErrorStateInfo.NOT_RESPONDING) {
+                        } else if (e.condition ==
+                                ActivityManager.ProcessErrorStateInfo.NOT_RESPONDING) {
 
-                        logLabelWarnValue(
-                                "ANR",
-                                app + " — " + safeStr(e.shortMsg)
-                        );
+                            logLabelWarnValue(
+                                    "ANR",
+                                    app + " — " + safeStr(e.shortMsg)
+                            );
 
-                    } else {
+                        } else {
 
-                        logLabelWarnValue(
-                                "ERROR",
-                                app + " — " + safeStr(e.shortMsg)
-                        );
+                            logLabelWarnValue(
+                                    gr ? "ΣΦΑΛΜΑ" : "ERROR",
+                                    app + " — " + safeStr(e.shortMsg)
+                            );
+                        }
                     }
-                }
 
-                logLine();
-                logLabelOkValue(
-                        "Note",
-                        "Snapshot shows ONLY current crashed / ANR processes (not history)"
-                );
+                    appendHtml("<br>");
+                    logLabelOkValue(
+                            gr ? "Σημείωση" : "Note",
+                            gr
+                                    ? "Το στιγμιότυπο δείχνει ΜΟΝΟ τρέχοντα crashes / ANR (όχι ιστορικό)"
+                                    : "Snapshot shows ONLY current crashed / ANR processes (not history)"
+                    );
+                }
             }
         }
-    }
 
-} catch (Throwable ignore) {}
+    } catch (Throwable ignore) {}
 
-// ============================================================
-// (B) DropBox crash logs — legacy Android sources
-// ============================================================
-try {
-DropBoxManager db = (DropBoxManager) getSystemService(DROPBOX_SERVICE);
+    // ============================================================
+    // (B) DropBox crash logs
+    // ============================================================
+    try {
+        DropBoxManager db =
+                (DropBoxManager) getSystemService(DROPBOX_SERVICE);
 
-if (db != null) {    
-    String[] tags = {    
-            "system_app_crash", "data_app_crash",    
-            "system_app_anr", "data_app_anr",    
-            "system_server_crash", "system_server_wtf",    
-            "system_server_anr"    
-    };    
+        if (db != null) {
 
-    for (String tag : tags) {    
-        DropBoxManager.Entry ent = db.getNextEntry(tag, 0);    
+            String[] tags = {
+                    "system_app_crash", "data_app_crash",
+                    "system_app_anr", "data_app_anr",
+                    "system_server_crash", "system_server_wtf",
+                    "system_server_anr"
+            };
 
-        while (ent != null) {    
+            for (String tag : tags) {
 
-            if (tag.contains("system_server")) {  
-systemCount++;
+                DropBoxManager.Entry ent = db.getNextEntry(tag, 0);
 
-} else if (tag.contains("anr")) {
-anrCount++;
-} else if (tag.contains("crash")) {
-crashCount++;
-}
+                while (ent != null) {
 
-String shortTxt = readDropBoxEntry(ent);    
+                    if (tag.contains("system_server")) {
+                        systemCount++;
+                    } else if (tag.contains("anr")) {
+                        anrCount++;
+                    } else if (tag.contains("crash")) {
+                        crashCount++;
+                    }
 
-            String clean = tag.toUpperCase(Locale.US).replace("_", " ");    
-            details.add(clean + ": " + shortTxt);    
+                    String shortTxt = readDropBoxEntry(ent);
+                    String clean = tag.toUpperCase(Locale.US)
+                            .replace("_", " ");
 
-            // grouping       
-         try {  
+                    details.add(clean + ": " + shortTxt);
 
-String key;  
+                    try {
+                        String key;
 
-if (shortTxt != null && shortTxt.length() > 0) {  
-    String t = shortTxt.toLowerCase(Locale.US);  
-    int pi = t.indexOf("package:");  
-    if (pi >= 0) {  
-        String rest = t.substring(pi + 8).trim();  
-        String[] parts = rest.split("[\\s\\n\\r\\t]+");  
-        key = (parts.length > 0 && parts[0].contains(".")) ? parts[0] : clean;  
-    } else {  
-        key = clean;  
-    }  
-} else {  
-    key = clean;  
-}  
+                        if (shortTxt != null && shortTxt.length() > 0) {
+                            String t = shortTxt.toLowerCase(Locale.US);
+                            int pi = t.indexOf("package:");
+                            if (pi >= 0) {
+                                String rest = t.substring(pi + 8).trim();
+                                String[] parts =
+                                        rest.split("[\\s\\n\\r\\t]+");
+                                key = (parts.length > 0 &&
+                                       parts[0].contains("."))
+                                        ? parts[0]
+                                        : clean;
+                            } else {
+                                key = clean;
+                            }
+                        } else {
+                            key = clean;
+                        }
 
-appEvents.put(key, appEvents.getOrDefault(key, 0) + 1);
+                        appEvents.put(key,
+                                appEvents.getOrDefault(key, 0) + 1);
 
-} catch (Exception ignored) {}
-ent = db.getNextEntry(tag, ent.getTimeMillis());
-}   // END while
-}       // END for
-}           // END if (db != null)
-} catch (Exception ignored) {}   // END DropBox try
+                    } catch (Exception ignored) {}
 
-// ============================================================
-// (C) SUMMARY + RISK SCORE
-// ============================================================
-int risk = 0;
-risk += crashCount * 5;
-risk += anrCount * 8;
-risk += systemCount * 15;
-if (risk > 100) risk = 100;
-
-logLine();
-logInfo("Stability summary");
-
-logLabelOkValue(
-        "Crash events",
-        String.valueOf(crashCount)
-);
-
-if (anrCount > 0)
-    logLabelWarnValue("ANR events", String.valueOf(anrCount));
-else
-    logLabelOkValue("ANR events", "0");
-
-if (systemCount > 0)
-    logLabelErrorValue("System-level faults", String.valueOf(systemCount));
-else
-    logLabelOkValue("System-level faults", "0");
-
-logLine();
-logInfo("Stability risk score");
-
-if (risk >= 60)
-    logLabelErrorValue("Risk", risk + "%");
-else if (risk >= 30)
-    logLabelWarnValue("Risk", risk + "%");
-else
-    logLabelOkValue("Risk", risk + "%");
-
-logLabelOkValue(
-        "Note",
-        "Score based on detected system log signals (availability varies by OEM / Android)"
-);
-
-boolean softwareCrashLikely = (crashCount > 0 || anrCount > 0);
-
-// ============================================================
-// (D) HEATMAP (top offenders)
-// ============================================================
-if (!appEvents.isEmpty()) {
-
-    logLine();
-    logInfo("Heatmap (top offenders)");
-
-    appEvents.entrySet()
-            .stream()
-            .sorted((a, b) -> b.getValue() - a.getValue())
-            .limit(5)
-            .forEach(e -> {
-
-                if (e.getValue() >= 10) {
-                    logLabelErrorValue(
-                            e.getKey(),
-                            e.getValue() + " events"
-                    );
-                } else if (e.getValue() >= 5) {
-                    logLabelWarnValue(
-                            e.getKey(),
-                            e.getValue() + " events"
-                    );
-                } else {
-                    logLabelOkValue(
-                            e.getKey(),
-                            e.getValue() + " events"
-                    );
+                    ent = db.getNextEntry(tag,
+                            ent.getTimeMillis());
                 }
-            });
-}
+            }
+        }
 
-// ============================================================
-// (E) FULL DETAILS
-// ============================================================
-if (!details.isEmpty()) {
+    } catch (Exception ignored) {}
 
+    // ============================================================
+    // (C) SUMMARY + RISK SCORE
+    // ============================================================
+    int risk = 0;
+    risk += crashCount * 5;
+    risk += anrCount * 8;
+    risk += systemCount * 15;
+    if (risk > 100) risk = 100;
+
+    appendHtml("<br>");
+    logInfo(gr ? "Σύνοψη Σταθερότητας" : "Stability summary");
     logLine();
-    logInfo("Detailed crash records");
 
-    int count = details.size();
+    logLabelOkValue(
+            gr ? "Συμβάντα Crash" : "Crash events",
+            String.valueOf(crashCount)
+    );
 
-    if (count == 1)
-        logLabelWarnValue("Records", "1 crash detected");
-    else if (count <= 3)
-        logLabelWarnValue("Records", count + " crashes detected");
+    if (anrCount > 0)
+        logLabelWarnValue(
+                "ANR",
+                String.valueOf(anrCount)
+        );
     else
-        logLabelErrorValue("Records", count + " crashes detected (HIGH instability)");
+        logLabelOkValue("ANR", "0");
 
-    for (String d : details) {
-        logLabelWarnValue("Detail", d);
+    if (systemCount > 0)
+        logLabelErrorValue(
+                gr ? "Σφάλματα Συστήματος" : "System-level faults",
+                String.valueOf(systemCount)
+        );
+    else
+        logLabelOkValue(
+                gr ? "Σφάλματα Συστήματος" : "System-level faults",
+                "0"
+        );
+
+    appendHtml("<br>");
+    logInfo(gr ? "Δείκτης Ρίσκου Σταθερότητας"
+               : "Stability risk score");
+    logLine();
+
+    if (risk >= 60)
+        logLabelErrorValue("Risk", risk + "%");
+    else if (risk >= 30)
+        logLabelWarnValue("Risk", risk + "%");
+    else
+        logLabelOkValue("Risk", risk + "%");
+
+    logLabelOkValue(
+            gr ? "Σημείωση" : "Note",
+            gr
+                    ? "Η βαθμολογία βασίζεται σε διαθέσιμα system logs (διαφέρει ανά OEM / Android)"
+                    : "Score based on detected system log signals (availability varies by OEM / Android)"
+    );
+
+    boolean softwareCrashLikely =
+            (crashCount > 0 || anrCount > 0);
+
+    // ============================================================
+    // (D) HEATMAP
+    // ============================================================
+    if (!appEvents.isEmpty()) {
+
+        appendHtml("<br>");
+        logInfo(gr
+                ? "Heatmap (συχνότερα συμβάντα)"
+                : "Heatmap (top offenders)");
+        logLine();
+
+        appEvents.entrySet()
+                .stream()
+                .sorted((a, b) ->
+                        b.getValue() - a.getValue())
+                .limit(5)
+                .forEach(e -> {
+
+                    String label =
+                            e.getValue() + (gr ? " συμβάντα" : " events");
+
+                    if (e.getValue() >= 10)
+                        logLabelErrorValue(e.getKey(), label);
+                    else if (e.getValue() >= 5)
+                        logLabelWarnValue(e.getKey(), label);
+                    else
+                        logLabelOkValue(e.getKey(), label);
+                });
     }
 
-} else {
+    // ============================================================
+    // (E) FULL DETAILS
+    // ============================================================
+    if (!details.isEmpty()) {
+
+        appendHtml("<br>");
+        logInfo(gr
+                ? "Αναλυτικά αρχεία crash"
+                : "Detailed crash records");
+        logLine();
+
+        int count = details.size();
+
+        if (count == 1)
+            logLabelWarnValue(
+                    gr ? "Καταγραφές" : "Records",
+                    gr ? "1 crash εντοπίστηκε"
+                       : "1 crash detected");
+        else if (count <= 3)
+            logLabelWarnValue(
+                    gr ? "Καταγραφές" : "Records",
+                    count + (gr
+                            ? " crashes εντοπίστηκαν"
+                            : " crashes detected"));
+        else
+            logLabelErrorValue(
+                    gr ? "Καταγραφές" : "Records",
+                    count + (gr
+                            ? " crashes εντοπίστηκαν (ΥΨΗΛΗ αστάθεια)"
+                            : " crashes detected (HIGH instability)")
+            );
+
+        for (String d : details) {
+            logLabelWarnValue(
+                    gr ? "Λεπτομέρεια" : "Detail",
+                    d
+            );
+        }
+
+    } else {
+        logLine();
+        logLabelOkValue(
+                gr ? "Ιστορικό Crash" : "Crash history",
+                gr
+                        ? "Δεν εντοπίστηκαν καταγραφές crash"
+                        : "No crash records detected"
+        );
+    }
+
+    GELServiceLog.info(
+            "SUMMARY: CRASH_ORIGIN=" +
+                    (softwareCrashLikely
+                            ? "SOFTWARE"
+                            : "UNCLEAR")
+    );
+
+    appendHtml("<br>");
+    logOk(gr ? "Το Lab 25 ολοκληρώθηκε."
+             : "Lab 25 finished.");
     logLine();
-    logLabelOkValue("Crash history", "No crash records detected");
-}
-
-GELServiceLog.info(
-        "SUMMARY: CRASH_ORIGIN=" +
-        (softwareCrashLikely ? "SOFTWARE" : "UNCLEAR")
-);
-
-appendHtml("<br>");
-logOk("Lab 25 finished.");
-logLine();
 }
 
 // ============================================================
@@ -14472,9 +14496,10 @@ private void lab27PermissionsPrivacy() {
     // ============================================================
     // USAGE ACCESS — MANDATORY GATE
     // ============================================================
-    if (!ensureUsageAccessOrShowDialog()) {
-        return;
-    }
+    if (!hasUsageAccess()) {
+    showUsageAccessDialog();
+    return;
+}
 
     final boolean gr = AppLang.isGreek(this);
 
@@ -14813,229 +14838,165 @@ return (i >= 0 && i < p.length() - 1) ? p.substring(i + 1) : p;
 // ============================================================
 // LAB 28 — Hardware Stability & Interconnect Integrity
 // TECHNICIAN MODE — SYMPTOM-BASED TRIAGE ONLY
-// !! This lab does NOT diagnose hardware faults.
-// !! Does NOT confirm soldering defects.
 // ============================================================
 private void lab28HardwareStability() {
-    
-boolean randomReboots = false;
-boolean signalDrops = false;
-boolean sensorFlaps = false;
-boolean thermalSpikes = false;
+
+    final boolean gr = AppLang.isGreek(this);
+
+    boolean randomReboots = false;
+    boolean signalDrops = false;
+    boolean sensorFlaps = false;
+    boolean thermalSpikes = false;
 
     appendHtml("<br>");
     logLine();
-    logInfo("LAB 28 — Hardware Stability & Interconnect Integrity");
-    logWarn("Technician mode — symptom-based analysis ONLY.");
+    logInfo(gr
+            ? "LAB 28 — Σταθερότητα Υλικού & Ακεραιότητα Διασυνδέσεων"
+            : "LAB 28 — Hardware Stability & Interconnect Integrity");
+    logWarn(gr
+            ? "Λειτουργία τεχνικού — Ανάλυση βασισμένη σε συμπτώματα ΜΟΝΟ."
+            : "Technician mode — symptom-based analysis ONLY.");
     logLine();
-    
-int symptomScore = 0;
-int powerGlitches = 0;
 
-    // ------------------------------------------------------------
-    // POPUP — TECHNICIAN WARNING (with TTS + Language + Mute)
-    // ------------------------------------------------------------
-    // helper method (showLab28Popup) is located in activity helpers
+    int symptomScore = 0;
+    int powerGlitches = 0;
+
+    // Technician popup (already helper-based)
     showLab28Popup();
 
     // ============================================================
-    // STAGE A — SYMPTOM SCORE (ORIGINAL LOGIC — UNTOUCHED)
+    // STAGE A — SYMPTOM SCORE
     // ============================================================
-    logInfo("Observed symptom signals");
+    appendHtml("<br>");
+    logInfo(gr ? "Παρατηρούμενα συμπτώματα" : "Observed symptom signals");
+    logLine();
 
-if (randomReboots) {
-    logLabelWarnValue("Reboots", "Random reboots or sudden resets detected");
-    symptomScore += 25;
-} else {
-    logLabelOkValue("Reboots", "No abnormal reboot pattern");
-}
+    if (randomReboots) {
+        logLabelWarnValue(gr ? "Επανεκκινήσεις" : "Reboots",
+                gr ? "Τυχαίες επανεκκινήσεις ή resets"
+                   : "Random reboots or sudden resets detected");
+        symptomScore += 25;
+    } else {
+        logLabelOkValue(gr ? "Επανεκκινήσεις" : "Reboots",
+                gr ? "Καμία ανωμαλία" : "No abnormal reboot pattern");
+    }
 
-if (signalDrops) {
-    logLabelWarnValue("Radio", "Network or signal instability detected");
-    symptomScore += 20;
-} else {
-    logLabelOkValue("Radio", "Signals appear stable");
-}
+    if (signalDrops) {
+        logLabelWarnValue(gr ? "Δίκτυο" : "Radio",
+                gr ? "Αστάθεια σήματος ή δικτύου"
+                   : "Network or signal instability detected");
+        symptomScore += 20;
+    } else {
+        logLabelOkValue(gr ? "Δίκτυο" : "Radio",
+                gr ? "Σήμα σταθερό" : "Signals appear stable");
+    }
 
-if (sensorFlaps) {
-    logLabelWarnValue("Sensors", "Intermittent sensor readings detected");
-    symptomScore += 15;
-} else {
-    logLabelOkValue("Sensors", "Sensors stable");
-}
+    if (sensorFlaps) {
+        logLabelWarnValue(gr ? "Αισθητήρες" : "Sensors",
+                gr ? "Διακοπτόμενες μετρήσεις αισθητήρων"
+                   : "Intermittent sensor readings detected");
+        symptomScore += 15;
+    } else {
+        logLabelOkValue(gr ? "Αισθητήρες" : "Sensors",
+                gr ? "Σταθερή λειτουργία" : "Sensors stable");
+    }
 
-if (thermalSpikes) {
-    logLabelWarnValue("Thermal", "Abnormal thermal spikes detected");
-    symptomScore += 20;
-} else {
-    logLabelOkValue("Thermal", "Thermal behaviour normal");
-}
+    if (thermalSpikes) {
+        logLabelWarnValue(gr ? "Θερμικά" : "Thermal",
+                gr ? "Απότομες θερμικές αιχμές"
+                   : "Abnormal thermal spikes detected");
+        symptomScore += 20;
+    } else {
+        logLabelOkValue(gr ? "Θερμικά" : "Thermal",
+                gr ? "Θερμική συμπεριφορά φυσιολογική"
+                   : "Thermal behaviour normal");
+    }
 
-if (powerGlitches > 0) {
-    logLabelWarnValue("Power", "Power or charging instability detected");
-    symptomScore += 20;
-} else {
-    logLabelOkValue("Power", "Power behaviour stable");
-}
+    if (powerGlitches > 0) {
+        logLabelWarnValue(gr ? "Τροφοδοσία" : "Power",
+                gr ? "Αστάθεια φόρτισης ή ρεύματος"
+                   : "Power or charging instability detected");
+        symptomScore += 20;
+    } else {
+        logLabelOkValue(gr ? "Τροφοδοσία" : "Power",
+                gr ? "Σταθερή συμπεριφορά"
+                   : "Power behaviour stable");
+    }
 
-if (symptomScore > 100) symptomScore = 100;
+    if (symptomScore > 100) symptomScore = 100;
 
     // ------------------------------------------------------------
     // SYMPTOM INTERPRETATION
     // ------------------------------------------------------------
-    logLine();
-logInfo("Symptom consistency score");
+    String symptomLevel =
+            (symptomScore <= 20) ? (gr ? "ΧΑΜΗΛΟ" : "LOW") :
+            (symptomScore <= 45) ? (gr ? "ΜΕΤΡΙΟ" : "MODERATE") :
+            (symptomScore <= 70) ? (gr ? "ΥΨΗΛΟ" : "HIGH") :
+                                   (gr ? "ΠΟΛΥ ΥΨΗΛΟ" : "VERY HIGH");
 
-String symptomLevel =
-        (symptomScore <= 20) ? "LOW" :
-        (symptomScore <= 45) ? "MODERATE" :
-        (symptomScore <= 70) ? "HIGH" : "VERY HIGH";
-
-if (symptomScore >= 40)
-    logLabelWarnValue("Score", symptomScore + "/100 (" + symptomLevel + ")");
-else
-    logLabelOkValue("Score", symptomScore + "/100 (" + symptomLevel + ")");
-
-    // ============================================================
-    // STAGE B — EVIDENCE SCORE (FROM GELServiceLog)
-    // ============================================================
-    int evidenceScore = 0;
-Lab28Evidence ev = Lab28EvidenceReader.readFromGELServiceLog();
-
-if (ev != null) {
-
-    logLine();
-    logInfo("Cross-lab evidence signals");
-
-    if (ev.thermalSpikes) {
-        logLabelWarnValue("Thermal evidence", "Instability detected (Lab 16)");
-        evidenceScore += 20;
-    } else {
-        logLabelOkValue("Thermal evidence", "No abnormal pattern");
-    }
-
-    if (ev.chargingGlitch) {
-        logLabelWarnValue("Charging evidence", "Power glitches detected (Lab 15)");
-        evidenceScore += 20;
-    } else {
-        logLabelOkValue("Charging evidence", "Charging stable");
-    }
-
-    if (ev.radioInstability) {
-        logLabelWarnValue("Radio evidence", "Instability detected (Labs 10–13)");
-        evidenceScore += 20;
-    } else {
-        logLabelOkValue("Radio evidence", "Signals stable");
-    }
-
-    if (ev.sensorFlaps) {
-        logLabelWarnValue("Sensor evidence", "Instability detected (Labs 7–9)");
-        evidenceScore += 15;
-    } else {
-        logLabelOkValue("Sensor evidence", "Sensors stable");
-    }
-
-    if (ev.rebootPattern) {
-        logLabelWarnValue("Reboot evidence", "Abnormal reboot pattern (Lab 20)");
-        evidenceScore += 15;
-    } else {
-        logLabelOkValue("Reboot evidence", "Reboot behaviour normal");
-    }
-
-    if (evidenceScore > 100) evidenceScore = 100;
-}
-
-    // ============================================================
-    // STAGE C — EXCLUSION RULES (ANTI-FALSE-POSITIVE)
-    // ============================================================
-    boolean softwareLikely = false;
-
-if (ev != null) {
-
-    if ("SOFTWARE".equals(ev.crashPattern)) {
-        logLabelWarnValue("Exclusion", "Crash history suggests SOFTWARE origin");
-        softwareLikely = true;
-    }
-
-    if (ev.appsHeavyImpact) {
-        logLabelWarnValue("Exclusion", "Installed apps impact suggests SOFTWARE stress");
-        softwareLikely = true;
-    }
-
-    if (ev.thermalOnlyDuringCharging) {
-        logLabelWarnValue("Exclusion", "Thermal spikes linked to charging");
-        softwareLikely = true;
-    }
-}
-
-if (softwareLikely) {
-    evidenceScore = Math.max(0, evidenceScore - 30);
-    logLabelWarnValue("Adjustment", "Evidence score reduced due to software indicators");
-}
+    appendHtml("<br>");
+    if (symptomScore >= 40)
+        logLabelWarnValue(gr ? "Δείκτης Συνεκτικότητας Συμπτωμάτων"
+                             : "Symptom consistency score",
+                symptomScore + "/100 (" + symptomLevel + ")");
+    else
+        logLabelOkValue(gr ? "Δείκτης Συνεκτικότητας Συμπτωμάτων"
+                           : "Symptom consistency score",
+                symptomScore + "/100 (" + symptomLevel + ")");
 
     // ============================================================
     // STAGE D — FINAL CONFIDENCE
     // ============================================================
-    int finalScore = (int) (0.6f * symptomScore + 0.4f * evidenceScore);
-if (finalScore > 100) finalScore = 100;
+    int finalScore = symptomScore;
+    if (finalScore > 100) finalScore = 100;
 
-logLine();
-logInfo("Final stability confidence");
+    String finalLevel =
+            (finalScore <= 20) ? (gr ? "ΧΑΜΗΛΟ" : "LOW") :
+            (finalScore <= 45) ? (gr ? "ΜΕΤΡΙΟ" : "MODERATE") :
+            (finalScore <= 70) ? (gr ? "ΥΨΗΛΟ" : "HIGH") :
+                                 (gr ? "ΠΟΛΥ ΥΨΗΛΟ" : "VERY HIGH");
 
-String finalLevel =
-        (finalScore <= 20) ? "LOW" :
-        (finalScore <= 45) ? "MODERATE" :
-        (finalScore <= 70) ? "HIGH" : "VERY HIGH";
-
-if (finalScore >= 40)
-    logLabelWarnValue("Confidence", finalScore + "/100 (" + finalLevel + ")");
-else
-    logLabelOkValue("Confidence", finalScore + "/100 (" + finalLevel + ")");
+    appendHtml("<br>");
+    if (finalScore >= 40)
+        logLabelWarnValue(gr ? "Τελική Εκτίμηση Σταθερότητας"
+                             : "Final stability confidence",
+                finalScore + "/100 (" + finalLevel + ")");
+    else
+        logLabelOkValue(gr ? "Τελική Εκτίμηση Σταθερότητας"
+                           : "Final stability confidence",
+                finalScore + "/100 (" + finalLevel + ")");
 
     // ============================================================
-    // FINAL WORDING — TRIAGE, NOT DIAGNOSIS
+    // TRIAGE NOTE
     // ============================================================
+    appendHtml("<br>");
+    logInfo(gr ? "Σημείωση Τεχνικού" : "Technician note");
     logLine();
-logInfo("Technician note");
 
-if (finalScore >= 60) {
+    if (finalScore >= 60) {
 
-    logLabelWarnValue("Finding", "Multi-source instability pattern detected");
-    logLabelWarnValue("Interpretation", "Consistent with intermittent contact issues");
-    logLabelWarnValue("Possibility", "Loose connectors or unstable interconnect paths");
+        logLabelWarnValue(gr ? "Εύρημα" : "Finding",
+                gr ? "Εντοπίστηκε μοτίβο αστάθειας"
+                   : "Multi-source instability pattern detected");
 
-    logLabelOkValue("Important", "This is NOT a hardware diagnosis");
-    logLabelOkValue("Important", "This does NOT confirm solder defects");
+        logLabelOkValue(gr ? "Σημαντικό" : "Important",
+                gr ? "ΔΕΝ αποτελεί διάγνωση υλικού."
+                   : "This is NOT a hardware diagnosis.");
 
-    logLabelOkValue(
-            "Recommended action",
-            "Professional physical inspection and bench testing"
-    );
+        logLabelOkValue(gr ? "Συστήνεται" : "Recommended action",
+                gr ? "Έλεγχος από τεχνικό."
+                   : "Professional inspection recommended.");
 
-} else if (finalScore >= 30) {
+    } else {
 
-    logLabelWarnValue("Finding", "Some instability patterns detected");
-    logLabelOkValue(
-            "Interpretation",
-            "Mixed origin possible (hardware or software)"
-    );
-    logLabelOkValue(
-            "Action",
-            "Hardware intervention NOT indicated at this stage"
-    );
+        logLabelOkValue(gr ? "Εύρημα" : "Finding",
+                gr ? "Δεν εντοπίστηκαν σοβαρά μοτίβα αστάθειας."
+                   : "No significant instability patterns detected.");
+    }
 
-} else {
-
-    logLabelOkValue("Finding", "No significant instability patterns detected");
-    logLabelOkValue(
-            "Conclusion",
-            "No indication of interconnect or solder-related issues"
-    );
-}
-
-appendHtml("<br>");
-logOk("Lab 28 finished.");
-logLine();
+    appendHtml("<br>");
+    logOk(gr ? "Το Lab 28 ολοκληρώθηκε." : "Lab 28 finished.");
+    logLine();
 }
 
 // ============================================================
@@ -15126,10 +15087,22 @@ private static class Lab28EvidenceReader {
 // ============================================================
 private void lab28CombineFindings() {
 
-appendHtml("<br>");
-logLine();
-logInfo("LAB 29 — Auto Final Diagnosis Summary (FULL AUTO)");
-logLine();
+    final boolean gr = AppLang.isGreek(this);
+
+    appendHtml("<br>");
+    logLine();
+    logInfo(gr
+            ? "LAB 29 — Αυτόματη Τελική Σύνοψη Διάγνωσης (ΠΛΗΡΩΣ ΑΥΤΟΜΑΤΗ)"
+            : "LAB 29 — Auto Final Diagnosis Summary (FULL AUTO)");
+    logLine();
+
+    // ============================================================
+    // USAGE ACCESS — REQUIRED
+    // ============================================================
+    if (!hasUsageAccess()) {
+        showUsageAccessDialog();
+        return;
+    }
 
 // ------------------------------------------------------------
 // 1) THERMALS (from zones + battery temp)
@@ -15223,92 +15196,123 @@ int deviceHealthScore = Math.round(
 // PRINT DETAILS
 // ------------------------------------------------------------
 
-logInfo("AUTO Breakdown");
+appendHtml("<br>");
+logInfo(gr ? "Αυτόματη Ανάλυση" : "AUTO Breakdown");
+logLine();
 
 // ================= THERMALS =================
-logInfo("Thermals");
-logLabelOkValue("Status", thermalFlag + " " + thermalScore + "%");
+appendHtml("<br>");
+logInfo(gr ? "Θερμικά" : "Thermals");
+logLine();
+
+logLabelOkValue(gr ? "Κατάσταση" : "Status", thermalFlag + " " + thermalScore + "%");
 
 if (zones == null || zones.isEmpty()) {
     logLabelWarnValue(
-            "Zones",
-            "No thermal zones readable — Battery temp only (" + fmt1(battTemp) + "°C)"
+            gr ? "Ζώνες" : "Zones",
+            gr
+                    ? "Δεν είναι αναγνώσιμες θερμικές ζώνες — Μόνο θερμοκρασία μπαταρίας (" + fmt1(battTemp) + "°C)"
+                    : "No thermal zones readable — Battery temp only (" + fmt1(battTemp) + "°C)"
     );
 } else {
-    logLabelOkValue("Zones", String.valueOf(zones.size()));
-    logLabelOkValue("Max", fmt1(maxThermal) + "°C");
-    logLabelOkValue("Average", fmt1(avgThermal) + "°C");
+    logLabelOkValue(gr ? "Ζώνες" : "Zones", String.valueOf(zones.size()));
+    logLabelOkValue(gr ? "Μέγιστη" : "Max", fmt1(maxThermal) + "°C");
+    logLabelOkValue(gr ? "Μέση" : "Average", fmt1(avgThermal) + "°C");
 
     if (cpu  != null) logLabelOkValue("CPU",  fmt1(cpu)  + "°C");
     if (gpu  != null) logLabelOkValue("GPU",  fmt1(gpu)  + "°C");
     if (pmic != null) logLabelOkValue("PMIC", fmt1(pmic) + "°C");
-    if (skin != null) logLabelOkValue("Skin", fmt1(skin) + "°C");
+    if (skin != null) logLabelOkValue(gr ? "Επιφάνεια" : "Skin", fmt1(skin) + "°C");
 
-    logLabelOkValue("Battery", fmt1(battTemp) + "°C");
+    logLabelOkValue(gr ? "Μπαταρία" : "Battery", fmt1(battTemp) + "°C");
 }
 
-logInfo("Battery");
-logLabelOkValue("Status", batteryFlag + " " + batteryScore + "%");
+appendHtml("<br>");
+logInfo(gr ? "Μπαταρία" : "Battery");
+logLine();
+
+logLabelOkValue(gr ? "Κατάσταση" : "Status", batteryFlag + " " + batteryScore + "%");
 
 logLabelOkValue(
-        "State",
-        "Level=" + (battPct >= 0 ? fmt1(battPct) + "%" : "Unknown") +
+        gr ? "Στοιχεία" : "State",
+        (gr ? "Επίπεδο=" : "Level=") +
+        (battPct >= 0 ? fmt1(battPct) + "%" : (gr ? "Άγνωστο" : "Unknown")) +
         " | Temp=" + fmt1(battTemp) + "°C" +
-        " | Charging=" + charging
+        " | " + (gr ? "Φόρτιση=" : "Charging=") + charging
 );
 
-logInfo("Storage");
-logLabelOkValue("Status", storageFlag + " " + storageScore + "%");
+appendHtml("<br>");
+logInfo(gr ? "Αποθήκευση" : "Storage");
+logLine();
+
+logLabelOkValue(gr ? "Κατάσταση" : "Status", storageFlag + " " + storageScore + "%");
 
 logLabelOkValue(
-        "Usage",
-        "Free=" + st.pctFree + "% | Used=" +
+        gr ? "Χρήση" : "Usage",
+        (gr ? "Ελεύθερο=" : "Free=") + st.pctFree + "% | " +
+        (gr ? "Χρησιμοποιείται=" : "Used=") +
         humanBytes(st.usedBytes) + " / " + humanBytes(st.totalBytes)
 );
 
-logInfo("Apps footprint");
-logLabelOkValue("Status", appsFlag + " " + appsScore + "%");
+appendHtml("<br>");
+logInfo(gr ? "Αποτύπωμα Εφαρμογών" : "Apps footprint");
+logLine();
+
+logLabelOkValue(gr ? "Κατάσταση" : "Status", appsFlag + " " + appsScore + "%");
 
 logLabelOkValue(
-        "Counts",
+        gr ? "Μετρήσεις" : "Counts",
         "User=" + ap.userApps +
         " | System=" + ap.systemApps +
         " | Total=" + ap.totalApps
 );
 
+appendHtml("<br>");
 logInfo("RAM");
-logLabelOkValue("Status", ramFlag + " " + ramScore + "%");
+logLine();
+
+logLabelOkValue(gr ? "Κατάσταση" : "Status", ramFlag + " " + ramScore + "%");
 
 logLabelOkValue(
-        "Free",
+        gr ? "Ελεύθερη" : "Free",
         rm.pctFree + "% (" +
         humanBytes(rm.freeBytes) + " / " + humanBytes(rm.totalBytes) + ")"
 );
 
-logInfo("Stability / Uptime");
-logLabelOkValue("Status", stabilityFlag + " " + stabilityScore + "%");
+appendHtml("<br>");
+logInfo(gr ? "Σταθερότητα / Χρόνος λειτουργίας" : "Stability / Uptime");
+logLine();
 
-logLabelOkValue("Uptime", formatUptime(upMs));
+logLabelOkValue(gr ? "Κατάσταση" : "Status", stabilityFlag + " " + stabilityScore + "%");
+
+logLabelOkValue(gr ? "Χρόνος λειτουργίας" : "Uptime", formatUptime(upMs));
 
 if (upMs < 2 * 60 * 60 * 1000L) {
     logLabelWarnValue(
-            "Note",
-            "Recent reboot (<2h) — instability may be masked"
+            gr ? "Σημείωση" : "Note",
+            gr
+                    ? "Πρόσφατη επανεκκίνηση (<2h) — πιθανή απόκρυψη αστάθειας"
+                    : "Recent reboot (<2h) — instability may be masked"
     );
 } else if (upMs > 7L * 24L * 60L * 60L * 1000L) {
     logLabelWarnValue(
-            "Note",
-            "Long uptime (>7 days) — reboot recommended before deep servicing"
+            gr ? "Σημείωση" : "Note",
+            gr
+                    ? "Μεγάλος χρόνος λειτουργίας (>7 ημέρες) — συνιστάται επανεκκίνηση πριν από έλεγχο"
+                    : "Long uptime (>7 days) — reboot recommended before deep servicing"
     );
 }
 
-logInfo("Security");
-logLabelOkValue("Status", securityFlag + " " + securityScore + "%");
+appendHtml("<br>");
+logInfo(gr ? "Ασφάλεια" : "Security");
+logLine();
 
-logLabelOkValue("Secure lock", String.valueOf(sec.lockSecure));
+logLabelOkValue(gr ? "Κατάσταση" : "Status", securityFlag + " " + securityScore + "%");
+
+logLabelOkValue(gr ? "Κλείδωμα συσκευής" : "Secure lock", String.valueOf(sec.lockSecure));
 logLabelOkValue(
-        "Patch level",
-        sec.securityPatch == null ? "Unknown" : sec.securityPatch
+        gr ? "Ενημέρωση ασφαλείας" : "Patch level",
+        sec.securityPatch == null ? (gr ? "Άγνωστο" : "Unknown") : sec.securityPatch
 );
 
 logLabelOkValue(
@@ -15319,16 +15323,19 @@ logLabelOkValue(
 );
 
 if (sec.rootSuspected)
-    logLabelWarnValue("Root", "Suspicion flags detected");
+    logLabelWarnValue(gr ? "Root" : "Root", gr ? "Εντοπίστηκαν ενδείξεις root" : "Suspicion flags detected");
 
 if (sec.testKeys)
-    logLabelWarnValue("Build", "Signed with test-keys (custom ROM risk)");
+    logLabelWarnValue(gr ? "Build" : "Build", gr ? "Υπογεγραμμένο με test-keys (κίνδυνος custom ROM)" : "Signed with test-keys (custom ROM risk)");
 
-logInfo("Privacy");
-logLabelOkValue("Status", privacyFlag + " " + privacyScore + "%");
+appendHtml("<br>");
+logInfo(gr ? "Ιδιωτικότητα" : "Privacy");
+logLine();
+
+logLabelOkValue(gr ? "Κατάσταση" : "Status", privacyFlag + " " + privacyScore + "%");
 
 logLabelOkValue(
-        "Dangerous permissions",
+        gr ? "Επικίνδυνες άδειες" : "Dangerous permissions",
         "Location=" + pr.userAppsWithLocation +
         " | Mic=" + pr.userAppsWithMic +
         " | Camera=" + pr.userAppsWithCamera +
@@ -15338,26 +15345,27 @@ logLabelOkValue(
 // ------------------------------------------------------------
 // FINAL VERDICT
 // ------------------------------------------------------------
+appendHtml("<br>");
+logInfo(gr ? "Τελικές Βαθμολογίες" : "FINAL Scores");
 logLine();
-logInfo("FINAL Scores");
 
 logLabelOkValue(
-        "Device health",
+        gr ? "Υγεία συσκευής" : "Device health",
         deviceHealthScore + "% " + colorFlagFromScore(deviceHealthScore)
 );
 
 logLabelOkValue(
-        "Performance",
+        gr ? "Απόδοση" : "Performance",
         performanceScore + "% " + colorFlagFromScore(performanceScore)
 );
 
 logLabelOkValue(
-        "Security",
+        gr ? "Ασφάλεια" : "Security",
         securityScore + "% " + securityFlag
 );
 
 logLabelOkValue(
-        "Privacy",
+        gr ? "Ιδιωτικότητα" : "Privacy",
         privacyScore + "% " + privacyFlag
 );
 
@@ -15369,21 +15377,20 @@ String verdict =
                 performanceScore
         );
 
+appendHtml("<br>");
+logInfo(gr ? "Τελικό Συμπέρασμα" : "Final verdict");
 logLine();
-logInfo("Final verdict");
 
 if (verdict.startsWith("🟢"))
-    logLabelOkValue("Result", verdict);
+    logLabelOkValue(gr ? "Αποτέλεσμα" : "Result", verdict);
 else if (verdict.startsWith("🟡"))
-    logLabelWarnValue("Result", verdict);
+    logLabelWarnValue(gr ? "Αποτέλεσμα" : "Result", verdict);
 else
-    logLabelErrorValue("Result", verdict);
+    logLabelErrorValue(gr ? "Αποτέλεσμα" : "Result", verdict);
 
 appendHtml("<br>");
-logOk("Lab 29 finished.");
+logOk(gr ? "Το Lab 29 ολοκληρώθηκε." : "Lab 29 finished.");
 logLine();
-
-}
 
 // ============================================================
 // ======= LAB 29 INTERNAL AUTO HELPERS (SAFE, NO IMPORTS) =====
@@ -15739,21 +15746,28 @@ return "";
 
 private String finalVerdict(int health, int sec, int priv, int perf) {
 
+    final boolean gr = AppLang.isGreek(this);
+
 // ============================================================
 // LEVEL 1 — HEALTHY / NORMAL
 // ============================================================
 if (health >= 80) {
 
     if (sec < 55 || priv < 55) {
-        return
-            "Device condition: HEALTHY.\n" +
-            "Attention: privacy or security risks detected.\n" +
-            "User review is recommended.";
+        return gr
+                ? "Κατάσταση συσκευής: ΥΓΙΗΣ.\n" +
+                  "Προσοχή: εντοπίστηκαν ζητήματα ιδιωτικότητας ή ασφάλειας.\n" +
+                  "Συνιστάται έλεγχος από τον χρήστη."
+                : "Device condition: HEALTHY.\n" +
+                  "Attention: privacy or security risks detected.\n" +
+                  "User review is recommended.";
     }
 
-    return
-        "Device condition: HEALTHY.\n" +
-        "No servicing required.";
+    return gr
+            ? "Κατάσταση συσκευής: ΥΓΙΗΣ.\n" +
+              "Δεν απαιτείται τεχνική παρέμβαση."
+            : "Device condition: HEALTHY.\n" +
+              "No servicing required.";
 }
 
 // ============================================================
@@ -15762,27 +15776,37 @@ if (health >= 80) {
 if (health >= 55) {
 
     if (sec < 55 || priv < 55) {
-        return
-            "Device condition: MODERATE DEGRADATION.\n" +
-            "Attention: privacy or security risks detected.\n" +
-            "User review is recommended.";
+        return gr
+                ? "Κατάσταση συσκευής: ΜΕΤΡΙΑ ΥΠΟΒΑΘΜΙΣΗ.\n" +
+                  "Προσοχή: εντοπίστηκαν ζητήματα ιδιωτικότητας ή ασφάλειας.\n" +
+                  "Συνιστάται έλεγχος από τον χρήστη."
+                : "Device condition: MODERATE DEGRADATION.\n" +
+                  "Attention: privacy or security risks detected.\n" +
+                  "User review is recommended.";
     }
 
-    return
-        "Device condition: MODERATE DEGRADATION.\n" +
-        "Further monitoring is recommended.";
+    return gr
+            ? "Κατάσταση συσκευής: ΜΕΤΡΙΑ ΥΠΟΒΑΘΜΙΣΗ.\n" +
+              "Συνιστάται περαιτέρω παρακολούθηση."
+            : "Device condition: MODERATE DEGRADATION.\n" +
+              "Further monitoring is recommended.";
 }
 
 // ============================================================
 // LEVEL 3 — UNATTRIBUTED INSTABILITY
 // (Evidence-based — no hardware accusation)
 // ============================================================
-return
-    "Device condition: INSTABILITY DETECTED.\n" +
-    "System degradation observed without a confirmed software cause.\n" +
-    "Cause is not confirmed.\n" +
-    "Classification: Unattributed system instability.\n" +
-    "Further diagnostics are recommended.";
+return gr
+        ? "Κατάσταση συσκευής: ΕΝΤΟΠΙΣΤΗΚΕ ΑΣΤΑΘΕΙΑ.\n" +
+          "Παρατηρείται υποβάθμιση συστήματος χωρίς επιβεβαιωμένη αιτία λογισμικού.\n" +
+          "Η αιτία δεν έχει επιβεβαιωθεί.\n" +
+          "Κατηγοριοποίηση: Μη αποδοθείσα αστάθεια συστήματος.\n" +
+          "Συνιστώνται περαιτέρω διαγνωστικοί έλεγχοι."
+        : "Device condition: INSTABILITY DETECTED.\n" +
+          "System degradation observed without a confirmed software cause.\n" +
+          "Cause is not confirmed.\n" +
+          "Classification: Unattributed system instability.\n" +
+          "Further diagnostics are recommended.";
 
 }
 
@@ -15797,85 +15821,95 @@ return String.format(Locale.US, "%.1f", v);
 // ============================================================
 private void lab29FinalSummary() {
 
-appendHtml("<br>");  
-logLine();  
-logInfo("LAB 30 — FINAL TECHNICIAN SUMMARY (READ-ONLY)");  
-logLine();  
+    final boolean gr = AppLang.isGreek(this);
 
-// ------------------------------------------------------------  
-// 1) READ FULL LOG (from all labs)  
-// ------------------------------------------------------------  
-String fullLog = GELServiceLog.getAll();  
+    appendHtml("<br>");
+    logLine();
+    logInfo(gr
+            ? "LAB 30 — ΤΕΛΙΚΗ ΣΥΝΟΨΗ ΤΕΧΝΙΚΟΥ (ΜΟΝΟ ΑΝΑΓΝΩΣΗ)"
+            : "LAB 30 — FINAL TECHNICIAN SUMMARY (READ-ONLY)");
+    logLine();
 
-if (fullLog.trim().isEmpty()) {  
-    logWarn("No diagnostic data found. Please run Manual Tests first.");  
-    return;  
-}  
+    // ------------------------------------------------------------
+    // 1) READ FULL LOG (from all labs)
+    // ------------------------------------------------------------
+    String fullLog = GELServiceLog.getAll();
 
-// ------------------------------------------------------------  
-// 2) FILTER WARNINGS & ERRORS ONLY  
-// ------------------------------------------------------------  
-String[] lines = fullLog.split("\n");  
-StringBuilder warnings = new StringBuilder();  
+    if (fullLog.trim().isEmpty()) {
+        logWarn(gr
+                ? "Δεν βρέθηκαν διαγνωστικά δεδομένα. Εκτελέστε πρώτα τα Manual Tests."
+                : "No diagnostic data found. Please run Manual Tests first.");
+        return;
+    }
 
-for (String l : lines) {  
-    String low = l.toLowerCase(Locale.US);  
+    // ------------------------------------------------------------
+    // 2) FILTER WARNINGS & ERRORS ONLY
+    // ------------------------------------------------------------
+    String[] lines = fullLog.split("\n");
+    StringBuilder warnings = new StringBuilder();
 
-    if (low.contains("") || low.contains("warning")) {  
-        warnings.append(l).append("\n");  
-    }  
-    if (low.contains("") || low.contains("error")) {  
-        warnings.append(l).append("\n");  
-    }  
-}  
+    for (String l : lines) {
+        if (l == null) continue;
 
-// ------------------------------------------------------------
-// 3) PRINT SUMMARY TO UI (ONLY)
-// ------------------------------------------------------------
+        String low = l.toLowerCase(Locale.US);
 
-logLine();
-logInfo("Summary");
-
-if (warnings.length() == 0) {
-
-    logLabelOkValue(
-            "Status",
-            "No warnings or errors detected"
-    );
-
-} else {
-
-    logLabelWarnValue(
-            "Status",
-            "Warnings / errors detected"
-    );
-
-    for (String w : warnings.toString().split("\n")) {
-        if (w != null && !w.trim().isEmpty()) {
-            logLabelWarnValue(
-                    "Issue",
-                    w.trim()
-            );
+        if (low.contains("warning") || low.contains("error")) {
+            warnings.append(l).append("\n");
         }
     }
-}
 
-appendHtml("<br>");
-logLabelOkValue(
-        "LAB 30",
-        "Finished"
-);
-logLine();
+    // ------------------------------------------------------------
+    // 3) PRINT SUMMARY TO UI (ONLY)
+    // ------------------------------------------------------------
+    appendHtml("<br>");
+    logInfo(gr ? "Σύνοψη" : "Summary");
+    logLine();
 
-appendHtml("<br>");
-logLabelOkValue(
-        "Export",
-        "Use the button below to generate the official PDF report"
-);
+    if (warnings.length() == 0) {
 
-// Enable existing export button (do NOT create new)  
-enableSingleExportButton();
+        logLabelOkValue(
+                gr ? "Κατάσταση" : "Status",
+                gr
+                        ? "Δεν εντοπίστηκαν προειδοποιήσεις ή σφάλματα"
+                        : "No warnings or errors detected"
+        );
 
+    } else {
+
+        logLabelWarnValue(
+                gr ? "Κατάσταση" : "Status",
+                gr
+                        ? "Εντοπίστηκαν προειδοποιήσεις / σφάλματα"
+                        : "Warnings / errors detected"
+        );
+
+        for (String w : warnings.toString().split("\n")) {
+            if (w != null && !w.trim().isEmpty()) {
+                logLabelWarnValue(
+                        gr ? "Ζήτημα" : "Issue",
+                        w.trim()
+                );
+            }
+        }
+    }
+
+    appendHtml("<br>");
+    logLabelOkValue(
+            "LAB 30",
+            gr ? "Ολοκληρώθηκε" : "Finished"
+    );
+    logLine();
+
+    appendHtml("<br>");
+    logLabelOkValue(
+            gr ? "Εξαγωγή" : "Export",
+            gr
+                    ? "Χρησιμοποιήστε το κουμπί παρακάτω για δημιουργία επίσημου PDF report"
+                    : "Use the button below to generate the official PDF report"
+    );
+
+    // Enable existing export button (do NOT create new)
+    enableSingleExportButton();
 }
 
 // ============================================================

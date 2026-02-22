@@ -262,19 +262,6 @@
                 android:maxLines="2"
                 android:padding="6dp"/>
         </LinearLayout>
-
-        <!-- NEW: UNINSTALL APPS BUTTON -->
-        <Button
-    android:id="@+id/btnAppManager"
-    android:layout_width="match_parent"
-    android:layout_height="60dp"
-    android:text="@string/app_manager_btn"
-    android:background="@drawable/gel_btn_outline_selector"
-    android:textColor="@color/gel_btn_text_white"
-    android:layout_margin="4dp"
-    android:gravity="center"
-    android:maxLines="2"
-    android:padding="6dp"/>
         
         <!-- ================================================= -->
         <!-- PERFORMANCE -->
@@ -290,6 +277,43 @@
             android:layout_marginTop="18dp"
             android:paddingLeft="6dp"/>
 
+         <!-- PERFORMANCE TOOLS ROW -->
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:layout_marginTop="12dp">
+
+    <Button
+        android:id="@+id/btnAppManager"
+        android:layout_width="0dp"
+        android:layout_weight="1"
+        android:layout_height="60dp"
+        android:text="@string/app_manager_btn"
+        android:background="@drawable/gel_btn_outline_selector"
+        android:textColor="@color/gel_btn_text_white"
+        android:layout_margin="4dp"
+        android:gravity="center"
+        android:maxLines="2"
+        android:padding="6dp"/>
+
+    <Button
+        android:id="@+id/btnGuidedOptimizer"
+        android:layout_width="0dp"
+        android:layout_weight="1"
+        android:layout_height="60dp"
+        android:text="⚡ GUIDED OPTIMIZER"
+        android:textAllCaps="false"
+        android:textColor="#00FF7F"
+        android:background="@drawable/gel_btn_outline_selector"
+        android:layout_margin="4dp"
+        android:gravity="center"
+        android:maxLines="2"
+        android:padding="6dp"/>
+
+</LinearLayout>
+
+        
         <!-- ================================================= -->
         <!-- DIAGNOSIS -->
         <!-- ================================================= -->

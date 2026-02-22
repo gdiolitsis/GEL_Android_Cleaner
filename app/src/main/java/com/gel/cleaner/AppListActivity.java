@@ -55,15 +55,13 @@ public class AppListActivity extends GELAutoActivityHook {
     private TextView txtStatsUsers;
     private TextView txtStatsSystem;
     private TextView txtStatsSelected;
-    
+
     private boolean returnedFromUsageScreen = false;
     private boolean isLoadingApps = false;
 
-    private final List<AppEntry> allApps =
-        Collections.synchronizedList(new ArrayList<>());
-    private final List<AppEntry> visible =
-        Collections.synchronizedList(new ArrayList<>());
-   
+    private final List<AppEntry> allApps = new ArrayList<>();
+    private final List<AppEntry> visible = new ArrayList<>();
+
     private AppListAdapter adapter;
 
     private String search = "";
@@ -82,10 +80,10 @@ public class AppListActivity extends GELAutoActivityHook {
     private final ArrayList<String> guidedQueue = new ArrayList<>();
     private int guidedIndex = 0;
 
-      @Override
+    @Override
     protected void attachBaseContext(Context base) {
-        super.attachBaseContext(LocaleHelper.apply(base)
-    );
+        super.attachBaseContext(LocaleHelper.apply(base));
+    }
 }
 
     // ============================================================
@@ -755,30 +753,46 @@ private void loadAllApps() {
     });
 }
 
-    private void fillSizes(AppEntry e) {
+private void fillSizes(AppEntry e) {
 
-        if (e == null) return;
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return;
-        if (!hasUsageAccess()) return;
+    if (e == null) return;
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return;
+    if (!hasUsageAccess()) return;
 
-        try {
-            StorageStatsManager ssm =
-                    (StorageStatsManager) getSystemService(Context.STORAGE_STATS_SERVICE);
-            if (ssm == null) return;
+    try {
+        StorageStatsManager ssm =
+                (StorageStatsManager) getSystemService(Context.STORAGE_STATS_SERVICE);
+        if (ssm == null) return;
 
-            StorageStats st = ssm.queryStatsForPackage(
-                    android.os.storage.StorageManager.UUID_DEFAULT,
-                    e.pkg,
-                    android.os.UserHandle.getUserHandleForUid(Process.myUid())
-            );
+        StorageStats st = ssm.queryStatsForPackage(
+                android.os.storage.StorageManager.UUID_DEFAULT,
+                e.pkg,
+                android.os.UserHandle.getUserHandleForUid(Process.myUid())
+        );
 
-            if (st != null) {
-                e.appBytes = st.getAppBytes();
-                e.cacheBytes = st.getCacheBytes();
+        if (st != null) {
+
+            long appBytes = st.getAppBytes();
+            long dataBytes = st.getDataBytes();
+            long cacheBytes = st.getCacheBytes();
+
+            e.appBytes = appBytes;
+            e.cacheBytes = cacheBytes;
+
+            // 🔥 Πραγματικό μέγεθος εφαρμογής (χωρίς cache)
+            e.appSizeBytes = appBytes + dataBytes;
+
+            // 🔥 Ποσοστό cache
+            if (e.appSizeBytes > 0) {
+                double raw = (cacheBytes * 100.0) / e.appSizeBytes;
+                e.cachePercent = (int) Math.round(raw);
+            } else {
+                e.cachePercent = 0;
             }
+        }
 
-        } catch (Throwable ignored) {}
-    }
+    } catch (Throwable ignored) {}
+}
 
 // ============================================================
 // FILTER + SORT (STABLE - NO DUPLICATES)
@@ -786,7 +800,6 @@ private void loadAllApps() {
 
 private void applyFiltersAndSort() {
 
-    // Snapshot once to avoid concurrent modification
     final ArrayList<AppEntry> snapshot = new ArrayList<>(allApps);
 
     new Thread(() -> {
@@ -794,32 +807,27 @@ private void applyFiltersAndSort() {
         ArrayList<AppEntry> users   = new ArrayList<>();
         ArrayList<AppEntry> systems = new ArrayList<>();
 
-        boolean rooted = isDeviceRooted();   // ✅ ΜΙΑ ΦΟΡΑ
+        boolean rooted = isDeviceRooted();
         String s = (search == null) ? "" : search.toLowerCase(Locale.US);
 
         for (AppEntry e : snapshot) {
 
             if (e == null) continue;
-            if (e.isHeader) continue; // 🔒 NEVER process headers
+            if (e.isHeader) continue;
 
-            // 🔥 UNINSTALL MODE → hide system apps if NOT rooted
+            // UNINSTALL MODE
             if (isUninstallMode && !rooted && e.isSystem) {
                 continue;
             }
 
-            // 🔥 CACHE MODE → hide apps with 0 cache
-           
-if (!isUninstallMode) {
+            // CACHE MODE
+            if (!isUninstallMode) {
+                if (hasUsageAccess()) {
+                    if (e.cacheBytes <= 0) continue;
+                }
+            }
 
-    // Αν έχουμε Usage Access → δείχνουμε μόνο apps με cache > 0
-    if (hasUsageAccess()) {
-        if (e.cacheBytes <= 0) continue;
-    }
-
-    // Αν ΔΕΝ έχουμε Usage Access → ΔΕΝ φιλτράρουμε
-}
-
-            // 🔎 SEARCH FILTER
+            // SEARCH
             if (!TextUtils.isEmpty(s)) {
                 String name = (e.label == null) ? "" : e.label.toLowerCase(Locale.US);
                 String pkg  = (e.pkg == null) ? "" : e.pkg.toLowerCase(Locale.US);
@@ -831,25 +839,43 @@ if (!isUninstallMode) {
         }
 
         Comparator<AppEntry> comp = sortByCacheBiggest
-                ? (a, b) -> {
-                    long ca = (a == null) ? -1 : a.cacheBytes;
-                    long cb = (b == null) ? -1 : b.cacheBytes;
+        ? (a, b) -> {
 
-                    if (ca < 0 && cb < 0) return alphaCompare(a, b);
-                    if (ca < 0) return 1;
-                    if (cb < 0) return -1;
+            if (a == null || b == null) return 0;
 
-                    int c = Long.compare(cb, ca);
-                    return (c != 0) ? c : alphaCompare(a, b);
-                }
-                : this::alphaCompare;
+            // 🔎 DEBUG (ΠΡΟΣΩΡΙΝΟ)
+            Log.d("SORT_DEBUG",
+                    (a.label == null ? "null" : a.label) +
+                    " | cache=" + a.cacheBytes +
+                    " | %=" + a.cachePercent +
+                    " | size=" + a.appSizeBytes);
 
+            // 1️⃣ cache %
+            int percentCompare =
+                    Integer.compare(b.cachePercent, a.cachePercent);
+            if (percentCompare != 0) return percentCompare;
+
+            // 2️⃣ absolute cache
+            int cacheCompare =
+                    Long.compare(b.cacheBytes, a.cacheBytes);
+            if (cacheCompare != 0) return cacheCompare;
+
+            // 3️⃣ app size
+            int sizeCompare =
+                    Long.compare(b.appSizeBytes, a.appSizeBytes);
+            if (sizeCompare != 0) return sizeCompare;
+
+            return alphaCompare(a, b);
+        }
+        : this::alphaCompare;
+
+        // 🔥 IMPORTANT — SORT HERE
         Collections.sort(users, comp);
         Collections.sort(systems, comp);
 
         final ArrayList<AppEntry> rebuilt = new ArrayList<>();
 
-        // ---- USER HEADER ----
+        // USER HEADER
         if (!users.isEmpty()) {
             AppEntry h = new AppEntry();
             h.isHeader = true;
@@ -862,7 +888,7 @@ if (!isUninstallMode) {
             if (userExpanded) rebuilt.addAll(users);
         }
 
-        // ---- SYSTEM HEADER ----
+        // SYSTEM HEADER
         if (!systems.isEmpty()) {
             AppEntry h = new AppEntry();
             h.isHeader = true;

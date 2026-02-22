@@ -1285,7 +1285,7 @@ yesBtn.setOnClickListener(v -> {
     );
 
     appendHtml("<br>");
-    logOk("Lab 3 finished.");
+    logOk(gr ? "Το Lab 3 ολοκληρώθηκε." : "Lab 3 finished.");
     logLine();
 
     restoreLab3Audio();
@@ -1316,7 +1316,7 @@ noBtn.setOnClickListener(v -> {
     );
 
     appendHtml("<br>");
-    logOk("Lab 3 finished.");
+    logOk(gr ? "Το Lab 3 ολοκληρώθηκε." : "Lab 3 finished.");
     logLine();
 
     restoreLab3Audio();
@@ -4511,7 +4511,7 @@ gr ? "Αποτυχία δρομολόγησης ήχου ή περιορισμό
     }
 
             appendHtml("<br>");
-            logOk("Lab 1 finished.");
+            logOk(gr ? "Το Lab 1 ολοκληρώθηκε." : "Lab 1 finished.");
             logLine();
         }
 
@@ -4707,7 +4707,7 @@ appendHtml("<br>");
             if (tg != null) tg.release();
 
             appendHtml("<br>");
-            logOk("Lab 2 finished.");
+            logOk(gr ? "Το Lab 2 ολοκληρώθηκε." : "Lab 2 finished.");
             logLine();
         }
 
@@ -5159,7 +5159,7 @@ if (bottomOk && topOk) {
         } finally {
 
             appendHtml("<br>");
-            logOk("Lab 4 (BASE) finished.");
+            logOk(gr ? "Το Lab 4 BASE ολοκληρώθηκε." : "Lab 4 BASE finished.");
             logLine();
 
             if (onFinished != null && !fallbackUsed) {
@@ -5797,7 +5797,7 @@ routeToCallEarpiece();
             logLine();
 
             appendHtml("<br>");
-            logOk("Lab 4 finished.");
+            logOk(gr ? "Το Lab 4 ολοκληρώθηκε." : "Lab 4 finished.");
             logLine();
 
             runOnUiThread(this::enableSingleExportButton);
@@ -5824,7 +5824,7 @@ routeToCallEarpiece();
 );
 
             appendHtml("<br>");
-            logOk("Lab 4 finished.");
+            logOk(gr ? "Το Lab 4 ολοκληρώθηκε." : "Lab 4 finished.");
             logLine();
 
 } finally {
@@ -6421,7 +6421,7 @@ logLabelWarnValue(
 } finally {
 
     appendHtml("<br>");
-    logOk("Lab 5 finished.");
+    logOk(gr ? "Το Lab 5 ολοκληρώθηκε." : "Lab 5 finished.");
     logLine();
 
     runOnUiThread(this::enableSingleExportButton);
@@ -6764,9 +6764,11 @@ private void lab8CameraHardwareCheck() {
         } catch (Throwable t) {
             logError("Failed to launch camera app.");
             logWarn("Camera app may be missing or blocked.");
+            
             appendHtml("<br>");
-            logOk("Lab 8 finished.");
+            logOk(gr ? "Το Lab 8 ολοκληρώθηκε." : "Lab 8 finished.");
             logLine();
+            
             enableSingleExportButton();
         }
         return;
@@ -6778,7 +6780,7 @@ private void lab8CameraHardwareCheck() {
     if (!hasAnyCamera) {
         logError("No camera hardware detected on this device.");
         appendHtml("<br>");
-        logOk("Lab 8 finished.");
+        logOk(gr ? "Το Lab 8 ολοκληρώθηκε." : "Lab 8 finished.");
         logLine();
         enableSingleExportButton();
         return;
@@ -6788,7 +6790,7 @@ private void lab8CameraHardwareCheck() {
     if (cm == null) {
         logError("CameraManager unavailable.");
         appendHtml("<br>");
-        logOk("Lab 8 finished.");
+        logOk(gr ? "Το Lab 8 ολοκληρώθηκε." : "Lab 8 finished.");
         logLine();
         enableSingleExportButton();
         return;
@@ -6817,7 +6819,7 @@ private void lab8CameraHardwareCheck() {
     } catch (Throwable t) {
         logError("Failed to enumerate cameras.");
         appendHtml("<br>");
-        logOk("Lab 8 finished.");
+        logOk(gr ? "Το Lab 8 ολοκληρώθηκε." : "Lab 8 finished.");
         logLine();
         enableSingleExportButton();
         return;
@@ -6826,7 +6828,7 @@ private void lab8CameraHardwareCheck() {
     if (ids == null || ids.length == 0) {
         logError("No accessible camera IDs found.");
         appendHtml("<br>");
-        logOk("Lab 8 finished.");
+        logOk(gr ? "Το Lab 8 ολοκληρώθηκε." : "Lab 8 finished.");
         logLine();
         enableSingleExportButton();
         return;
@@ -6906,7 +6908,7 @@ logLabelOkValue("Total camera IDs", String.valueOf(ids.length));
     if (cams.isEmpty()) {
         logError("No usable camera descriptors.");
         appendHtml("<br>");
-        logOk("Lab 8 finished.");
+        logOk(gr ? "Το Lab 8 ολοκληρώθηκε." : "Lab 8 finished.");
         logLine();
         enableSingleExportButton();
         return;
@@ -7140,7 +7142,7 @@ if (cameraSubsystemOk) {
     );
 
             appendHtml("<br>");
-            logOk("Lab 8 finished.");
+            logOk(gr ? "Το Lab 8 ολοκληρώθηκε." : "Lab 8 finished.");
             logLine();
 
     // LAB 8.1
@@ -7154,7 +7156,7 @@ if (cameraSubsystemOk) {
     logError("One or more cameras failed basic operation checks.");
 
             appendHtml("<br>");
-            logOk("Lab 8 finished.");
+            logOk(gr ? "Το Lab 8 ολοκληρώθηκε." : "Lab 8 finished.");
             logLine();
 
     enableSingleExportButton();
@@ -7972,8 +7974,9 @@ no.setOnClickListener(v -> {
     AppTTS.stop();
     d.dismiss();
     logWarn("LAB 8.1 skipped by user.");
+    
     logLine();
-    logOk("Lab 8.1 Finished");
+    logOk(gr ? "Το Lab 8.1 ολοκληρώθηκε." : "Lab 8.1 finished.");
     logLine();
     enableSingleExportButton();
 });
@@ -8006,7 +8009,7 @@ private void startLab8_1CameraCapabilities() {
     }
 
     appendHtml("<br>");
-    logOk("Lab 8.1 Finished");
+    logOk(gr ? "Το Lab 8.1 ολοκληρώθηκε." : "Lab 8.1 finished.");
     logLine();
     enableSingleExportButton();
 }
@@ -8338,7 +8341,7 @@ logLabelOkValue(
         logError("Sensors analysis error", e.getMessage());
     } finally {
         appendHtml("<br>");
-        logOk("Lab 9", "Finished");
+        logOk(gr ? "Το Lab 9 ολοκληρώθηκε." : "Lab 9 finished.");
         logLine();
         enableSingleExportButton();
     }
@@ -8625,7 +8628,7 @@ if (requestCode == REQ_LAB13_BT_CONNECT) {
         );
 
         appendHtml("<br>");
-        logOk("Lab 13 finished.");
+        logOk(gr ? "Το Lab 13 ολοκληρώθηκε." : "Lab 13 finished.");
         logLine();
     }
 
@@ -8838,7 +8841,7 @@ else
 }
 
 appendHtml("<br>");
-logOk("Lab 10 finished.");
+logOk(gr ? "Το Lab 10 ολοκληρώθηκε." : "Lab 10 finished.");
 logLine();
 
 } catch (Exception e) {
@@ -8981,7 +8984,7 @@ if (s.hasInternet) {
 logOk("Laboratory snapshot collected. No functional verdict inferred.");
 
 appendHtml("<br>");
-logOk("Lab 11 finished.");
+logOk(gr ? "Το Lab 11 ολοκληρώθηκε." : "Lab 11 finished.");
 logLine();
 }
 
@@ -9073,7 +9076,7 @@ logInfo(
 );
 
 appendHtml("<br>");
-logOk("Lab 12 finished.");
+logOk(gr ? "Το Lab 12 ολοκληρώθηκε." : "Lab 12 finished.");
 logLine();
 }
 
@@ -9388,7 +9391,7 @@ if (!enabled) {
         logWarn("External Bluetooth device test skipped by user.");
         logOk("Proceeded with system Bluetooth connection check only.");
         appendHtml("<br>");
-        logOk("Lab 13 finished.");
+        logOk(gr ? "Το Lab 13 ολοκληρώθηκε." : "Lab 13 finished.");
         logLine();
         return;
     }
@@ -9879,8 +9882,9 @@ private void lab13FinishAndReport(boolean adapterStable) {
         logInfo("LAB 13 — Results");
         logWarn("No external Bluetooth device was connected during the test.");
         logInfo("System Bluetooth check completed. External device test skipped.");
+        
         appendHtml("<br>");
-        logOk("Lab 13 finished.");
+        logOk(gr ? "Το Lab 13 ολοκληρώθηκε." : "Lab 13 finished.");
         logLine();
         return;
     }
@@ -9961,7 +9965,7 @@ private void lab13FinishAndReport(boolean adapterStable) {
     }
 
     appendHtml("<br>");
-    logOk("Lab 13 finished.");
+    logOk(gr ? "Το Lab 13 ολοκληρώθηκε." : "Lab 13 finished.");
     logLine();
 }
 
@@ -10734,7 +10738,7 @@ logLabelOkValue(
 logLab14Confidence();
 
 appendHtml("<br>");
-logOk("LAB 14 finished.");
+logOk(gr ? "Το Lab 14 ολοκληρώθηκε." : "Lab 14 finished.");
 logLine();
 }
 });
@@ -11316,7 +11320,7 @@ GELServiceLog.info(
 );
 
 appendHtml("<br>");
-logOk("LAB 15 finished.");
+logOk(gr ? "Το Lab 15 ολοκληρώθηκε." : "Lab 15 finished.");
 logLine();
 
 // ------------------------------------------------------------
@@ -11506,7 +11510,7 @@ GELServiceLog.info(
 );
 
 appendHtml("<br>");
-logOk("Lab 16 finished.");
+logOk(gr ? "Το Lab 16 ολοκληρώθηκε." : "Lab 16 finished.");
 logLine();
 }
 
@@ -11949,7 +11953,7 @@ p.edit()
 // ================= FINAL (UI THREAD) =================
 
 appendHtml("<br>");
-logOk("LAB 17 finished.");
+logOk(gr ? "Το Lab 17 ολοκληρώθηκε." : "Lab 17 finished.");
 logLine();
 
 }); // END ui.post
@@ -12269,7 +12273,7 @@ if (critical) {
 }
 
 appendHtml("<br>");
-logOk("Lab 18 finished.");
+logOk(gr ? "Το Lab 18 ολοκληρώθηκε." : "Lab 18 finished.");
 logLine();
 
 } catch (Throwable ignore) {
@@ -12480,7 +12484,7 @@ private void lab19RamSnapshot() {
     }
 
     appendHtml("<br>");
-    logOk("Lab 19 finished.");
+    logOk(gr ? "Το Lab 19 ολοκληρώθηκε." : "Lab 19 finished.");
     logLine();
 }
 
@@ -12627,7 +12631,7 @@ private void lab20UptimeHints() {
     );
 
     appendHtml("<br>");
-    logOk("Lab 20 finished.");
+    logOk(gr ? "Το Lab 20 ολοκληρώθηκε." : "Lab 20 finished.");
     logLine();
 }
 
@@ -12827,7 +12831,7 @@ if (!secure) {
     logLabelWarnValue("Reason", "Secure lock required (PIN / Pattern / Password)");
 
     appendHtml("<br>");
-    logOk("LAB 21 finished.");
+    logOk(gr ? "Το Lab 21 ολοκληρώθηκε." : "Lab 21 finished.");
     logLine();
     lab21Running = false;
     return;
@@ -12842,7 +12846,7 @@ if (!biometricSupported) {
     logLabelOkValue("Action", "Enroll biometrics in Settings and re-run LAB 21");
 
     appendHtml("<br>");
-    logOk("LAB 21 finished.");
+    logOk(gr ? "Το Lab 21 ολοκληρώθηκε." : "Lab 21 finished.");
     logLine();
     lab21Running = false;
     return;
@@ -12878,7 +12882,7 @@ if (Build.VERSION.SDK_INT >= 28) {
                         logLabelWarnValue("OEM note", "OEM may still prioritize same sensor");
 
                         appendHtml("<br>");
-                        logOk("LAB 21 finished.");
+                        logOk(gr ? "Το Lab 21 ολοκληρώθηκε." : "Lab 21 finished.");
                         logLine();
                         lab21Running = false;
                     }
@@ -12892,7 +12896,7 @@ if (Build.VERSION.SDK_INT >= 28) {
                         logLabelWarnValue("Meaning", "Biometric did not authenticate during real sensor test");
 
                         appendHtml("<br>");
-                        logOk("LAB 21 finished.");
+                        logOk(gr ? "Το Lab 21 ολοκληρώθηκε." : "Lab 21 finished.");
                         logLine();
                         lab21Running = false;
                     }
@@ -12907,7 +12911,7 @@ if (Build.VERSION.SDK_INT >= 28) {
                         logLabelWarnValue("Meaning", "Biometric sensor NOT verified functional");
 
                         appendHtml("<br>");
-                        logOk("LAB 21 finished.");
+                        logOk(gr ? "Το Lab 21 ολοκληρώθηκε." : "Lab 21 finished.");
                         logLine();
                         lab21Running = false;
                     }
@@ -12928,7 +12932,7 @@ if (Build.VERSION.SDK_INT >= 28) {
                                     logLabelWarnValue("Result", "Cancelled by user");
 
                                     appendHtml("<br>");
-                                    logOk("LAB 21 finished.");
+                                    logOk(gr ? "Το Lab 21 ολοκληρώθηκε." : "Lab 21 finished.");
                                     logLine();
                                     lab21Running = false;
                                 }
@@ -12951,7 +12955,7 @@ if (Build.VERSION.SDK_INT >= 28) {
         logLabelWarnValue("Reason", "Biometric prompt error: " + e.getMessage());
 
         appendHtml("<br>");
-        logOk("LAB 21 finished.");
+        logOk(gr ? "Το Lab 21 ολοκληρώθηκε." : "Lab 21 finished.");
         logLine();
         lab21Running = false;
     }
@@ -12971,7 +12975,7 @@ if (Build.VERSION.SDK_INT >= 28) {
     logLabelOkValue("Action", "Disable active biometric in Settings to test another sensor");
 
     appendHtml("<br>");
-    logOk("LAB 21 finished.");
+    logOk(gr ? "Το Lab 21 ολοκληρώθηκε." : "Lab 21 finished.");
     logLine();
     lab21Running = false;
 }
@@ -13181,7 +13185,7 @@ logLabelOkValue(
 );
 
 appendHtml("<br>");
-logOk("Lab 22 finished.");
+logOk(gr ? "Το Lab 22 ολοκληρώθηκε." : "Lab 22 finished.");
 logLine();
 
 }
@@ -13361,7 +13365,7 @@ if (risk >= 60) {
 }
 
 appendHtml("<br>");
-logOk("LAB 23 finished.");
+logOk(gr ? "Το Lab 23 ολοκληρώθηκε." : "Lab 23 finished.");
 logLine();
 }
 
@@ -13659,7 +13663,7 @@ if (risk >= 70 || suExec || pkgHit) {
 }
 
 appendHtml("<br>");
-logLabelOkValue("Result", "Lab 24 finished");
+logOk(gr ? "Το Lab 24 ολοκληρώθηκε." : "Lab 24 finished.");
 logLine();
 }
 
@@ -14049,8 +14053,7 @@ private void lab25CrashHistory() {
     );
 
     appendHtml("<br>");
-    logOk(gr ? "Το Lab 25 ολοκληρώθηκε."
-             : "Lab 25 finished.");
+    logOk(gr ? "Το Lab 25 ολοκληρώθηκε." : "Lab 25 finished.");
     logLine();
 }
 
@@ -15895,10 +15898,7 @@ private void lab29FinalSummary() {
     }
 
     appendHtml("<br>");
-    logLabelOkValue(
-            "LAB 30",
-            gr ? "Ολοκληρώθηκε" : "Finished"
-    );
+    logOk(gr ? "Το Lab 30 ολοκληρώθηκε." : "Lab 30 finished.");
     logLine();
 
     appendHtml("<br>");
@@ -16118,10 +16118,7 @@ if (requestCode == REQ_LAB6_COLOR) {
     );
 
     appendHtml("<br>");
-    logLabelOkValue(
-            "LAB 6",
-            "Finished"
-    );
+    logOk(gr ? "Το Lab 6 ολοκληρώθηκε." : "Lab 6 finished.");
     logLine();
 
     enableSingleExportButton();
@@ -16164,9 +16161,9 @@ if (requestCode == 7007) {
                 "Auto-rotate disabled or sensor malfunction"
         );
 
-        appendHtml("<br>");
-        logLabelOkValue("LAB 7", "Finished (rotation incomplete)");
-        logLine();
+       appendHtml("<br>");
+       logOk(gr ? "Το Lab 7 ολοκληρώθηκε. (rotation incomplete)" : "Lab 7 finished.  (rotation incomplete)");
+       logLine();
 
         enableSingleExportButton();
         return;
@@ -16194,7 +16191,7 @@ if (requestCode == 8008) {
     }
 
     appendHtml("<br>");
-    logLabelOkValue("LAB 7", "Finished");
+    logOk(gr ? "Το Lab 7 ολοκληρώθηκε." : "Lab 7 finished.");
     logLine();
 
     enableSingleExportButton();

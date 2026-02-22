@@ -90,6 +90,19 @@
          APPLICATION
          ============================================================ -->
     <application
+
+<!-- AndroidManifest.xml — ADD THESE (inside <application>) -->
+
+<activity
+    android:name=".GuidedOptimizerActivity"
+    android:exported="false"
+    android:screenOrientation="portrait"
+    android:theme="@style/Theme.GEL.DarkGold" />
+
+<receiver
+    android:name=".OptimizerReminderReceiver"
+    android:exported="false" />
+        
         android:allowBackup="false"
         android:supportsRtl="true"
         android:usesCleartextTraffic="false"

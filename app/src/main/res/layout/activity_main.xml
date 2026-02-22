@@ -302,7 +302,7 @@
         android:layout_width="0dp"
         android:layout_weight="1"
         android:layout_height="60dp"
-        android:text="⚡ GUIDED OPTIMIZER"
+        android:text="@string/guided_optimizer_btn"
         android:textAllCaps="false"
         android:textColor="#00FF7F"
         android:background="@drawable/gel_btn_neon_outline"

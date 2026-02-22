@@ -80,7 +80,6 @@ protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_main);
 
-    // BASIC BINDS
     txtLogs = findViewById(R.id.txtLogs);
     scroll = findViewById(R.id.scrollRoot);
 
@@ -88,37 +87,37 @@ protected void onCreate(Bundle savedInstanceState) {
     setupDonate();
     setupButtons();
 
-    // =====================================================
-    // RETURN BUTTON
-    // =====================================================
-    Button btnReturnAndroid = findViewById(R.id.btnReturnAndroid);
-    if (btnReturnAndroid != null) {
-        btnReturnAndroid.setSaveEnabled(false);
-        btnReturnAndroid.setOnClickListener(v -> {
-            if ("apple".equals(getSavedPlatform())) {
-                savePlatform("android");
-                applyAndroidModeUI();
-            } else {
-                savePlatform("apple");
-                applyAppleModeUI();
-            }
-            syncReturnButtonText();
-        });
+    // ENTRY FLOW
+    SharedPreferences prefs = getSharedPreferences("gel_prefs", MODE_PRIVATE);
+    boolean welcomeShownPref = prefs.getBoolean("welcome_shown", false);
+
+    if (!welcomeShownPref && !isWelcomeDisabled()) {
+        showWelcomePopup();
+        prefs.edit().putBoolean("welcome_shown", true).apply();
     }
 
-    // =====================================================
-    // APP MANAGER (single binding)
-    // =====================================================
-    View appManager = findViewById(R.id.btnAppManager);
-    if (appManager != null) {
-        appManager.setOnClickListener(v -> {
+    // APPLY PLATFORM UI
+    if ("apple".equals(getSavedPlatform())) {
+        applyAppleModeUI();
+    } else {
+        applyAndroidModeUI();
+    }
+
+    syncReturnButtonText();
+
+    log("📱 Device ready", false);
+
+    // APP MANAGER
+    View btnAppManager = findViewById(R.id.btnAppManager);
+    if (btnAppManager != null) {
+        btnAppManager.setOnClickListener(v -> {
             try {
-                Intent i = new Intent(this, AppListActivity.class);
+                Intent i = new Intent(MainActivity.this, AppListActivity.class);
                 i.putExtra("mode", "uninstall");
                 startActivity(i);
             } catch (Exception e) {
                 Toast.makeText(
-                        this,
+                        MainActivity.this,
                         "Cannot open App Manager",
                         Toast.LENGTH_SHORT
                 ).show();
@@ -126,48 +125,21 @@ protected void onCreate(Bundle savedInstanceState) {
         });
     }
 
-    // =====================================================
     // GUIDED OPTIMIZER
-    // =====================================================
-    View optimizer = findViewById(R.id.btnGuidedOptimizer);
-    if (optimizer != null) {
-        optimizer.setOnClickListener(v -> {
+    View btnGuidedOptimizer = findViewById(R.id.btnGuidedOptimizer);
+    if (btnGuidedOptimizer != null) {
+        btnGuidedOptimizer.setOnClickListener(v -> {
             try {
-                startActivity(new Intent(this, GuidedOptimizerActivity.class));
+                startActivity(new Intent(MainActivity.this, GuidedOptimizerActivity.class));
             } catch (Exception e) {
                 Toast.makeText(
-                        this,
+                        MainActivity.this,
                         "Cannot open Guided Optimizer",
                         Toast.LENGTH_SHORT
                 ).show();
             }
         });
     }
-}
-
-// =========================================================
-// ENTRY FLOW
-// =========================================================
-
-SharedPreferences prefs = getSharedPreferences("gel_prefs", MODE_PRIVATE);
-boolean welcomeShown = prefs.getBoolean("welcome_shown", false);
-
-if (!welcomeShown && !isWelcomeDisabled()) {
-    showWelcomePopup();
-    prefs.edit().putBoolean("welcome_shown", true).apply();
-    return;
-}
-
-// APPLY PLATFORM UI
-if ("apple".equals(getSavedPlatform())) {
-applyAppleModeUI();
-} else {
-applyAndroidModeUI();
-}
-
-syncReturnButtonText();
-
-log("📱 Device ready", false);
 }
 
 @Override

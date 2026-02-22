@@ -84,7 +84,6 @@ public class AppListActivity extends GELAutoActivityHook {
     protected void attachBaseContext(Context base) {
         super.attachBaseContext(LocaleHelper.apply(base));
     }
-}
 
     // ============================================================
     // ON CREATE
@@ -1205,21 +1204,27 @@ private void showGelDialog(String message) {
     d.show();
 }
 
-    // ============================================================
-    // MODEL
-    // ============================================================
+// ============================================================
+// MODEL
+// ============================================================
 
-    static class AppEntry {
-        String pkg;
-        String label;
-        boolean isSystem;
-        boolean selected;
-        long appBytes;
-        long cacheBytes;
+static class AppEntry {
 
-        boolean isHeader;
-        boolean isUserHeader;
-        boolean isSystemHeader;
-        String headerTitle;
-    }
+    String pkg;
+    String label;
+    boolean isSystem;
+    boolean selected;
+
+    long appBytes;
+    long cacheBytes;
+
+    // 🔥 ΝΕΑ ΠΕΔΙΑ ΓΙΑ SMART CACHE SORT
+    long appSizeBytes;
+    int cachePercent;
+
+    boolean isHeader;
+    boolean isUserHeader;
+    boolean isSystemHeader;
+    String headerTitle;
+}
 }

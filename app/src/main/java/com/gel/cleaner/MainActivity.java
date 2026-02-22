@@ -77,62 +77,72 @@ super.onResume();
 // =========================================================
 @Override
 protected void onCreate(Bundle savedInstanceState) {
-super.onCreate(savedInstanceState);
-setContentView(R.layout.activity_main);
+    super.onCreate(savedInstanceState);
+    setContentView(R.layout.activity_main);
 
-// BASIC BINDS
-txtLogs = findViewById(R.id.txtLogs);
-scroll = findViewById(R.id.scrollRoot);
+    // BASIC BINDS
+    txtLogs = findViewById(R.id.txtLogs);
+    scroll = findViewById(R.id.scrollRoot);
 
-setupLangButtons();
-setupDonate();
-setupButtons();
+    setupLangButtons();
+    setupDonate();
+    setupButtons();
 
-// RETURN BUTTON
-Button btnReturnAndroid = findViewById(R.id.btnReturnAndroid);
-if (btnReturnAndroid != null) {
-btnReturnAndroid.setSaveEnabled(false);
-btnReturnAndroid.setOnClickListener(v -> {
-if ("apple".equals(getSavedPlatform())) {
-savePlatform("android");
-applyAndroidModeUI();
-} else {
-savePlatform("apple");
-applyAppleModeUI();
-}
-syncReturnButtonText();
-});
-}
+    // =====================================================
+    // RETURN BUTTON
+    // =====================================================
+    Button btnReturnAndroid = findViewById(R.id.btnReturnAndroid);
+    if (btnReturnAndroid != null) {
+        btnReturnAndroid.setSaveEnabled(false);
+        btnReturnAndroid.setOnClickListener(v -> {
+            if ("apple".equals(getSavedPlatform())) {
+                savePlatform("android");
+                applyAndroidModeUI();
+            } else {
+                savePlatform("apple");
+                applyAppleModeUI();
+            }
+            syncReturnButtonText();
+        });
+    }
 
-Button btnUninstall = findViewById(R.id.btnAppManager);
+    // =====================================================
+    // APP MANAGER (single binding)
+    // =====================================================
+    View appManager = findViewById(R.id.btnAppManager);
+    if (appManager != null) {
+        appManager.setOnClickListener(v -> {
+            try {
+                Intent i = new Intent(this, AppListActivity.class);
+                i.putExtra("mode", "uninstall");
+                startActivity(i);
+            } catch (Exception e) {
+                Toast.makeText(
+                        this,
+                        "Cannot open App Manager",
+                        Toast.LENGTH_SHORT
+                ).show();
+            }
+        });
+    }
 
-if (btnUninstall != null) {
-btnUninstall.setOnClickListener(v -> {
-
-Intent i = new Intent(this, AppListActivity.class);
-i.putExtra("mode", "uninstall");
-startActivity(i);
-
-});
-}
-
-View appManager = findViewById(R.id.btnAppManager);
-
-if (appManager != null) {
-
-appManager.setOnClickListener(v -> {
-try {
-
-Intent i = new Intent(this, AppListActivity.class);
-i.putExtra("mode", "uninstall");
-startActivity(i);
-
-} catch (Exception e) {
-Toast.makeText(this,
-"Cannot open App Manager",
-Toast.LENGTH_SHORT).show();
-}
-});
+    // =====================================================
+    // GUIDED OPTIMIZER
+    // =====================================================
+    View optimizer = findViewById(R.id.btnGuidedOptimizer);
+    if (optimizer != null) {
+        optimizer.setOnClickListener(v -> {
+            try {
+                startActivity(new Intent(this, GuidedOptimizerActivity.class));
+            } catch (Exception e) {
+                Toast.makeText(
+                        this,
+                        "Cannot open Guided Optimizer",
+                        Toast.LENGTH_SHORT
+                ).show();
+            }
+        });
+    }
 }
 
 // =========================================================

@@ -17,7 +17,7 @@ public final class OptimizerIntents {
     public static void openStorageSettings(Context c) {
         if (c == null) return;
         if (!tryStart(c, new Intent(Settings.ACTION_INTERNAL_STORAGE_SETTINGS))) {
-            if (!tryStart(c, new Intent(Settings.ACTION_MANAGE_STORAGE))) {
+            if (!tryStart(c, new Intent("android.settings.INTERNAL_STORAGE_SETTINGS"))) {
                 tryStart(c, new Intent(Settings.ACTION_SETTINGS));
             }
         }

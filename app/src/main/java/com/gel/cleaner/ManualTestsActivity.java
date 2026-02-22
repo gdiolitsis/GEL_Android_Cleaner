@@ -15391,6 +15391,7 @@ else
 appendHtml("<br>");
 logOk(gr ? "Το Lab 29 ολοκληρώθηκε." : "Lab 29 finished.");
 logLine();
+}
 
 // ============================================================
 // ======= LAB 29 INTERNAL AUTO HELPERS (SAFE, NO IMPORTS) =====

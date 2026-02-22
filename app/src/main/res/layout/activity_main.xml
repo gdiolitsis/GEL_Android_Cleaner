@@ -305,7 +305,7 @@
         android:text="⚡ GUIDED OPTIMIZER"
         android:textAllCaps="false"
         android:textColor="#00FF7F"
-        android:background="@drawable/gel_btn_outline_selector"
+        android:background="@drawable/gel_btn_neon_outline"
         android:layout_margin="4dp"
         android:gravity="center"
         android:maxLines="2"

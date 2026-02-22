@@ -32,11 +32,11 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
 
     <!-- ============================================================
-     BIOMETRICS
-     ============================================================ -->
+         BIOMETRICS
+         ============================================================ -->
     <uses-permission android:name="android.permission.USE_BIOMETRIC"/>
     <uses-permission android:name="android.permission.USE_FINGERPRINT"/>
-    
+
     <!-- ============================================================
          SIM / MOBILE NETWORK
          ============================================================ -->
@@ -63,18 +63,19 @@
     <uses-permission android:name="android.permission.BLUETOOTH"/>
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+
     <!-- ============================================================
          CAMERA
          ============================================================ -->
     <uses-permission android:name="android.permission.CAMERA"/>
 
     <uses-feature
-    android:name="android.hardware.camera"
-    android:required="false" />
+        android:name="android.hardware.camera"
+        android:required="false" />
 
-<uses-feature
-    android:name="android.hardware.camera.any"
-    android:required="false" />
+    <uses-feature
+        android:name="android.hardware.camera.any"
+        android:required="false" />
 
     <!-- ============================================================
          AUDIO / MICROPHONE
@@ -89,71 +90,67 @@
     <!-- ============================================================
          APPLICATION
          ============================================================ -->
-<application
-    android:allowBackup="false"
-    android:supportsRtl="true"
-    android:usesCleartextTraffic="false"
-    android:requestLegacyExternalStorage="true"
-    android:icon="@mipmap/ic_launcher"
-    android:roundIcon="@mipmap/ic_launcher_round"
-    android:label="@string/app_name"
-    android:theme="@style/Theme.GEL.DarkGold">
+    <application
+        android:allowBackup="false"
+        android:supportsRtl="true"
+        android:usesCleartextTraffic="false"
+        android:requestLegacyExternalStorage="true"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:label="@string/app_name"
+        android:theme="@style/Theme.GEL.DarkGold">
 
-    <!-- ================= NEW OPTIMIZER ================= -->
+        <!-- ================= NEW OPTIMIZER ================= -->
+        <activity
+            android:name=".GuidedOptimizerActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.GEL.DarkGold" />
 
-    <activity
-        android:name=".GuidedOptimizerActivity"
-        android:exported="false"
-        android:screenOrientation="portrait"
-        android:theme="@style/Theme.GEL.DarkGold" />
+        <receiver
+            android:name=".OptimizerReminderReceiver"
+            android:exported="false" />
 
-    <receiver
-        android:name=".OptimizerReminderReceiver"
-        android:exported="false" />
+        <!-- ================= EXISTING ================= -->
+        <activity
+            android:name="com.gel.cleaner.iphone.AppleDeviceInfoInternalActivity"
+            android:exported="false" />
 
-    <!-- ================= EXISTING ================= -->
+        <activity
+            android:name="com.gel.cleaner.iphone.AppleDeviceInfoPeripheralsActivity"
+            android:exported="false" />
 
-    <activity
-        android:name="com.gel.cleaner.iphone.AppleDeviceInfoInternalActivity"
-        android:exported="false" />
+        <activity
+            android:name=".IPhoneLabsActivity"
+            android:exported="false"
+            android:theme="@style/Theme.GEL.DarkGold" />
 
-    <activity
-        android:name="com.gel.cleaner.iphone.AppleDeviceInfoPeripheralsActivity"
-        android:exported="false" />
+        <!-- MAIN -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
 
-    <activity
-        android:name=".IPhoneLabsActivity"
-        android:exported="false"
-        android:theme="@style/Theme.GEL.DarkGold" />
+        <!-- CORE ACTIVITIES -->
+        <activity android:name=".AppListActivity" android:exported="false" android:screenOrientation="portrait"/>
+        <activity android:name=".CleanerActivity" android:exported="false" android:screenOrientation="portrait"/>
+        <activity android:name=".PermissionsActivity" android:exported="false"/>
+        <activity android:name=".DeviceInfoInternalActivity" android:exported="false" android:screenOrientation="portrait"/>
+        <activity android:name=".DeviceInfoPeripheralsActivity" android:exported="false" android:screenOrientation="portrait"/>
+        <activity android:name=".CpuRamLiveActivity" android:exported="false" android:screenOrientation="portrait"/>
+        <activity android:name=".CoreMonitorActivity" android:exported="false" android:screenOrientation="portrait"/>
+        <activity android:name=".DiagnosisMenuActivity" android:exported="false" android:screenOrientation="portrait"/>
+        <activity android:name=".ManualTestsActivity" android:exported="false" android:screenOrientation="portrait"/>
+        <activity android:name=".PerformanceDiagnosticsActivity" android:exported="false" android:screenOrientation="portrait"/>
+        <activity android:name=".ServiceReportActivity" android:exported="false" android:screenOrientation="portrait"/>
+        <activity android:name=".AutoDiagnosisActivity" android:exported="false" android:screenOrientation="portrait"/>
 
-    <!-- MAIN -->
-    <activity
-        android:name=".MainActivity"
-        android:exported="true"
-        android:launchMode="singleTask"
-        android:screenOrientation="portrait">
-        <intent-filter>
-            <action android:name="android.intent.action.MAIN"/>
-            <category android:name="android.intent.category.LAUNCHER"/>
-        </intent-filter>
-    </activity>
-
-    <!-- CORE ACTIVITIES -->
-    <activity android:name=".AppListActivity" android:exported="false" android:screenOrientation="portrait"/>
-    <activity android:name=".CleanerActivity" android:exported="false" android:screenOrientation="portrait"/>
-    <activity android:name=".PermissionsActivity" android:exported="false"/>
-    <activity android:name=".DeviceInfoInternalActivity" android:exported="false" android:screenOrientation="portrait"/>
-    <activity android:name=".DeviceInfoPeripheralsActivity" android:exported="false" android:screenOrientation="portrait"/>
-    <activity android:name=".CpuRamLiveActivity" android:exported="false" android:screenOrientation="portrait"/>
-    <activity android:name=".CoreMonitorActivity" android:exported="false" android:screenOrientation="portrait"/>
-    <activity android:name=".DiagnosisMenuActivity" android:exported="false" android:screenOrientation="portrait"/>
-    <activity android:name=".ManualTestsActivity" android:exported="false" android:screenOrientation="portrait"/>
-    <activity android:name=".PerformanceDiagnosticsActivity" android:exported="false" android:screenOrientation="portrait"/>
-    <activity android:name=".ServiceReportActivity" android:exported="false" android:screenOrientation="portrait"/>
-    <activity android:name=".AutoDiagnosisActivity" android:exported="false" android:screenOrientation="portrait"/>
-
-</application>
-    
         <!-- ============================================================
              MANUAL LABS 6–9 : DISPLAY & SENSORS
              ============================================================ -->

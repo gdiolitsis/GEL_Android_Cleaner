@@ -42,24 +42,27 @@
 <string name="app_cache_title">Επίλεξε εφαρμογή για καθαρισμό cache</string>
 <string name="app_icon_desc">Εικονίδιο Εφαρμογής</string>
 
-    <!-- CACHE / APP MANAGER -->
+<!-- CACHE / APP MANAGER -->
 <string name="search_app">Αναζήτηση εφαρμογής...</string>
-<string name="select_all">Επιλογή ΟΛΩΝ</string>
-<string name="deselect_all">Αποεπιλογή ΟΛΩΝ</string>
-<string name="largest_cache">Εφαρμογές με Μεγαλύτερη Cache</string>
-<string name="select_user_apps">Επιλογή ΕΦΑΡΜΟΓΩΝ ΧΡΗΣΤΗ</string>
-<string name="deselect_user_apps">Αποεπιλογή ΕΦΑΡΜΟΓΩΝ ΧΡΗΣΤΗ</string>
-<string name="select_system_apps">Επιλογή ΕΦΑΡΜΟΓΩΝ ΣΥΣΤΗΜΑΤΟΣ</string>
-<string name="deselect_system_apps">Αποεπιλογή ΕΦΑΡΜΟΓΩΝ ΣΥΣΤΗΜΑΤΟΣ</string>
-<string name="start_guided_cleaning">Εκκίνηση Καθοδηγούμενης Διαδικασίας</string>
-<string name="app_manager_btn">🗂 Διαχείριση Εφαρμογών\n(Λειτουργία Απεγκατάστασης)</string>
-<string name="app_uninstall">🗑 Απεγκατάσταση Εφαρμογών</string>
-    
-    <!-- PERFORMANCE -->
+<string name="select_all">Επιλογή όλων</string>
+<string name="deselect_all">Αποεπιλογή όλων</string>
+<string name="largest_cache">Εφαρμογές με τη μεγαλύτερη cache</string>
+<string name="select_user_apps">Επιλογή εφαρμογών χρήστη</string>
+<string name="deselect_user_apps">Αποεπιλογή εφαρμογών χρήστη</string>
+<string name="select_system_apps">Επιλογή εφαρμογών συστήματος</string>
+<string name="deselect_system_apps">Αποεπιλογή εφαρμογών συστήματος</string>
+<string name="start_guided_cleaning">Έναρξη καθοδηγούμενης διαδικασίας</string>
+<string name="app_manager_btn">🗂 Διαχείριση Εφαρμογών\n(Λειτουργία απεγκατάστασης)</string>
+<string name="app_uninstall">🗑 Απεγκατάσταση εφαρμογών</string>
+
+<!-- PERFORMANCE TOOLS -->
+<string name="guided_optimizer_btn">⚡ Έξυπνη Βελτιστοποίηση</string>
+
+<!-- PERFORMANCE -->
 <string name="diagnostics">GEL Διάγνωση Συσκευής</string>
 <string name="diagnostics_android">GEL Διάγνωση Συσκευής</string>
 <string name="diagnostics_apple">GEL Διάγνωση Συσκευών Apple</string>
-
+    
     <!-- Permissions -->
     <string name="toast_storage_access">Παραχώρησε πρόσβαση στα αρχεία για να συνεχίσεις</string>
     <string name="toast_usage_access">Ενεργοποίησε την πρόσβαση στη χρήση εφαρμογών</string>

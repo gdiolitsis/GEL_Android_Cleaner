@@ -1,8 +1,10 @@
 package com.gel.cleaner;
 
+import android.app.PendingIntent;
 import android.app.usage.StorageStats;
 import android.app.usage.StorageStatsManager;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Process;
@@ -110,13 +112,26 @@ r.score = 2;
 
     try {
         NotificationCompat.Builder nb =
-                new NotificationCompat.Builder(ctx, "gel_default")
-                        .setSmallIcon(android.R.drawable.stat_notify_more)
-                        .setContentTitle(title)
-                        .setContentText(body)
-                        .setStyle(new NotificationCompat.BigTextStyle().bigText(body))
-                        .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-                        .setAutoCancel(true);
+        new NotificationCompat.Builder(ctx, "gel_default")
+                .setSmallIcon(android.R.drawable.stat_notify_more)
+                .setContentTitle(title)
+                .setContentText(body)
+                .setStyle(new NotificationCompat.BigTextStyle().bigText(body))
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setAutoCancel(true);
+
+// ✅ CLICK ACTION → ανοίγει την εφαρμογή
+Intent intent = new Intent(ctx, MainActivity.class);
+intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+
+PendingIntent pi = PendingIntent.getActivity(
+        ctx,
+        19001,
+        intent,
+        PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+);
+
+nb.setContentIntent(pi);
 
         NotificationManagerCompat.from(ctx).notify(19001, nb.build());
 

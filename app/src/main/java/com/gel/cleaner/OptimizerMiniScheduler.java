@@ -124,7 +124,16 @@ r.score = 2;
 Intent intent = new Intent(ctx, MainActivity.class);
 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
 
-PendingIntent pi = PendingIntent.getActivity(
+Intent intent = new Intent(ctx, MainActivity.class);
+intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+
+intent.putExtra("mini_cpu", r.cpuSpike);
+intent.putExtra("mini_thermal", r.thermalHigh);
+intent.putExtra("mini_crash", r.crashSignal);
+intent.putExtra("mini_cache", r.cacheHigh);
+intent.putExtra("mini_temp", r.temperature);
+        
+        PendingIntent pi = PendingIntent.getActivity(
         ctx,
         19001,
         intent,

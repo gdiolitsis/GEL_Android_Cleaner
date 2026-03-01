@@ -126,15 +126,17 @@ r.cpuSpike = true;
             // ==============================
             // CLICK ACTION
             // ==============================
-            Intent intent = new Intent(ctx, MainActivity.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+Intent intent = new Intent(ctx, MainActivity.class);
+intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
 
-            intent.putExtra("mini_cpu", r.cpuSpike);
-            intent.putExtra("mini_thermal", r.thermalHigh);
-            intent.putExtra("mini_crash", r.crashSignal);
-            intent.putExtra("mini_cache", r.cacheHigh);
-            intent.putExtra("mini_temp", r.temperature);
+intent.putExtra("mini_cpu", r.cpuSpike);
+intent.putExtra("mini_thermal", r.thermalHigh);
+intent.putExtra("mini_crash", r.crashSignal);
+intent.putExtra("mini_cache", r.cacheHigh);
+intent.putExtra("mini_temp", r.temperature);
 
+            intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
             PendingIntent pi = PendingIntent.getActivity(
                     ctx,
                     19001,

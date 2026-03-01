@@ -84,7 +84,11 @@ super.onResume();
 protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_main);
-    
+
+if (getIntent() != null && getIntent().hasExtra("mini_cpu")) {
+    handleMiniSignals(getIntent());
+}
+        
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 
     NotificationChannel channel =
@@ -182,6 +186,62 @@ if (savedInstanceState == null) {
                 ).show();
             }
         });
+    }
+}
+
+@Override
+protected void onNewIntent(Intent intent) {
+    super.onNewIntent(intent);
+    setIntent(intent);
+
+    if (intent != null && intent.hasExtra("mini_cpu")) {
+        handleMiniSignals(intent);
+    }
+}
+
+private void handleMiniSignals(Intent intent) {
+
+    boolean cpu = intent.getBooleanExtra("mini_cpu", false);
+    boolean thermal = intent.getBooleanExtra("mini_thermal", false);
+    boolean crash = intent.getBooleanExtra("mini_crash", false);
+    boolean cache = intent.getBooleanExtra("mini_cache", false);
+    double temp = intent.getDoubleExtra("mini_temp", 0);
+
+    showSmartMiniDiagnostic(cpu, thermal, crash, cache, temp);
+}
+
+private void showSmartDiagnosticPopup(String issue) {
+
+    final boolean gr = AppLang.isGreek(this);
+
+    String title = gr
+            ? "Ένδειξη επιβάρυνσης"
+            : "Health Signal Detected";
+
+    String message = gr
+            ? "Το σύστημα εντόπισε πιθανή επιβάρυνση.\n\nΘέλεις να γίνει έλεγχος τώρα;"
+            : "The system detected a possible load issue.\n\nRun diagnostic now?";
+
+    new androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle(title)
+            .setMessage(message)
+            .setPositiveButton(gr ? "Έλεγχος" : "Run Check", (d, w) -> {
+
+                startActivity(new Intent(this, GuidedOptimizerActivity.class));
+            })
+            .setNegativeButton(gr ? "Αργότερα" : "Later", null)
+            .show();
+}
+
+@Override
+protected void onNewIntent(Intent intent) {
+    super.onNewIntent(intent);
+    setIntent(intent); // 🔥 σημαντικό
+
+    if (intent != null && intent.hasExtra("gel_issue_type")) {
+
+        String issue = intent.getStringExtra("gel_issue_type");
+        showSmartDiagnosticPopup(issue);
     }
 }
 

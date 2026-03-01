@@ -95,9 +95,8 @@ public class OptimizerMiniScheduler extends Worker {
         OptimizerMiniHealthProbes.Result r =
                 OptimizerMiniHealthProbes.run(ctx, cacheHigh);
 
-        if (!r.critical) {
-            return Result.success();
-        }
+        // DEBUG FORCE
+r.critical = true;
 
         // ==============================
         // Notification Text

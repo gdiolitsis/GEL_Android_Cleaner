@@ -95,9 +95,9 @@ public Result doWork() {
 r.score = 2;
 // ----------------------
 
-    if (r.score < 2) {
-        return Result.success();
-    }
+    if (!r.critical) {
+    return Result.success();
+}
 
     // --- Notify ---
     boolean gr = AppLang.isGreek(ctx);

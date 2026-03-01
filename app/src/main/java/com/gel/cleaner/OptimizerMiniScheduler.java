@@ -97,7 +97,8 @@ public class OptimizerMiniScheduler extends Worker {
 
         // DEBUG FORCE
 r.critical = true;
-
+r.cpuSpike = true;
+        
         // ==============================
         // Notification Text
         // ==============================

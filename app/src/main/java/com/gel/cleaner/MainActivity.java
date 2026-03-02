@@ -58,6 +58,24 @@ private TextView welcomeMessage;
 private TextView txtLogs;
 private ScrollView scroll;
 
+@Override
+public boolean onCreateOptionsMenu(android.view.Menu menu) {
+    menu.add(0, 1001, 0, "Settings")
+            .setShowAsAction(android.view.MenuItem.SHOW_AS_ACTION_ALWAYS);
+    return true;
+}
+
+@Override
+public boolean onOptionsItemSelected(android.view.MenuItem item) {
+
+    if (item.getItemId() == 1001) {
+        showSettingsDialog();
+        return true;
+    }
+
+    return super.onOptionsItemSelected(item);
+}
+
 // =========================================================
 // PREFS
 // =========================================================
@@ -124,6 +142,13 @@ if (getIntent() != null && getIntent().hasExtra("mini_cpu")) {
                 1001
         );
     }
+}
+
+SharedPreferences sp =
+        getSharedPreferences("gel_prefs", MODE_PRIVATE);
+
+if (sp.getBoolean("pulse_enabled", false)) {
+    OptimizerMiniPulseScheduler.enable(this);
 }
 
 // ================= ENTRY FLOW =================

@@ -1,6 +1,7 @@
 package com.gel.cleaner;
 
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.widget.Button;
@@ -21,16 +22,12 @@ public class OptimizerDiagnosticActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         readExtras();
-
         buildUI();
     }
 
     private void readExtras() {
-
         Intent i = getIntent();
-
         if (i == null) return;
 
         cpu     = i.getBooleanExtra("mini_cpu", false);
@@ -48,39 +45,51 @@ public class OptimizerDiagnosticActivity extends AppCompatActivity {
 
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(40, 60, 40, 40);
+        root.setPadding(60, 80, 60, 60);
+        root.setBackgroundColor(Color.BLACK);
 
         scroll.addView(root);
 
-        // TITLE
+        // ================= TITLE =================
         TextView title = new TextView(this);
-        title.setTextSize(20f);
+        title.setText(gr ? "GEL Smart Diagnostic"
+                : "GEL Smart Diagnostic");
+        title.setTextColor(Color.parseColor("#FFD700"));
+        title.setTextSize(22f);
         title.setGravity(Gravity.CENTER);
-        title.setText(gr ?
-                "Έξυπνη Διάγνωση Συστήματος" :
-                "Smart System Diagnostic");
         root.addView(title);
 
-        // MESSAGE
-        TextView message = new TextView(this);
-        message.setTextSize(16f);
-        message.setPadding(0, 40, 0, 40);
-        message.setText(buildMessage(gr));
-        root.addView(message);
+        // ================= SEVERITY =================
+        TextView severity = new TextView(this);
+        severity.setTextColor(Color.WHITE);
+        severity.setTextSize(16f);
+        severity.setPadding(0, 40, 0, 20);
+        severity.setText(getSeverityText(gr));
+        root.addView(severity);
 
-        // BUTTON 1 — RUN TESTS
+        // ================= DETAILS =================
+        TextView details = new TextView(this);
+        details.setTextColor(Color.parseColor("#00FF7F"));
+        details.setTextSize(15f);
+        details.setPadding(0, 20, 0, 40);
+        details.setText(buildDetailedMessage(gr));
+        root.addView(details);
+
+        // ================= ACTION BUTTON =================
         Button runBtn = new Button(this);
-        runBtn.setText(gr ? "Έλεγχος Συστήματος" : "Run Diagnostics");
+        runBtn.setText(gr ? "Προτεινόμενος Έλεγχος"
+                : "Run Recommended Tests");
         runBtn.setOnClickListener(v -> {
             startActivity(new Intent(this, ManualTestsActivity.class));
             finish();
         });
         root.addView(runBtn);
 
-        // BUTTON 2 — QUICK FIX (αν cache)
-        if (cache) {
+        // ================= QUICK FIX =================
+        if (cache && !crash) {
             Button fixBtn = new Button(this);
-            fixBtn.setText(gr ? "Καθαρισμός Cache" : "Clean Cache");
+            fixBtn.setText(gr ? "Άμεσος Καθαρισμός Cache"
+                    : "Quick Cache Cleanup");
             fixBtn.setOnClickListener(v -> {
                 Intent i = new Intent(this, AppListActivity.class);
                 i.putExtra("mode", "cache");
@@ -90,7 +99,7 @@ public class OptimizerDiagnosticActivity extends AppCompatActivity {
             root.addView(fixBtn);
         }
 
-        // BUTTON 3 — CLOSE
+        // ================= CLOSE =================
         Button closeBtn = new Button(this);
         closeBtn.setText(gr ? "Αργότερα" : "Later");
         closeBtn.setOnClickListener(v -> finish());
@@ -99,43 +108,64 @@ public class OptimizerDiagnosticActivity extends AppCompatActivity {
         setContentView(scroll);
     }
 
-    private String buildMessage(boolean gr) {
+    private String getSeverityText(boolean gr) {
+
+        int score = 0;
+
+        if (crash) score += 3;
+        if (thermal) score += 2;
+        if (cpu) score += 1;
+        if (cache) score += 1;
+
+        if (score >= 4) {
+            return gr ? "⚠ ΚΡΙΣΙΜΗ Κατάσταση"
+                      : "⚠ CRITICAL Condition";
+        } else if (score >= 2) {
+            return gr ? "⚠ Μέτρια Επιβάρυνση"
+                      : "⚠ Moderate Load";
+        } else {
+            return gr ? "Ήπια ένδειξη επιβάρυνσης"
+                      : "Minor system signal";
+        }
+    }
+
+    private String buildDetailedMessage(boolean gr) {
 
         StringBuilder sb = new StringBuilder();
 
         if (crash) {
             sb.append(gr ?
-                    "• Εντοπίστηκε πρόσφατο crash ή ANR.\n\n" :
-                    "• Recent crash or ANR detected.\n\n");
+                    "• Εντοπίστηκε πρόσφατο crash / ANR.\n\n"
+                    : "• Recent crash / ANR detected.\n\n");
         }
 
         if (thermal) {
             sb.append(gr ?
-                    "• Υψηλή θερμοκρασία: " + temp + "°C\n\n" :
-                    "• High temperature detected: " + temp + "°C\n\n");
+                    "• Θερμοκρασία: " + temp + "°C\n\n"
+                    : "• Temperature: " + temp + "°C\n\n");
         }
 
         if (cpu && thermal) {
             sb.append(gr ?
-                    "• Υψηλό φορτίο CPU σε συνδυασμό με θερμοκρασία.\n\n" :
-                    "• High CPU load combined with temperature.\n\n");
+                    "• Υψηλό CPU load σε συνδυασμό με θερμοκρασία.\n\n"
+                    : "• High CPU load combined with thermal increase.\n\n");
         }
 
         if (cache) {
             sb.append(gr ?
-                    "• Αυξημένη προσωρινή μνήμη εφαρμογών.\n\n" :
-                    "• High application cache usage detected.\n\n");
+                    "• Υψηλή προσωρινή μνήμη εφαρμογών.\n\n"
+                    : "• High application cache usage.\n\n");
         }
 
         if (sb.length() == 0) {
             sb.append(gr ?
-                    "Δεν εντοπίστηκε σοβαρό πρόβλημα.\n\n" :
-                    "No critical issue detected.\n\n");
+                    "Δεν εντοπίστηκε σοβαρή ανωμαλία."
+                    : "No major anomaly detected.");
+        } else {
+            sb.append(gr ?
+                    "Συνιστάται πλήρης έλεγχος για επιβεβαίωση."
+                    : "A full diagnostic is recommended.");
         }
-
-        sb.append(gr ?
-                "Συνιστάται πλήρης έλεγχος για επιβεβαίωση." :
-                "A full diagnostic is recommended.");
 
         return sb.toString();
     }

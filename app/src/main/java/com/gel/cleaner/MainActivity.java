@@ -968,8 +968,16 @@ t.setTextColor(Color.WHITE);
 t.setTextSize(20f);
 t.setTypeface(null, Typeface.BOLD);
 t.setGravity(Gravity.CENTER);
-t.setPadding(0, 0, 0, dp(36));
+t.setPadding(0, 0, 0, dp(38));
 root.addView(t);
+
+// ================= CHECKBOX =================
+CheckBox cb = new CheckBox(this);
+cb.setText(AppLang.isGreek(this)
+? "Να μην εμφανιστεί ξανά"
+: "Do not show again");
+cb.setTextColor(Color.WHITE);
+cb.setPadding(0, dp(8), 0, dp(16));
 
 // ================= ANDROID BUTTON =================
 TextView androidBtn = new TextView(this);
@@ -991,7 +999,7 @@ androidBtn.setBackground(bgAndroid);
 LinearLayout.LayoutParams lpBtn =
 new LinearLayout.LayoutParams(
 LinearLayout.LayoutParams.MATCH_PARENT,
-dp(220)
+dp(150)
 );
 lpBtn.setMargins(dp(8), dp(10), dp(8), 0);
 androidBtn.setLayoutParams(lpBtn);
@@ -1016,13 +1024,14 @@ appleBtn.setBackground(bgApple);
 LinearLayout.LayoutParams lpBtn2 =
 new LinearLayout.LayoutParams(
 LinearLayout.LayoutParams.MATCH_PARENT,
-dp(220)
+dp(150)
 );
 lpBtn2.setMargins(dp(8), dp(14), dp(8), 0);
 appleBtn.setLayoutParams(lpBtn2);
 
 root.addView(androidBtn);
 root.addView(appleBtn);
+root.addView(cb);
 
 b.setView(root);
 final AlertDialog d = b.create();
@@ -1127,6 +1136,8 @@ show(R.id.btnCpuRamLive);
 show(R.id.btnCleanAll);
 show(R.id.btnBrowserCache);
 show(R.id.btnAppCache);
+show(R.id.btnAppManager);
+show(R.id.btnGuidedOptimizer);
 
 show(R.id.btnDonate);
 show(R.id.btnPhoneInfoInternal);
@@ -1156,6 +1167,8 @@ hide(R.id.btnCpuRamLive);
 hide(R.id.btnCleanAll);
 hide(R.id.btnBrowserCache);
 hide(R.id.btnAppCache);
+hide(R.id.btnAppManager);
+hide(R.id.btnGuidedOptimizer);
 
 hide(R.id.txtLogs);
 
@@ -1394,7 +1407,7 @@ iphoneBtn.setBackground(iphoneBg);
 LinearLayout.LayoutParams lpIphone =
 new LinearLayout.LayoutParams(
 LinearLayout.LayoutParams.MATCH_PARENT,
-dp(72)
+dp(150)
 );
 lpIphone.setMargins(0, dp(12), 0, 0);
 iphoneBtn.setLayoutParams(lpIphone);
@@ -1419,7 +1432,7 @@ ipadBtn.setBackground(ipadBg);
 LinearLayout.LayoutParams lpIpad =
 new LinearLayout.LayoutParams(
 LinearLayout.LayoutParams.MATCH_PARENT,
-dp(72)
+dp(150)
 );
 lpIpad.setMargins(0, dp(12), 0, 0);
 ipadBtn.setLayoutParams(lpIpad);
@@ -1500,7 +1513,7 @@ root.setOrientation(LinearLayout.VERTICAL);
 root.setPadding(dp(18), dp(18), dp(18), dp(18));
 
 GradientDrawable bg = new GradientDrawable();
-bg.setColor(0xFFFFD700);
+bg.setColor(Color.BLACK);
 bg.setCornerRadius(dp(10));
 bg.setStroke(dp(3), 0xFFFFD700);
 root.setBackground(bg);

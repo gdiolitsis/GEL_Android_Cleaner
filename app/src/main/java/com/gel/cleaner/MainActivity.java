@@ -307,8 +307,8 @@ private void showSettingsDialog() {
     final android.widget.CheckBox cbSched = new android.widget.CheckBox(this);
     cbSched.setChecked(schedEnabled);
     cbSched.setText(gr
-            ? "Optimizer Scheduler — Υπενθύμιση Κάθε..."
-            : "Optimizer Scheduler — Reminder Every...");
+            ? "Έξυπνη Βελτιστοποίηση — Υπενθύμιση Κάθε..."
+            : "Guided Optimizer — Reminder Every...");
     cbSched.setTextColor(0xFF00FF7F);
     cbSched.setPadding(0, dp(6), 0, dp(6));
     box.addView(cbSched);

@@ -158,13 +158,68 @@ if (!r.critical) {
 
 boolean gr = AppLang.isGreek(ctx);
 
-String title = gr
-        ? "Εντοπίστηκε ένδειξη επιβάρυνσης"
-        : "Device Health Signal";
+String title;
+String body;
 
-String body = gr
-        ? "Παρατηρήθηκε πιθανή επιβάρυνση συστήματος."
-        : "Potential system load detected.";
+if (r.crashSignal) {
+
+    title = gr ? "⚠ Εντοπίστηκε Crash"
+               : "⚠ System Crash Detected";
+
+    body = gr
+            ? "Παρατηρήθηκε πρόσφατο crash ή ANR."
+            : "A recent crash or ANR was detected.";
+
+}
+else if (r.thermalHigh && r.temperature >= 45.0) {
+
+    title = gr ? "🔥 Υψηλή Θερμοκρασία"
+               : "🔥 High Device Temperature";
+
+    body = gr
+            ? "Θερμοκρασία: " + r.temperature + "°C"
+            : "Temperature: " + r.temperature + "°C";
+
+}
+else if (r.cpuSpike && r.thermalHigh) {
+
+    title = gr ? "⚠ Υψηλό CPU & Θερμοκρασία"
+               : "⚠ High CPU & Thermal Load";
+
+    body = gr
+            ? "Αυξημένο CPU σε συνδυασμό με θερμοκρασία."
+            : "High CPU load combined with temperature rise.";
+
+}
+else if (r.cpuSpike) {
+
+    title = gr ? "📈 Υψηλό CPU Load"
+               : "📈 High CPU Usage";
+
+    body = gr
+            ? "Παρατηρήθηκε αυξημένη χρήση επεξεργαστή."
+            : "High processor usage detected.";
+
+}
+else if (r.cacheHigh) {
+
+    title = gr ? "🧹 Υψηλή Cache Εφαρμογών"
+               : "🧹 High App Cache Usage";
+
+    body = gr
+            ? "Μεγάλη προσωρινή μνήμη εφαρμογών."
+            : "Large application cache usage detected.";
+
+}
+else {
+
+    title = gr ? "Ένδειξη Επιβάρυνσης"
+               : "Health Signal";
+
+    body = gr
+            ? "Παρατηρήθηκε πιθανή επιβάρυνση."
+            : "Potential load detected.";
+}
 
 try {
 

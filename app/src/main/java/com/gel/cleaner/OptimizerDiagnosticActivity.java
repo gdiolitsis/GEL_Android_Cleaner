@@ -1,20 +1,25 @@
+// GDiolitsis Engine Lab (GEL) — Author & Developer
+// OptimizerDiagnosticActivity — Smart Diagnostic Popup (Severity + Recommended Labs)
+
 package com.gel.cleaner;
 
-import android.animation.ObjectAnimator;
-import android.animation.ValueAnimator;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
+import android.util.TypedValue;
 import android.view.Gravity;
-import android.view.animation.DecelerateInterpolator;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class OptimizerDiagnosticActivity extends AppCompatActivity {
 
@@ -24,13 +29,10 @@ public class OptimizerDiagnosticActivity extends AppCompatActivity {
     private boolean cache;
     private double temp;
 
-    private int severityLevel; // 0=minor,1=moderate,2=critical
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         readExtras();
-        evaluateSeverity();
         buildUI();
     }
 
@@ -45,182 +47,129 @@ public class OptimizerDiagnosticActivity extends AppCompatActivity {
         temp    = i.getDoubleExtra("mini_temp", 0);
     }
 
-    private void evaluateSeverity() {
-
-        if (crash) {
-            severityLevel = 2;
-            return;
-        }
-
-        if (thermal && temp >= 45.0) {
-            severityLevel = 2;
-            return;
-        }
-
-        if (cpu && thermal) {
-            severityLevel = 1;
-            return;
-        }
-
-        if (cache) {
-            severityLevel = 1;
-            return;
-        }
-
-        severityLevel = 0;
-    }
-
     private void buildUI() {
 
-        boolean gr = AppLang.isGreek(this);
+        final boolean gr = AppLang.isGreek(this);
 
         ScrollView scroll = new ScrollView(this);
+        scroll.setFillViewport(true);
 
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(60, 90, 60, 60);
+        root.setPadding(dp(22), dp(26), dp(22), dp(18));
         root.setBackgroundColor(Color.BLACK);
 
-        scroll.addView(root);
+        scroll.addView(root,
+                new ViewGroup.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT
+                ));
 
         // ================= TITLE =================
         TextView title = new TextView(this);
         title.setText("GEL Smart Diagnostic");
-        title.setTextColor(Color.parseColor("#FFD700"));
-        title.setTextSize(22f);
+        title.setTextColor(0xFFFFD700);
+        title.setTextSize(TypedValue.COMPLEX_UNIT_SP, 22);
         title.setTypeface(null, Typeface.BOLD);
         title.setGravity(Gravity.CENTER);
+        title.setPadding(0, dp(6), 0, dp(10));
         root.addView(title);
 
         // ================= SEVERITY =================
         TextView severity = new TextView(this);
-        severity.setTextSize(17f);
-        severity.setPadding(0, 50, 0, 20);
-        severity.setTypeface(null, Typeface.BOLD);
-
-        if (severityLevel == 2) {
-            severity.setTextColor(Color.parseColor("#FF3B3B"));
-        } else if (severityLevel == 1) {
-            severity.setTextColor(Color.parseColor("#FFA500"));
-        } else {
-            severity.setTextColor(Color.WHITE);
-        }
-
+        severity.setTextColor(Color.WHITE);
+        severity.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
+        severity.setPadding(0, dp(6), 0, dp(6));
         severity.setText(getSeverityText(gr));
         root.addView(severity);
 
         // ================= DETAILS =================
         TextView details = new TextView(this);
-        details.setTextColor(Color.parseColor("#00FF7F"));
-        details.setTextSize(15f);
-        details.setPadding(0, 20, 0, 60);
+        details.setTextColor(0xFF00FF7F);
+        details.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15);
+        details.setPadding(0, dp(10), 0, dp(14));
         details.setText(buildDetailedMessage(gr));
         root.addView(details);
 
-        LinearLayout.LayoutParams btnParams =
-                new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT
-                );
-        btnParams.setMargins(0, 25, 0, 25);
+        // ================= RECOMMENDED LABS =================
+        TextView labsTitle = new TextView(this);
+        labsTitle.setText(gr ? "Προτεινόμενα εργαστήρια" : "Recommended labs");
+        labsTitle.setTextColor(0xFFFFD700);
+        labsTitle.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
+        labsTitle.setTypeface(null, Typeface.BOLD);
+        labsTitle.setPadding(0, dp(8), 0, dp(8));
+        root.addView(labsTitle);
 
-        // ================= RUN BUTTON =================
-        Button runBtn = new Button(this);
-        runBtn.setText(gr ? "Προτεινόμενος Έλεγχος"
-                : "Run Recommended Tests");
+        TextView labs = new TextView(this);
+        labs.setTextColor(0xFF00FF7F);
+        labs.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15);
+        labs.setPadding(0, 0, 0, dp(18));
+        labs.setText(buildRecommendedLabsText(gr));
+        root.addView(labs);
 
-        runBtn.setLayoutParams(btnParams);
-        runBtn.setTextColor(Color.BLACK);
-        runBtn.setTextSize(16f);
-        runBtn.setAllCaps(false);
-
-        GradientDrawable runBg = new GradientDrawable();
-        runBg.setColor(Color.parseColor("#00FF7F"));
-        runBg.setCornerRadius(25);
-        runBg.setStroke(5, Color.parseColor("#FFD700"));
-        runBtn.setBackground(runBg);
-
+        // ================= ACTION BUTTON =================
+        Button runBtn = mkNeonGreenGoldBtn(gr ? "RUN RECOMMENDED TESTS" : "RUN RECOMMENDED TESTS");
         runBtn.setOnClickListener(v -> {
             startActivity(new Intent(this, ManualTestsActivity.class));
             finish();
         });
-
         root.addView(runBtn);
 
-        // 🔥 Pulse animation if critical
-        if (severityLevel == 2) {
-            ObjectAnimator scaleX = ObjectAnimator.ofFloat(runBtn, "scaleX", 1f, 1.05f);
-            ObjectAnimator scaleY = ObjectAnimator.ofFloat(runBtn, "scaleY", 1f, 1.05f);
-            scaleX.setDuration(800);
-            scaleY.setDuration(800);
-            scaleX.setRepeatMode(ValueAnimator.REVERSE);
-            scaleY.setRepeatMode(ValueAnimator.REVERSE);
-            scaleX.setRepeatCount(ValueAnimator.INFINITE);
-            scaleY.setRepeatCount(ValueAnimator.INFINITE);
-            scaleX.setInterpolator(new DecelerateInterpolator());
-            scaleY.setInterpolator(new DecelerateInterpolator());
-            scaleX.start();
-            scaleY.start();
-        }
-
-        // ================= QUICK FIX (Cache Only) =================
+        // ================= QUICK FIX (CACHE) =================
         if (cache && !crash) {
-
-            Button fixBtn = new Button(this);
-            fixBtn.setText(gr ? "Άμεσος Καθαρισμός Cache"
-                    : "Quick Cache Cleanup");
-
-            fixBtn.setLayoutParams(btnParams);
-            fixBtn.setTextColor(Color.BLACK);
-            fixBtn.setAllCaps(false);
-
-            GradientDrawable fixBg = new GradientDrawable();
-            fixBg.setColor(Color.parseColor("#00FF7F"));
-            fixBg.setCornerRadius(25);
-            fixBg.setStroke(5, Color.parseColor("#FFD700"));
-
-            fixBtn.setBackground(fixBg);
-
+            Button fixBtn = mkNeonGreenGoldBtn(gr ? "ΑΜΕΣΟΣ ΚΑΘΑΡΙΣΜΟΣ CACHE" : "QUICK CACHE CLEANUP");
             fixBtn.setOnClickListener(v -> {
                 Intent i = new Intent(this, AppListActivity.class);
                 i.putExtra("mode", "cache");
                 startActivity(i);
                 finish();
             });
-
-            root.addView(fixBtn);
+            fixBtn.setPadding(dp(14), dp(12), dp(14), dp(12));
+            LinearLayout.LayoutParams p =
+                    new LinearLayout.LayoutParams(
+                            ViewGroup.LayoutParams.MATCH_PARENT,
+                            ViewGroup.LayoutParams.WRAP_CONTENT
+                    );
+            p.topMargin = dp(10);
+            root.addView(fixBtn, p);
         }
 
-        // ================= CLOSE BUTTON =================
-        Button closeBtn = new Button(this);
-        closeBtn.setText(gr ? "Αργότερα" : "Later");
-        closeBtn.setLayoutParams(btnParams);
-        closeBtn.setTextColor(Color.WHITE);
-        closeBtn.setAllCaps(false);
-
-        GradientDrawable closeBg = new GradientDrawable();
-        closeBg.setColor(Color.parseColor("#B00020"));
-        closeBg.setCornerRadius(25);
-
-        closeBtn.setBackground(closeBg);
+        // ================= CLOSE =================
+        Button closeBtn = mkRedGoldBtn(gr ? "LATER" : "LATER");
         closeBtn.setOnClickListener(v -> finish());
 
-        root.addView(closeBtn);
+        LinearLayout.LayoutParams p2 =
+                new LinearLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT
+                );
+        p2.topMargin = dp(12);
+        root.addView(closeBtn, p2);
 
         setContentView(scroll);
     }
 
     private String getSeverityText(boolean gr) {
 
-        if (severityLevel == 2) {
-            return gr ? "⚠ ΚΡΙΣΙΜΗ Κατάσταση"
-                      : "⚠ CRITICAL Condition";
-        } else if (severityLevel == 1) {
-            return gr ? "⚠ Μέτρια Επιβάρυνση"
-                      : "⚠ Moderate Load";
+        // CRITICAL RULES (your spec)
+        boolean criticalThermal = thermal && temp >= 45.0;
+        boolean criticalCrash   = crash; // always notify on 1 crash
+
+        int score = 0;
+        if (criticalCrash) score += 4;
+        if (criticalThermal) score += 4;
+
+        // moderate scoring
+        if (thermal) score += 2;
+        if (cpu) score += 1;
+        if (cache) score += 1;
+
+        if (criticalCrash || criticalThermal || score >= 6) {
+            return gr ? "⚠ ΚΡΙΣΙΜΗ Κατάσταση" : "⚠ CRITICAL Condition";
+        } else if (score >= 2) {
+            return gr ? "⚠ Μέτρια Επιβάρυνση" : "⚠ Moderate Load";
         } else {
-            return gr ? "Ήπια ένδειξη επιβάρυνσης"
-                      : "Minor system signal";
+            return gr ? "Ήπια ένδειξη επιβάρυνσης" : "Minor system signal";
         }
     }
 
@@ -229,39 +178,143 @@ public class OptimizerDiagnosticActivity extends AppCompatActivity {
         StringBuilder sb = new StringBuilder();
 
         if (crash) {
-            sb.append(gr ?
-                    "• Εντοπίστηκε πρόσφατο crash / ANR.\n\n"
-                    : "• Recent crash / ANR detected.\n\n");
+            sb.append(gr
+                    ? "• Εντοπίστηκε πρόσφατο crash / ANR / low-memory.\n\n"
+                    : "• Recent crash / ANR / low-memory detected.\n\n");
         }
 
         if (thermal) {
-            sb.append(gr ?
-                    "• Θερμοκρασία: " + temp + "°C\n\n"
-                    : "• Temperature: " + temp + "°C\n\n");
+            String t = (temp > 0 ? String.format("%.1f", temp) : "—");
+            sb.append(gr
+                    ? "• Θερμοκρασία μπαταρίας: " + t + "°C\n\n"
+                    : "• Battery temperature: " + t + "°C\n\n");
         }
 
         if (cpu && thermal) {
-            sb.append(gr ?
-                    "• Υψηλό CPU load σε συνδυασμό με θερμοκρασία.\n\n"
+            sb.append(gr
+                    ? "• Υψηλό CPU load σε συνδυασμό με θερμοκρασία.\n\n"
                     : "• High CPU load combined with thermal increase.\n\n");
+        } else if (cpu) {
+            sb.append(gr
+                    ? "• Παρατηρήθηκε στιγμιαίο CPU spike.\n\n"
+                    : "• A short CPU spike was detected.\n\n");
         }
 
         if (cache) {
-            sb.append(gr ?
-                    "• Υψηλή προσωρινή μνήμη εφαρμογών.\n\n"
+            sb.append(gr
+                    ? "• Υψηλή προσωρινή μνήμη (cache) εφαρμογών.\n\n"
                     : "• High application cache usage.\n\n");
         }
 
         if (sb.length() == 0) {
-            sb.append(gr ?
-                    "Δεν εντοπίστηκε σοβαρή ανωμαλία."
+            sb.append(gr
+                    ? "Δεν εντοπίστηκε σοβαρή ανωμαλία."
                     : "No major anomaly detected.");
         } else {
-            sb.append(gr ?
-                    "Συνιστάται πλήρης έλεγχος για επιβεβαίωση."
-                    : "A full diagnostic is recommended.");
+            sb.append(gr
+                    ? "Συνιστάται έλεγχος για επιβεβαίωση."
+                    : "A diagnostic is recommended.");
         }
 
-        return sb.toString();
+        return sb.toString().trim();
+    }
+
+    private String buildRecommendedLabsText(boolean gr) {
+
+        List<String> labs = new ArrayList<>();
+
+        // Crash path
+        if (crash) {
+            labs.add(gr ? "• LAB 14 — Stress / Stability" : "• LAB 14 — Stress / Stability");
+            labs.add(gr ? "• LAB 15 — Thermal / Overheat Analysis" : "• LAB 15 — Thermal / Overheat Analysis");
+            labs.add(gr ? "• LAB 19 — Installed Apps Impact Analysis" : "• LAB 19 — Installed Apps Impact Analysis");
+        }
+
+        // Thermal path
+        if (thermal) {
+            labs.add(gr ? "• LAB 15 — Thermal / Overheat Analysis" : "• LAB 15 — Thermal / Overheat Analysis");
+            labs.add(gr ? "• LAB 14 — Stress / Stability" : "• LAB 14 — Stress / Stability");
+        }
+
+        // CPU spike path
+        if (cpu) {
+            labs.add(gr ? "• LAB 14 — Stress / Stability" : "• LAB 14 — Stress / Stability");
+            labs.add(gr ? "• LAB 19 — Installed Apps Impact Analysis" : "• LAB 19 — Installed Apps Impact Analysis");
+        }
+
+        // Cache path
+        if (cache) {
+            labs.add(gr ? "• App Cache Cleanup (App Manager)" : "• App Cache Cleanup (App Manager)");
+            labs.add(gr ? "• LAB 19 — Installed Apps Impact Analysis" : "• LAB 19 — Installed Apps Impact Analysis");
+        }
+
+        // de-dup
+        List<String> uniq = new ArrayList<>();
+        for (String s : labs) if (!uniq.contains(s)) uniq.add(s);
+
+        if (uniq.isEmpty()) {
+            return gr
+                    ? "• Προαιρετικά: LAB 19 — Installed Apps Impact Analysis\n• Προαιρετικά: LAB 14 — Stress / Stability"
+                    : "• Optional: LAB 19 — Installed Apps Impact Analysis\n• Optional: LAB 14 — Stress / Stability";
+        }
+
+        StringBuilder sb = new StringBuilder();
+        for (String s : uniq) sb.append(s).append("\n");
+        return sb.toString().trim();
+    }
+
+    // =========================
+    // GEL BUTTONS
+    // =========================
+    private Button mkNeonGreenGoldBtn(String text) {
+        Button b = new Button(this);
+        b.setText(text);
+        b.setAllCaps(false);
+        b.setTextColor(Color.BLACK);
+        b.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
+        b.setTypeface(null, Typeface.BOLD);
+        b.setPadding(dp(14), dp(12), dp(14), dp(12));
+
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(0xFF00FF7F);     // neon green
+        bg.setCornerRadius(dp(12));
+        bg.setStroke(dp(3), 0xFFFFD700); // gold
+        b.setBackground(bg);
+
+        LinearLayout.LayoutParams p =
+                new LinearLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT
+                );
+        p.topMargin = dp(8);
+        b.setLayoutParams(p);
+
+        return b;
+    }
+
+    private Button mkRedGoldBtn(String text) {
+        Button b = new Button(this);
+        b.setText(text);
+        b.setAllCaps(false);
+        b.setTextColor(Color.WHITE);
+        b.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
+        b.setTypeface(null, Typeface.BOLD);
+        b.setPadding(dp(14), dp(12), dp(14), dp(12));
+
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(0xFFB00020);     // red
+        bg.setCornerRadius(dp(12));
+        bg.setStroke(dp(3), 0xFFFFD700); // gold
+        b.setBackground(bg);
+
+        return b;
+    }
+
+    private int dp(int v) {
+        return (int) TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP,
+                v,
+                getResources().getDisplayMetrics()
+        );
     }
 }

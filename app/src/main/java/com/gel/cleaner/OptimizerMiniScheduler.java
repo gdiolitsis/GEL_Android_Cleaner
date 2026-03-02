@@ -87,6 +87,14 @@ public class OptimizerMiniScheduler extends Worker {
         OptimizerMiniHealthProbes.Result r =
                 OptimizerMiniHealthProbes.run(ctx, cacheHigh);
 
+        // ================= TEST FORCE =================
+r.crashSignal = true;
+r.cacheHigh = true;
+r.thermalHigh = true;
+r.temperature = 46.0;
+r.critical = true;
+// ==============================================
+
         // ==============================
         // SMART ESCALATION ENGINE
         // ==============================

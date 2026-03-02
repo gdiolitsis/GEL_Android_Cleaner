@@ -123,12 +123,16 @@ r.cpuSpike = true;
                             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                             .setAutoCancel(true);
 
-            // ==============================
-            // CLICK ACTION
-            // ==============================
+// ==============================
+// CLICK ACTION
+// ==============================
 Intent intent = new Intent(ctx, MainActivity.class);
-intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+
+// 🔴 force new clean task ώστε να περάσουν σίγουρα τα extras
+intent.setFlags(
+        Intent.FLAG_ACTIVITY_NEW_TASK |
+        Intent.FLAG_ACTIVITY_CLEAR_TASK
+);
 
 intent.putExtra("mini_cpu", r.cpuSpike);
 intent.putExtra("mini_thermal", r.thermalHigh);
@@ -136,15 +140,14 @@ intent.putExtra("mini_crash", r.crashSignal);
 intent.putExtra("mini_cache", r.cacheHigh);
 intent.putExtra("mini_temp", r.temperature);
 
-            intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-            PendingIntent pi = PendingIntent.getActivity(
-                    ctx,
-                    19001,
-                    intent,
-                    PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
-            );
+PendingIntent pi = PendingIntent.getActivity(
+        ctx,
+        19001,
+        intent,
+        PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+);
 
-            nb.setContentIntent(pi);
+nb.setContentIntent(pi);
 
             NotificationManagerCompat.from(ctx).notify(19001, nb.build());
 

@@ -353,7 +353,7 @@ private void showSettingsDialog() {
     LinearLayout row = new LinearLayout(this);
     row.setOrientation(LinearLayout.HORIZONTAL);
     row.setGravity(Gravity.CENTER);
-    row.setPadding(0, dp(110), 0, 0);
+    row.setPadding(0, dp(18), 0, 0);
 
     android.widget.Button btnCancel = new android.widget.Button(this);
     btnCancel.setText(gr ? "Άκυρο" : "Cancel");
@@ -367,7 +367,7 @@ private void showSettingsDialog() {
     btnSave.setTextColor(Color.WHITE);
     btnSave.setBackground(makeGelBtn(0xFF00FF7F)); // neon green
 
-    LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, dp(44), 1f);
+    LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, dp(110), 1f);
     lp.setMargins(dp(6), 0, dp(6), 0);
     row.addView(btnCancel, lp);
     row.addView(btnSave, lp);

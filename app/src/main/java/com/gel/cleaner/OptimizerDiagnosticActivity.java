@@ -108,7 +108,11 @@ public class OptimizerDiagnosticActivity extends AppCompatActivity {
         root.addView(labs);
 
         // ================= ACTION BUTTON =================
-        Button runBtn = mkNeonGreenGoldBtn(gr ? "RUN RECOMMENDED TESTS" : "RUN RECOMMENDED TESTS");
+        Button runBtn = mkNeonGreenGoldBtn(
+        gr
+                ? "ΕΚΤΕΛΕΣΗ ΠΡΟΤΕΙΝΟΜΕΝΩΝ ΕΡΓΑΣΤΗΡΙΩΝ"
+                : "RUN RECOMMENDED LABS"
+);
         runBtn.setOnClickListener(v -> {
             startActivity(new Intent(this, ManualTestsActivity.class));
             finish();
@@ -135,7 +139,7 @@ public class OptimizerDiagnosticActivity extends AppCompatActivity {
         }
 
         // ================= CLOSE =================
-        Button closeBtn = mkRedGoldBtn(gr ? "LATER" : "LATER");
+        Button closeBtn = mkRedGoldBtn(gr ? "ΑΡΓΟΤΕΡΑ" : "LATER");
         closeBtn.setOnClickListener(v -> finish());
 
         LinearLayout.LayoutParams p2 =

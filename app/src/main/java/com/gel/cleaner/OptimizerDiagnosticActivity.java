@@ -1,9 +1,14 @@
 package com.gel.cleaner;
 
+import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
 import android.content.Intent;
 import android.graphics.Color;
+import android.graphics.Typeface;
+import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.view.Gravity;
+import android.view.animation.DecelerateInterpolator;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
@@ -19,10 +24,13 @@ public class OptimizerDiagnosticActivity extends AppCompatActivity {
     private boolean cache;
     private double temp;
 
+    private int severityLevel; // 0=minor,1=moderate,2=critical
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         readExtras();
+        evaluateSeverity();
         buildUI();
     }
 
@@ -37,6 +45,31 @@ public class OptimizerDiagnosticActivity extends AppCompatActivity {
         temp    = i.getDoubleExtra("mini_temp", 0);
     }
 
+    private void evaluateSeverity() {
+
+        if (crash) {
+            severityLevel = 2;
+            return;
+        }
+
+        if (thermal && temp >= 45.0) {
+            severityLevel = 2;
+            return;
+        }
+
+        if (cpu && thermal) {
+            severityLevel = 1;
+            return;
+        }
+
+        if (cache) {
+            severityLevel = 1;
+            return;
+        }
+
+        severityLevel = 0;
+    }
+
     private void buildUI() {
 
         boolean gr = AppLang.isGreek(this);
@@ -45,25 +78,34 @@ public class OptimizerDiagnosticActivity extends AppCompatActivity {
 
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(60, 80, 60, 60);
+        root.setPadding(60, 90, 60, 60);
         root.setBackgroundColor(Color.BLACK);
 
         scroll.addView(root);
 
         // ================= TITLE =================
         TextView title = new TextView(this);
-        title.setText(gr ? "GEL Smart Diagnostic"
-                : "GEL Smart Diagnostic");
+        title.setText("GEL Smart Diagnostic");
         title.setTextColor(Color.parseColor("#FFD700"));
         title.setTextSize(22f);
+        title.setTypeface(null, Typeface.BOLD);
         title.setGravity(Gravity.CENTER);
         root.addView(title);
 
         // ================= SEVERITY =================
         TextView severity = new TextView(this);
-        severity.setTextColor(Color.WHITE);
-        severity.setTextSize(16f);
-        severity.setPadding(0, 40, 0, 20);
+        severity.setTextSize(17f);
+        severity.setPadding(0, 50, 0, 20);
+        severity.setTypeface(null, Typeface.BOLD);
+
+        if (severityLevel == 2) {
+            severity.setTextColor(Color.parseColor("#FF3B3B"));
+        } else if (severityLevel == 1) {
+            severity.setTextColor(Color.parseColor("#FFA500"));
+        } else {
+            severity.setTextColor(Color.WHITE);
+        }
+
         severity.setText(getSeverityText(gr));
         root.addView(severity);
 
@@ -71,38 +113,98 @@ public class OptimizerDiagnosticActivity extends AppCompatActivity {
         TextView details = new TextView(this);
         details.setTextColor(Color.parseColor("#00FF7F"));
         details.setTextSize(15f);
-        details.setPadding(0, 20, 0, 40);
+        details.setPadding(0, 20, 0, 60);
         details.setText(buildDetailedMessage(gr));
         root.addView(details);
 
-        // ================= ACTION BUTTON =================
+        LinearLayout.LayoutParams btnParams =
+                new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                );
+        btnParams.setMargins(0, 25, 0, 25);
+
+        // ================= RUN BUTTON =================
         Button runBtn = new Button(this);
         runBtn.setText(gr ? "Προτεινόμενος Έλεγχος"
                 : "Run Recommended Tests");
+
+        runBtn.setLayoutParams(btnParams);
+        runBtn.setTextColor(Color.BLACK);
+        runBtn.setTextSize(16f);
+        runBtn.setAllCaps(false);
+
+        GradientDrawable runBg = new GradientDrawable();
+        runBg.setColor(Color.parseColor("#00FF7F"));
+        runBg.setCornerRadius(25);
+        runBg.setStroke(5, Color.parseColor("#FFD700"));
+        runBtn.setBackground(runBg);
+
         runBtn.setOnClickListener(v -> {
             startActivity(new Intent(this, ManualTestsActivity.class));
             finish();
         });
+
         root.addView(runBtn);
 
-        // ================= QUICK FIX =================
+        // 🔥 Pulse animation if critical
+        if (severityLevel == 2) {
+            ObjectAnimator scaleX = ObjectAnimator.ofFloat(runBtn, "scaleX", 1f, 1.05f);
+            ObjectAnimator scaleY = ObjectAnimator.ofFloat(runBtn, "scaleY", 1f, 1.05f);
+            scaleX.setDuration(800);
+            scaleY.setDuration(800);
+            scaleX.setRepeatMode(ValueAnimator.REVERSE);
+            scaleY.setRepeatMode(ValueAnimator.REVERSE);
+            scaleX.setRepeatCount(ValueAnimator.INFINITE);
+            scaleY.setRepeatCount(ValueAnimator.INFINITE);
+            scaleX.setInterpolator(new DecelerateInterpolator());
+            scaleY.setInterpolator(new DecelerateInterpolator());
+            scaleX.start();
+            scaleY.start();
+        }
+
+        // ================= QUICK FIX (Cache Only) =================
         if (cache && !crash) {
+
             Button fixBtn = new Button(this);
             fixBtn.setText(gr ? "Άμεσος Καθαρισμός Cache"
                     : "Quick Cache Cleanup");
+
+            fixBtn.setLayoutParams(btnParams);
+            fixBtn.setTextColor(Color.BLACK);
+            fixBtn.setAllCaps(false);
+
+            GradientDrawable fixBg = new GradientDrawable();
+            fixBg.setColor(Color.parseColor("#00FF7F"));
+            fixBg.setCornerRadius(25);
+            fixBg.setStroke(5, Color.parseColor("#FFD700"));
+
+            fixBtn.setBackground(fixBg);
+
             fixBtn.setOnClickListener(v -> {
                 Intent i = new Intent(this, AppListActivity.class);
                 i.putExtra("mode", "cache");
                 startActivity(i);
                 finish();
             });
+
             root.addView(fixBtn);
         }
 
-        // ================= CLOSE =================
+        // ================= CLOSE BUTTON =================
         Button closeBtn = new Button(this);
         closeBtn.setText(gr ? "Αργότερα" : "Later");
+        closeBtn.setLayoutParams(btnParams);
+        closeBtn.setTextColor(Color.WHITE);
+        closeBtn.setAllCaps(false);
+
+        GradientDrawable closeBg = new GradientDrawable();
+        closeBg.setColor(Color.parseColor("#B00020"));
+        closeBg.setCornerRadius(25);
+
+        closeBtn.setBackground(closeBg);
         closeBtn.setOnClickListener(v -> finish());
+
         root.addView(closeBtn);
 
         setContentView(scroll);
@@ -110,17 +212,10 @@ public class OptimizerDiagnosticActivity extends AppCompatActivity {
 
     private String getSeverityText(boolean gr) {
 
-        int score = 0;
-
-        if (crash) score += 3;
-        if (thermal) score += 2;
-        if (cpu) score += 1;
-        if (cache) score += 1;
-
-        if (score >= 4) {
+        if (severityLevel == 2) {
             return gr ? "⚠ ΚΡΙΣΙΜΗ Κατάσταση"
                       : "⚠ CRITICAL Condition";
-        } else if (score >= 2) {
+        } else if (severityLevel == 1) {
             return gr ? "⚠ Μέτρια Επιβάρυνση"
                       : "⚠ Moderate Load";
         } else {

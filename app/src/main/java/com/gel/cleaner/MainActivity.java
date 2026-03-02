@@ -242,13 +242,6 @@ if (savedInstanceState == null) {
     }
 }
 
-// ==============================
-// GEL DP HELPER
-// ==============================
-public int dp(int v) {
-    return (int) (getResources().getDisplayMetrics().density * v);
-}
-
 private void showSettingsDialog() {
 
     final boolean gr = AppLang.isGreek(this);
@@ -975,7 +968,7 @@ t.setTextColor(Color.WHITE);
 t.setTextSize(20f);
 t.setTypeface(null, Typeface.BOLD);
 t.setGravity(Gravity.CENTER);
-t.setPadding(0, 0, 0, dp(18));
+t.setPadding(0, 0, 0, dp(36));
 root.addView(t);
 
 // ================= ANDROID BUTTON =================
@@ -998,7 +991,7 @@ androidBtn.setBackground(bgAndroid);
 LinearLayout.LayoutParams lpBtn =
 new LinearLayout.LayoutParams(
 LinearLayout.LayoutParams.MATCH_PARENT,
-dp(110)
+dp(220)
 );
 lpBtn.setMargins(dp(8), dp(10), dp(8), 0);
 androidBtn.setLayoutParams(lpBtn);
@@ -1023,7 +1016,7 @@ appleBtn.setBackground(bgApple);
 LinearLayout.LayoutParams lpBtn2 =
 new LinearLayout.LayoutParams(
 LinearLayout.LayoutParams.MATCH_PARENT,
-dp(110)
+dp(220)
 );
 lpBtn2.setMargins(dp(8), dp(14), dp(8), 0);
 appleBtn.setLayoutParams(lpBtn2);

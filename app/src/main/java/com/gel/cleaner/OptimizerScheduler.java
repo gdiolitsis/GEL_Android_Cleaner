@@ -1,5 +1,5 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
-// OptimizerScheduler.java — FINAL (Reminder Notifications • No background work • Exact + Doze-safe)
+// OptimizerScheduler.java — FINAL (Reminder Notifications • No background work)
 // ⚠️ Reminder: Always return the final code ready for copy-paste (no extra explanations / no questions).
 
 package com.gel.cleaner;
@@ -9,7 +9,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.os.Build;
+import android.os.SystemClock;
 
 public final class OptimizerScheduler {
 
@@ -17,28 +17,26 @@ public final class OptimizerScheduler {
     private static final String K_REMINDER_ENABLED = "reminder_enabled";
     private static final String K_REMINDER_INTERVAL = "reminder_interval"; // 1,7,30
 
-    private static final int REQ_CODE = 7771;
-
     private OptimizerScheduler() {}
-
-    // ============================
-    // PUBLIC API
-    // ============================
 
     public static void enableReminder(Context c, int daysInterval) {
         if (c == null) return;
+        if (daysInterval <= 0) daysInterval = 7;
 
-        int safeDays = normalizeDays(daysInterval);
+        // clamp
+        if (daysInterval != 1 && daysInterval != 7 && daysInterval != 30) {
+            daysInterval = 7;
+        }
 
         try {
             c.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
                     .edit()
                     .putBoolean(K_REMINDER_ENABLED, true)
-                    .putInt(K_REMINDER_INTERVAL, safeDays)
+                    .putInt(K_REMINDER_INTERVAL, daysInterval)
                     .apply();
         } catch (Throwable ignore) {}
 
-        scheduleNext(c, safeDays, true);
+        schedule(c, daysInterval);
     }
 
     public static void disableReminder(Context c) {
@@ -68,13 +66,14 @@ public final class OptimizerScheduler {
     public static int getReminderDays(Context c) {
         if (c == null) return 7;
 
+        int days = 7;
         try {
-            int d = c.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-                    .getInt(K_REMINDER_INTERVAL, 7);
-            return normalizeDays(d);
+            SharedPreferences sp = c.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+            days = sp.getInt(K_REMINDER_INTERVAL, 7);
         } catch (Throwable ignore) {}
 
-        return 7;
+        if (days != 1 && days != 7 && days != 30) days = 7;
+        return days;
     }
 
     public static void rescheduleIfEnabled(Context c) {
@@ -84,83 +83,65 @@ public final class OptimizerScheduler {
         int days = 7;
 
         try {
-            SharedPreferences sp = c.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+            SharedPreferences sp =
+                    c.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+
             en = sp.getBoolean(K_REMINDER_ENABLED, false);
             days = sp.getInt(K_REMINDER_INTERVAL, 7);
+
         } catch (Throwable ignore) {}
 
-        if (en) scheduleNext(c, normalizeDays(days), true);
+        if (days != 1 && days != 7 && days != 30) days = 7;
+
+        if (en) schedule(c, days);
         else cancel(c);
     }
 
-    // Called by OptimizerReminderReceiver AFTER showing notification
-    public static void scheduleNextFromReceiver(Context c) {
-        if (c == null) return;
+    private static void schedule(Context c, int daysInterval) {
 
-        boolean en = isReminderEnabled(c);
-        if (!en) {
-            cancel(c);
-            return;
-        }
+        long intervalMs = daysInterval * 24L * 60L * 60L * 1000L;
 
-        int days = getReminderDays(c);
-        scheduleNext(c, days, false);
-    }
-
-    // ============================
-    // INTERNAL
-    // ============================
-
-    private static int normalizeDays(int d) {
-        if (d == 1 || d == 7 || d == 30) return d;
-        return 7;
-    }
-
-    private static PendingIntent buildPI(Context c) {
         Intent i = new Intent(c, OptimizerReminderReceiver.class);
-        return PendingIntent.getBroadcast(
+        PendingIntent pi = PendingIntent.getBroadcast(
                 c,
-                REQ_CODE,
+                7771,
                 i,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
-    }
-
-    private static void scheduleNext(Context c, int daysInterval, boolean resetNow) {
 
         AlarmManager am = (AlarmManager) c.getSystemService(Context.ALARM_SERVICE);
         if (am == null) return;
 
-        PendingIntent pi = buildPI(c);
+        long first = SystemClock.elapsedRealtime() + (2L * 60L * 60L * 1000L);
 
         try { am.cancel(pi); } catch (Throwable ignore) {}
 
-        long now = System.currentTimeMillis();
-        long intervalMs = daysInterval * 24L * 60L * 60L * 1000L;
-
-        // First run: +2 hours (as you had). Next runs: +interval from "now" (receiver will call scheduleNextFromReceiver).
-        long triggerAt = resetNow
-                ? (now + (2L * 60L * 60L * 1000L))
-                : (now + intervalMs);
-
         try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pi);
-            } else {
-                am.setExact(AlarmManager.RTC_WAKEUP, triggerAt, pi);
-            }
+            am.setInexactRepeating(
+                    AlarmManager.ELAPSED_REALTIME_WAKEUP,
+                    first,
+                    intervalMs,
+                    pi
+            );
         } catch (Throwable ignore) {
             try {
-                am.set(AlarmManager.RTC_WAKEUP, triggerAt, pi);
+                am.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, first, pi);
             } catch (Throwable ignored) {}
         }
     }
 
     private static void cancel(Context c) {
+
+        Intent i = new Intent(c, OptimizerReminderReceiver.class);
+        PendingIntent pi = PendingIntent.getBroadcast(
+                c,
+                7771,
+                i,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+        );
+
         AlarmManager am = (AlarmManager) c.getSystemService(Context.ALARM_SERVICE);
         if (am == null) return;
-
-        PendingIntent pi = buildPI(c);
 
         try { am.cancel(pi); } catch (Throwable ignore) {}
     }

@@ -7,12 +7,22 @@
     android:background="@color/gel_bg">
 
     <!-- ROOT -->
+   
     <LinearLayout
         android:orientation="vertical"
         android:padding="12dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center_horizontal">
+        
+<androidx.appcompat.widget.Toolbar
+    android:id="@+id/gelToolbar"
+    android:layout_width="match_parent"
+    android:layout_height="56dp"
+    android:background="#000000"
+    android:elevation="8dp"
+    android:titleTextColor="#FFD700"/>
+        
 
         <!-- ================================================= -->
         <!-- HEADER -->

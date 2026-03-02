@@ -255,6 +255,10 @@ private void showSmartMiniDiagnostic(
         boolean cache,
         double temp
 ) {
+	
+	Toast.makeText(this, "Mini diagnostic called", Toast.LENGTH_LONG).show();
+
+cpu = true;
 
     final boolean gr = AppLang.isGreek(this);
 

@@ -239,6 +239,57 @@ protected void onNewIntent(Intent intent) {
     }
 }
 
+private void showSettingsDialog() {
+
+    SharedPreferences sp =
+            getSharedPreferences("gel_prefs", MODE_PRIVATE);
+
+    boolean miniEnabled =
+            sp.getBoolean("pulse_enabled", false);
+
+    final boolean gr = AppLang.isGreek(this);
+
+    androidx.appcompat.app.AlertDialog.Builder b =
+            new androidx.appcompat.app.AlertDialog.Builder(this);
+
+    b.setTitle(gr ? "Ρυθμίσεις GEL" : "GEL Settings");
+
+    android.widget.LinearLayout root =
+            new android.widget.LinearLayout(this);
+    root.setOrientation(android.widget.LinearLayout.VERTICAL);
+    root.setPadding(60, 40, 60, 20);
+
+    android.widget.CheckBox miniCheck =
+            new android.widget.CheckBox(this);
+
+    miniCheck.setText(gr
+            ? "Mini Check (09:00 / 15:00 / 21:00)"
+            : "Mini Check (09:00 / 15:00 / 21:00)");
+
+    miniCheck.setChecked(miniEnabled);
+
+    root.addView(miniCheck);
+
+    b.setView(root);
+
+    b.setPositiveButton(gr ? "Αποθήκευση" : "Save", (d, w) -> {
+
+        boolean enabled = miniCheck.isChecked();
+
+        sp.edit().putBoolean("pulse_enabled", enabled).apply();
+
+        if (enabled) {
+            OptimizerMiniPulseScheduler.enable(this);
+        } else {
+            OptimizerMiniPulseScheduler.disable(this);
+        }
+    });
+
+    b.setNegativeButton(gr ? "Κλείσιμο" : "Close", null);
+
+    b.show();
+}
+
 private void handleMiniSignals(Intent intent) {
 
     boolean cpu = intent.getBooleanExtra("mini_cpu", false);

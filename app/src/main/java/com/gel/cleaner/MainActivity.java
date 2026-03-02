@@ -19,7 +19,10 @@ import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.SharedPreferences;
 import android.graphics.*;
+import android.graphics.Color;
 import android.graphics.drawable.*;
+import android.graphics.drawable.GradientDrawable;
+import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -30,7 +33,14 @@ import android.provider.Settings;
 import android.speech.tts.TextToSpeech;
 import android.util.TypedValue;
 import android.view.*;
+import android.view.Gravity;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.*;
+import android.widget.LinearLayout;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
@@ -58,21 +68,25 @@ private TextView welcomeMessage;
 private TextView txtLogs;
 private ScrollView scroll;
 
+// ==============================
+// MAINACTIVITY — ADD/REPLACE THESE METHODS
+// ==============================
+
 @Override
-public boolean onCreateOptionsMenu(android.view.Menu menu) {
-    menu.add(0, 1001, 0, "Settings")
-            .setShowAsAction(android.view.MenuItem.SHOW_AS_ACTION_ALWAYS);
+public boolean onCreateOptionsMenu(Menu menu) {
+    // ⚙ settings icon (always visible)
+    menu.add(0, 1001, 0, "")
+            .setIcon(R.drawable.ic_settings)
+            .setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
     return true;
 }
 
 @Override
-public boolean onOptionsItemSelected(android.view.MenuItem item) {
-
+public boolean onOptionsItemSelected(MenuItem item) {
     if (item.getItemId() == 1001) {
         showSettingsDialog();
         return true;
     }
-
     return super.onOptionsItemSelected(item);
 }
 
@@ -107,6 +121,10 @@ protected void onCreate(Bundle savedInstanceState) {
         findViewById(R.id.gelToolbar);
 
 setSupportActionBar(toolbar);
+
+if (getSupportActionBar() != null) {
+    getSupportActionBar().setTitle("");
+}
 
 if (getIntent() != null && getIntent().hasExtra("mini_cpu")) {
     handleMiniSignals(getIntent());
@@ -224,6 +242,190 @@ if (savedInstanceState == null) {
     }
 }
 
+// ==============================
+// GEL DP HELPER
+// ==============================
+private int dp(int v) {
+    return (int) (getResources().getDisplayMetrics().density * v);
+}
+
+private void showSettingsDialog() {
+
+    final boolean gr = AppLang.isGreek(this);
+
+    // ---- current states ----
+    SharedPreferences sp = getSharedPreferences("gel_prefs", MODE_PRIVATE);
+    boolean miniEnabled = sp.getBoolean("pulse_enabled", false);
+
+    boolean schedEnabled = OptimizerScheduler.isReminderEnabled(this);
+    int schedDays = OptimizerScheduler.getReminderDays(this); // 1/7/30 (default 7)
+
+    // ---- GEL dialog root ----
+    LinearLayout box = new LinearLayout(this);
+    box.setOrientation(LinearLayout.VERTICAL);
+    box.setPadding(dp(18), dp(16), dp(18), dp(14));
+
+    GradientDrawable bg = new GradientDrawable();
+    bg.setColor(0xFF0B0B0B);
+    bg.setCornerRadius(dp(18));
+    bg.setStroke(dp(3), 0xFFFFD700);
+    box.setBackground(bg);
+
+    TextView title = new TextView(this);
+    title.setText(gr ? "Ρυθμίσεις" : "Settings");
+    title.setTextColor(Color.WHITE);
+    title.setTypeface(Typeface.DEFAULT_BOLD);
+    title.setTextSize(18f);
+    title.setGravity(Gravity.CENTER);
+    title.setPadding(0, 0, 0, dp(10));
+    box.addView(title);
+
+    // ==============================
+    // MINI CHECK (3 φορές/ημέρα 09-15-21)
+    // ==============================
+    final android.widget.CheckBox cbMini = new android.widget.CheckBox(this);
+    cbMini.setChecked(miniEnabled);
+    cbMini.setText(gr
+            ? "Mini Check — 3 φορές/ημέρα (09:00 • 15:00 • 21:00)"
+            : "Mini Check — 3/day (09:00 • 15:00 • 21:00)");
+    cbMini.setTextColor(0xFF00FF7F);
+    cbMini.setPadding(0, dp(6), 0, dp(10));
+    box.addView(cbMini);
+
+    TextView miniHint = new TextView(this);
+    miniHint.setText(gr
+            ? "Στέλνει ειδοποίηση μόνο σε Critical (Crash / ≥45°C / Escalation)."
+            : "Notifies only on Critical (Crash / ≥45°C / Escalation).");
+    miniHint.setTextColor(0xFFB0B0B0);
+    miniHint.setTextSize(13f);
+    miniHint.setPadding(0, 0, 0, dp(14));
+    box.addView(miniHint);
+
+    // ==============================
+    // OPTIMIZER SCHEDULER (reminder) ON/OFF + 1/7/30
+    // ==============================
+    TextView sep = new TextView(this);
+    sep.setText("────────────────────────");
+    sep.setTextColor(0xFF333333);
+    sep.setGravity(Gravity.CENTER);
+    sep.setPadding(0, dp(2), 0, dp(10));
+    box.addView(sep);
+
+    final android.widget.CheckBox cbSched = new android.widget.CheckBox(this);
+    cbSched.setChecked(schedEnabled);
+    cbSched.setText(gr
+            ? "Optimizer Scheduler — Υπενθύμιση"
+            : "Optimizer Scheduler — Reminder");
+    cbSched.setTextColor(0xFFFFD700);
+    cbSched.setPadding(0, dp(6), 0, dp(6));
+    box.addView(cbSched);
+
+    final RadioGroup rg = new RadioGroup(this);
+    rg.setOrientation(LinearLayout.HORIZONTAL);
+    rg.setPadding(0, dp(4), 0, dp(10));
+
+    RadioButton r1 = new RadioButton(this);
+    r1.setText(gr ? "1 μέρα" : "1 day");
+    r1.setTextColor(Color.WHITE);
+
+    RadioButton r7 = new RadioButton(this);
+    r7.setText(gr ? "1 εβδομάδα" : "1 week");
+    r7.setTextColor(Color.WHITE);
+
+    RadioButton r30 = new RadioButton(this);
+    r30.setText(gr ? "1 μήνα" : "1 month");
+    r30.setTextColor(Color.WHITE);
+
+    rg.addView(r1);
+    rg.addView(r7);
+    rg.addView(r30);
+
+    if (schedDays == 1) rg.check(r1.getId());
+    else if (schedDays == 30) rg.check(r30.getId());
+    else rg.check(r7.getId());
+
+    rg.setEnabled(cbSched.isChecked());
+    for (int k = 0; k < rg.getChildCount(); k++) rg.getChildAt(k).setEnabled(cbSched.isChecked());
+
+    cbSched.setOnCheckedChangeListener((b, on) -> {
+        rg.setEnabled(on);
+        for (int k = 0; k < rg.getChildCount(); k++) rg.getChildAt(k).setEnabled(on);
+    });
+
+    box.addView(rg);
+
+    // ==============================
+    // BUTTONS
+    // ==============================
+    LinearLayout row = new LinearLayout(this);
+    row.setOrientation(LinearLayout.HORIZONTAL);
+    row.setGravity(Gravity.CENTER);
+    row.setPadding(0, dp(6), 0, 0);
+
+    android.widget.Button btnCancel = new android.widget.Button(this);
+    btnCancel.setText(gr ? "Άκυρο" : "Cancel");
+    btnCancel.setAllCaps(false);
+    btnCancel.setTextColor(Color.WHITE);
+    btnCancel.setBackground(makeGelBtn(0xFFAA1111)); // red
+
+    android.widget.Button btnSave = new android.widget.Button(this);
+    btnSave.setText(gr ? "Αποθήκευση" : "Save");
+    btnSave.setAllCaps(false);
+    btnSave.setTextColor(Color.BLACK);
+    btnSave.setBackground(makeGelBtn(0xFF00FF7F)); // neon green
+
+    LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, dp(44), 1f);
+    lp.setMargins(dp(6), 0, dp(6), 0);
+    row.addView(btnCancel, lp);
+    row.addView(btnSave, lp);
+
+    box.addView(row);
+
+    AlertDialog dlg = new AlertDialog.Builder(this)
+            .setView(box)
+            .setCancelable(true)
+            .create();
+
+    btnCancel.setOnClickListener(v -> dlg.dismiss());
+
+    btnSave.setOnClickListener(v -> {
+
+        // ---- mini check save ----
+        boolean newMini = cbMini.isChecked();
+        sp.edit().putBoolean("pulse_enabled", newMini).apply();
+
+        if (newMini) OptimizerMiniPulseScheduler.enable(this);
+        else OptimizerMiniPulseScheduler.disable(this);
+
+        // ---- scheduler save ----
+        boolean newSched = cbSched.isChecked();
+        if (newSched) {
+
+            int days = 7;
+            int checked = rg.getCheckedRadioButtonId();
+            if (checked == r1.getId()) days = 1;
+            else if (checked == r30.getId()) days = 30;
+
+            OptimizerScheduler.enableReminder(this, days);
+
+        } else {
+            OptimizerScheduler.disableReminder(this);
+        }
+
+        dlg.dismiss();
+    });
+
+    dlg.show();
+}
+
+private GradientDrawable makeGelBtn(int solidColor) {
+    GradientDrawable d = new GradientDrawable();
+    d.setColor(solidColor);
+    d.setCornerRadius(dp(14));
+    d.setStroke(dp(3), 0xFFFFD700);
+    return d;
+}
+
 @Override
 protected void onNewIntent(Intent intent) {
     super.onNewIntent(intent);
@@ -242,57 +444,6 @@ protected void onNewIntent(Intent intent) {
         String issue = intent.getStringExtra("gel_issue_type");
         showSmartDiagnosticPopup(issue);
     }
-}
-
-private void showSettingsDialog() {
-
-    SharedPreferences sp =
-            getSharedPreferences("gel_prefs", MODE_PRIVATE);
-
-    boolean miniEnabled =
-            sp.getBoolean("pulse_enabled", false);
-
-    final boolean gr = AppLang.isGreek(this);
-
-    androidx.appcompat.app.AlertDialog.Builder b =
-            new androidx.appcompat.app.AlertDialog.Builder(this);
-
-    b.setTitle(gr ? "Ρυθμίσεις GEL" : "GEL Settings");
-
-    android.widget.LinearLayout root =
-            new android.widget.LinearLayout(this);
-    root.setOrientation(android.widget.LinearLayout.VERTICAL);
-    root.setPadding(60, 40, 60, 20);
-
-    android.widget.CheckBox miniCheck =
-            new android.widget.CheckBox(this);
-
-    miniCheck.setText(gr
-            ? "Mini Check (09:00 / 15:00 / 21:00)"
-            : "Mini Check (09:00 / 15:00 / 21:00)");
-
-    miniCheck.setChecked(miniEnabled);
-
-    root.addView(miniCheck);
-
-    b.setView(root);
-
-    b.setPositiveButton(gr ? "Αποθήκευση" : "Save", (d, w) -> {
-
-        boolean enabled = miniCheck.isChecked();
-
-        sp.edit().putBoolean("pulse_enabled", enabled).apply();
-
-        if (enabled) {
-            OptimizerMiniPulseScheduler.enable(this);
-        } else {
-            OptimizerMiniPulseScheduler.disable(this);
-        }
-    });
-
-    b.setNegativeButton(gr ? "Κλείσιμο" : "Close", null);
-
-    b.show();
 }
 
 private void handleMiniSignals(Intent intent) {

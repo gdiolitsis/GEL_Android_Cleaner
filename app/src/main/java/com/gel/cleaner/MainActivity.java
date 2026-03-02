@@ -102,6 +102,11 @@ super.onResume();
 protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_main);
+   
+   androidx.appcompat.widget.Toolbar toolbar =
+        findViewById(R.id.gelToolbar);
+
+setSupportActionBar(toolbar);
 
 if (getIntent() != null && getIntent().hasExtra("mini_cpu")) {
     handleMiniSignals(getIntent());

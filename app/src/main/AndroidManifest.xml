@@ -101,6 +101,8 @@
         android:label="@string/app_name"
         android:theme="@style/Theme.GEL.DarkGold">
 
+        <activity android:name=".OptimizerDiagnosticActivity"/>
+
         <!-- ================= NEW OPTIMIZER ================= -->
         <activity
             android:name=".GuidedOptimizerActivity"

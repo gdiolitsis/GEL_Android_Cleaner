@@ -126,16 +126,14 @@ if (getIntent() != null && getIntent().hasExtra("mini_cpu")) {
     }
 }
 
-    // ================= ENTRY FLOW =================
+// ================= ENTRY FLOW =================
 boolean forceWelcome =
         getIntent().getBooleanExtra("force_welcome", false);
 
 boolean skipWelcomeOnce =
         getIntent().getBooleanExtra("skip_welcome_once", false);
 
-if (savedInstanceState == null) {
-
-    boolean fromMini = getIntent() != null &&
+boolean fromMini = getIntent() != null &&
                    getIntent().hasExtra("mini_cpu");
 
 if (savedInstanceState == null) {

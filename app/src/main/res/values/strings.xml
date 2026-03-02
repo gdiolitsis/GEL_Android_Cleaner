@@ -4,7 +4,7 @@
     <string name="app_name">GEL iDoctor</string>
 
     <!-- UI Sections -->
-    <string name="settings">Settings</string>
+    <string name="settings">SETTINGS</string>
     <string name="system">🛠 System</string>
     <string name="cleaner">🧹 Cleaner</string>
     <string name="junk">🗑 Junk</string>

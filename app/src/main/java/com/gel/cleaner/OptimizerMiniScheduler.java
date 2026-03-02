@@ -268,6 +268,21 @@ r.critical = true;
 
         } catch (Throwable ignore) {}
 
+        // =====================================================
+// RE-ARM SAME SLOT FOR NEXT DAY (FIXED HOURS SYSTEM)
+// =====================================================
+
+int hour = getInputData().getInt("hour", -1);
+String workName = getInputData().getString("workName");
+
+if (hour != -1 && workName != null) {
+    OptimizerMiniPulseScheduler.reschedule(
+            ctx,
+            hour,
+            workName
+    );
+}
+
         return Result.success();
     }
 }

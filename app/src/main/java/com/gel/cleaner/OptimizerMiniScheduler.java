@@ -40,20 +40,7 @@ public class OptimizerMiniScheduler extends Worker {
             return Result.success();
         }
 
-        // ==============================
-        // 24h Anti-Spam Cooldown
-        // ==============================
-        long lastNotify = sp.getLong("last_mini_notify", 0);
-        long now = System.currentTimeMillis();
-
-        boolean bypassCooldown =
-        r.crashSignal ||
-        (r.thermalHigh && r.temperature >= 45.0);
-
-if (!bypassCooldown &&
-        now - lastNotify < 24L * 60L * 60L * 1000L) {
-    return Result.success();
-}
+        long nowTime = System.currentTimeMillis();
 
         // ==============================
         // Cache Check
@@ -94,176 +81,185 @@ if (!bypassCooldown &&
             }
         } catch (Throwable ignore) {}
 
-// ==============================
-// Run Health Probes
-// ==============================
-OptimizerMiniHealthProbes.Result r =
-        OptimizerMiniHealthProbes.run(ctx, cacheHigh);
+        // ==============================
+        // Run Health Probes
+        // ==============================
+        OptimizerMiniHealthProbes.Result r =
+                OptimizerMiniHealthProbes.run(ctx, cacheHigh);
 
-// ==============================
-// SMART ESCALATION ENGINE
-// ==============================
+        // ==============================
+        // SMART ESCALATION ENGINE
+        // ==============================
 
-long nowTime = System.currentTimeMillis();
+        boolean isCritical =
+                r.crashSignal ||
+                (r.thermalHigh && r.temperature >= 45.0);
 
-boolean isCritical =
-        r.crashSignal ||
-        (r.thermalHigh && r.temperature >= 45.0);
+        boolean isModerate =
+                (!isCritical) &&
+                (r.cpuSpike || r.cacheHigh || r.thermalHigh);
 
-boolean isModerate =
-        (!isCritical) &&
-        (r.cpuSpike || r.cacheHigh || r.thermalHigh);
+        if (isCritical) {
+            r.critical = true;
+        }
+        else if (isModerate) {
 
-if (isCritical) {
-    r.critical = true;
-}
-else if (isModerate) {
+            int moderateCount = sp.getInt("mini_moderate_count", 0);
+            long firstModerateTime = sp.getLong("mini_moderate_first_time", 0);
 
-    int moderateCount = sp.getInt("mini_moderate_count", 0);
-    long firstModerateTime = sp.getLong("mini_moderate_first_time", 0);
+            if (firstModerateTime == 0 ||
+                    nowTime - firstModerateTime > 24L * 60L * 60L * 1000L) {
 
-    if (firstModerateTime == 0 ||
-            nowTime - firstModerateTime > 24L * 60L * 60L * 1000L) {
+                moderateCount = 1;
+                firstModerateTime = nowTime;
 
-        moderateCount = 1;
-        firstModerateTime = nowTime;
+            } else {
+                moderateCount++;
+            }
 
-    } else {
-        moderateCount++;
-    }
+            sp.edit()
+                    .putInt("mini_moderate_count", moderateCount)
+                    .putLong("mini_moderate_first_time", firstModerateTime)
+                    .apply();
 
-    sp.edit()
-            .putInt("mini_moderate_count", moderateCount)
-            .putLong("mini_moderate_first_time", firstModerateTime)
-            .apply();
+            if (moderateCount >= 3) {
 
-    if (moderateCount >= 3) {
+                r.critical = true;
 
-        r.critical = true;
+                sp.edit()
+                        .putInt("mini_moderate_count", 0)
+                        .putLong("mini_moderate_first_time", 0)
+                        .apply();
+            }
+        }
 
-        sp.edit()
-                .putInt("mini_moderate_count", 0)
-                .putLong("mini_moderate_first_time", 0)
-                .apply();
-    }
-}
+        if (!r.critical) {
+            return Result.success();
+        }
 
-if (!r.critical) {
-    return Result.success();
-}
+        // ==============================
+        // COOLDOWN (Crash / 45°C bypass)
+        // ==============================
 
-// ==============================
-// NOTIFICATION TEXT
-// ==============================
+        long lastNotify = sp.getLong("last_mini_notify", 0);
 
-boolean gr = AppLang.isGreek(ctx);
+        boolean bypassCooldown =
+                r.crashSignal ||
+                (r.thermalHigh && r.temperature >= 45.0);
 
-String title;
-String body;
+        if (!bypassCooldown &&
+                nowTime - lastNotify < 24L * 60L * 60L * 1000L) {
+            return Result.success();
+        }
 
-if (r.crashSignal) {
+        // ==============================
+        // DYNAMIC NOTIFICATION TEXT
+        // ==============================
 
-    title = gr ? "⚠ Εντοπίστηκε Crash"
-               : "⚠ System Crash Detected";
+        boolean gr = AppLang.isGreek(ctx);
 
-    body = gr
-            ? "Παρατηρήθηκε πρόσφατο crash ή ANR."
-            : "A recent crash or ANR was detected.";
+        String title;
+        String body;
 
-}
-else if (r.thermalHigh && r.temperature >= 45.0) {
+        if (r.crashSignal) {
 
-    title = gr ? "🔥 Υψηλή Θερμοκρασία"
-               : "🔥 High Device Temperature";
+            title = gr ? "⚠ Εντοπίστηκε Crash"
+                       : "⚠ System Crash Detected";
 
-    body = gr
-            ? "Θερμοκρασία: " + r.temperature + "°C"
-            : "Temperature: " + r.temperature + "°C";
+            body = gr
+                    ? "Παρατηρήθηκε πρόσφατο crash ή ANR."
+                    : "A recent crash or ANR was detected.";
 
-}
-else if (r.cpuSpike && r.thermalHigh) {
+        }
+        else if (r.thermalHigh && r.temperature >= 45.0) {
 
-    title = gr ? "⚠ Υψηλό CPU & Θερμοκρασία"
-               : "⚠ High CPU & Thermal Load";
+            title = gr ? "🔥 Υψηλή Θερμοκρασία"
+                       : "🔥 High Device Temperature";
 
-    body = gr
-            ? "Αυξημένο CPU σε συνδυασμό με θερμοκρασία."
-            : "High CPU load combined with temperature rise.";
+            body = gr
+                    ? "Θερμοκρασία: " + r.temperature + "°C"
+                    : "Temperature: " + r.temperature + "°C";
 
-}
-else if (r.cpuSpike) {
+        }
+        else if (r.cpuSpike && r.thermalHigh) {
 
-    title = gr ? "📈 Υψηλό CPU Load"
-               : "📈 High CPU Usage";
+            title = gr ? "⚠ Υψηλό CPU & Θερμοκρασία"
+                       : "⚠ High CPU & Thermal Load";
 
-    body = gr
-            ? "Παρατηρήθηκε αυξημένη χρήση επεξεργαστή."
-            : "High processor usage detected.";
+            body = gr
+                    ? "Αυξημένο CPU σε συνδυασμό με θερμοκρασία."
+                    : "High CPU load combined with temperature rise.";
 
-}
-else if (r.cacheHigh) {
+        }
+        else if (r.cpuSpike) {
 
-    title = gr ? "🧹 Υψηλή Cache Εφαρμογών"
-               : "🧹 High App Cache Usage";
+            title = gr ? "📈 Υψηλό CPU Load"
+                       : "📈 High CPU Usage";
 
-    body = gr
-            ? "Μεγάλη προσωρινή μνήμη εφαρμογών."
-            : "Large application cache usage detected.";
+            body = gr
+                    ? "Παρατηρήθηκε αυξημένη χρήση επεξεργαστή."
+                    : "High processor usage detected.";
 
-}
-else {
+        }
+        else if (r.cacheHigh) {
 
-    title = gr ? "Ένδειξη Επιβάρυνσης"
-               : "Health Signal";
+            title = gr ? "🧹 Υψηλή Cache Εφαρμογών"
+                       : "🧹 High App Cache Usage";
 
-    body = gr
-            ? "Παρατηρήθηκε πιθανή επιβάρυνση."
-            : "Potential load detected.";
-}
+            body = gr
+                    ? "Μεγάλη προσωρινή μνήμη εφαρμογών."
+                    : "Large application cache usage detected.";
 
-try {
+        }
+        else {
 
-    NotificationCompat.Builder nb =
-            new NotificationCompat.Builder(ctx, "gel_default")
-                    .setSmallIcon(android.R.drawable.stat_notify_more)
-                    .setContentTitle(title)
-                    .setContentText(body)
-                    .setStyle(new NotificationCompat.BigTextStyle().bigText(body))
-                    .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-                    .setAutoCancel(true);
+            title = gr ? "Ένδειξη Επιβάρυνσης"
+                       : "Health Signal";
 
-    // ==============================
-    // CLICK ACTION
-    // ==============================
+            body = gr
+                    ? "Παρατηρήθηκε πιθανή επιβάρυνση."
+                    : "Potential load detected.";
+        }
 
-    Intent intent = new Intent(ctx, MainActivity.class);
+        try {
 
-    intent.setFlags(
-            Intent.FLAG_ACTIVITY_NEW_TASK |
-            Intent.FLAG_ACTIVITY_CLEAR_TASK
-    );
+            NotificationCompat.Builder nb =
+                    new NotificationCompat.Builder(ctx, "gel_default")
+                            .setSmallIcon(android.R.drawable.stat_notify_more)
+                            .setContentTitle(title)
+                            .setContentText(body)
+                            .setStyle(new NotificationCompat.BigTextStyle().bigText(body))
+                            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                            .setAutoCancel(true);
 
-    intent.putExtra("mini_cpu", r.cpuSpike);
-    intent.putExtra("mini_thermal", r.thermalHigh);
-    intent.putExtra("mini_crash", r.crashSignal);
-    intent.putExtra("mini_cache", r.cacheHigh);
-    intent.putExtra("mini_temp", r.temperature);
+            Intent intent = new Intent(ctx, MainActivity.class);
 
-    PendingIntent pi = PendingIntent.getActivity(
-            ctx,
-            19001,
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
-    );
+            intent.setFlags(
+                    Intent.FLAG_ACTIVITY_NEW_TASK |
+                    Intent.FLAG_ACTIVITY_CLEAR_TASK
+            );
 
-    nb.setContentIntent(pi);
+            intent.putExtra("mini_cpu", r.cpuSpike);
+            intent.putExtra("mini_thermal", r.thermalHigh);
+            intent.putExtra("mini_crash", r.crashSignal);
+            intent.putExtra("mini_cache", r.cacheHigh);
+            intent.putExtra("mini_temp", r.temperature);
 
-    NotificationManagerCompat.from(ctx).notify(19001, nb.build());
+            PendingIntent pi = PendingIntent.getActivity(
+                    ctx,
+                    19001,
+                    intent,
+                    PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+            );
 
-    sp.edit().putLong("last_mini_notify", nowTime).apply();
+            nb.setContentIntent(pi);
 
-} catch (Throwable ignore) {}
+            NotificationManagerCompat.from(ctx).notify(19001, nb.build());
 
-return Result.success();
+            sp.edit().putLong("last_mini_notify", nowTime).apply();
+
+        } catch (Throwable ignore) {}
+
+        return Result.success();
     }
 }

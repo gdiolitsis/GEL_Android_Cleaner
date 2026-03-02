@@ -1,1752 +1,3177 @@
-// GDiolitsis Engine Lab (GEL) - Author & Developer
-// MainActivity - STABLE FINAL
-// NOTE: Always return full file ready for copy-paste (no patch-only replies).
+// GDiolitsis Engine Lab (GEL)
+// GuidedOptimizerActivity — FINAL STABLE VERSION
 
 package com.gel.cleaner;
 
-import com.gel.cleaner.iphone.*;
-import com.gel.cleaner.base.*;
-
-import android.app.AppOpsManager;
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
+import android.app.AlertDialog;
 import android.app.usage.UsageStats;
 import android.app.usage.UsageStatsManager;
-import android.Manifest;
-import android.content.*;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
-import android.content.SharedPreferences;
-import android.graphics.*;
 import android.graphics.Color;
-import android.graphics.drawable.*;
-import android.graphics.drawable.GradientDrawable;
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
+import android.content.SharedPreferences;
 import android.graphics.Typeface;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
-import android.os.Process;
+import android.os.PowerManager;
 import android.provider.Settings;
-import android.speech.tts.TextToSpeech;
-import android.util.TypedValue;
-import android.view.*;
 import android.view.Gravity;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.widget.*;
+import android.view.View;
+import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.ScrollView;
 import android.widget.LinearLayout;
-import android.widget.RadioButton;
-import android.widget.RadioGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AlertDialog;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.work.WorkManager;
+import androidx.work.OneTimeWorkRequest;
 
-import java.util.ArrayList;
-import java.util.Locale;
 import java.util.List;
-import java.util.Map;
-import java.util.LinkedHashMap;
+import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 
-public class MainActivity extends GELAutoActivityHook
-implements GELCleaner.LogCallback {
+public final class GuidedOptimizerActivity extends AppCompatActivity {
 
-// =========================================================
-// STATE
-// =========================================================
+    private boolean gr;
+    private int step = 0;
+    
+    private AlertDialog currentDialog;
+    
+    private boolean returnedFromUsageScreen = false;
+    private boolean returnedFromDnsScreen = false;
+        
+    private String batteryVerdict = "STABLE";
+    private String dataVerdict = "STABLE";
+    private String appsVerdict = "STABLE";
 
-private boolean welcomeShown = false;
+    private static final int STEP_INTRO    = 0;
+    private static final int STEP_STORAGE  = 1;
+    private static final int STEP_BATTERY  = 2;
+    private static final int STEP_DATA     = 3;
+    private static final int STEP_APPS     = 4;
+    private static final int STEP_UNUSED = 5;
+    private static final int STEP_CACHE    = 6;
+    private static final int STEP_DNS = 7;
+    private static final int STEP_DEV_OPTIONS = 8;
+    private static final int STEP_QUEST    = 9;
+    private static final int STEP_LABS     = 10;
+    private static final int STEP_REMINDER = 11;
+    private static final int STEP_MINI_REMINDER = 12;
+    private static final int STEP_FINAL = 13;
 
-private TextView welcomeTitle;
-private TextView welcomeMessage;
+    private final ArrayList<String> symptoms = new ArrayList<>();
+    private boolean pulseEnabled = false;
+    
+    private boolean returnedFromDevScreen = false;
 
-private TextView txtLogs;
-private ScrollView scroll;
+    private static final String PREFS = "gel_prefs";
+    private static final String KEY_PULSE_ENABLED = "pulse_enabled";
+    private static final String KEY_REMINDER_ENABLED = "reminder_enabled";
+    
+    private boolean isSchedulerEnabled() {
 
-// ==============================
-// MAINACTIVITY — ADD/REPLACE THESE METHODS
-// ==============================
+        SharedPreferences sp =
+                getSharedPreferences(PREFS, MODE_PRIVATE);
 
-@Override
-public boolean onCreateOptionsMenu(Menu menu) {
-    // ⚙ settings icon (always visible)
-    menu.add(0, 1001, 0, "")
-            .setIcon(R.drawable.ic_settings)
-            .setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
-    return true;
-}
-
-@Override
-public boolean onOptionsItemSelected(MenuItem item) {
-    if (item.getItemId() == 1001) {
-        showSettingsDialog();
-        return true;
+        return sp.getBoolean(KEY_REMINDER_ENABLED, false);
     }
-    return super.onOptionsItemSelected(item);
+
+    private boolean isMiniPulseEnabled() {
+
+        SharedPreferences sp =
+                getSharedPreferences("gel_prefs", MODE_PRIVATE);
+
+        return sp.getBoolean("pulse_enabled", false);
+    }
+
+@Override
+protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+
+    // 🔥 IMMEDIATE TEST
+    WorkManager.getInstance(this)
+            .enqueue(
+                    new OneTimeWorkRequest.Builder(OptimizerMiniScheduler.class)
+                            .build()
+            );
+
+    gr = AppLang.isGreek(this);
+
+    // RESTORE CURRENT STEP (so we don't restart intro after returning / recreation)
+    if (savedInstanceState != null) {
+        step = savedInstanceState.getInt("gel_step", STEP_INTRO);
+        returnedFromUsageScreen = savedInstanceState.getBoolean("gel_returned_usage", false);
+
+        batteryVerdict = savedInstanceState.getString("gel_battery_verdict", "STABLE");
+        dataVerdict    = savedInstanceState.getString("gel_data_verdict", "STABLE");
+        appsVerdict    = savedInstanceState.getString("gel_apps_verdict", "STABLE");
+
+        ArrayList<String> s = savedInstanceState.getStringArrayList("gel_symptoms");
+        symptoms.clear();
+        if (s != null) symptoms.addAll(s);
+
+        // continue from where we left off
+        go(step);
+        return;
+    }
+
+    // FIRST LAUNCH ONLY
+    go(STEP_INTRO);
 }
 
-// =========================================================
-// PREFS
-// =========================================================
-private static final String PREFS = "gel_prefs";
-private static final String KEY_PLATFORM = "platform_mode";
-
-// =========================================================
-// LOCALE
-// =========================================================
 @Override
-protected void attachBaseContext(Context base) {
-super.attachBaseContext(LocaleHelper.apply(base));
+protected void onSaveInstanceState(Bundle out) {
+    super.onSaveInstanceState(out);
+
+    out.putInt("gel_step", step);
+    out.putBoolean("gel_returned_usage", returnedFromUsageScreen);
+
+    out.putString("gel_battery_verdict", batteryVerdict);
+    out.putString("gel_data_verdict", dataVerdict);
+    out.putString("gel_apps_verdict", appsVerdict);
+
+    out.putStringArrayList("gel_symptoms", new ArrayList<>(symptoms));
 }
 
 @Override
 protected void onResume() {
-super.onResume();
+    super.onResume();
+
+    // If we returned from Usage Access screen, just clear the flag.
+    // Do NOT restart flow here.
+    if (returnedFromUsageScreen) {
+        returnedFromUsageScreen = false;
+    }
+
+    // If we returned from Private DNS screen,
+    // just clear the flag and stay on the same step.
+    if (returnedFromDnsScreen) {
+        returnedFromDnsScreen = false;
+        showDnsHowToDialog();   // 👈 προσθήκη
+        return;                 // 👈 για να μην πέσει στο go(step)
+    }
+    
+    if (returnedFromDevScreen) {
+    returnedFromDevScreen = false;
+    showDevOptionsHowToDialog();
+    return;
 }
 
-// =========================================================
-// ON CREATE
-// =========================================================
-@Override
-protected void onCreate(Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
-    setContentView(R.layout.activity_main);
-   
-   androidx.appcompat.widget.Toolbar toolbar =
-        findViewById(R.id.gelToolbar);
-
-setSupportActionBar(toolbar);
-
-if (getSupportActionBar() != null) {
-    getSupportActionBar().setTitle("");
+    // Re-render current step (no auto-advance)
+    go(step);
 }
 
-if (getIntent() != null && getIntent().hasExtra("mini_cpu")) {
-    handleMiniSignals(getIntent());
+private void setPulseEnabled(boolean enabled) {
+    pulseEnabled = enabled;
+    getSharedPreferences(PREFS, MODE_PRIVATE)
+            .edit()
+            .putBoolean(KEY_PULSE_ENABLED, enabled)
+            .apply();
 }
-        
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 
-    NotificationChannel channel =
-            new NotificationChannel(
-                    "gel_default",
-                    "GEL Health Alerts",
-                    NotificationManager.IMPORTANCE_DEFAULT
-            );
+private boolean isPulseEnabled() {
+    return getSharedPreferences(PREFS, MODE_PRIVATE)
+            .getBoolean(KEY_PULSE_ENABLED, false);
+}
 
-    channel.setDescription("Device health & mini check notifications");
+private void scheduleMiniPulse3xDaily() {
+    try {
+        androidx.work.Constraints c =
+                new androidx.work.Constraints.Builder()
+                        .setRequiresBatteryNotLow(false)
+                        .build();
 
-    NotificationManager nm =
-            getSystemService(NotificationManager.class);
+        androidx.work.PeriodicWorkRequest req =
+                new androidx.work.PeriodicWorkRequest.Builder(
+                        OptimizerMiniScheduler.class,
+                        8, java.util.concurrent.TimeUnit.HOURS
+                )
+                .setConstraints(c)
+                .addTag("gel_mini_pulse")
+                .build();
 
-    if (nm != null) {
-        nm.createNotificationChannel(channel);
+        androidx.work.WorkManager.getInstance(this)
+                .enqueueUniquePeriodicWork(
+                        "gel_mini_pulse",
+                        androidx.work.ExistingPeriodicWorkPolicy.REPLACE,
+                        req
+                );
+
+    } catch (Throwable ignore) {}
+}
+
+private void cancelMiniPulse() {
+    try {
+        androidx.work.WorkManager.getInstance(this)
+                .cancelUniqueWork("gel_mini_pulse");
+    } catch (Throwable ignore) {}
+}
+
+// ============================================================
+// ✅ SYSTEM APP FILTER (DROP SYSTEM APPS FROM GUIDED LISTS)
+// Paste inside GuidedOptimizerActivity (anywhere in class scope)
+// ============================================================
+private boolean isSystemPkg(String pkg) {
+    if (pkg == null) return true;
+    try {
+        ApplicationInfo ai = getPackageManager().getApplicationInfo(pkg, 0);
+        return (ai.flags & ApplicationInfo.FLAG_SYSTEM) != 0
+                || (ai.flags & ApplicationInfo.FLAG_UPDATED_SYSTEM_APP) != 0;
+    } catch (Throwable t) {
+        return true; // safest
     }
 }
 
-    txtLogs = findViewById(R.id.txtLogs);
-    scroll = findViewById(R.id.scrollRoot);
+private int dp(int v) {
+    return (int) android.util.TypedValue.applyDimension(
+            android.util.TypedValue.COMPLEX_UNIT_DIP,
+            v,
+            getResources().getDisplayMetrics()
+    );
+}
 
-    setupLangButtons();
-    setupDonate();
-    setupButtons();
-    
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-    if (checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS)
-            != PackageManager.PERMISSION_GRANTED) {
+private void addSection(
+        LinearLayout root,
+        String title,
+        String body,
+        int color) {
 
-        requestPermissions(
-                new String[]{android.Manifest.permission.POST_NOTIFICATIONS},
-                1001
+    TextView t = new TextView(this);
+    t.setText(title);
+    t.setTextColor(color);
+    t.setTextSize(16f);
+    t.setTypeface(null, android.graphics.Typeface.BOLD);
+    t.setPadding(0, dp(12), 0, dp(6));
+    root.addView(t);
+
+    TextView b = new TextView(this);
+    b.setText(body);
+    b.setTextColor(android.graphics.Color.WHITE);
+    b.setTextSize(14f);
+    b.setPadding(0, 0, 0, dp(10));
+    root.addView(b);
+}
+
+// ============================================================
+// LIMIT + ADD (APPS UI HELPER)
+// NOTE: Always return full code ready for copy-paste (no patch-only replies).
+// ============================================================
+private void limitAndAdd(LinearLayout root, ArrayList<AppRisk> list) {
+
+    if (root == null || list == null || list.isEmpty()) return;
+
+    final int LIMIT = 12;
+    int shown = 0;
+
+    PackageManager pm = getPackageManager();
+
+    for (AppRisk r : list) {
+
+        if (++shown > LIMIT) break;
+
+        String label = r.packageName;
+
+        try {
+            ApplicationInfo ai = pm.getApplicationInfo(r.packageName, 0);
+            CharSequence cs = pm.getApplicationLabel(ai);
+            if (cs != null) label = cs.toString();
+        } catch (Throwable ignore) {}
+
+        TextView tv = new TextView(this);
+        tv.setText("• " + label + "  (" + r.minutes + " min)");
+        tv.setTextColor(0xFF00FF7F);
+        tv.setPadding(0, dp(8), 0, dp(8));
+
+        root.addView(tv);
+    }
+
+    if (list.size() > LIMIT) {
+        TextView more = new TextView(this);
+        more.setText(gr
+                ? ("(+" + (list.size() - LIMIT) + " ακόμη)")
+                : ("(+" + (list.size() - LIMIT) + " more)"));
+        more.setTextColor(0xFFAAAAAA);
+        more.setPadding(0, dp(8), 0, dp(6));
+        more.setGravity(Gravity.CENTER);
+        root.addView(more);
+    }
+}
+
+    // ============================================================
+    // SAFE SETTINGS OPEN
+    // ============================================================
+
+    private void safeStartActivity(String... actions) {
+        for (String action : actions) {
+            try {
+                startActivity(new Intent(action));
+                return;
+            } catch (Throwable ignore) {}
+        }
+        try {
+            startActivity(new Intent(Settings.ACTION_SETTINGS));
+        } catch (Throwable ignore) {}
+    }
+
+    // ============================================================
+    // ROUTER
+    // ============================================================
+
+    private void go(int s) {
+    step = s;
+
+    switch (step) {
+        case STEP_INTRO: showIntro(); break;
+        case STEP_STORAGE: showStorage(); break;
+        case STEP_BATTERY: showBattery(); break;
+        case STEP_DATA: showData(); break;
+        case STEP_APPS: showApps(); break;
+        case STEP_UNUSED: showInactiveApps(); break;
+        case STEP_CACHE: showCache(); break;
+        case STEP_DNS: showDnsStep(); break; 
+        case STEP_DEV_OPTIONS: showDevOptionsStep(); break;
+        case STEP_QUEST: showQuestionnaire(); break;
+        case STEP_LABS: showLabRecommendation(); break;
+        case STEP_REMINDER: showReminder(); break;
+        case STEP_MINI_REMINDER: showMiniSchedulerPopup(); break;
+        case STEP_FINAL: showFinalVerdict(); break;
+    }
+}
+
+    // ============================================================
+    // INTRO
+    // ============================================================
+
+    private void showIntro() {
+
+        showDialog(
+                gr ? "Έξυπνη Βελτιστοποίηση"
+                        : "Smart Optimization",
+                gr
+                        ? "Θα σε πάω στις σωστές ρυθμίσεις της συσκευής.\n\n"
+                        + "Ο στόχος είναι να κάνουμε τη συσκευή σου να λειτουργεί ομαλά και με ασφάλεια.\n\n"
+                        + "Εσύ κάνεις τις επιλογές — εγώ κρατάω το τιμόνι (χωρίς να πατάω γκάζι μόνος μου 😄).\n\n"
+                        + "Πάτα «ΈΝΑΡΞΗ» για να ξεκινήσουμε. \n\n"
+                        : "I will guide you to the right system settings.\n\n"
+                        + "The goal is to help your device run smoothly and securely.\n\n"
+                        + "You make the choices — I simply steer (no autopilot 😄).\n\n"
+                        + "Press “START” to begin. \n\n",
+                null,
+                () -> go(STEP_STORAGE),
+                true
         );
     }
+
+    // ============================================================
+    // STEP 1 — STORAGE
+    // ============================================================
+
+    private void showStorage() {
+   
+        showDialog(
+                progressTitle(gr ? "ΒΗΜΑ 1 — Αποθήκευση" : "STEP 1 — Storage"),
+                gr
+                        ? "Πάτησε ΡΥΘΜΙΣΕΙΣ παρακατω.\n\n"
+                        + "Θα ανοίξουν οι ρυθμίσεις αποθήκευσης της συσκευής.\n\n"
+                        + "Χρησιμοποίησε τα διαθέσιμα εργαλεία καθαρισμού όπου χρειάζεται.\n"
+                        + "Συνήθως αρκεί η εκκαθάριση προσωρινής μνήμης (cache), προσωρινών δεδομένων και κατάλοιπων αρχείων.\n"
+                        + "Αυτές οι ενέργειες είναι ασφαλείς και δεν διαγράφουν προσωπικά δεδομένα.\n\n"
+                        + "ΠΡΟΣΟΧΗ: Η εκκαθάριση δεδομένων εφαρμογής διαγράφει ρυθμίσεις, αποθηκευμένους λογαριασμούς και offline περιεχόμενο.\n"
+                        + "Χρησιμοποίησέ την μόνο αν γνωρίζεις ακριβώς τι κάνεις.\n\n"
+                        + "Σε ορισμένες συσκευές η εφαρμογή μπορεί να κλείσει προσωρινά.\n\n"
+                        + "Μετά τον καθαρισμό, άνοιξε ξανά την εφαρμογή\n"
+                        + "και πάτησε OK/ΠΑΡΑΛΕΙΨΗ για να συνεχίσουμε.\n\n"
+                        : "Tap SETTINGS below.\n\n"
+                        + "The device storage settings will open.\n\n"
+                        + "Use the available cleaning tools where necessary.\n"
+                        + "In most cases, clearing temporary cache, temporary data and residual files is sufficient.\n"
+                        + "These actions are safe and do not remove personal data.\n\n"
+                        + "WARNING: Clearing app data removes settings, saved accounts and offline content.\n"
+                        + "Use it only if you fully understand the consequences.\n\n"
+                        + "On some devices the app may close temporarily.\n\n"
+                        + "After cleaning, reopen the app\n"
+                        + "and tap OK/SKIP to continue.\n\n",
+                () -> {
+
+// --------------------------------------------------------
+// 1️⃣ GLOBAL STORAGE (PRIMARY)
+// --------------------------------------------------------
+try {
+    Intent storage = new Intent(Settings.ACTION_INTERNAL_STORAGE_SETTINGS);
+    storage.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+    startActivity(storage);
+    return;
+} catch (Throwable ignore) {}
+
+// --------------------------------------------------------
+// 2️⃣ DEVICE STORAGE (SECONDARY) — extra Android safety net
+// --------------------------------------------------------
+try {
+    Intent deviceStorage = new Intent(Settings.ACTION_INTERNAL_STORAGE_SETTINGS);
+    deviceStorage.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+    startActivity(deviceStorage);
+    return;
+} catch (Throwable ignore) {}
+
+// --------------------------------------------------------
+// 3️⃣ OEM CLEANER (FALLBACK)
+// --------------------------------------------------------
+try {
+    boolean launched = CleanLauncher.openDeepCleaner(this);
+    if (launched) return;
+} catch (Throwable ignore) {}
+
+// --------------------------------------------------------
+// 4️⃣ LAST RESORT
+// --------------------------------------------------------
+Toast.makeText(
+        this,
+        gr ? "Δεν βρέθηκε καθαριστής στη συσκευή."
+           : "No compatible cleaner found.",
+        Toast.LENGTH_SHORT
+).show();
+
+            },
+            () -> go(STEP_BATTERY),
+            false
+    );
 }
 
-SharedPreferences sp =
-        getSharedPreferences("gel_prefs", MODE_PRIVATE);
+// ============================================================
+// STEP 2 — BATTERY INTELLIGENCE ENGINE (MODERATE + HEAVY ONLY)
+// ============================================================
 
-if (sp.getBoolean("pulse_enabled", false)) {
-    OptimizerMiniPulseScheduler.enable(this);
-}
+private void showBattery() {
 
-// ================= ENTRY FLOW =================
-boolean forceWelcome =
-        getIntent().getBooleanExtra("force_welcome", false);
+    if (!hasUsageAccess()) {
 
-boolean skipWelcomeOnce =
-        getIntent().getBooleanExtra("skip_welcome_once", false);
+        batteryVerdict = "STABLE";
 
-boolean fromMini = getIntent() != null &&
-                   getIntent().hasExtra("mini_cpu");
-
-if (savedInstanceState == null) {
-
-    if (!fromMini && !skipWelcomeOnce &&
-        (forceWelcome || !isWelcomeDisabled())) {
-
-        showWelcomePopup();
+        showDialog(
+        progressTitle(
+                gr
+                        ? "ΒΗΜΑ 2 — Κατανάλωση Μπαταρίας (48 ώρες)"
+                        : "STEP 2 — Battery Consumption (48 hours)"
+        ),
+                gr
+                        ? "Για να αναλύσουμε τη δραστηριότητα εφαρμογών,\n"
+                        + "απαιτείται πρόσβαση Χρήσης Εφαρμογών.\n\n"
+                       + "Πάτησε ΡΥΘΜΙΣΕΙΣ παρακάτω και ενεργοποίησε την για το GEL.\n\n"
+                        + "Καμία συλλογή προσωπικών δεδομένων δεν γίνεται με την παραχώρηση της Πρόσβασης Χρήσης.\n\n"                        
+                        + "Όταν επιστρέψεις, πάτησε ΟΚ/ΠΑΡΑΛΕΙΨΗ για να συνεχίσουμε.\n\n"
+                        : "To analyze app activity,\n"
+                        + "Usage Access permission is required.\n\n" 
+                        + "Tap SETTINGS below and enable it for GEL.\n\n"      
+                        + "No personal data is collected when granting Usage Access permission.\n\n"
+                        + "When you return, press OK/SKIP to continue.\n\n",
+                () -> {
+    try {
+        Intent intent = new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS);
+        intent.setData(Uri.parse("package:" + getPackageName()));
+        returnedFromUsageScreen = true;
+        startActivity(intent);
+    } catch (Throwable e) {
+        returnedFromUsageScreen = true;
+        startActivity(new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS));
     }
-}
-
-    // ================= APPLY PLATFORM UI =================
-    if ("apple".equals(getSavedPlatform())) {
-        applyAppleModeUI();
-    } else {
-        applyAndroidModeUI();
-    }
-
-    syncReturnButtonText();
-
-    log("📱 Device ready", false);
-
-    // ================= APP MANAGER =================
-    View btnAppManager = findViewById(R.id.btnAppManager);
-    if (btnAppManager != null) {
-        btnAppManager.setOnClickListener(v -> {
-            try {
-                Intent i = new Intent(MainActivity.this, AppListActivity.class);
-                i.putExtra("mode", "uninstall");
-                startActivity(i);
-            } catch (Exception e) {
-                Toast.makeText(
-                        MainActivity.this,
-                        "Cannot open App Manager",
-                        Toast.LENGTH_SHORT
-                ).show();
-            }
-        });
-    }
-
-    // ================= GUIDED OPTIMIZER =================
-    View btnGuidedOptimizer = findViewById(R.id.btnGuidedOptimizer);
-    if (btnGuidedOptimizer != null) {
-        btnGuidedOptimizer.setOnClickListener(v -> {
-            try {
-                startActivity(new Intent(
-                        MainActivity.this,
-                        GuidedOptimizerActivity.class
-                ));
-            } catch (Exception e) {
-                Toast.makeText(
-                        MainActivity.this,
-                        "Cannot open Guided Optimizer",
-                        Toast.LENGTH_SHORT
-                ).show();
-            }
-        });
-    }
-}
-
-private void showSettingsDialog() {
-
-    final boolean gr = AppLang.isGreek(this);
-
-    // ---- current states ----
-    SharedPreferences sp = getSharedPreferences("gel_prefs", MODE_PRIVATE);
-    boolean miniEnabled = sp.getBoolean("pulse_enabled", false);
-
-    boolean schedEnabled = OptimizerScheduler.isReminderEnabled(this);
-    int schedDays = OptimizerScheduler.getReminderDays(this); // 1/7/30 (default 7)
-
-    // ---- GEL dialog root ----
-    LinearLayout box = new LinearLayout(this);
-    box.setOrientation(LinearLayout.VERTICAL);
-    box.setPadding(dp(18), dp(16), dp(18), dp(14));
-
-    GradientDrawable bg = new GradientDrawable();
-    bg.setColor(0xFF0B0B0B);
-    bg.setCornerRadius(dp(18));
-    bg.setStroke(dp(3), 0xFFFFD700);
-    box.setBackground(bg);
-
-    TextView title = new TextView(this);
-    title.setText(gr ? "Ρυθμίσεις" : "Settings");
-    title.setTextColor(Color.WHITE);
-    title.setTypeface(Typeface.DEFAULT_BOLD);
-    title.setTextSize(18f);
-    title.setGravity(Gravity.CENTER);
-    title.setPadding(0, 0, 0, dp(10));
-    box.addView(title);
-
-    // ==============================
-    // MINI CHECK (3 φορές/ημέρα 09-15-21)
-    // ==============================
-    final android.widget.CheckBox cbMini = new android.widget.CheckBox(this);
-    cbMini.setChecked(miniEnabled);
-    cbMini.setText(gr
-            ? "Mini Check — 3 φορές/ημέρα (09:00 • 15:00 • 21:00)"
-            : "Mini Check — 3/day (09:00 • 15:00 • 21:00)");
-    cbMini.setTextColor(0xFF00FF7F);
-    cbMini.setPadding(0, dp(6), 0, dp(10));
-    box.addView(cbMini);
-
-    TextView miniHint = new TextView(this);
-    miniHint.setText(gr
-? "Διαρκεί λιγότερο από 1 δευτερόλεπτο και στέλνει ειδοποίηση μόνο σε κρίσιμες καταστάσεις (Crash / ≥45°C / Υπερφόρτωση CPU–GPU–Cache)."
-: "Runs in under 1 second and notifies only on critical conditions (Crash / ≥45°C / CPU–GPU–Cache overload).");
-    miniHint.setTextColor(Color.WHITE);
-    miniHint.setTextSize(13f);
-    miniHint.setPadding(0, 0, 0, dp(14));
-    box.addView(miniHint);
-
-    // ==============================
-    // OPTIMIZER SCHEDULER (reminder) ON/OFF + 1/7/30
-    // ==============================
-    TextView sep = new TextView(this);
-    sep.setText("────────────────────────");
-    sep.setTextColor(0xFF333333);
-    sep.setGravity(Gravity.CENTER);
-    sep.setPadding(0, dp(2), 0, dp(10));
-    box.addView(sep);
-
-    final android.widget.CheckBox cbSched = new android.widget.CheckBox(this);
-    cbSched.setChecked(schedEnabled);
-    cbSched.setText(gr
-            ? "Έξυπνη Βελτιστοποίηση — Υπενθύμιση Κάθε..."
-            : "Guided Optimizer — Reminder Every...");
-    cbSched.setTextColor(0xFF00FF7F);
-    cbSched.setPadding(0, dp(6), 0, dp(6));
-    box.addView(cbSched);
-
-    final RadioGroup rg = new RadioGroup(this);
-    rg.setOrientation(LinearLayout.HORIZONTAL);
-    rg.setPadding(0, dp(4), 0, dp(10));
-
-    RadioButton r1 = new RadioButton(this);
-    r1.setText(gr ? "1 Ημέρα" : "1 Day");
-    r1.setTextColor(Color.WHITE);
-
-    RadioButton r7 = new RadioButton(this);
-    r7.setText(gr ? "1 Εβδομάδα" : "1 Week");
-    r7.setTextColor(Color.WHITE);
-
-    RadioButton r30 = new RadioButton(this);
-    r30.setText(gr ? "1 Μήνα" : "1 Month");
-    r30.setTextColor(Color.WHITE);
-
-    rg.addView(r1);
-    rg.addView(r7);
-    rg.addView(r30);
-
-    if (schedDays == 1) rg.check(r1.getId());
-    else if (schedDays == 30) rg.check(r30.getId());
-    else rg.check(r7.getId());
-
-    rg.setEnabled(cbSched.isChecked());
-    for (int k = 0; k < rg.getChildCount(); k++) rg.getChildAt(k).setEnabled(cbSched.isChecked());
-
-    cbSched.setOnCheckedChangeListener((b, on) -> {
-        rg.setEnabled(on);
-        for (int k = 0; k < rg.getChildCount(); k++) rg.getChildAt(k).setEnabled(on);
-    });
-
-    box.addView(rg);
-
-    // ==============================
-    // BUTTONS
-    // ==============================
-    LinearLayout row = new LinearLayout(this);
-    row.setOrientation(LinearLayout.HORIZONTAL);
-    row.setGravity(Gravity.CENTER);
-    row.setPadding(0, dp(18), 0, 0);
-
-    android.widget.Button btnCancel = new android.widget.Button(this);
-    btnCancel.setText(gr ? "Άκυρο" : "Cancel");
-    btnCancel.setAllCaps(false);
-    btnCancel.setTextColor(Color.WHITE);
-    btnCancel.setBackground(makeGelBtn(0xFFAA1111)); // red
-
-    android.widget.Button btnSave = new android.widget.Button(this);
-    btnSave.setText(gr ? "Αποθήκευση" : "Save");
-    btnSave.setAllCaps(false);
-    btnSave.setTextColor(Color.BLACK);
-    btnSave.setBackground(makeGelBtn(0xFF00FF7F)); // neon green
-
-    LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, dp(44), 1f);
-    lp.setMargins(dp(6), 0, dp(6), 0);
-    row.addView(btnCancel, lp);
-    row.addView(btnSave, lp);
-
-    box.addView(row);
-
-    AlertDialog dlg = new AlertDialog.Builder(this)
-            .setView(box)
-            .setCancelable(true)
-            .create();
-
-    btnCancel.setOnClickListener(v -> dlg.dismiss());
-
-    btnSave.setOnClickListener(v -> {
-
-        // ---- mini check save ----
-        boolean newMini = cbMini.isChecked();
-        sp.edit().putBoolean("pulse_enabled", newMini).apply();
-
-        if (newMini) OptimizerMiniPulseScheduler.enable(this);
-        else OptimizerMiniPulseScheduler.disable(this);
-
-        // ---- scheduler save ----
-        boolean newSched = cbSched.isChecked();
-        if (newSched) {
-
-            int days = 7;
-            int checked = rg.getCheckedRadioButtonId();
-            if (checked == r1.getId()) days = 1;
-            else if (checked == r30.getId()) days = 30;
-
-            OptimizerScheduler.enableReminder(this, days);
-
-        } else {
-            OptimizerScheduler.disableReminder(this);
-        }
-
-        dlg.dismiss();
-    });
-
-    dlg.show();
-}
-
-private GradientDrawable makeGelBtn(int solidColor) {
-    GradientDrawable d = new GradientDrawable();
-    d.setColor(solidColor);
-    d.setCornerRadius(dp(14));
-    d.setStroke(dp(3), 0xFFFFD700);
-    return d;
-}
-
-@Override
-protected void onNewIntent(Intent intent) {
-    super.onNewIntent(intent);
-    setIntent(intent); // 🔥 απαραίτητο λόγω singleTask
-
-    if (intent == null) return;
-
-    // 🔹 Νέο mini health system
-    if (intent.hasExtra("mini_cpu")) {
-        handleMiniSignals(intent);
+},
+                () -> go(STEP_BATTERY),
+                false
+        );
         return;
     }
 
-    // 🔹 Παλιό gel_issue_type (αν το κρατάς ακόμα)
-    if (intent.hasExtra("gel_issue_type")) {
-        String issue = intent.getStringExtra("gel_issue_type");
-        showSmartDiagnosticPopup(issue);
+    long now = System.currentTimeMillis();
+    long start = now - (48L * 60 * 60 * 1000); // 48 hours window
+
+    UsageStatsManager usm =
+        (UsageStatsManager) getSystemService(USAGE_STATS_SERVICE);
+
+List<UsageStats> stats =
+        usm.queryUsageStats(
+                UsageStatsManager.INTERVAL_DAILY,
+                start,
+                now
+        );
+
+if (stats == null || stats.isEmpty()) {
+    batteryVerdict = "STABLE";
+    showStableDialog();
+    return;
+}
+
+// ============================================================
+// ✅ BATTERY STEP — MERGE + FILTER (NO SYSTEM APPS)
+// Replace your whole "MERGE FG+BG ... suspiciousApps ... heavyApps/moderateApps" block with this
+// ============================================================
+
+// 🔽 MERGE FG + BG
+HashMap<String, Long> mergedFgMinutes = new HashMap<>();
+HashMap<String, Long> mergedBgMinutes = new HashMap<>();
+
+for (UsageStats u : stats) {
+
+    if (u == null) continue;
+
+    String pkg = u.getPackageName();
+    if (pkg == null) continue;
+    if (pkg.equals(getPackageName())) continue;
+
+    // ✅ DROP SYSTEM APPS
+    if (isSystemPkg(pkg)) continue;
+
+    long fg = 0L;
+    try { fg = u.getTotalTimeInForeground() / 60000L; } catch (Throwable ignore) {}
+
+    long bg = 0L;
+    try {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+            bg = u.getTotalTimeForegroundServiceUsed() / 60000L;
+        }
+    } catch (Throwable ignore) {}
+
+    Long curFg = mergedFgMinutes.get(pkg);
+    mergedFgMinutes.put(pkg, (curFg == null ? 0L : curFg) + fg);
+
+    Long curBg = mergedBgMinutes.get(pkg);
+    mergedBgMinutes.put(pkg, (curBg == null ? 0L : curBg) + bg);
+}
+
+// ✅ Only 3rd-party suspicious apps
+ArrayList<AppRisk> suspiciousApps = new ArrayList<>();
+
+for (String pkg : mergedBgMinutes.keySet()) {
+
+    if (pkg == null) continue;
+    if (pkg.equals(getPackageName())) continue;
+
+    // ✅ DROP SYSTEM APPS (double safety)
+    if (isSystemPkg(pkg)) continue;
+
+    long fgMinutes = mergedFgMinutes.get(pkg) != null ? mergedFgMinutes.get(pkg) : 0L;
+    long bgMinutes = mergedBgMinutes.get(pkg) != null ? mergedBgMinutes.get(pkg) : 0L;
+
+    // ✅ RULE: only background without opening
+    boolean userOpened = fgMinutes > 0;
+    boolean bgNoOpen = (!userOpened && bgMinutes > 0);
+    if (!bgNoOpen) continue;
+
+    suspiciousApps.add(new AppRisk(pkg, bgMinutes, false));
+}
+
+PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
+
+ArrayList<AppRisk> heavyApps = new ArrayList<>();
+ArrayList<AppRisk> moderateApps = new ArrayList<>();
+
+for (String pkg : mergedBgMinutes.keySet()) {
+
+    if (pkg == null) continue;
+    if (pkg.equals(getPackageName())) continue;
+
+    // ✅ DROP SYSTEM APPS
+    if (isSystemPkg(pkg)) continue;
+
+    long fgMinutes = mergedFgMinutes.get(pkg) != null ? mergedFgMinutes.get(pkg) : 0L;
+    long bgMinutes = mergedBgMinutes.get(pkg) != null ? mergedBgMinutes.get(pkg) : 0L;
+
+    // ✅ RULE: only background without opening
+    boolean userOpened = fgMinutes > 0;
+    boolean bgNoOpen = (!userOpened && bgMinutes > 0);
+    if (!bgNoOpen) continue;
+
+    boolean unrestricted = false;
+    try { unrestricted = pm != null && pm.isIgnoringBatteryOptimizations(pkg); } catch (Throwable ignore) {}
+
+    int score;
+    if (bgMinutes >= 120) score = 3;          // HEAVY
+    else if (bgMinutes >= 45) score = 2;      // MODERATE
+    else score = 1;                           // LOW
+
+    if (unrestricted && score >= 2) score++;  // elevate if unrestricted
+
+    if (score >= 3) heavyApps.add(new AppRisk(pkg, bgMinutes, unrestricted));
+    else if (score == 2) moderateApps.add(new AppRisk(pkg, bgMinutes, unrestricted));
+}
+
+// ✅ STABLE
+if (heavyApps.isEmpty() && moderateApps.isEmpty()) {
+    batteryVerdict = "STABLE";
+    showStableDialog();
+    return;
+}
+
+    ScrollView scroll = new ScrollView(this);
+
+    LinearLayout root = buildBaseBox(
+        progressTitle(
+                gr
+                        ? "ΒΗΜΑ 2 — Κατανάλωση Μπαταρίας (48 ώρες)"
+                        : "STEP 2 — Battery Consumption (48 hours)"
+        )
+);
+
+scroll.addView(root);
+
+    boolean suspiciousBattery = false;
+boolean legitHeavyUse = false;
+
+for (AppRisk r : heavyApps) {
+
+    if (r.minutes >= 120 && r.unrestricted) {
+        suspiciousBattery = true;
+        break;
+    }
+
+    if (r.minutes >= 120) {
+        legitHeavyUse = true;
     }
 }
 
-private void handleMiniSignals(Intent intent) {
+String verdict;
 
-    boolean cpu = intent.getBooleanExtra("mini_cpu", false);
-    boolean thermal = intent.getBooleanExtra("mini_thermal", false);
-    boolean crash = intent.getBooleanExtra("mini_crash", false);
-    boolean cache = intent.getBooleanExtra("mini_cache", false);
-    double temp = intent.getDoubleExtra("mini_temp", 0);
+if (suspiciousBattery) {
+    verdict = "HEAVY";
+}
+else if (legitHeavyUse || !moderateApps.isEmpty()) {
+    verdict = "MODERATE";
+}
+else {
+    verdict = "STABLE";
+}
 
-    new android.os.Handler(android.os.Looper.getMainLooper())
-            .post(() ->
-                    showSmartMiniDiagnostic(cpu, thermal, crash, cache, temp)
+batteryVerdict = verdict;
+
+    addEngineVerdict(root, verdict,
+            heavyApps.size(),
+            moderateApps.size());
+
+    addRecommendations(root, verdict);
+
+    if (!heavyApps.isEmpty() || !moderateApps.isEmpty()) {
+
+    addSection(
+            root,
+            gr ? "⚠️ Background Δραστηριότητα"
+               : "⚠️ Background Activity",
+            gr ? "Εφαρμογές που έτρεξαν χωρίς να τις ανοίξεις τις τελευταίες 48 ώρες."
+               : "Apps that ran without being opened in the last 48h.",
+            0xFFFFC107
+    );
+
+    ArrayList<AppRisk> combined = new ArrayList<>();
+    combined.addAll(heavyApps);
+    combined.addAll(moderateApps);
+
+    addBatteryAppList(root, combined);
+}
+
+    Button next = mkGreenBtn("OK");
+next.setOnClickListener(v -> go(STEP_DATA));
+root.addView(next);
+
+showCustomDialog(scroll);
+}
+
+// ============================================================
+// STABLE STATE
+// ============================================================
+
+private void showStableDialog() {
+
+    showDialog(
+            progressTitle(
+                    gr
+                            ? "ΒΗΜΑ 2 — Κατανάλωση Μπαταρίας (48 ώρες)"
+                            : "STEP 2 — Battery Consumption (48 hours)"
+            ),
+            gr
+                    ? "Τα αποτελέσματα αφορούν εφαρμογές που δεν άνοιξες τις τελευταίες 48 ώρες,\n"
+                      + "αλλά παρουσίασαν δραστηριότητα στο παρασκήνιο\n"
+                      + "καταναλώνοντας μπαταρία.\n\n"
+                      + "Engine Verdict: STABLE\n\n"
+                      + "Δεν εντοπίστηκε δραστηριότητα εφαρμογών στο παρασκήνιο, τις τελευταίες 48 ώρες.\n\n"
+                    : "Results refer to apps you did not open in the last 48 hours,\n"
+                      + "but showed background activity,\n"
+                      + "consuming battery.\n\n"
+                      + "Engine Verdict: STABLE\n\n"
+                      + "No background app activity detected in the last 48 hours.\n\n",
+            null,
+            () -> go(STEP_DATA),
+            false
+    );
+}
+
+private void showFinalVerdict() {
+
+    final boolean gr = AppLang.isGreek(this);
+
+    LinearLayout root = buildBaseBox(
+            gr ? "Τελική Αναφορά Συσκευής"
+               : "Final Device Report"
+    );
+
+    String finalVerdict = resolveFinalVerdict();
+    String displayText;
+
+    switch (finalVerdict) {
+        case "HEAVY":
+            displayText = gr
+                    ? "🔴 Εντοπίστηκε Υψηλή Δραστηριότητα στο Παρασκήνιο."
+                    : "🔴 High Background Activity Detected.";
+            break;
+
+        case "MODERATE":
+            displayText = gr
+                    ? "🟡 Εντοπίστηκε Δραστηριότητα στο Παρασκήνιο."
+                    : "🟡 Background Activity Detected.";
+            break;
+
+        default:
+            displayText = gr
+                    ? "🟢 Δεν Εντοπίστηκε Δραστηριότητα στο Παρασκήνιο."
+                    : "🟢 No Background Activity Detected.";
+            break;
+    }
+
+    // Section Details
+    addFinalRow(root, gr ? "Μπαταρία" : "Battery", batteryVerdict, gr);
+    addFinalRow(root, gr ? "Δεδομένα" : "Data", dataVerdict, gr);
+    addFinalRow(root, gr ? "Εφαρμογές" : "Apps", appsVerdict, gr);
+
+    // Divider
+    View div = new View(this);
+    div.setBackgroundColor(0xFF333333);
+    LinearLayout.LayoutParams dlp =
+            new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    dp(1));
+    dlp.setMargins(0, dp(20), 0, dp(20));
+    div.setLayoutParams(dlp);
+    root.addView(div);
+
+    // Overall Status
+    TextView statusTv = new TextView(this);
+
+    int color =
+            finalVerdict.equals("HEAVY") ? 0xFFFF5252 :
+            finalVerdict.equals("MODERATE") ? 0xFFFFC107 :
+            0xFF00C853;
+
+    statusTv.setText(displayText);
+    statusTv.setTextColor(color);
+    statusTv.setTextSize(18f);
+    statusTv.setTypeface(null, Typeface.BOLD);
+    statusTv.setPadding(0, dp(10), 0, dp(20));
+    root.addView(statusTv);
+
+    if ("STABLE".equals(finalVerdict)) {
+        TextView cleanMsg = new TextView(this);
+        cleanMsg.setText(
+                gr
+                        ? "Δεν εντοπίστηκε δραστηριότητα στο παρασκήνιο τις τελευταίες 48 ώρες."
+                        : "No background activity detected in the last 48 hours."
+        );
+        cleanMsg.setTextColor(0xFFAAAAAA);
+        cleanMsg.setPadding(0, dp(6), 0, dp(18));
+        root.addView(cleanMsg);
+    }
+
+    // ============================
+    // Automation Status Section
+    // ============================
+
+    View schedDiv = new View(this);
+    schedDiv.setBackgroundColor(0xFF333333);
+    LinearLayout.LayoutParams sdlp =
+            new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    dp(1));
+    sdlp.setMargins(0, dp(15), 0, dp(15));
+    schedDiv.setLayoutParams(sdlp);
+    root.addView(schedDiv);
+
+    TextView schedTitle = new TextView(this);
+    schedTitle.setText(gr ? "Αυτοματοποιήσεις" : "Automation Status");
+    schedTitle.setTextColor(0xFFFFD700);
+    schedTitle.setTextSize(17f);
+    schedTitle.setTypeface(null, Typeface.BOLD);
+    schedTitle.setPadding(0, dp(4), 0, dp(10));
+    root.addView(schedTitle);
+
+    // Reminder Scheduler
+    boolean reminderOn = OptimizerScheduler.isReminderEnabled(this);
+
+    TextView reminderTv = new TextView(this);
+    reminderTv.setText(
+            (gr ? "Υπενθύμιση Επιθεώρησης: "
+                : "Inspection Reminder: ")
+            + (reminderOn
+                ? (gr ? "🟢 ΕΝΕΡΓΗ" : "🟢 ENABLED")
+                : (gr ? "🔴 ΑΝΕΝΕΡΓΗ" : "🔴 DISABLED"))
+    );
+    reminderTv.setTextColor(reminderOn ? 0xFF00C853 : 0xFFFF5252);
+    reminderTv.setTextSize(15f);
+    reminderTv.setPadding(0, dp(6), 0, dp(6));
+    root.addView(reminderTv);
+
+    // Mini Pulse
+    boolean miniOn = isMiniPulseEnabled();
+
+    TextView miniPulseTv = new TextView(this);
+    miniPulseTv.setText(
+            (gr ? "Mini Έλεγχος Παρασκηνίου: "
+                : "Mini Background Check: ")
+            + (miniOn
+                ? (gr ? "🟢 ΕΝΕΡΓΟΣ" : "🟢 ENABLED")
+                : (gr ? "🔴 ΑΝΕΝΕΡΓΟΣ" : "🔴 DISABLED"))
+    );
+    miniPulseTv.setTextColor(miniOn ? 0xFF00C853 : 0xFFFF5252);
+    miniPulseTv.setTextSize(15f);
+    miniPulseTv.setPadding(0, dp(6), 0, dp(20));
+    root.addView(miniPulseTv);
+
+    // Done
+    Button done = mkGreenBtn(gr ? "ΟΚ" : "OK");
+    done.setOnClickListener(v -> finish());
+    root.addView(done);
+
+    showCustomDialog(root);
+}
+
+
+private String resolveFinalVerdict() {
+
+    int heavyCount = 0;
+    int moderateCount = 0;
+
+    if ("HEAVY".equals(batteryVerdict)) heavyCount++;
+    if ("HEAVY".equals(dataVerdict)) heavyCount++;
+    if ("HEAVY".equals(appsVerdict)) heavyCount++;
+
+    if ("MODERATE".equals(batteryVerdict)) moderateCount++;
+    if ("MODERATE".equals(dataVerdict)) moderateCount++;
+    if ("MODERATE".equals(appsVerdict)) moderateCount++;
+
+    if (heavyCount >= 2) {
+        return "HEAVY";
+    }
+
+    if (heavyCount == 1 || moderateCount >= 1) {
+        return "MODERATE";
+    }
+
+    return "STABLE";
+}
+
+
+private void addFinalRow(LinearLayout root,
+                         String label,
+                         String verdict,
+                         boolean gr) {
+
+    TextView tv = new TextView(this);
+
+    String verdictText;
+
+    if ("HEAVY".equals(verdict)) {
+        verdictText = gr ? "Υψηλή" : "High";
+    } else if ("MODERATE".equals(verdict)) {
+        verdictText = gr ? "Μέτρια" : "Moderate";
+    } else {
+        verdictText = gr ? "Σταθερή" : "Stable";
+    }
+
+    int color =
+            "HEAVY".equals(verdict) ? 0xFFFF5252 :
+            "MODERATE".equals(verdict) ? 0xFFFFC107 :
+            0xFF00C853;
+
+    tv.setText(label + ": " + verdictText);
+    tv.setTextColor(color);
+    tv.setTextSize(16f);
+    tv.setPadding(0, dp(6), 0, dp(6));
+
+    root.addView(tv);
+}
+
+// ============================================================
+// SUPPORTING STRUCTURES
+// ============================================================
+
+private static class AppRisk {
+    String packageName;
+    long minutes;
+    boolean unrestricted;
+
+    AppRisk(String p, long m, boolean u) {
+        packageName = p;
+        minutes = m;
+        unrestricted = u;
+    }
+}
+
+private boolean hasUsageAccess() {
+
+    UsageStatsManager usm =
+            (UsageStatsManager) getSystemService(USAGE_STATS_SERVICE);
+
+    long now = System.currentTimeMillis();
+
+    List<UsageStats> stats =
+            usm.queryUsageStats(
+                    UsageStatsManager.INTERVAL_DAILY,
+                    now - 1000 * 60,
+                    now
             );
+
+    return stats != null && !stats.isEmpty();
 }
 
-private void showSmartDiagnosticPopup(String issue) {
+private void addEngineVerdict(LinearLayout root,
+                              String verdict,
+                              int heavyCount,
+                              int moderateCount) {
 
-    final boolean gr = AppLang.isGreek(this);
+    TextView tv = new TextView(this);
 
-    String title = gr
-            ? "Ένδειξη επιβάρυνσης"
-            : "Health Signal Detected";
+    int color =
+            verdict.equals("HEAVY") ? 0xFFFF5252 :
+            0xFFFFC107;
 
-    String message = gr
-            ? "Το σύστημα εντόπισε πιθανή επιβάρυνση.\n\nΘέλεις να γίνει έλεγχος τώρα;"
-            : "The system detected a possible load issue.\n\nRun diagnostic now?";
+    tv.setText(
+        "Engine Verdict: " + verdict + "\n\n"
+        + (gr ? "Υψηλή Δραστηριότητα στο παρασκήνιο: \n\n"
+              : "High Background Activity: \n\n")
+        + heavyCount + "\n"
+        + (gr ? "Μέτρια Δραστηριότητα στο παρασκήνιο: \n\n"
+              : "Moderate Background Activity: \n\n")
+        + moderateCount
+);
 
-    new androidx.appcompat.app.AlertDialog.Builder(this)
-            .setTitle(title)
-            .setMessage(message)
-            .setPositiveButton(gr ? "Έλεγχος" : "Run Check", (d, w) -> {
+    tv.setTextColor(color);
+    tv.setTextSize(15f);
+    tv.setPadding(0,10,0,30);
 
-                startActivity(new Intent(this, GuidedOptimizerActivity.class));
-            })
-            .setNegativeButton(gr ? "Αργότερα" : "Later", null)
-            .show();
+    root.addView(tv);
 }
 
-private void showSmartMiniDiagnostic(
-        boolean cpu,
-        boolean thermal,
-        boolean crash,
-        boolean cache,
-        double temp
-) {
+private void addRecommendations(LinearLayout root,
+                                String verdict) {
 
-    Intent i = new Intent(this, OptimizerDiagnosticActivity.class);
+    TextView tv = new TextView(this);
 
-    i.putExtra("mini_cpu", cpu);
-    i.putExtra("mini_thermal", thermal);
-    i.putExtra("mini_crash", crash);
-    i.putExtra("mini_cache", cache);
-    i.putExtra("mini_temp", temp);
+    String rec;
 
-    startActivity(i);
+    if (verdict.equals("HEAVY")) {
+        rec = gr
+                ? "Προτείνεται περιορισμός δραστηριότητας παρασκηνίου, ή απεγκατάσταση μη απαραίτητων εφαρμογών. \n\n"
+                : "It is recommended to restrict background activity, or uninstall unnecessary apps. \n\n";
+    } else {
+        rec = gr
+                ? "Έλεγξε τις παρακάτω εφαρμογές. \n\n"
+                : "Review listed apps. \n\n";
+    }
+
+    tv.setText(rec);
+    tv.setTextColor(0xFFAAAAAA);
+    tv.setPadding(0,0,0,30);
+
+    root.addView(tv);
 }
 
-@Override
-public void onRequestPermissionsResult(int requestCode,
-                                       @NonNull String[] permissions,
-                                       @NonNull int[] grantResults) {
-    super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+// ============================================================
+// STEP 3 — DATA INTELLIGENCE ENGINE (MODERATE + HEAVY ONLY)
+// ============================================================
 
-    if (requestCode == 1001) {
-        // nothing else needed for now
+private void showData() {
+
+    // ✅ Needs Usage Access (for "rarely used but active" signal)
+    if (!hasUsageAccess()) {
+        dataVerdict = "STABLE";
+        showDialog(
+        progressTitle(
+                gr
+                        ? "ΒΗΜΑ 3 — Κατανάλωση Δεδομένων (48 ώρες)"
+                        : "STEP 3 — Data Consumption (48 hours)"
+        ),
+        gr
+                ? "Για να κάνουμε premium ανάλυση δεδομένων,\n"
+                  + "χρειαζόμαστε πρόσβαση Χρήσης Εφαρμογών.\n\n"
+                  + "Πάτησε ΡΥΘΜΙΣΕΙΣ παρακάτω και ενεργοποίησε την για το GEL. \n\n"
+                  + "Καμία συλλογή προσωπικών δεδομένων δεν γίνεται με την παραχώρηση της Πρόσβασης Χρήσης.\n\n"                  
+                  + "Όταν επιστρέψεις πάτησε ΕΝΑΡΞΗ για να ξεκινήσουμε. \n\n"
+                : "To run premium data analysis,\n"
+                  + "Usage Access permission is required.\n\n"
+                  + "Press SETTINGS below and enable it for GEL. \n\n"
+                  + "No personal data is collected when granting Usage Access permission."
+                  + "Whene you return press START to continue.\n\n",
+        () -> startActivity(new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)),
+        () -> go(STEP_DATA),
+        false
+);
+        return;
+    }
+
+    // ⏱ Window: 48 hours
+    final long now = System.currentTimeMillis();
+    final long start = now - (48L * 60 * 60 * 1000);
+
+    final ArrayList<DataRisk> heavy = new ArrayList<>();
+    final ArrayList<DataRisk> moderate = new ArrayList<>();
+
+    try {
+
+    UsageStatsManager usm =
+            (UsageStatsManager) getSystemService(USAGE_STATS_SERVICE);
+
+    List<UsageStats> stats =
+            usm != null
+                    ? usm.queryUsageStats(
+                            UsageStatsManager.INTERVAL_DAILY,
+                            start,
+                            now
+                    )
+                    : null;
+
+    if (stats == null || stats.isEmpty()) {
+        dataVerdict = "STABLE";
+        showDialog(
+        progressTitle(
+                gr
+                        ? "ΒΗΜΑ 3 — Κατανάλωση Δεδομένων (48 ώρες)"
+                        : "STEP 3 — Data Consumption (48 hours)"
+        ),
+        gr
+  ? "Τα αποτελέσματα αφορούν εφαρμογές που δεν άνοιξες τις τελευταίες 48 ώρες,\n"
+  + "αλλά παρουσίασαν δραστηριότητα στο παρασκήνιο,\n"
+  + "καταναλώνοντας δεδομένα.\n\n"
+  + "Engine Verdict: STABLE\n\n"
+  + "Δεν υπάρχουν διαθέσιμα στοιχεία χρήσης για τις τελευταίες 48 ώρες.\n\n"
+: "Results refer to apps you did not open in the last 48 hours,\n"
+  + "but showed background activity,\n"
+  + "consuming data.\n\n"
+  + "Engine Verdict: STABLE\n\n"
+  + "No usage stats available in the last 48 hours.\n\n",
+        null,
+        () -> go(STEP_APPS),
+        false
+);
+return;
+}
+
+// 🔽 MERGE 48h DAILY BUCKETS
+HashMap<String, Long> mergedFgMinutes = new HashMap<>();
+HashMap<String, Long> mergedBgMinutes = new HashMap<>();
+HashMap<String, Long> mergedLastUsed  = new HashMap<>();
+
+for (UsageStats u : stats) {
+
+    if (u == null) continue;
+
+    String pkg = u.getPackageName();
+    if (pkg == null) continue;
+
+    long fg = 0L;
+    try {
+        fg = u.getTotalTimeInForeground() / 60000L;
+    } catch (Throwable ignore) {}
+
+    long bg = 0L;
+    try {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+            bg = u.getTotalTimeForegroundServiceUsed() / 60000L;
+        }
+    } catch (Throwable ignore) {}
+
+    long last = 0L;
+    try {
+        last = u.getLastTimeUsed();
+    } catch (Throwable ignore) {}
+
+    Long curFg = mergedFgMinutes.get(pkg);
+    mergedFgMinutes.put(pkg, (curFg == null ? 0L : curFg) + fg);
+
+    Long curBg = mergedBgMinutes.get(pkg);
+    mergedBgMinutes.put(pkg, (curBg == null ? 0L : curBg) + bg);
+
+    Long lastCur = mergedLastUsed.get(pkg);
+    if (lastCur == null || last > lastCur) {
+        mergedLastUsed.put(pkg, last);
     }
 }
-
-@Override
-protected void onPause() {
-    super.onPause();
-    try { AppTTS.stop(); } catch (Throwable ignore) {}
-}
-
-private void hardRestart() {
-    Intent i = getIntent();
-    i.putExtra("force_welcome", true);
-    finish();
-    startActivity(i);
-}
-
-// =========================================================
-// HELPERS
-// =========================================================
-
-private LinearLayout buildMuteRow() {
-    final boolean gr = AppLang.isGreek(this);
-
-    LinearLayout row = new LinearLayout(this);
-    row.setOrientation(LinearLayout.HORIZONTAL);
-    row.setGravity(Gravity.CENTER_VERTICAL);
-    row.setPadding(0, dp(8), 0, dp(16));
-
-    CheckBox muteCheck = new CheckBox(this);
-    muteCheck.setChecked(AppTTS.isMuted(this));
-    muteCheck.setPadding(0, 0, dp(6), 0);
-
-    TextView label = new TextView(this);
-    label.setText(gr ? "Σίγαση φωνητικών οδηγιών"
-                     : "Mute voice instructions");
-    label.setTextColor(Color.WHITE);
-    label.setTextSize(14f);
-
-    View.OnClickListener toggle = v -> {
-        boolean newState = !AppTTS.isMuted(this);
-        AppTTS.setMuted(this, newState);
-        muteCheck.setChecked(newState);
-        if (newState) {
-            try { AppTTS.stop(); } catch (Throwable ignore) {}
-        }
-    };
-
-    label.setOnClickListener(toggle);
-
-    muteCheck.setOnCheckedChangeListener((button, checked) -> {
-        if (checked == AppTTS.isMuted(this)) return;
-        AppTTS.setMuted(this, checked);
-        if (checked) {
-            try { AppTTS.stop(); } catch (Throwable ignore) {}
-        }
-    });
-
-    row.addView(muteCheck);
-    row.addView(label);
-
-    return row;
-}
-
-private void syncReturnButtonText() {
-    Button b = findViewById(R.id.btnReturnAndroid);
-    if (b != null) {
-        if ("apple".equals(getSavedPlatform())) {
-            b.setText(getString(R.string.return_android));
-        } else {
-            b.setText(getString(R.string.return_apple));
-        }
-    }
-}
-
-private boolean isWelcomeDisabled() {
-return getSharedPreferences(PREFS, MODE_PRIVATE)
-.getBoolean("welcome_disabled", false);
-}
-
-private void disableWelcomeForever() {
-getSharedPreferences(PREFS, MODE_PRIVATE)
-.edit()
-.putBoolean("welcome_disabled", true)
-.apply();
-}
-
-private void savePlatform(String mode) {
-getSharedPreferences(PREFS, MODE_PRIVATE)
-.edit().putString(KEY_PLATFORM, mode).apply();
-}
-
-private String getSavedPlatform() {
-return getSharedPreferences(PREFS, MODE_PRIVATE)
-.getString(KEY_PLATFORM, "android");
-}
-
-private boolean isAppleMode() {
-return "apple".equals(getSavedPlatform());
-}
-
-private AlertDialog.Builder buildNeonDialog() {
-AlertDialog.Builder b = new AlertDialog.Builder(this);
-return b;
-}
-
-private ArrayAdapter<String> neonAdapter(String[] names) {
-
-    return new ArrayAdapter<String>(
-            this,
-            android.R.layout.simple_list_item_1,
-            names
-    ) {
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            TextView tv = (TextView) super.getView(position, convertView, parent);
-            tv.setTextColor(0xFF00FF9C); // neon green
-            tv.setTypeface(null, Typeface.BOLD);
-            return tv;
-        }
-    };
-}
-
-// =========================================================
-// TTS - WELCOME
-// =========================================================
-private void speakWelcomeTTS() {
-
-if (!welcomeShown) return;
-if (AppTTS.isMuted(this)) return;
-
-if (AppLang.isGreek(this)) {
-
-AppTTS.speak(
-this,
-getWelcomeTextGR()
-);
-
-} else {
-
-AppTTS.speak(
-this,
-getWelcomeTextEN()
-);
-}
-}
-
-// =========================================================
-// WELCOME TEXT
-// =========================================================
-private String getWelcomeTextEN() {
-return
-"Although this is an Android application, " +
-"it is the only tool on the market that can also help you " +
-"understand problems on Apple devices.\n\n" +
-"By importing panic logs from your iPhone or iPad, " +
-"we analyze what really happened inside your device.\n\n" +
-"You will understand:\n" +
-"• what your panic logs mean.\n" +
-"• what caused the issue,\n" +
-"• and how you can solve it.\n\n" +
-"Choose what you want to explore:\n" +
-"your Android device or another Apple device.";
-}
-
-private String getWelcomeTextGR() {
-return
-"Παρότι αυτή είναι εφαρμογή Android, " +
-"είναι το μοναδικό εργαλείο στην αγορά που μπορεί να σε βοηθήσει " +
-"να καταλάβεις προβλήματα και σε συσκευές Apple.\n\n" +
-"Με την εισαγωγή panic logs από iPhone ή iPad, " +
-"αναλύουμε τι συνέβη πραγματικά μέσα στη συσκευή σου.\n\n" +
-"Θα καταλάβεις:\n" +
-"• τι σημαίνουν τα panic logs.\n" +
-"• τι προκάλεσε το πρόβλημα,\n" +
-"• και πώς μπορείς να το λύσεις.\n\n" +
-"Διάλεξε τι θέλεις να εξερευνήσεις:\n" +
-"τη συσκευή Android σου ή μια άλλη συσκευή Apple.";
-}
-
-// =========================================================
-// DIMEN
-// =========================================================
-private int dp(float v) {
-return (int) TypedValue.applyDimension(
-TypedValue.COMPLEX_UNIT_DIP,
-v,
-
-getResources().getDisplayMetrics()
-);
-}
-
-// ------------------------------------------------------------
-// SHOW POPUP
-// ------------------------------------------------------------
-private void showWelcomePopup() {
-
-if (welcomeShown) return;
-welcomeShown = true;
-
-boolean gr = AppLang.isGreek(this);
-
-AlertDialog.Builder b =
-new AlertDialog.Builder(MainActivity.this);
-
-b.setCancelable(true);
-
-// ================= ROOT =================
-LinearLayout root = new LinearLayout(MainActivity.this);
-root.setOrientation(LinearLayout.VERTICAL);
-root.setPadding(dp(24), dp(22), dp(24), dp(20));
-
-GradientDrawable bg = new GradientDrawable();
-bg.setColor(0xFF000000); // Μαύρο
-bg.setCornerRadius(dp(14));
-bg.setStroke(dp(4), 0xFFFFD700); // Χρυσό περίγραμμα
-root.setBackground(bg);
-
-// ================= TITLE =================
-welcomeTitle = new TextView(MainActivity.this);
-welcomeTitle.setText(
-AppLang.isGreek(this) ? "ΚΑΛΩΣ ΗΡΘΑΤΕ" : "WELCOME"
-);
-welcomeTitle.setTextColor(Color.WHITE);
-welcomeTitle.setTextSize(19f);
-welcomeTitle.setTypeface(null, Typeface.BOLD);
-welcomeTitle.setGravity(Gravity.CENTER);
-welcomeTitle.setPadding(0, 0, 0, dp(14));
-root.addView(welcomeTitle);
-
-// ================= MESSAGE =================
-welcomeMessage = new TextView(MainActivity.this);
-welcomeMessage.setText(
-AppLang.isGreek(this)
-? getWelcomeTextGR()
-: getWelcomeTextEN()
-);
-welcomeMessage.setTextColor(0xFF00FF9C); // Neon green
-welcomeMessage.setTextSize(15f);
-welcomeMessage.setGravity(Gravity.CENTER);
-welcomeMessage.setLineSpacing(0f, 1.15f);
-welcomeMessage.setPadding(dp(6), 0, dp(6), dp(18));
-root.addView(welcomeMessage);
-
-// ================= MUTE ROW =================
-root.addView(buildMuteRow());
-
-// ================= LANGUAGE SPINNER =================
-Spinner langSpinner = new Spinner(MainActivity.this);
-
-ArrayAdapter<String> adapter =
-        new ArrayAdapter<String>(
-                MainActivity.this,
-                android.R.layout.simple_spinner_item,
-                new String[]{"EN", "GR"}
-        ) {
-
-            @Override
-            public View getView(int position, View convertView, ViewGroup parent) {
-                TextView tv = (TextView) super.getView(position, convertView, parent);
-                tv.setTypeface(null, Typeface.BOLD);
-                tv.setGravity(Gravity.CENTER);
-                tv.setTextColor(Color.WHITE);
-                return tv;
-            }
-
-            @Override
-            public View getDropDownView(int position, View convertView, ViewGroup parent) {
-                TextView tv = (TextView) super.getDropDownView(position, convertView, parent);
-                tv.setTypeface(null, Typeface.BOLD);
-                tv.setGravity(Gravity.CENTER);
-                tv.setTextColor(Color.BLACK);
-                tv.setPadding(dp(14), dp(12), dp(14), dp(12));
-                return tv;
-            }
-        };
-
-adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-
-langSpinner.setAdapter(adapter);
-langSpinner.setSelection(AppLang.isGreek(this) ? 1 : 0);
-
-langSpinner.setOnItemSelectedListener(
-        new AdapterView.OnItemSelectedListener() {
-
-            @Override
-            public void onItemSelected(
-                    AdapterView<?> parent,
-                    View view,
-                    int position,
-                    long id
-            ) {
-
-                String newLang = (position == 0) ? "en" : "el";
-
-                if (!newLang.equals(LocaleHelper.getLang(MainActivity.this))) {
-
-                    LocaleHelper.set(MainActivity.this, newLang);
-
-                    try { AppTTS.stop(); } catch (Throwable ignore) {}
-
-                    // 🔥 Hard restart activity + force reopen welcome
-                    Intent i = getIntent();
-                    i.putExtra("force_welcome", true);
-
-                    finish();
-                    overridePendingTransition(0, 0);
-                    startActivity(i);
-                    overridePendingTransition(0, 0);
-                }
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {}
-        }
-);
-
-// ================= LANGUAGE BOX =================
-LinearLayout langBox = new LinearLayout(MainActivity.this);
-langBox.setOrientation(LinearLayout.VERTICAL);
-langBox.setGravity(Gravity.CENTER);
-langBox.setPadding(dp(12), dp(12), dp(12), dp(12));
-
-GradientDrawable langBg = new GradientDrawable();
-langBg.setColor(0xFF111111); // Σκούρο μαύρο
-langBg.setCornerRadius(dp(10));
-langBg.setStroke(dp(3), 0xFFFFD700); // Χρυσό
-langBox.setBackground(langBg);
-
-langBox.addView(langSpinner);
-
-LinearLayout.LayoutParams lpLang =
-new LinearLayout.LayoutParams(
-LinearLayout.LayoutParams.WRAP_CONTENT,
-LinearLayout.LayoutParams.WRAP_CONTENT
-);
-lpLang.gravity = Gravity.CENTER;
-lpLang.setMargins(0, 0, 0, dp(18));
-langBox.setLayoutParams(lpLang);
-
-root.addView(langBox);
-
-// ================= CHECKBOX =================
-CheckBox cb = new CheckBox(this);
-cb.setText(AppLang.isGreek(this)
-? "Να μην εμφανιστεί ξανά"
-: "Do not show again");
-cb.setTextColor(Color.WHITE);
-cb.setPadding(0, dp(8), 0, dp(16));
-root.addView(cb);
-
-// ================= OK BUTTON =================
-Button okBtn = new Button(MainActivity.this);
-okBtn.setText("OK");
-okBtn.setAllCaps(false);
-okBtn.setTextColor(Color.WHITE);
-okBtn.setTextSize(TypedValue.COMPLEX_UNIT_SP, 22f);
-okBtn.setTypeface(null, Typeface.BOLD);
-
-GradientDrawable okBg = new GradientDrawable();
-okBg.setColor(0xFF00E676); // Neon green
-okBg.setCornerRadius(dp(12));
-okBg.setStroke(dp(3), 0xFFFFD700); // Χρυσό περίγραμμα
-okBtn.setBackground(okBg);
-
-LinearLayout.LayoutParams okLp =
-new LinearLayout.LayoutParams(
-LinearLayout.LayoutParams.MATCH_PARENT,
-dp(140)
-);
-okLp.setMargins(dp(6), dp(6), dp(6), 0);
-okBtn.setLayoutParams(okLp);
-
-root.addView(okBtn);
-
-// ================= SET VIEW =================
-b.setView(root);
-
-final AlertDialog d = b.create();
-
-if (d.getWindow() != null) {
-d.getWindow().setBackgroundDrawable(
-new ColorDrawable(Color.TRANSPARENT)
-);
-}
-
-// --------------------------------------------
-// STATE BEFORE SHOW
-// --------------------------------------------
-welcomeShown = true;
-
-// --------------------------------------------
-// STOP ALWAYS ON DISMISS - CANCEL
-// --------------------------------------------
-d.setOnDismissListener(dialog -> {
-try { AppTTS.stop(); } catch (Throwable ignore) {}
-welcomeShown = false;
-});
-
-d.setOnCancelListener(dialog -> {
-try { AppTTS.stop(); } catch (Throwable ignore) {}
-welcomeShown = false;
-});
-
-// --------------------------------------------
-// SPEAK ONLY WHEN DIALOG IS ACTUALLY SHOWN
-// --------------------------------------------
-d.setOnShowListener(dialog -> {
-if (!AppTTS.isMuted(MainActivity.this) && welcomeShown) {
-speakWelcomeTTS();
-}
-});
-
-// --------------------------------------------
-// SHOW
-// --------------------------------------------
-d.show();
-
-// --------------------------------------------
-// OK BUTTON
-// --------------------------------------------
-okBtn.setOnClickListener(v -> {
-try { AppTTS.stop(); } catch (Throwable ignore) {}
-
-welcomeShown = false;
-
-if (cb.isChecked()) {
-disableWelcomeForever();
-}
-
-d.dismiss();
-showPlatformSelectPopup();
-});
-}
-
-// =========================================================
-// PLATFORM SELECT - FINAL, CLEAN
-// =========================================================
-private void showPlatformSelectPopup() {
-
-boolean gr = AppLang.isGreek(this);
-
-AlertDialog.Builder b =
-new AlertDialog.Builder(
-MainActivity.this,
-android.R.style.Theme_Material_Dialog_NoActionBar
-);
-
-LinearLayout root = new LinearLayout(this);
-root.setOrientation(LinearLayout.VERTICAL);
-root.setGravity(Gravity.CENTER_HORIZONTAL);
-root.setPadding(dp(24), dp(20), dp(24), dp(18));
-
-GradientDrawable bg = new GradientDrawable();
-bg.setColor(0xFF101010);
-bg.setCornerRadius(dp(10));
-bg.setStroke(dp(3), 0xFFFFD700);
-root.setBackground(bg);
-
-// ================= TITLE =================
-TextView t = new TextView(this);
-t.setText(gr ? "ΕΠΙΛΟΓΗ ΣΥΣΚΕΥΗΣ" : "SELECT DEVICE");
-t.setTextColor(Color.WHITE);
-t.setTextSize(20f);
-t.setTypeface(null, Typeface.BOLD);
-t.setGravity(Gravity.CENTER);
-t.setPadding(0, 0, 0, dp(38));
-root.addView(t);
-
-// ================= CHECKBOX =================
-CheckBox cb = new CheckBox(this);
-cb.setText(AppLang.isGreek(this)
-? "Να μην εμφανιστεί ξανά"
-: "Do not show again");
-cb.setTextColor(Color.WHITE);
-cb.setPadding(0, dp(8), 0, dp(16));
-
-// ================= ANDROID BUTTON =================
-TextView androidBtn = new TextView(this);
-androidBtn.setText(gr
-? "🤖  Η ANDROID ΣΥΣΚΕΥΗ ΜΟΥ"
-: "🤖  MY ANDROID DEVICE");
-androidBtn.setTextColor(Color.WHITE);
-androidBtn.setTextSize(18f);
-androidBtn.setTypeface(null, Typeface.BOLD);
-androidBtn.setGravity(Gravity.CENTER);
-androidBtn.setPadding(0, dp(20), 0, dp(20));
-
-GradientDrawable bgAndroid = new GradientDrawable();
-bgAndroid.setColor(0xFF3DDC84);
-bgAndroid.setCornerRadius(dp(12));
-bgAndroid.setStroke(dp(3), 0xFFFFD700);
-androidBtn.setBackground(bgAndroid);
-
-LinearLayout.LayoutParams lpBtn =
-new LinearLayout.LayoutParams(
-LinearLayout.LayoutParams.MATCH_PARENT,
-dp(150)
-);
-lpBtn.setMargins(dp(8), dp(10), dp(8), 0);
-androidBtn.setLayoutParams(lpBtn);
-
-// ================= APPLE BUTTON =================
-TextView appleBtn = new TextView(this);
-appleBtn.setText(gr
-? "🍎  ΑΛΛΗ ΣΥΣΚΕΥΗ APPLE"
-: "🍎  OTHER APPLE DEVICE");
-appleBtn.setTextColor(Color.WHITE);
-appleBtn.setTextSize(18f);
-appleBtn.setTypeface(null, Typeface.BOLD);
-appleBtn.setGravity(Gravity.CENTER);
-appleBtn.setPadding(0, dp(20), 0, dp(20));
-
-GradientDrawable bgApple = new GradientDrawable();
-bgApple.setColor(0xFF1C1C1E);
-bgApple.setCornerRadius(dp(12));
-bgApple.setStroke(dp(3), 0xFFFFD700);
-appleBtn.setBackground(bgApple);
-
-LinearLayout.LayoutParams lpBtn2 =
-new LinearLayout.LayoutParams(
-LinearLayout.LayoutParams.MATCH_PARENT,
-dp(150)
-);
-lpBtn2.setMargins(dp(8), dp(14), dp(8), 0);
-appleBtn.setLayoutParams(lpBtn2);
-
-root.addView(androidBtn);
-root.addView(appleBtn);
-root.addView(cb);
-
-b.setView(root);
-final AlertDialog d = b.create();
-
-if (d.getWindow() != null) {
-d.getWindow().setBackgroundDrawable(
-new ColorDrawable(Color.TRANSPARENT)
-);
-}
-
-// --------------------------------------------
-// STATE
-// --------------------------------------------
-welcomeShown = true;
-
-// --------------------------------------------
-// STOP ON DISMISS
-// --------------------------------------------
-d.setOnDismissListener(dialog -> {
-try { AppTTS.stop(); } catch (Throwable ignore) {}
-welcomeShown = false;
-});
-
-// --------------------------------------------
-// STOP ON BACK (CANCEL)
-// --------------------------------------------
-d.setOnCancelListener(dialog -> {
-try { AppTTS.stop(); } catch (Throwable ignore) {}
-welcomeShown = false;
-});
-
-// --------------------------------------------
-// SHOW
-// --------------------------------------------
-d.show();
-
-// --------------------------------------------
-// WINDOW LAYOUT AFTER SHOW
-// --------------------------------------------
-Window w = d.getWindow();
-if (w != null) {
-w.setLayout(
-ViewGroup.LayoutParams.MATCH_PARENT,
-ViewGroup.LayoutParams.WRAP_CONTENT
-);
-w.getDecorView().setPadding(dp(16), 0, dp(16), 0);
-}
-
-// --------------------------------------------
-// ANDROID BUTTON
-// --------------------------------------------
-androidBtn.setOnClickListener(v -> {
-
-    try { AppTTS.stop(); } catch (Throwable ignore) {}
-
-    welcomeShown = false;
-
-    savePlatform("android");
-
-    d.dismiss();
-
-    recreate();
-});
-
-// --------------------------------------------
-// APPLE BUTTON
-// --------------------------------------------
-appleBtn.setOnClickListener(v -> {
-
-    try { AppTTS.stop(); } catch (Throwable ignore) {}
-
-    welcomeShown = false;
-
-    savePlatform("apple");
-
-    d.dismiss();
-
-    recreate();
-});
-}
-
-// =========================================================
-// APPLE ENTRY POINT
-// =========================================================
-private void openAppleInternalPeripherals() {
-applyAppleModeUI();
-}
-
-// =========================================================
-// ANDROID MODE UI FILTER
-// =========================================================
-private void applyAndroidModeUI() {
-
-hide(R.id.btnAppleDeviceDeclaration);
-
-show(R.id.section_system);
-show(R.id.section_clean);
-show(R.id.section_junk);
-show(R.id.section_performance);
-
-show(R.id.btnCpuRamLive);
-show(R.id.btnCleanAll);
-show(R.id.btnBrowserCache);
-show(R.id.btnAppCache);
-show(R.id.btnAppManager);
-show(R.id.btnGuidedOptimizer);
-
-show(R.id.btnDonate);
-show(R.id.btnPhoneInfoInternal);
-show(R.id.btnPhoneInfoPeripherals);
-show(R.id.btnDiagnostics);
-
-// ANDROID DIAGNOSTICS - LOCALIZED + RESET STYLE
-View diagBtn = findViewById(R.id.btnDiagnostics);
-if (diagBtn instanceof TextView) {
-TextView tv = (TextView) diagBtn;
-tv.setText(R.string.diagnostics_android);
-tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20f);
-}
-}
-
-// =========================================================
-// APPLE MODE UI FILTER
-// =========================================================
-private void applyAppleModeUI() {
-
-hide(R.id.section_system);
-hide(R.id.section_clean);
-hide(R.id.section_junk);
-hide(R.id.section_performance);
-
-hide(R.id.btnCpuRamLive);
-hide(R.id.btnCleanAll);
-hide(R.id.btnBrowserCache);
-hide(R.id.btnAppCache);
-hide(R.id.btnAppManager);
-hide(R.id.btnGuidedOptimizer);
-
-hide(R.id.txtLogs);
-
-show(R.id.btnDonate);
-show(R.id.btnPhoneInfoInternal);
-show(R.id.btnPhoneInfoPeripherals);
-show(R.id.btnDiagnostics);
-show(R.id.btnAppleDeviceDeclaration);
-
-// APPLE DIAGNOSTICS - LOCALIZED + EMPHASIZED
-View v = findViewById(R.id.btnDiagnostics);
-if (v instanceof TextView) {
-TextView tv = (TextView) v;
-tv.setText(R.string.diagnostics_apple);
-tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f);
-}
-}
-
-private void hide(int id){
-View v = findViewById(id);
-if (v != null) v.setVisibility(View.GONE);
-}
-
-private void show(int id){
-View v = findViewById(id);
-if (v != null) v.setVisibility(View.VISIBLE);
-}
-
-// =========================================================
-// LANGUAGE SYSTEM
-// =========================================================
-private void setupLangButtons() {
-View bGR = findViewById(R.id.btnLangGR);
-View bEN = findViewById(R.id.btnLangEN);
-
-if (bGR != null) bGR.setOnClickListener(v -> changeLang("el"));
-if (bEN != null) bEN.setOnClickListener(v -> changeLang("en"));
-}
-
-private void changeLang(String code) {
-
-    if (code.equals(LocaleHelper.getLang(this))) return;
-
-    LocaleHelper.set(this, code);
-
-    Intent i = getIntent();
-    i.putExtra("skip_welcome_once", true);
-
-    finish();
-    startActivity(i);
-}
-
-// =========================================================
-// DONATE
-// =========================================================
-private void setupDonate() {
-
-    View b = findViewById(R.id.btnDonate);
-
-    if (b != null) {
-
-        b.setOnClickListener(v -> {
-
-            try {
-
-                startActivity(new Intent(
-                        Intent.ACTION_VIEW,
-                        Uri.parse("https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=gdiolitsis@yahoo.com&currency_code=EUR")
-                ));
-
-            } catch (Exception e) {
-
-                Toast.makeText(
-                        this,
-                        "Cannot open browser",
-                        Toast.LENGTH_SHORT
-                ).show();
-            }
-        });
-    }
-}
-
-// =========================================================
-// BUTTONS - PLATFORM AWARE
-// =========================================================
-private void setupButtons() {
-
-bind(R.id.btnAppleDeviceDeclaration,
-this::showAppleDeviceDeclarationPopup);
-
-// ==========================
-//  INTERNAL INFO
-// ==========================
-bind(R.id.btnPhoneInfoInternal, () -> {
-if (isAppleMode()) {
-startActivity(new Intent(
-this,
-AppleDeviceInfoInternalActivity.class
-));
-} else {
-startActivity(new Intent(
-this,
-DeviceInfoInternalActivity.class
-));
-}
-});
-
-// ==========================
-//  PERIPHERALS INFO
-// ==========================
-bind(R.id.btnPhoneInfoPeripherals, () -> {
-if (isAppleMode()) {
-startActivity(new Intent(
-this,
-AppleDeviceInfoPeripheralsActivity.class
-));
-} else {
-startActivity(new Intent(
-this,
-DeviceInfoPeripheralsActivity.class
-));
-}
-});
-
-// ==========================
-// ⚙️ ΥΠΟΛΟΙΠΑ ΚΟΥΜΠΙΑ
-// ==========================
-bind(R.id.btnCpuRamLive,
-() -> startActivity(new Intent(this, CpuRamLiveActivity.class)));
-
-bind(R.id.btnCleanAll,
-() -> GELCleaner.deepClean(this,this));
-
-bind(R.id.btnBrowserCache,
-this::showBrowserPicker);
-
-View appCache = findViewById(R.id.btnAppCache);
-if (appCache != null) {
-
-appCache.setOnClickListener(v -> {
-try {
-
-Intent i = new Intent(this, AppListActivity.class);
-i.putExtra("mode", "cache"); // CACHE MODE
-startActivity(i);
-
-} catch (Exception e) {
-Toast.makeText(this, "Cannot open App List", Toast.LENGTH_SHORT).show();
-}
-});
-}
-
-bind(R.id.btnDiagnostics, () -> {
-startActivity(new Intent(
-this,
-DiagnosisMenuActivity.class
-));
-});
-
-    // ==========================
-    // RETURN PLATFORM  👇 ΒΑΛΕ ΤΟ ΕΔΩ
-    // ==========================
-    bind(R.id.btnReturnAndroid, () -> {
-
-        if (isAppleMode()) {
-            savePlatform("android");
-        } else {
-            savePlatform("apple");
-        }
-
-        recreate();
-    });
-}
-
-// =========================================================
-// BIND HELPER
-// =========================================================
-private void bind(int id, Runnable fn){
-View b = findViewById(id);
-if (b != null){
-b.setOnClickListener(v -> {
-try { fn.run(); }
-catch(Throwable t){
-Toast.makeText(this,
-"Action failed: "+t.getMessage(),
-Toast.LENGTH_SHORT).show();
-}
-});
-}
-}
-
-// =========================================================
-//  APPLE DEVICE DECLARATION
-// =========================================================
-private void showAppleDeviceDeclarationPopup() {
-
-AlertDialog.Builder b =
-new AlertDialog.Builder(this,
-android.R.style.Theme_Material_Dialog_Alert);
-
-LinearLayout root = new LinearLayout(this);
-root.setOrientation(LinearLayout.VERTICAL);
-root.setPadding(dp(20), dp(20), dp(20), dp(20));
-
-GradientDrawable bg = new GradientDrawable();
-bg.setColor(0xFF000000);
-bg.setCornerRadius(dp(10));
-bg.setStroke(dp(3), 0xFFFFD700);
-root.setBackground(bg);
-
-TextView title = new TextView(this);
-title.setText("Select your Apple device");
-title.setTextColor(Color.WHITE);
-title.setTextSize(20f);
-title.setTypeface(null, Typeface.BOLD);
-title.setGravity(Gravity.CENTER);
-title.setPadding(0, 0, 0, dp(16));
-root.addView(title);
-
-// ==========================
-// ðŸ“± iPHONE BUTTON
-// ==========================
-Button iphoneBtn = new Button(this);
-iphoneBtn.setIncludeFontPadding(false);
-iphoneBtn.setText("📱  iPHONE");
-iphoneBtn.setAllCaps(false);
-iphoneBtn.setTextColor(Color.WHITE);
-iphoneBtn.setTextSize(16f);
-
-GradientDrawable iphoneBg = new GradientDrawable();
-iphoneBg.setColor(0xFF000000);
-iphoneBg.setCornerRadius(dp(10));
-iphoneBg.setStroke(dp(3), 0xFFFFD700);
-iphoneBtn.setBackground(iphoneBg);
-
-LinearLayout.LayoutParams lpIphone =
-new LinearLayout.LayoutParams(
-LinearLayout.LayoutParams.MATCH_PARENT,
-dp(150)
-);
-lpIphone.setMargins(0, dp(12), 0, 0);
-iphoneBtn.setLayoutParams(lpIphone);
-iphoneBtn.setPadding(dp(16), dp(14), dp(16), dp(14));
-
-// ==========================
-// ðŸ“² iPAD BUTTON
-// ==========================
-Button ipadBtn = new Button(this);
-ipadBtn.setIncludeFontPadding(false);
-ipadBtn.setText("📲  iPAD");
-ipadBtn.setAllCaps(false);
-ipadBtn.setTextColor(Color.WHITE);
-ipadBtn.setTextSize(16f);
-
-GradientDrawable ipadBg = new GradientDrawable();
-ipadBg.setColor(0xFF000000);
-ipadBg.setCornerRadius(dp(10));
-ipadBg.setStroke(dp(3), 0xFFFFD700);
-ipadBtn.setBackground(ipadBg);
-
-LinearLayout.LayoutParams lpIpad =
-new LinearLayout.LayoutParams(
-LinearLayout.LayoutParams.MATCH_PARENT,
-dp(150)
-);
-lpIpad.setMargins(0, dp(12), 0, 0);
-ipadBtn.setLayoutParams(lpIpad);
-ipadBtn.setPadding(dp(16), dp(14), dp(16), dp(14));
-
-// ==========================
-// ADD TO BOX
-// ==========================
-root.addView(iphoneBtn);
-root.addView(ipadBtn);
-
-b.setView(root);
-AlertDialog d = b.create();
-if (d.getWindow() != null)
-d.getWindow().setBackgroundDrawable(
-new ColorDrawable(Color.TRANSPARENT));
-
-d.show();
-
-// ==========================
-// ACTIONS
-// ==========================
-iphoneBtn.setOnClickListener(v -> {
-d.dismiss();
-showAppleModelPicker("iphone");
-});
-
-ipadBtn.setOnClickListener(v -> {
-d.dismiss();
-showAppleModelPicker("ipad");
-});
-}
-
-// =========================================================
-//  MODEL PICKER - GEL STYLE (FINAL)
-// =========================================================
-private void showAppleModelPicker(String type) {
-
-String[] models = "iphone".equals(type)
-? new String[]{
-"iPhone 15",
-"iPhone 15 Pro",
-"iPhone 15 Pro Max",
-
-"iPhone 14",
-"iPhone 14 Pro",
-"iPhone 14 Pro Max",
-
-"iPhone 13",
-"iPhone 13 Pro",
-"iPhone 13 Pro Max",
-
-"iPhone 12",
-"iPhone 12 Pro",
-"iPhone 12 Pro Max",
-
-"iPhone 11",
-"iPhone 11 Pro",
-"iPhone 11 Pro Max"
-}
-: new String[]{
-"iPad Pro 11 (M2)",
-"iPad Pro 12.9 (M2)",
-"iPad Pro 11 (M1)",
-"iPad Pro 12.9 (M1)",
-"iPad Air 11 (M2)",
-"iPad Air 13 (M2)",
-"iPad Air (M1)",
-"iPad mini 6"
-};
-
-AlertDialog.Builder b =
-new AlertDialog.Builder(this,
-android.R.style.Theme_Material_Dialog_Alert);
-
-LinearLayout root = new LinearLayout(this);
-root.setOrientation(LinearLayout.VERTICAL);
-root.setPadding(dp(18), dp(18), dp(18), dp(18));
-
-GradientDrawable bg = new GradientDrawable();
-bg.setColor(Color.BLACK);
-bg.setCornerRadius(dp(10));
-bg.setStroke(dp(3), 0xFFFFD700);
-root.setBackground(bg);
-
-TextView title = new TextView(this);
-title.setText("Select Apple Model");
-title.setTextColor(Color.WHITE);
-
-root.addView(title);
-
-ListView list = new ListView(this);
-list.setDivider(null);
-list.setDividerHeight(0);
-
-ArrayAdapter < String > adapter =
-new ArrayAdapter < String > (
-this,
-android.R.layout.simple_list_item_1,
-models
-) {
-@Override
-public View getView(int position, View convertView, ViewGroup parent) {
-TextView tv = (TextView) super.getView(position, convertView, parent);
-tv.setTextColor(0xFF00FF9C);
-tv.setTextSize(16f);
-tv.setTypeface(Typeface.MONOSPACE, Typeface.BOLD);
-tv.setPadding(dp(14), dp(14), dp(14), dp(14));
-tv.setBackground(null);
-return tv;
-}
-};
-
-list.setAdapter(adapter);
-root.addView(list);
-b.setView(root);
-
-AlertDialog d = b.create();
-if (d.getWindow() != null)
-d.getWindow().setBackgroundDrawable(
-new ColorDrawable(Color.TRANSPARENT));
-
-d.show();
-
-// =========================
-// ACTION
-// =========================
-list.setOnItemClickListener((parent, view, position, id) -> {
-
-String rawModel = models[position];
-String normalizedModel = normalizeAppleModel(rawModel);
-
-saveAppleDevice(type, normalizedModel);
-
-TextView btn = findViewById(R.id.btnAppleDeviceDeclaration);
-if (btn != null) {
-btn.setText("🍎 " + type.toUpperCase(Locale.US)
-+ " — " + rawModel);
-}
-
-Toast.makeText(
-this,
-"Selected: " + rawModel,
-Toast.LENGTH_SHORT
-).show();
-
-d.dismiss();
-});
-}
-
-// =========================================================
-// NORMALIZE APPLE MODEL - MATCH iPadSpecs / AppleSpecs
-// =========================================================
-private String normalizeAppleModel(String raw) {
-
-if (raw == null) return null;
-
-String m = raw.trim();
-
-// iPad Pro
-if (m.equals("iPad Pro 11 (M2)")) return "iPad Pro 11 M2";
-if (m.equals("iPad Pro 12.9 (M2)")) return "iPad Pro 12.9 M2";
-if (m.equals("iPad Pro 11 (M1)")) return "iPad Pro 11 M1";
-if (m.equals("iPad Pro 12.9 (M1)")) return "iPad Pro 12.9 M1";
-
-// iPad Air
-if (m.equals("iPad Air 11 (M2)")) return "iPad Air 11 M2";
-if (m.equals("iPad Air 13 (M2)")) return "iPad Air 13 M2";
-if (m.equals("iPad Air (M1)")) return "iPad Air M1";
-
-// iPad mini
-if (m.equals("iPad mini 6")) return "iPad mini 6";
-
-// iPhones are already correct
-return m;
-}
-
-// =========================================================
-// SAVE SELECTION (LOCKED KEYS)
-// =========================================================
-private void saveAppleDevice(String type, String model) {
-
-getSharedPreferences(PREFS, MODE_PRIVATE)
-.edit()
-.putString("apple_type", type)
-.putString("apple_model", model)
-.apply();
-}
-
-// =========================================================
-// BROWSER PICKER - DYNAMIC (REAL BROWSERS ONLY)
-// =========================================================
-private void showBrowserPicker() {
 
 PackageManager pm = getPackageManager();
 
-// -----------------------------------------------------
-// FIND REAL BROWSERS
-// -----------------------------------------------------
-Map < String, String > apps = new LinkedHashMap<>();
+try {
 
-Intent browserIntent = new Intent(Intent.ACTION_MAIN);
-browserIntent.addCategory(Intent.CATEGORY_APP_BROWSER);
+    for (String pkg : mergedBgMinutes.keySet()) {
 
-List < ResolveInfo > browsers =
-pm.queryIntentActivities(browserIntent, 0);
+        if (pkg == null) continue;
+        if (pkg.equals(getPackageName())) continue;
 
-if (browsers != null) {
-for (ResolveInfo ri : browsers) {
+        long fgMinutes =
+                mergedFgMinutes.get(pkg) != null
+                        ? mergedFgMinutes.get(pkg)
+                        : 0L;
 
-if (ri.activityInfo == null) continue;
+        long bgMinutes =
+                mergedBgMinutes.get(pkg) != null
+                        ? mergedBgMinutes.get(pkg)
+                        : 0L;
 
-String pkg = ri.activityInfo.packageName;
-CharSequence label = ri.loadLabel(pm);
+        // ✅ ΚΑΝΟΝΑΣ: ΜΟΝΟ background χωρίς άνοιγμα
+        boolean userOpened = fgMinutes > 0;
+        boolean bgNoOpen   = (!userOpened && bgMinutes > 0);
+        if (!bgNoOpen) continue;
 
-if (pkg == null || label == null) continue;
+        Long lastObj = mergedLastUsed.get(pkg);
+        long lastUsed = lastObj != null ? lastObj : 0L;
 
-// verify http support
-Intent httpTest = new Intent(Intent.ACTION_VIEW,
-Uri.parse("http://www.example.com"));
-httpTest.setPackage(pkg);
+        long hoursSinceUse =
+                lastUsed > 0
+                        ? (now - lastUsed) / (1000L * 60 * 60)
+                        : 999999;
 
-List < ResolveInfo > httpHandlers =
-pm.queryIntentActivities(httpTest, 0);
+        try {
+            ApplicationInfo ai = pm.getApplicationInfo(pkg, 0);
+            boolean isSystem =
+                    (ai.flags & ApplicationInfo.FLAG_SYSTEM) != 0;
+            if (isSystem) continue;
+        } catch (Throwable ignore) {}
 
-if (httpHandlers == null || httpHandlers.isEmpty())
-continue;
+        boolean rarelyUsedButActive =
+                (bgMinutes <= 5 && hoursSinceUse <= 12);
 
-apps.put(label.toString(), pkg);
-}
-}
+        long score =
+                (bgMinutes * 2)
+                        + (rarelyUsedButActive ? 30 : 0);
 
-// -----------------------------------------------------
-// HANDLE RESULTS
-// -----------------------------------------------------
-if (apps.isEmpty()) {
-Toast.makeText(this, "No browsers found.", Toast.LENGTH_SHORT).show();
+        if (score >= 240) {
+            heavy.add(new DataRisk(
+                    pkg,
+                    score,
+                    bgMinutes,
+                    hoursSinceUse,
+                    rarelyUsedButActive
+            ));
+        }
+        else if (score >= 80) {
+            moderate.add(new DataRisk(
+                    pkg,
+                    score,
+                    bgMinutes,
+                    hoursSinceUse,
+                    rarelyUsedButActive
+            ));
+        }
+    }
+
+} catch (Throwable ignore) {}
+
+    if (heavy.isEmpty() && moderate.isEmpty()) {
+        dataVerdict = "STABLE";
+        showDialog(
+        progressTitle(
+                gr
+                        ? "ΒΗΜΑ 3 — Κατανάλωση Δεδομένων (48 ώρες)"
+                        : "STEP 3 — Data Consumption (48 hours)"
+        ),
+        gr
+                ? "Τα αποτελέσματα αφορούν εφαρμογές που δεν άνοιξες τις τελευταίες 48 ώρες,\n"
+                  + "αλλά παρουσίασαν δραστηριότητα στο παρασκήνιο,\n"
+                  + "καταναλώνοντας δεδομενα.\n\n"
+                  + "Engine Verdict: STABLE\n\n"
+                  + "Δεν εντοπίστηκε ύποπτη ή βαριά δραστηριότητα χρήσης τις τελευταίες 48 ώρες.\n\n"
+                : "Results refer to apps you did not open in the last 48 hours,\n"
+                  + "but showed background activity,\n"
+                  + "consuming data.\n\n"
+                  + "Engine Verdict: STABLE\n\n"
+                  + "No suspicious or heavy usage activity detected in the last 48 hours.\n\n",
+        null,
+        () -> go(STEP_APPS),
+        false
+);
 return;
 }
 
-if (apps.size() == 1) {
-openAppInfo(apps.values().iterator().next());
-return;
+    // Sort by SCORE desc (stable + simple)
+    java.util.Comparator<DataRisk> cmp =
+            (a, b) -> Long.compare(b.score, a.score);
+
+    java.util.Collections.sort(heavy, cmp);
+    java.util.Collections.sort(moderate, cmp);
+
+    // UI
+    ScrollView scroll = new ScrollView(this);
+    LinearLayout root = buildBaseBox(
+        progressTitle(
+            gr ? "ΒΗΜΑ 3 — Κατανάλωση Δεδομένων (48 ώρες)"
+   : "STEP 3 — Data Consumption (48 hours)"
+        )
+);
+    scroll.addView(root);
+
+    boolean suspiciousData = false;
+
+for (DataRisk r : heavy) {
+
+    if (r.fgMinutes <= 5 && r.hoursSinceUse <= 12) {
+        suspiciousData = true;
+        break;
+    }
 }
 
-String[] names = apps.keySet().toArray(new String[0]);
+String verdict;
 
-// -----------------------------------------------------
-// POPUP
-// -----------------------------------------------------
-AlertDialog.Builder builder = buildNeonDialog();
+if (suspiciousData) {
+    verdict = "HEAVY";
+}
+else if (!heavy.isEmpty() || !moderate.isEmpty()) {
+    verdict = "MODERATE";
+}
+else {
+    verdict = "STABLE";
+}
 
-TextView title = new TextView(this);
-title.setText("Select Browser");
-title.setTextColor(0xFFFFFFFF);
-title.setTextSize(18f);
-title.setTypeface(null, Typeface.BOLD);
-title.setGravity(Gravity.CENTER);
-title.setPadding(dp(16), dp(14), dp(16), dp(10));
+dataVerdict = verdict;
 
-title.setLayoutParams(
-new LinearLayout.LayoutParams(
-LinearLayout.LayoutParams.MATCH_PARENT,
-LinearLayout.LayoutParams.WRAP_CONTENT
-)
+    addEngineVerdictData(root, verdict, heavy.size(), moderate.size());
+    
+    TextView sectionTitle = new TextView(this);
+sectionTitle.setText(
+        gr ? "Τι σημαίνουν τα αποτελέσματα"
+           : "What the results mean"
+);
+sectionTitle.setTextColor(0xFFFFD700); // GEL gold
+sectionTitle.setTypeface(null, Typeface.BOLD);
+sectionTitle.setTextSize(16f);
+sectionTitle.setPadding(0, dp(12), 0, dp(10));
+
+root.addView(sectionTitle);
+
+    TextView explain = new TextView(this);
+
+String fullText = gr
+        ? "Η ανάλυση βασίζεται σε δραστηριότητα στο παρασκήνιο (όχι MB).\n\n"
+        + "• High Activity = αυξημένη δραστηριότητα στο παρασκήνιο.\n\n"
+        + "• 💤 Σπάνια χρήση αλλά ενεργή = δεν άνοιξες την εφαρμογή,\n"
+        + "   αλλά παρουσίασε πρόσφατη δραστηριότητα στο παρασκήνιο.\n\n"
+        + "Πάτα σε μια εφαρμογή για ενέργειες.\n\n"
+        : "This analysis is based on background activity (not MB).\n\n"
+        + "• High Activity = elevated background activity.\n\n"
+        + "• 💤 Rarely used but active = you did not open the app,\n"
+        + "   but it showed recent background activity\n\n"
+        + "Tap an app for actions.\n\n";
+
+android.text.SpannableStringBuilder sb =
+        new android.text.SpannableStringBuilder(fullText);
+
+// Highlight labels
+String highLabel = gr
+        ? "Υψηλή Δραστηριότητα"
+        : "High Activity";
+String rareLabel = gr
+        ? "💤 Σπάνια χρήση αλλά ενεργή"
+        : "💤 Rarely used but active";
+
+int highStart = fullText.indexOf(highLabel);
+int rareStart = fullText.indexOf(rareLabel);
+
+if (highStart >= 0) {
+    int highEnd = highStart + highLabel.length();
+    sb.setSpan(new android.text.style.StyleSpan(android.graphics.Typeface.BOLD),
+            highStart, highEnd, android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+    sb.setSpan(new android.text.style.ForegroundColorSpan(0xFFFF5252),
+            highStart, highEnd, android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+}
+
+if (rareStart >= 0) {
+    int rareEnd = rareStart + rareLabel.length();
+    sb.setSpan(new android.text.style.StyleSpan(android.graphics.Typeface.BOLD),
+            rareStart, rareEnd, android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+    sb.setSpan(new android.text.style.ForegroundColorSpan(0xFFFFC107),
+            rareStart, rareEnd, android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+}
+
+explain.setText(sb);
+explain.setTextColor(0xFFAAAAAA);
+explain.setPadding(0, 0, 0, 28);
+
+root.addView(explain);
+
+    if (!heavy.isEmpty()) {
+        addSection(
+                root,
+                gr ? "🔥 Υψηλή Δραστηριότητα" : "🔥 High Activity",
+                gr ? "Εφαρμογές με πολύ υψηλή δραστηριότητα." : "Apps with very high activity.",
+                0xFFFF5252
+        );
+        addDataRows(root, heavy);
+    }
+
+    if (!moderate.isEmpty()) {
+        addSection(
+                root,
+                gr ? "⚠️ Εφαρμογές με Μέτρια Δραστηριότητα" : "⚠️ Moderate Activity apps",
+                gr ? "Εφαρμογές που αξίζουν έλεγχο." : "Apps worth reviewing.",
+                0xFFFFC107
+        );
+        addDataRows(root, moderate);
+    }
+
+    Button okBtn = mkGreenBtn("OK");
+    okBtn.setOnClickListener(v -> go(STEP_APPS));
+    root.addView(okBtn);
+
+    showCustomDialog(scroll);
+
+} catch (Throwable ignore) {
+}
+
+}
+
+// ============================================================
+// DATA RISK MODEL (NO BYTES, SCORE ONLY)
+// ============================================================
+private static class DataRisk {
+    final String pkg;
+    final long score;          // behavioural index
+    final long fgMinutes;      // foreground minutes in 48h
+    final long hoursSinceUse;  // hours in the last used
+    final boolean rarelyUsedButActive;
+
+    DataRisk(String p, long s, long fg, long h, boolean r) {
+        pkg = p;
+        score = s;
+        fgMinutes = fg;
+        hoursSinceUse = h;
+        rarelyUsedButActive = r;
+    }
+}
+
+// ============================================================
+// UI: ENGINE VERDICT
+// ============================================================
+private void addEngineVerdictData(LinearLayout root,
+                                  String verdict,
+                                  int heavyCount,
+                                  int moderateCount) {
+
+    TextView tv = new TextView(this);
+
+    int color =
+            verdict.equals("HEAVY") ? 0xFFFF5252 :
+            0xFFFFC107;
+
+    tv.setText(
+        "Engine Verdict: " + verdict + "\n\n"
+        + (gr ? "Υψηλή Δραστηριότητα:\n\n"
+              : "High Activity:\n\n")
+        + heavyCount + "\n\n"
+        + (gr ? "Μέτρια Δραστηριότητα:\n\n"
+              : "Moderate Activity:\n\n")
+        + moderateCount + "\n\n"
 );
 
-builder.setCustomTitle(title);
+    tv.setTextColor(color);
+    tv.setTextSize(15f);
+    tv.setPadding(0, 10, 0, 22);
 
-builder.setAdapter(neonAdapter(names), (d, w) -> {
-String pkg = apps.get(names[w]);
-openAppInfo(pkg);
-});
+    root.addView(tv);
 
-AlertDialog dialog = builder.create();
-dialog.show();
+    TextView rec = new TextView(this);
 
-Window window = dialog.getWindow();
-if (window != null) {
-GradientDrawable bg = new GradientDrawable();
-bg.setColor(0xFF000000);
-bg.setCornerRadius(dp(10));
-bg.setStroke(dp(3), 0xFFFFD700);
-window.setBackgroundDrawable(bg);
-}
-}
+rec.setText(
+        gr
+                ? "Μπορείς να περιορίσεις τη δραστηριότητα στο παρασκήνιο αυτών των εφαρμογών, ή να αφαιρέσεις όσες δεν χρειάζεσαι.\n\n"
+                : "You can restrict background activity for these apps, or remove those you don’t need.\n\n"
+);
 
-// =========================================================
-// LOGGING,
-// =========================================================
-@Override
-public void log(String msg, boolean isError) {
-runOnUiThread(() -> {
-if (txtLogs == null) return;
+rec.setTextColor(0xFFFFFFFF);
+rec.setPadding(0, 0, 0, 26);
 
-String prev = txtLogs.getText() == null ? "" : txtLogs.getText().toString();
-txtLogs.setText(prev.isEmpty()?msg:prev+"\n"+msg);
-
-if (scroll != null)
-scroll.post(() -> scroll.fullScroll(ScrollView.FOCUS_DOWN));
-});
+root.addView(rec);
 }
 
-// =========================================================
-// OPEN APP INFO (for Browser Picker)
-// =========================================================
-private void openAppInfo(String pkg) {
+// ============================================================
+// UI: ROWS
+// ============================================================
+private void addDataRows(LinearLayout root, java.util.List<DataRisk> list) {
+
+    final PackageManager pm = getPackageManager();
+
+    int shown = 0;
+    for (DataRisk r : list) {
+
+        if (++shown > 12) break;
+
+        String label = r.pkg;
+        try {
+            ApplicationInfo ai = pm.getApplicationInfo(r.pkg, 0);
+            CharSequence cs = pm.getApplicationLabel(ai);
+            if (cs != null) label = cs.toString();
+        } catch (Throwable ignore) {}
+
+        LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.VERTICAL);
+        row.setPadding(0, 14, 0, 14);
+
+        TextView name = new TextView(this);
+        name.setText("• " + label);
+        name.setTextColor(Color.WHITE);
+        name.setTypeface(null, Typeface.BOLD);
+
+        TextView meta = new TextView(this);
+
+        String tag = r.rarelyUsedButActive
+                ? (gr ? "💤 Σπάνια χρήση αλλά ενεργή \n\n" : "💤 Rarely used but active \n\n")
+                : (gr ? "Υψηλή Δραστηριότητα" : "High Activity \n\n");
+
+        meta.setText(
+                (gr ? "Δείκτης: " : "Index: ") + r.score
+                        + "  |  "
+                        + (gr ? "Χρήση: " : "Use: ") + r.fgMinutes + (gr ? " λεπτά (48h)" : " min (48h)")
+                        + "\n"
+                        + (gr ? "Τελευταία χρήση: " : "Last used: ") + r.hoursSinceUse + (gr ? " ώρες πριν" : "h ago")
+                        + "\n"
+                        + tag
+        );
+
+        meta.setTextColor(0xFF00FF7F);
+        meta.setPadding(0, 8, 0, 10);
+
+        LinearLayout btnRow = new LinearLayout(this);
+        btnRow.setOrientation(LinearLayout.HORIZONTAL);
+        btnRow.setGravity(Gravity.CENTER);
+
+        Button details = mkBlackGoldBtn(gr ? "Λεπτομέρειες" : "Details");
+        Button uninstall = mkRedBtn(gr ? "Απεγκατάσταση" : "Uninstall");
+
+        details.setOnClickListener(v -> openAppDetails(r.pkg));
+        uninstall.setOnClickListener(v -> uninstallPkg(r.pkg));
+
+        LinearLayout.LayoutParams lp =
+                new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
+        lp.setMargins(dp(6), 0, dp(6), 0);        
+        
+        details.setLayoutParams(lp);
+        uninstall.setLayoutParams(lp);
+
+        btnRow.addView(details);
+        btnRow.addView(uninstall);
+
+        row.addView(name);
+        row.addView(meta);
+        row.addView(btnRow);
+
+        View div = new View(this);
+        div.setBackgroundColor(0xFF222222);
+        LinearLayout.LayoutParams dlp =
+                new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(1));
+        dlp.setMargins(0, dp(14), 0, 0);
+        div.setLayoutParams(dlp);
+
+        row.addView(div);
+
+        root.addView(row);
+    }
+}
+
+// ============================================================
+// ACTIONS
+// ============================================================
+
+private void openAppDetails(String pkg) {
+
+    // 1️⃣ Main App Info (always works)
+    try {
+        Intent i = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+        i.setData(android.net.Uri.fromParts("package", pkg, null));
+        startActivity(i);
+        return;
+    } catch (Throwable ignore) {}
+
+    // 2️⃣ Fallback
+    try {
+        startActivity(new Intent(Settings.ACTION_APPLICATION_SETTINGS));
+    } catch (Throwable ignore2) {}
+}
+
+private void uninstallPkg(String pkg) {
+    try {
+        Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+        intent.setData(Uri.fromParts("package", pkg, null));
+        startActivity(intent);
+    } catch (Throwable ignore) {
+    }
+}
+
+private void openBatterySettings(String pkg) {
+
+    // 1️⃣ Try direct app battery screen (OEM dependent)
+    try {
+        Intent i = new Intent("android.settings.APP_BATTERY_SETTINGS");
+        i.putExtra("package_name", pkg);
+        startActivity(i);
+        return;
+    } catch (Throwable ignore) {}
+
+    // 2️⃣ Fallback → general battery settings
+    try {
+        startActivity(new Intent(Settings.ACTION_BATTERY_SAVER_SETTINGS));
+        return;
+    } catch (Throwable ignore2) {}
+
+    // 3️⃣ Last fallback → app info
+    openAppDetails(pkg);
+}
+
+// ============================================================
+// STEP 4 — APPS INTELLIGENCE ENGINE (MODERATE + HEAVY ONLY)
+// ============================================================
+
+private void showApps() {
+
+    long now = System.currentTimeMillis();
+    long start = now - (48L * 60 * 60 * 1000);
+
+    ArrayList<AppAppRisk> heavy = new ArrayList<>();
+    ArrayList<AppAppRisk> moderate = new ArrayList<>();
+
+    try {
+
+        UsageStatsManager usm =
+                (UsageStatsManager) getSystemService(USAGE_STATS_SERVICE);
+
+        List<UsageStats> stats =
+        usm.queryUsageStats(
+                UsageStatsManager.INTERVAL_DAILY,
+                start,
+                now
+        );
+
+HashMap<String, Long> mergedFgMinutes = new HashMap<>();
+HashMap<String, Long> mergedBgMinutes = new HashMap<>();
+HashMap<String, Long> mergedLastUsed  = new HashMap<>();
+
+if (stats != null) {
+    for (UsageStats u : stats) {
+
+        if (u == null) continue;
+
+        String pkg = u.getPackageName();
+        if (pkg == null) continue;
+
+        long fgMins = 0L;
 try {
-Intent i = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-i.setData(Uri.parse("package:" + pkg));
-startActivity(i);
-} catch (Exception e) {
-Toast.makeText(this, "Cannot open App Info", Toast.LENGTH_SHORT).show();
-}
+    fgMins = u.getTotalTimeInForeground() / 60000L;
+} catch (Throwable ignore) {}
+
+long bgMins = 0L;
+try {
+    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+        bgMins = u.getTotalTimeForegroundServiceUsed() / 60000L;
+    }
+} catch (Throwable ignore) {}
+
+long last = 0L;
+try {
+    last = u.getLastTimeUsed();
+} catch (Throwable ignore) {}
+
+Long curFg = mergedFgMinutes.get(pkg);
+mergedFgMinutes.put(pkg, (curFg == null ? 0L : curFg) + fgMins);
+
+Long curBg = mergedBgMinutes.get(pkg);
+mergedBgMinutes.put(pkg, (curBg == null ? 0L : curBg) + bgMins);
+
+Long lastCur = mergedLastUsed.get(pkg);
+if (lastCur == null || last > lastCur) {
+    mergedLastUsed.put(pkg, last);
+        }
+    }
 }
 
+if (stats == null || stats.isEmpty()) {
+    showAppsStable();
+    return;
+}
+
+if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.Q) {
+    showAppsStable();
+    return;
+}
+
+PackageManager pm = getPackageManager();
+
+for (String pkg : mergedBgMinutes.keySet()) {
+
+    if (pkg == null) continue;
+    if (pkg.equals(getPackageName())) continue;
+
+    long fgMinutes =
+            mergedFgMinutes.containsKey(pkg)
+                    ? mergedFgMinutes.get(pkg)
+                    : 0L;
+
+    long bgMinutes =
+            mergedBgMinutes.containsKey(pkg)
+                    ? mergedBgMinutes.get(pkg)
+                    : 0L;
+
+    Long lastObj = mergedLastUsed.get(pkg);
+    long lastUsed = lastObj != null ? lastObj : 0L;
+
+    long hoursSinceUse =
+            lastUsed > 0
+                    ? (now - lastUsed) / (1000L * 60 * 60)
+                    : 999999;
+
+    // ✅ ΜΟΝΟ background χωρίς άνοιγμα
+    boolean userOpened = fgMinutes > 0;
+    boolean bgNoOpen = (!userOpened && bgMinutes > 0);
+    if (!bgNoOpen) continue;
+
+    try {
+
+        ApplicationInfo ai = pm.getApplicationInfo(pkg, 0);
+        boolean isSystem =
+                (ai.flags & ApplicationInfo.FLAG_SYSTEM) != 0;
+
+        if (isSystem) continue;
+
+        String badge;
+        int level;
+
+        if (bgMinutes >= 60) {
+            badge = gr ? "🟥 Background χωρίς άνοιγμα \n\n"
+                       : "🟥 Background without opening \n\n";
+            level = 3;
+        } else {
+            badge = gr ? "🟨 Δραστηριότητα παρασκηνίου χωρίς άνοιγμα \n\n"
+                       : "🟨 Background activity without opening \n\n";
+            level = 2;
+        }
+
+        AppAppRisk r =
+                new AppAppRisk(pkg, fgMinutes, bgMinutes, hoursSinceUse, badge);
+
+        if (level >= 3) heavy.add(r);
+        else moderate.add(r);
+
+    } catch (Throwable ignore) {}
+}
+
+// ✅ STABLE
+if (heavy.isEmpty() && moderate.isEmpty()) {
+    showAppsStable();
+    return;
+}
+
+    ScrollView scroll = new ScrollView(this);
+
+    LinearLayout root = buildBaseBox(
+        progressTitle(
+                gr
+                        ? "ΒΗΜΑ 4 — Δραστηριότητα Εφαρμογών (48 ώρες)"
+                        : "STEP 4 — App Activity (48 hours)"
+        )
+);
+
+scroll.addView(root);
+
+// 🔎 Explanation
+TextView explain = new TextView(this);
+explain.setText(
+        gr
+                ? "Τα αποτελέσματα αφορούν εφαρμογές που έτρεξαν στο παρασκήνιο\n"
+                  + "χωρίς να τις ανοίξεις τις τελευταίες 48 ώρες. \n\n"
+                : "Results refer to apps that ran in the background\n"
+                  + "without you opening them in the last 48 hours. \n\n"
+);
+
+explain.setTextColor(0xFFFFFFFF);  // λευκό
+explain.setPadding(0, dp(8), 0, dp(18));
+
+root.addView(explain);
+
+// ----------------------------------------------------
+// SMART VERDICT ENGINE (USER-AWARE)
+// ----------------------------------------------------
+
+String verdict;
+
+if (!heavy.isEmpty()) {
+    verdict = "HEAVY";
+} else if (!moderate.isEmpty()) {
+    verdict = "MODERATE";
+} else {
+    verdict = "STABLE";
+}
+
+appsVerdict = verdict;
+addAppsVerdict(root, verdict, heavy.size(), moderate.size());
+
+if (!heavy.isEmpty()) {
+    addSection(
+            root,
+            gr ? "🔥 Υψηλή Δραστηριότητα"
+               : "🔥 High Activity",
+            "",
+            0xFFFF5252
+    );
+    addAppList(root, heavy);
+}
+
+if (!moderate.isEmpty()) {
+    addSection(
+            root,
+            gr ? "⚠️ Μέτρια Δραστηριότητα"
+               : "⚠️ Moderate Activity",
+            "",
+            0xFFFFC107
+    );
+    addAppList(root, moderate);
+}
+
+    Button next = mkGreenBtn("OK");
+next.setOnClickListener(v -> go(STEP_UNUSED));
+root.addView(next);
+
+showCustomDialog(scroll);
+
+} catch (Throwable ignore) {
+}
+
+}
+
+// ----------------------------------------------------
+// STEP 5 - UNUSED APPS (FIXED FOOTER)
+// ----------------------------------------------------
+
+private void showInactiveApps() {
+
+    if (!hasUsageAccess()) {
+        go(STEP_CACHE);
+        return;
+    }
+
+    boolean gr = AppLang.isGreek(this);
+
+    long now = System.currentTimeMillis();
+    long threshold = now - (30L * 24 * 60 * 60 * 1000);
+
+    ArrayList<UnusedApp> unused = new ArrayList<>();
+
+    try {
+
+        UsageStatsManager usm =
+                (UsageStatsManager) getSystemService(USAGE_STATS_SERVICE);
+
+        PackageManager pm = getPackageManager();
+
+        HashMap<String, Long> lastUsedMap = new HashMap<>();
+
+        List<UsageStats> stats =
+                usm.queryUsageStats(
+                        UsageStatsManager.INTERVAL_DAILY,
+                        threshold,
+                        now
+                );
+
+        if (stats != null) {
+            for (UsageStats u : stats) {
+
+                if (u == null) continue;
+
+                String pkg = u.getPackageName();
+                if (pkg == null) continue;
+                if (pkg.equals(getPackageName())) continue;
+
+                long last = 0L;
+                try { last = u.getLastTimeUsed(); } catch (Throwable ignore) {}
+
+                if (last > 0L) {
+                    Long cur = lastUsedMap.get(pkg);
+                    if (cur == null || last > cur) {
+                        lastUsedMap.put(pkg, last);
+                    }
+                }
+            }
+        }
+
+        List<ApplicationInfo> installed =
+                pm.getInstalledApplications(0);
+
+        for (ApplicationInfo ai : installed) {
+
+            String pkg = ai.packageName;
+            if (pkg == null) continue;
+            if (pkg.equals(getPackageName())) continue;
+
+            boolean isSystem =
+                    (ai.flags & ApplicationInfo.FLAG_SYSTEM) != 0;
+            if (isSystem) continue;
+
+            long lastUsed =
+                    lastUsedMap.containsKey(pkg)
+                            ? lastUsedMap.get(pkg)
+                            : 0L;
+
+            long installTime = 0L;
+            try {
+                installTime = pm.getPackageInfo(pkg, 0).firstInstallTime;
+            } catch (Throwable ignore) {}
+
+            long basis = 0L;
+
+            if (lastUsed > 0L) {
+                basis = lastUsed;
+            } else if (installTime > 0L && installTime <= now) {
+                basis = installTime;
+            }
+
+            if (basis <= 0L || basis > now) continue;
+
+            long daysSinceUse =
+                    (now - basis) / (1000L * 60 * 60 * 24);
+
+            if (daysSinceUse >= 30) {
+                unused.add(new UnusedApp(pkg, daysSinceUse));
+            }
+        }
+
+    } catch (Throwable ignore) {}
+
+    if (unused.isEmpty()) {
+        go(STEP_CACHE);
+        return;
+    }
+
+    java.util.Collections.sort(
+            unused,
+            (a, b) -> Long.compare(b.days, a.days)
+    );
+
+    // =====================================================
+    // CONTAINER (VERTICAL)
+    // =====================================================
+
+    LinearLayout container = new LinearLayout(this);
+    container.setOrientation(LinearLayout.VERTICAL);
+
+    // =====================================================
+    // SCROLL AREA
+    // =====================================================
+
+    ScrollView scroll = new ScrollView(this);
+
+    LinearLayout root = buildBaseBox(
+            progressTitle(
+                    gr ? "ΒΗΜΑ 5 — Αδρανείς Εφαρμογές (30 ημέρες)"
+                       : "STEP 5 — Unused Applications (30 days)"
+            )
+    );
+
+    scroll.addView(root);
+
+    LinearLayout.LayoutParams lpScroll =
+            new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    0,
+                    1f
+            );
+
+    scroll.setLayoutParams(lpScroll);
+    container.addView(scroll);
+
+    // =====================================================
+    // CONTENT
+    // =====================================================
+
+    TextView info = new TextView(this);
+    info.setText(
+            gr
+                    ? "Εφαρμογές που δεν έχουν χρησιμοποιηθεί >30 ημέρες.\n"
+                      + "Ενδέχεται να πιάνουν χώρο ή δικαιώματα.\n\n"
+                      + "Συνιστάται η απεγκατάσταση όσων δεν χρειάζεσαι.\n\n"
+                    : "Apps not used for over 30 days.\n"
+                      + "They may occupy storage or hold permissions.\n\n"
+                      + "It is recommended to uninstall those you don’t need.\n\n"
+    );
+    info.setTextColor(0xFFAAAAAA);
+    info.setPadding(0, 0, 0, 25);
+    root.addView(info);
+
+    PackageManager pm = getPackageManager();
+
+    for (UnusedApp r : unused) {
+
+        String label = r.pkg;
+        try {
+            ApplicationInfo ai = pm.getApplicationInfo(r.pkg, 0);
+            CharSequence cs = pm.getApplicationLabel(ai);
+            if (cs != null) label = cs.toString();
+        } catch (Throwable ignore) {}
+
+        LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.VERTICAL);
+        row.setPadding(0, 15, 0, 15);
+
+        TextView name = new TextView(this);
+        name.setText("• " + label);
+        name.setTextColor(Color.WHITE);
+        name.setTypeface(null, Typeface.BOLD);
+
+        TextView meta = new TextView(this);
+        meta.setText(
+                (gr ? "Χωρίς χρήση για "
+                        : "Unused for ")
+                        + r.days
+                        + (gr ? " ημέρες"
+                        : " days")
+        );
+        meta.setTextColor(0xFFFFC107);
+        meta.setPadding(0, 6, 0, 10);
+
+        LinearLayout btnRow = new LinearLayout(this);
+        btnRow.setOrientation(LinearLayout.HORIZONTAL);
+
+        Button uninstall =
+                mkRedBtn(gr ? "Απεγκατάσταση" : "Uninstall");
+        Button details =
+                mkBlackGoldBtn(gr ? "Λεπτομέρειες" : "Details");
+
+        uninstall.setOnClickListener(v -> uninstallPkg(r.pkg));
+        details.setOnClickListener(v -> openAppDetails(r.pkg));
+
+        LinearLayout.LayoutParams lp =
+                new LinearLayout.LayoutParams(
+                        0,
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                        1f
+                );
+        lp.setMargins(dp(6), 0, dp(6), 0);
+
+        uninstall.setLayoutParams(lp);
+        details.setLayoutParams(lp);
+
+        btnRow.addView(details);
+        btnRow.addView(uninstall);
+
+        row.addView(name);
+        row.addView(meta);
+        row.addView(btnRow);
+
+        root.addView(row);
+    }
+
+    // =====================================================
+    // FIXED ACTION BUTTONS (OUTSIDE SCROLL)
+    // =====================================================
+
+    LinearLayout actions = new LinearLayout(this);
+    actions.setOrientation(LinearLayout.VERTICAL);
+    actions.setPadding(dp(16), dp(10), dp(16), dp(16));
+
+    addActionButtons(
+            actions,
+            () -> go(STEP_CACHE)
+    );
+
+    container.addView(actions);
+
+    showCustomDialog(container);
+}
+
+private static class UnusedApp {
+    final String pkg;
+    final long days;
+
+    UnusedApp(String p, long d) {
+        pkg = p;
+        days = d;
+    }
+}
+
+// ============================================================
+// APPS MODEL
+// ============================================================
+
+private static class AppAppRisk {
+    final String pkg;
+    final long fgMinutes;   // user opened (foreground UI)
+    final long bgMinutes;   // background via Foreground Service (Android 10+)
+    final long hoursSinceUse;
+    final String badge;
+
+    AppAppRisk(String p, long fg, long bg, long h, String b) {
+        pkg = p;
+        fgMinutes = fg;
+        bgMinutes = bg;
+        hoursSinceUse = h;
+        badge = b;
+    }
+}
+
+// ============================================================
+// STABLE
+// ============================================================
+
+private void showAppsStable() {
+
+    showDialog(
+            progressTitle(gr ? "ΒΗΜΑ 4 — Δραστηριότητα Εφαρμογών στο παρασκήνιο, τις τελευταίες 48 ώρες"
+                    : "STEP 4 — App Background Activity in the last 48 hours)"),
+            gr
+                    ? "🟢 Engine Verdict: STABLE\n\n"
+                    + "Καμμία εφαρμογή δεν είχε δραστηριότητα στο παρασκήνιο,\n"
+                    + "τις τελευταίες 48 ώρες. \n\n"
+                    : "🟢 Engine Verdict: STABLE\n\n"
+                    + "No app showed background activity\n"
+                    + "in the last 48 hours. \n\n",
+            null,
+            () -> go(STEP_UNUSED),
+            false
+    );
+}
+
+// ============================================================
+// VERDICT
+// ============================================================
+
+private void addAppsVerdict(LinearLayout root,
+                            String verdict,
+                            int heavy,
+                            int moderate) {
+
+    TextView tv = new TextView(this);
+
+    int color =
+        verdict.equals("HEAVY") ? 0xFFFF5252 :
+        verdict.equals("MODERATE") ? 0xFFFFC107 :
+        0xFF00C853;
+
+    tv.setText(
+        "Engine Verdict: " + verdict + "\n\n"
+        + (gr ? "Υψηλή Δραστηριότητα στο παρασκήνιο:\n\n"
+              : "High Background Activity:\n\n")
+        + heavy + "\n\n"
+        + (gr ? "Μέτρια Δραστηριότητα στο παρασκήνιο:\n\n"
+              : "Moderate Background Activity:\n\n")
+        + moderate + "\n\n"
+);
+
+    tv.setTextColor(color);
+    tv.setTextSize(15f);
+    tv.setPadding(0,10,0,25);
+
+    root.addView(tv);
+}
+
+// ============================================================
+// LIST ROWS
+// ============================================================
+
+private void addAppList(LinearLayout root,
+                        List<AppAppRisk> list) {
+
+    PackageManager pm = getPackageManager();
+
+    int shown = 0;
+
+    for (AppAppRisk r : list) {
+
+        if (++shown > 12) break;
+
+        String label = r.pkg;
+
+        try {
+            ApplicationInfo ai = pm.getApplicationInfo(r.pkg, 0);
+            label = pm.getApplicationLabel(ai).toString();
+        } catch (Throwable ignore) {}
+        
+        boolean isSystem = false;
+try {
+    ApplicationInfo ai = pm.getApplicationInfo(r.pkg, 0);
+    isSystem = (ai.flags & ApplicationInfo.FLAG_SYSTEM) != 0;
+} catch (Throwable ignore) {}
+
+        LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.VERTICAL);
+        row.setPadding(0,14,0,14);
+
+        TextView name = new TextView(this);
+        name.setText("• " + label);
+        name.setTextColor(Color.WHITE);
+        name.setTypeface(null, Typeface.BOLD);
+
+        TextView meta = new TextView(this);
+meta.setText(
+        (gr ? "Δραστηριότητα στο παρασκήνιο: \n\n"
+            : "Background Activity: \n\n")
+        + r.bgMinutes
+        + (gr ? " λεπτά (48h)" : " min (48h)")
+        + "  |  "
+        + (gr ? "Τελευταία χρήση: "
+              : "Last used: ")
+        + r.hoursSinceUse + "h"
+        + "\n"
+        + r.badge
+);
+
+if (isSystem) {
+    meta.append(gr
+        ? "  |  ⚙️ Εφαρμογή Συστήματος."
+        : "  |  ⚙️ System App.");
+}
+
+        meta.setTextColor(0xFF00FF7F);
+        meta.setPadding(0,6,0,12);
+
+        LinearLayout btnRow = new LinearLayout(this);
+        btnRow.setOrientation(LinearLayout.HORIZONTAL);
+        btnRow.setGravity(Gravity.CENTER);
+
+        Button details = mkBlackGoldBtn(gr ? "Λεπτομέρειες" : "Details");
+        Button uninstall = mkRedBtn(gr ? "Απεγκατάσταση" : "Uninstall");
+       
+        details.setOnClickListener(v -> openAppDetails(r.pkg));
+        uninstall.setOnClickListener(v -> uninstallPkg(r.pkg));
+
+        LinearLayout.LayoutParams lp =
+                new LinearLayout.LayoutParams(0,
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                        1f);
+        lp.setMargins(dp(6),0,dp(6),0);
+
+        details.setLayoutParams(lp);
+        uninstall.setLayoutParams(lp);
+
+        btnRow.addView(details);
+
+if (!isSystem) {
+    btnRow.addView(uninstall);
+}
+
+        row.addView(name);
+        row.addView(meta);
+        row.addView(btnRow);
+
+        root.addView(row);
+    }
+}
+
+private void addBatteryAppList(LinearLayout root,
+                               List<AppRisk> list) {
+
+    PackageManager pm = getPackageManager();
+
+    int shown = 0;
+
+    for (AppRisk r : list) {
+
+        if (r == null || r.packageName == null) continue;
+
+        // ✅ ΜΗΝ εμφανίζεις system apps
+        if (isSystemPkg(r.packageName)) continue;
+
+        if (++shown > 12) break;
+
+        String label = r.packageName;
+
+        try {
+            ApplicationInfo ai = pm.getApplicationInfo(r.packageName, 0);
+            CharSequence cs = pm.getApplicationLabel(ai);
+            if (cs != null) label = cs.toString();
+        } catch (Throwable ignore) {}
+
+        if (++shown > 12) break;
+
+        try {
+            ApplicationInfo ai = pm.getApplicationInfo(r.packageName, 0);
+            CharSequence cs = pm.getApplicationLabel(ai);
+            if (cs != null) label = cs.toString();
+        } catch (Throwable ignore) {}
+        
+        boolean isSystem = false;
+try {
+    ApplicationInfo ai = pm.getApplicationInfo(r.packageName, 0);
+    isSystem = (ai.flags & ApplicationInfo.FLAG_SYSTEM) != 0;
+} catch (Throwable ignore) {}
+
+        LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.VERTICAL);
+        row.setPadding(0, 14, 0, 14);
+
+        TextView name = new TextView(this);
+        name.setText("• " + label);
+        name.setTextColor(Color.WHITE);
+        name.setTypeface(null, Typeface.BOLD);
+
+        TextView meta = new TextView(this);
+
+meta.setText(
+        (gr ? "Χρήση: \n\n" : "Usage: \n\n")
+                + r.minutes
+                + (gr ? " λεπτά (48h)" : " min (48h)")
+                + (r.unrestricted
+                ? (gr ? "  |  ⚠️ Χωρίς περιορισμό μπαταρίας"
+                      : "  |  ⚠️ Battery unrestricted")
+                : "")
+);
+
+meta.setTextColor(r.unrestricted ? 0xFFFFC107 : 0xFF00FF7F);
+meta.setPadding(0, 6, 0, 12);
+        
+        if (isSystem) {
+    meta.append(gr
+        ? "  |  ⚙️ Εφαρμογή Συστήματος."
+        : "  |  ⚙️ System App.");
+}
+
+        LinearLayout btnRow = new LinearLayout(this);
+        btnRow.setOrientation(LinearLayout.HORIZONTAL);
+        btnRow.setGravity(Gravity.CENTER);
+
+        Button details = mkBlackGoldBtn(gr ? "Λεπτομέρειες" : "Details");
+        Button uninstall = mkRedBtn(gr ? "Απεγκατάσταση" : "Uninstall");
+
+        details.setOnClickListener(v -> openAppDetails(r.packageName));
+        uninstall.setOnClickListener(v -> uninstallPkg(r.packageName));
+
+        LinearLayout.LayoutParams lp =
+                new LinearLayout.LayoutParams(
+                        0,
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                        1f
+                );
+        lp.setMargins(dp(6), 0, dp(6), 0);
+
+        details.setLayoutParams(lp);
+        uninstall.setLayoutParams(lp);
+
+        btnRow.addView(details);
+
+if (!isSystem) {
+    btnRow.addView(uninstall);
+}
+
+        row.addView(name);
+        row.addView(meta);
+        row.addView(btnRow);
+
+        View div = new View(this);
+        div.setBackgroundColor(0xFF222222);
+        LinearLayout.LayoutParams dlp =
+                new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        dp(1)
+                );
+        dlp.setMargins(0, dp(14), 0, 0);
+        div.setLayoutParams(dlp);
+
+        row.addView(div);
+
+        root.addView(row);
+    }
+}
+
+    // ============================================================
+    // STEP 6 — CACHE
+    // ============================================================
+
+    private void showCache() {
+
+        showDialog(
+                progressTitle(gr ? "ΒΗΜΑ 6 — Καθαρισμός Προσωρινής Μνήμης Εφαρμογών" : "STEP 6 — App Cache Cleaning"),
+                gr
+                        ? "Πατησε ΡΥΘΜΙΣΕΙΣ παρακάτω.\n\n"
+                        + "Θα ανοίξει η λίστα εφαρμογών. Πάτησε ταξινόμηση κατά «ΜΕΓΑΛΥΤΕΡΗ % CACHE».\n\n"
+                        + "Καθάρισε εφαρμογές με μεγάλη προσωρινή μνήμη — ή και όλες. \n\n"
+                        + "Στην πρώτη ομάδα θα δεις τις εφαρμογές που έχεις εγκαταστήσει. \n\n"
+                        + "Στη δεύτερη ομάδα θα δεις τις εφαρμογές συστήματος. \n\n"
+                        + "Η εκκαθάριση cache είναι ασφαλής και δεν διαγράφει προσωπικά δεδομένα.\n"
+                        + "Απόφυγε την εκκαθάριση δεδομένων εκτός αν γνωρίζεις τις συνέπειες.\n\n"        
+                        + "Πάτησε OK/ΠΑΡΑΛΕΙΨΗ όταν ολοκληρώσεις για να συνεχίσουμε.\n\n"
+                        : "Tap SETTINGS below.\n\n"
+                        + "The app list will open. Tap to sort by “LARGEST % CACHE”.\n\n"
+                        + "Clear apps with large temporary cache — or all of them if needed. \n\n"
+                        + "In the first group you will see apps you installed. \n\n"
+                        + "In the second group you will see system apps. \n\n"
+                        + "Clearing cache is safe and does not remove personal data.\n"
+                        + "Avoid clearing app data unless you understand the consequences.\n\n"
+                        + "Press OK/SKIP when finished to continue.\n\n",
+                () -> {
+    try {
+        Intent i = new Intent(this, AppListActivity.class);
+        i.putExtra("mode", "cache");
+        startActivity(i);
+    } catch (Exception e) {
+        Toast.makeText(
+                this,
+                gr ? "Δεν ήταν δυνατό να ανοίξει ο καθαριστής cache. \n\n"
+                   : "Unable to open cache cleaner. \n\n",
+                Toast.LENGTH_SHORT
+        ).show();
+    }
+},
+() -> go(STEP_DNS),
+false
+    );
+}
+
+    // ============================================================
+    // STEP 7 — DNS
+    // ============================================================
+
+private void showDnsStep() {
+
+    final boolean gr = AppLang.isGreek(this);
+
+    LinearLayout root = buildBaseBox(
+            progressTitle(gr
+                    ? "ΒΗΜΑ 7 — Μπλοκάρισμα Διαφημίσεων"
+                    : "STEP 7 — Block Advertisements")
+    );
+
+    TextView body = new TextView(this);
+    body.setText(gr
+? "Θέλεις να ρυθμίσουμε τη συσκευή σου ώστε να μπλοκάρει "
+  + "τις διαφημίσεις από άλλες εφαρμογές και το διαδίκτυο,\n"
+  + "χωρίς να χρειαστεί εγκατάσταση άλλης εφαρμογής;\n\n"
+  + "Η περιήγηση θα βελτιωθεί αισθητά, "
+  + "καθώς θα μπλοκάρονται οι διαφημίσεις και τα αναδυόμενα παράθυρα.\n\n"
+: "Would you like to configure your device to block ads "
+  + "from other applications and the internet,\n"
+  + "without installing any additional app?\n\n"
+  + "Browsing will improve noticeably, "
+  + "as advertisements and pop-ups will be blocked.\n\n"
+    );
+
+    body.setTextColor(0xFF00FF7F);
+    body.setPadding(0, dp(16), 0, dp(20));
+    root.addView(body);
+    
+    // 🔹 YES
+Button yesBtn = mkGreenBtn(gr ? "ΝΑΙ" : "YES");
+yesBtn.setOnClickListener(v -> showDnsHowToDialog());
+
+// 🔹 NO
+Button noBtn = mkRedBtn(gr ? "ΟΧΙ" : "NO");
+noBtn.setOnClickListener(v -> go(STEP_DEV_OPTIONS));
+
+root.addView(yesBtn);
+root.addView(noBtn);
+
+showCustomDialog(root);
+}
+
+private void showDnsHowToDialog() {
+
+    final boolean gr = AppLang.isGreek(this);
+
+    LinearLayout root = buildBaseBox(
+            progressTitle(gr
+                    ? "ΒΗΜΑ 7 — Οδηγίες Private DNS"
+                    : "STEP 7 — Private DNS Instructions")
+    );
+
+    TextView steps = new TextView(this);
+    steps.setText(gr
+            ? "Copy-paste έτοιμο:\n\n"
+              + "Αντέγραψε το κείμενο που σου δίνω παρακάτω και πάτησε ΑΝΟΙΓΜΑ ΡΥΘΜΙΣΕΩΝ.\n\n"
+              + "Εάν ανοίξουν οι γενικές ρυθμίσεις συσκευής,\n"
+              + "ανάλογα με την συσκευή σου, ψάξε για\n\n"
+              + "1) Συνδέσεις, ή Δίκτυο & Διαδίκτυο, ή Σύνδεση και Κοινοποίηση.\n\n"
+              + "2) Περισσότερες ρυθμίσεις σύνδεσης, ή Προσωπικό/Ιδιωτικό DNS.\n\n"
+              + "3) Όνομα παρόχου Προσωπικού/Ιδιωτικού DNS\n\n"
+              + "4) Κάνε επικόλληση το κείμενο που αντέγραψες (dns.adguard.com)  → Αποθήκευση.\n\n"
+              + "Όταν επιστρέψεις πάτησε ΕΤΟΙΜΟ για να συνεχίσουμε .\n\n"
+               : "Copy-paste ready:\n\n"
+              + "Copy the text provided below and tap OPEN SETTINGS.\n\n"
+              + "If the general device settings screen opens,\n"
+              + "depending on your device, look for:\n\n"
+              + "1) Connections, or Network & Internet, or Connection & Sharing.\n\n"
+              + "2) More connection settings, or Private DNS.\n\n"
+              + "3) Private DNS provider hostname.\n\n"
+              + "4) Paste the copied text (dns.adguard.com)  → Save.\n\n"
+              + "When you return, press DONE to continue.\n\n" );
+    steps.setTextColor(0xFF00FF7F);
+    steps.setPadding(0, dp(14), 0, dp(18));
+    root.addView(steps);
+
+    // Hostname box (monospace look)
+    TextView host = new TextView(this);
+    host.setText("dns.adguard.com");
+    host.setTextColor(Color.WHITE);
+    host.setTextSize(18f);
+    host.setTypeface(Typeface.MONOSPACE, Typeface.BOLD);
+    host.setGravity(Gravity.CENTER);
+    host.setPadding(dp(10), dp(12), dp(10), dp(12));
+
+    GradientDrawable boxBg = new GradientDrawable();
+    boxBg.setColor(0xFF111111);
+    boxBg.setCornerRadius(dp(10));
+    boxBg.setStroke(dp(3), 0xFFFFD700);
+    host.setBackground(boxBg);
+
+    root.addView(host);
+
+    // COPY button
+    Button copyBtn = mkGreenBtn(gr ? "ΑΝΤΙΓΡΑΦΗ" : "COPY");
+    copyBtn.setOnClickListener(v -> {
+        try {
+            ClipboardManager cb = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+            if (cb != null) {
+                cb.setPrimaryClip(ClipData.newPlainText("dns", "dns.adguard.com"));
+                Toast.makeText(this,
+                        gr ? "Αντιγράφηκε: dns.adguard.com" : "Copied: dns.adguard.com",
+                        Toast.LENGTH_SHORT).show();
+            }
+        } catch (Throwable ignore) {}
+    });
+    root.addView(copyBtn);
+
+    // OPEN SETTINGS button
+    Button openBtn = mkGreenBtn(gr ? "ΑΝΟΙΓΜΑ ΡΥΘΜΙΣΕΩΝ" : "OPEN SETTINGS");
+    openBtn.setOnClickListener(v -> {
+        try {
+            returnedFromDnsScreen = true;
+            try {
+    startActivity(new Intent("android.settings.PRIVATE_DNS_SETTINGS"));
+} catch (Exception e) {
+    startActivity(new Intent(Settings.ACTION_SETTINGS));
+}
+        } catch (Throwable t) {
+            // αν αποτύχει, απλά προχώρα
+            returnedFromDnsScreen = false;
+            go(STEP_QUEST);
+        }
+    });
+    root.addView(openBtn);
+
+    // DONE button
+    Button doneBtn = mkRedBtn(gr ? "ΕΤΟΙΜΟ" : "DONE");
+    doneBtn.setOnClickListener(v -> go(STEP_DEV_OPTIONS));
+    root.addView(doneBtn);
+
+    showCustomDialog(root);
+}
+
+    // ============================================================
+    // STEP 8 — DEVELOPMENT OPTIONS
+    // ============================================================
+
+private void showDevOptionsStep() {
+
+    final boolean gr = AppLang.isGreek(this);
+
+    LinearLayout root = buildBaseBox(
+            progressTitle(gr
+                    ? "ΒΗΜΑ 8 — Βελτίωση Απόκρισης"
+                    : "STEP 8 — Responsiveness Boost")
+    );
+
+    TextView body = new TextView(this);
+    body.setText(gr
+            ? "Θέλεις να βελτιώσουμε την ταχύτητα απόκρισης της συσκευής;\n\n"
+              + "Μπορούμε να μειώσουμε τη διάρκεια των system animations σε 0.5x.\n\n"
+              + "Θα παρατηρήσεις πιο γρήγορες μεταβάσεις μεταξύ οθονών και πιο άμεση απόκριση στο άνοιγμα εφαρμογών.\n\n"
+            : "Would you like to improve device responsiveness?\n\n"
+              + "We can reduce system animation scales to 0.5x.\n\n"
+              + "You will notice faster transitions and quicker app opening animations.\n\n"
+    );
+
+body.setTextColor(0xFF00FF7F);
+body.setPadding(0, dp(16), 0, dp(20));
+root.addView(body);
+
+// 🔹 YES
+Button yesBtn = mkGreenBtn(gr ? "ΝΑΙ" : "YES");
+yesBtn.setOnClickListener(v -> showDevOptionsHowToDialog());
+
+// 🔹 NO
+Button noBtn = mkRedBtn(gr ? "ΟΧΙ" : "NO");
+noBtn.setOnClickListener(v -> go(STEP_REMINDER));
+
+root.addView(yesBtn);
+root.addView(noBtn);
+
+showCustomDialog(root);
+}
+
+private void showDevOptionsHowToDialog() {
+
+    final boolean gr = AppLang.isGreek(this);
+
+    LinearLayout container = buildBaseBox(
+            progressTitle(gr
+                    ? "ΒΗΜΑ 8 — Ρύθμιση Επιλογών Προγραμματιστή"
+                    : "STEP 8 — Developer Options Setup")
+    );
+
+    container.setOrientation(LinearLayout.VERTICAL);
+
+    // =========================
+    // 1️⃣ SCROLLABLE CONTENT
+    // =========================
+    ScrollView scroll = new ScrollView(this);
+    scroll.setFillViewport(true);
+
+    LinearLayout content = new LinearLayout(this);
+    content.setOrientation(LinearLayout.VERTICAL);
+    content.setPadding(0, dp(6), 0, dp(6));
+
+    scroll.addView(content);
+
+    LinearLayout.LayoutParams scrollParams =
+            new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    0,
+                    1f   // 🔥 παίρνει όλο τον διαθέσιμο χώρο
+            );
+
+    container.addView(scroll, scrollParams);
+
+    TextView steps = new TextView(this);
+    steps.setText(gr
+? "Βελτίωση απόκρισης συσκευής.\n\n"
++ "Πάτησε ΑΝΟΙΓΜΑ ΡΥΘΜΙΣΕΩΝ παρακάτω.\n\n"
++ "Ανάλογα με τη συσκευή σου, θα ανοίξουν είτε οι\n"
++ "Επιλογές Προγραμματιστή, είτε οι γενικές Ρυθμίσεις.\n\n"
++ "Αν ΔΕΝ βλέπεις Επιλογές Προγραμματιστή:\n\n"
++ "1) Αναζήτησε:\n"
++ "   • Πληροφορίες συσκευής, ή Σχετικά με το τηλέφωνο.\n"
++ "   • (Σε ορισμένες συσκευές εμφανίζεται ως About phone)\n\n"
++ "2) Βρες:\n"
++ "   • Αριθμός έκδοσης (Build number), ή\n"
++ "   • Έκδοση MIUI, ή\n"
++ "   • Έκδοση One UI, ή\n"
++ "   • Version number\n\n"
++ "3) Πάτησε 7 φορές επάνω στο αντίστοιχο πεδίο.\n"
++ "Θα εμφανιστεί μήνυμα ότι ενεργοποιήθηκαν οι Επιλογές Προγραμματιστή.\n\n"
++ "4) Πάτησε επιστροφή (Back) και εντόπισε:\n"
++ "   • Πρόσθετες ρυθμίσεις (MIUI) → Επιλογές προγραμματιστών, ή\n"
++ "   • Επιλογές προγραμματιστή, ή\n"
++ "   • Σύστημα → Επιλογές προγραμματιστή\n\n"
++ "Στη συνέχεια θα μειώσουμε τις κλίμακες κινήσεων σε 0.5x.\n\n"
++ "Ρύθμισε με τη σειρά:\n"
++ "1) Κλίμακα κινουμένων σχεδίων παραθύρων\n"
++ "   (Window animation scale)\n"
++ "2) Κλίμακα μετάβασης κινουμένων σχεδίων\n"
++ "   (Transition animation scale)\n"
++ "3) Κλίμακα διάρκειας κινουμένων σχεδίων\n"
++ "   (Animator duration scale)\n\n"
++ "Ρύθμισέ τα όλα σε 0.5x.\n\n"
++ "Η ρύθμιση είναι ασφαλής και πλήρως αναστρέψιμη.\n\n"
++ "Όταν επιστρέψεις πάτησε ΕΤΟΙΜΟ για να συνεχίσουμε.\n\n"             
+: "Improve device responsiveness.\n\n"
++ "Tap OPEN SETTINGS below.\n\n"
++ "Depending on your device, either\n"
++ "Developer Options or the general Settings screen will open.\n\n"
++ "If you do NOT see Developer Options:\n\n"
++ "1) Look for:\n"
++ "   • About phone, or\n"
++ "   • About device\n\n"
++ "2) Find:\n"
++ "   • Build number, or\n"
++ "   • MIUI version, or\n"
++ "   • One UI version, or\n"
++ "   • Version number\n\n"
++ "3) Tap the corresponding field 7 times.\n"
++ "A message will appear confirming that Developer Options are enabled.\n\n"
++ "4) Press Back and locate:\n"
++ "   • Additional settings (MIUI) → Developer options, or\n"
++ "   • Developer options, or\n"
++ "   • System → Developer options\n\n"
++ "Next, we will reduce animation scales to 0.5x.\n\n"
++ "Adjust in order:\n"
++ "1) Window animation scale\n"
++ "2) Transition animation scale\n"
++ "3) Animator duration scale\n\n"
++ "Set all three to 0.5x.\n\n"
++ "This setting is safe and fully reversible.\n\n"
++ "When you return, press DONE to continue.\n\n"
+    );
+
+    steps.setTextColor(0xFF00FF7F);
+    steps.setPadding(0, dp(14), 0, dp(18));
+
+    content.addView(steps);
+
+    // OPEN SETTINGS
+    Button openBtn = mkGreenBtn(gr ? "ΑΝΟΙΓΜΑ ΡΥΘΜΙΣΕΩΝ" : "OPEN SETTINGS");
+    openBtn.setOnClickListener(v -> {
+
+        returnedFromDevScreen = true;
+
+        boolean opened = false;
+
+        try {
+            startActivity(new Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS));
+            opened = true;
+        } catch (Throwable ignore) {}
+
+        if (!opened) {
+            try {
+                startActivity(new Intent(Settings.ACTION_SETTINGS));
+            } catch (Throwable ignore) {}
+        }
+    });
+
+    // DONE
+    Button doneBtn = mkRedBtn(gr ? "ΕΤΟΙΜΟ" : "DONE");
+    doneBtn.setOnClickListener(v -> go(STEP_REMINDER));
+
+    container.addView(openBtn);
+    container.addView(doneBtn);
+
+    showCustomDialog(container);
+}
+
+    // ============================================================
+    // QUESTIONNAIRE
+    // ============================================================
+
+    private void showQuestionnaire() {
+
+        LinearLayout root = buildBaseBox(
+                gr ? "Πρόσεξες τελευταία κάτι που σε προβλημάτισε στη συσκευή σου; \n\n"
+   : "Have you noticed anything unusual on your device recently? \n\n"
+        );
+
+        CheckBox heat = mkCheck(gr?"Υψηλή θερμοκρασία":"High temperature");
+        CheckBox crash = mkCheck(gr?"Κρασαρίσματα":"Crashes");
+        CheckBox lag = mkCheck(gr?"Κολλάει":"Lag");
+        CheckBox charge = mkCheck(gr?"Αργή φόρτιση":"Slow charging");
+        CheckBox data = mkCheck(gr?"Internet issues":"Internet issues");
+        CheckBox camera = mkCheck(gr?"Κακά χρώματα κάμερας":"Bad camera colors");
+        CheckBox bluetooth = mkCheck(gr?"Bluetooth πρόβλημα":"Bluetooth issues");
+        CheckBox sound = mkCheck(gr?"Πρόβλημα ήχου":"Sound issues");
+        CheckBox boot = mkCheck(gr?"Αργή εκκίνηση":"Slow boot");
+        CheckBox wifi = mkCheck(gr ? "WiFi αστάθεια" : "WiFi instability");
+
+LinearLayout.LayoutParams p =
+        new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+p.setMargins(0, 0, 0, dp(20));   // ← απόσταση από τα κουμπιά
+wifi.setLayoutParams(p);
+
+        root.addView(heat);
+        root.addView(crash);
+        root.addView(lag);
+        root.addView(charge);
+        root.addView(data);
+        root.addView(camera);
+        root.addView(bluetooth);
+        root.addView(sound);
+        root.addView(boot);
+        root.addView(wifi);
+
+        addActionButtons(
+        root,
+        () -> {
+            symptoms.clear();
+            if (heat.isChecked()) symptoms.add("heat");
+            if (crash.isChecked()) symptoms.add("crash");
+            if (lag.isChecked()) symptoms.add("lag");
+            if (charge.isChecked()) symptoms.add("charge");
+            if (data.isChecked()) symptoms.add("data");
+            if (camera.isChecked()) symptoms.add("camera");
+            if (bluetooth.isChecked()) symptoms.add("bluetooth");
+            if (sound.isChecked()) symptoms.add("sound");
+            if (boot.isChecked()) symptoms.add("boot");
+            if (wifi.isChecked()) symptoms.add("wifi");
+            go(STEP_LABS);
+        }
+);
+
+        showCustomDialog(root);
+    }
+
+// ============================================================
+// LAB RECOMMENDATION (FIXED FLOW: Labs / OK / Exit)
+// ============================================================
+private void showLabRecommendation() {
+
+    if (symptoms == null || symptoms.isEmpty()) {
+        go(STEP_REMINDER);
+        return;
+    }
+
+    LinearLayout root = buildBaseBox(
+            gr
+                    ? "Για να ελέγξεις όσα μας ανέφερες, σου προτείνουμε να τρέξεις τα παρακάτω διαγνωστικά Εργαστήρια \n\n"
+                    : "Based on what you reported, we recommend running the following diagnostic Labs \n\n"
+    );
+
+    TextView tv = new TextView(this);
+    tv.setText(buildTechnicalRecommendationText(symptoms));
+    tv.setTextColor(0xFF00FF7F);
+    tv.setPadding(0, dp(20), 0, dp(20));
+    root.addView(tv);
+
+    // ------------------------------------------------------------
+    // 1) RUN LABS (BLACK / NEON GREEN) — same as Settings buttons
+    // ------------------------------------------------------------
+    Button labsBtn = mkBlackGoldBtn(gr ? "Εκτέλεση Εργαστηρίων" : "Run Labs");
+    labsBtn.setOnClickListener(v -> {
+        try {
+            startActivity(new Intent(this, ManualTestsActivity.class));
+        } catch (Throwable t) {
+            Toast.makeText(
+                    this,
+                    gr ? "Δεν ήταν δυνατό να ανοίξουν τα εργαστήρια. \n\n"
+                       : "Unable to open labs. \n\n",
+                    Toast.LENGTH_SHORT
+            ).show();
+        }
+    });
+    root.addView(labsBtn);
+
+    // ------------------------------------------------------------
+    // 2) OK (GREEN) — continue to next step (NOT labs)
+    // ------------------------------------------------------------
+    Button okBtn = mkGreenBtn(okSkipLabel(false));
+    okBtn.setOnClickListener(v -> go(STEP_REMINDER));
+     root.addView(okBtn);
+
+    // ------------------------------------------------------------
+    // 3) EXIT (RED)
+    // ------------------------------------------------------------
+    Button exitBtn = mkRedBtn(gr ? "Έξοδος" : "Exit");
+    exitBtn.setOnClickListener(v -> {
+        Toast.makeText(
+                this,
+                gr ? "Η βελτιστοποίηση διακόπηκε."
+                   : "Optimization cancelled.",
+                Toast.LENGTH_SHORT
+        ).show();
+        finish();
+    });
+    root.addView(exitBtn);
+
+    showCustomDialog(root);
+}
+
+    private String buildTechnicalRecommendationText(ArrayList<String> s) {
+
+    java.util.LinkedHashSet<String> labs = new java.util.LinkedHashSet<>();
+
+    if (s.contains("heat")) {
+        labs.add(gr
+                ? "LAB 16 — Θερμικός έλεγχος"
+                : "LAB 16 — Thermal diagnostics");
+        labs.add(gr
+                ? "LAB 14 — Έλεγχος μπαταρίας"
+                : "LAB 14 — Battery health analysis");
+    }
+
+    if (s.contains("charge")) {
+        labs.add(gr
+                ? "LAB 15 — Έλεγχος φόρτισης"
+                : "LAB 15 — Charging diagnostics");
+        labs.add(gr
+                ? "LAB 14 — Έλεγχος μπαταρίας"
+                : "LAB 14 — Battery health analysis");
+    }
+
+    if (s.contains("lag")) {
+        labs.add(gr
+                ? "LAB 19 — Απόδοση συστήματος"
+                : "LAB 19 — System performance analysis");
+        labs.add(gr
+                ? "LAB 26 — Ανάλυση επιπτώσεων εφαρμογών"
+                : "LAB 26 — Installed apps impact analysis");
+    }
+
+    if (s.contains("crash")) {
+        labs.add(gr
+                ? "LAB 25 — Ανάλυση κρασαρισμάτων"
+                : "LAB 25 — Crash intelligence analysis");
+        labs.add(gr
+                ? "LAB 30 — Τελική τεχνική αναφορά"
+                : "LAB 30 — Final technical report");
+    }
+
+    if (s.contains("data") || s.contains("wifi")) {
+        labs.add(gr
+                ? "LAB 26 — Δίκτυο & background χρήση"
+                : "LAB 26 — Network & background activity analysis");
+    }
+
+    if (s.contains("camera")) {
+        labs.add(gr
+                ? "LAB 8 — Διαγνωστικός έλεγχος κάμερας"
+                : "LAB 8 — Camera diagnostics");
+    }
+
+    if (s.contains("bluetooth")) {
+        labs.add(gr
+                ? "LAB 5 — Έλεγχος Bluetooth"
+                : "LAB 5 — Bluetooth diagnostics");
+    }
+
+    if (s.contains("sound")) {
+        labs.add(gr
+                ? "LAB 1–4 — Διαγνωστικά ήχου"
+                : "LAB 1–4 — Audio diagnostics");
+    }
+
+    if (s.contains("boot")) {
+        labs.add(gr
+                ? "LAB 19 — Εκκίνηση & Απόδοση"
+                : "LAB 19 — Boot & performance analysis");
+    }
+
+    labs.add(gr
+            ? "LAB 29 — Τελική σύνοψη υγείας"
+            : "LAB 29 — Final health summary");
+
+    StringBuilder sb = new StringBuilder();
+
+    sb.append(gr
+            ? "Προτείνονται τα εξής εργαστήρια:\n\n"
+            : "Recommended labs:\n\n");
+
+    for (String l : labs) {
+        sb.append("• ").append(l).append("\n");
+    }
+
+    return sb.toString();
+}
+
+    // ============================================================
+    // REMINDER
+    // ============================================================
+
+    private void showReminder() {
+
+    LinearLayout root = buildBaseBox(
+            gr ? "Αν έμεινες ευχαριστημένος/η από το αποτέλεσμα, θα ήθελες να σου υπενθυμίζουμε τακτικά, να κάνουμε την ίδια επιθεώρηση στη συσκευή σου; \n\n"
+               : "If you're satisfied with the results, would you like regular reminders, to run the same device inspection? \n\n"
+    );
+
+    Button daily = mkGreenBtn(gr ? "1 Ημέρα" : "Daily");
+    Button weekly = mkGreenBtn(gr ? "1 Εβδομάδα" : "Weekly");
+    Button monthly = mkGreenBtn(gr ? "1 Μήνας" : "Monthly");
+    Button skip = mkRedBtn(gr ? "Παράλειψη" : "Skip");
+
+    daily.setOnClickListener(v -> {
+    OptimizerScheduler.enableReminder(this,1);
+    go(STEP_MINI_REMINDER);
+});
+
+weekly.setOnClickListener(v -> {
+    OptimizerScheduler.enableReminder(this,7);
+    go(STEP_MINI_REMINDER);
+});
+
+monthly.setOnClickListener(v -> {
+    OptimizerScheduler.enableReminder(this,30);
+    go(STEP_MINI_REMINDER);
+});
+
+skip.setOnClickListener(v -> {
+    OptimizerScheduler.disableReminder(this);
+    go(STEP_MINI_REMINDER);
+});
+
+    root.addView(daily);
+    root.addView(weekly);
+    root.addView(monthly);
+    root.addView(skip);
+
+    showCustomDialog(root);
+}
+
+private void showMiniSchedulerPopup() {
+
+    final boolean gr = AppLang.isGreek(this);
+
+    LinearLayout root = buildBaseBox(
+        gr ? "Mini Έλεγχος στο Παρασκήνιο"
+           : "Mini Background Check"
+    );
+
+    TextView body = new TextView(this);
+    body.setText(gr
+  ? "Θέλεις, 3 φορές την ημέρα να κάνουμε έναν mini έλεγχο στο κινητό σου στο παρασκήνιο;\n\n"
+  + "Κάθε mini check θα διαρκεί λιγότερο από 1 δευτερόλεπτο.\n\n"
+  + "Θα παρακολουθούμε ενδείξεις όπως:\n"
+  + "• Υψηλή θερμοκρασία (όταν είναι διαθέσιμο)\n"
+  + "• Υπερβολική cache (> 80%)\n"
+  + "• Ύποπτη αστάθεια συστήματος (best-effort)\n\n"
+  + "Αν εντοπίσουμε σημαντικές μεταβολές στη συσκευή σου,\n"
+  + "θα σου εμφανίσουμε σχετική ειδοποίηση με προτάσεις.\n\n"
+: "Would you like us to run a mini background check 3 times per day?\n\n"
+  + "Each mini check lasts under 1 second.\n\n"
+  + "We monitor signals such as:\n"
+  + "• High device temperature (when available)\n"
+  + "• Excessive cache usage (> 80%)\n"
+  + "• Possible system instability (best-effort detection)\n\n"
+  + "If we detect significant changes on your device,\n"
+  + "you will receive a notification with recommendations.\n\n"
+    );
+
+    body.setTextColor(0xFF00FF7F);
+    body.setPadding(0, dp(16), 0, dp(20));
+    root.addView(body);
+
+    LinearLayout row = new LinearLayout(this);
+    row.setOrientation(LinearLayout.HORIZONTAL);
+    row.setGravity(Gravity.CENTER);
+
+    LinearLayout.LayoutParams lp =
+            new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
+    lp.setMargins(dp(8), 0, dp(8), 0);
+
+    Button noBtn = mkRedBtn(gr ? "ΟΧΙ" : "NO");
+    noBtn.setLayoutParams(lp);
+
+    Button yesBtn = mkGreenBtn(gr ? "ΝΑΙ" : "YES");
+    yesBtn.setLayoutParams(lp);
+
+    row.addView(noBtn);
+    row.addView(yesBtn);
+
+    root.addView(row);
+
+    noBtn.setOnClickListener(v -> {
+        setPulseEnabled(false);
+        cancelMiniPulse();
+        go(STEP_FINAL);  // συνεχίζουμε στο Questionnaire
+    });
+
+    yesBtn.setOnClickListener(v -> {
+        setPulseEnabled(true);
+        scheduleMiniPulse3xDaily();
+        go(STEP_FINAL);  // συνεχίζουμε στο Questionnaire
+    });
+
+    showCustomDialog(root);
+}
+
+    // ============================================================
+    // SETTINGS FALLBACKS
+    // ============================================================
+
+    private void openStorageSettings() {
+    safeStartActivity(
+            gr ? "Αποθήκευση" : "Storage",
+            Settings.ACTION_INTERNAL_STORAGE_SETTINGS,
+            Settings.ACTION_MEMORY_CARD_SETTINGS
+    );
+}
+
+    private void openBatteryUsage() {
+    safeStartActivity(
+            gr ? "Μπαταρία" : "Battery",
+            "android.settings.BATTERY_USAGE_SETTINGS",
+            "android.settings.POWER_USAGE_SUMMARY",
+            Settings.ACTION_BATTERY_SAVER_SETTINGS
+    );
+}
+
+    private void openDataUsage() {
+    safeStartActivity(
+            gr ? "Δεδομένα" : "Data Usage",
+            "android.settings.DATA_USAGE_SETTINGS",
+            Settings.ACTION_WIRELESS_SETTINGS
+    );
+}
+
+    private void open(String action) {
+        try { startActivity(new Intent(action)); } catch (Throwable ignore) {}
+    }
+
+    private void openLargestCache() {
+        Intent i = new Intent(this, AppListActivity.class);
+        i.putExtra("auto_largest_cache", true);
+        startActivity(i);
+    }
+
+// ============================================================
+// CENTRAL LABEL (OK / SKIP) — used by ALL steps
+// ============================================================
+private String okSkipLabel(boolean isIntro) {
+    if (isIntro) return (gr ? "Έναρξη" : "Start");
+    return (gr ? "OK / ΠΑΡΑΛΕΙΨΗ (Επόμενο Βήμα)" : "OK / SKIP (Next Step)");
+}
+
+// ============================================================
+// DIALOG ENGINE (UPDATED)
+// ============================================================
+private void showDialog(String title,
+                        String body,
+                        Runnable settingsAction,
+                        Runnable okAction,
+                        boolean isIntro) {
+
+    LinearLayout root = buildBaseBox(title);
+
+    TextView tvBody = new TextView(this);
+    tvBody.setText(body);
+    tvBody.setTextColor(0xFF00FF7F);
+    tvBody.setPadding(0, 20, 0, 20);
+    root.addView(tvBody);
+
+    if (settingsAction != null) {
+        Button settingsBtn = mkBlackGoldBtn(gr ? "Ρυθμίσεις" : "Settings");
+        settingsBtn.setOnClickListener(v -> settingsAction.run());
+        root.addView(settingsBtn);
+    }
+
+    // ✅ CENTRAL OK LABEL
+    Button okBtn = mkGreenBtn(okSkipLabel(isIntro));
+    okBtn.setOnClickListener(v -> okAction.run());
+    root.addView(okBtn);
+
+    Button exitBtn = mkRedBtn(gr ? "Έξοδος" : "Exit");
+    exitBtn.setOnClickListener(v -> {
+        Toast.makeText(this,
+                gr ? "Η βελτιστοποίηση διακόπηκε."
+                   : "Optimization cancelled.",
+                Toast.LENGTH_SHORT).show();
+        finish();
+    });
+    root.addView(exitBtn);
+
+    showCustomDialog(root);
+}
+
+// ============================================================
+// ACTION BUTTONS — OK/SKIP + EXIT (MATCHES showDialog)
+// ============================================================
+private void addActionButtons(LinearLayout root, Runnable okAction) {
+
+    Button okBtn = mkGreenBtn(okSkipLabel(false));
+    okBtn.setOnClickListener(v -> okAction.run());
+    root.addView(okBtn);
+
+    Button exitBtn = mkRedBtn(gr ? "Έξοδος" : "Exit");
+    exitBtn.setOnClickListener(v -> {
+        Toast.makeText(
+                this,
+                gr ? "Η βελτιστοποίηση διακόπηκε."
+                   : "Optimization cancelled.",
+                Toast.LENGTH_SHORT
+        ).show();
+        finish();
+    });
+    root.addView(exitBtn);
+}
+
+    private Button mkGreenBtn(String t) {
+        Button b = new Button(this);
+        b.setText(t);
+        b.setTextColor(Color.WHITE);
+        GradientDrawable d = new GradientDrawable();
+        d.setColor(0xFF00C853);
+        d.setStroke(5,0xFFFFD700);
+        d.setCornerRadius(25);
+        b.setBackground(d);
+        return b;
+    }
+
+    private Button mkRedBtn(String t) {
+        Button b = new Button(this);
+        b.setText(t);
+        b.setTextColor(Color.WHITE);
+        GradientDrawable d = new GradientDrawable();
+        d.setColor(0xFFC62828);
+        d.setStroke(5,0xFFFFD700);
+        d.setCornerRadius(25);
+        b.setBackground(d);
+        return b;
+    }
+
+    private Button mkBlackGoldBtn(String t) {
+        Button b = new Button(this);
+        b.setText(t);
+        b.setTextColor(0xFF00FF7F);
+        GradientDrawable d = new GradientDrawable();
+        d.setColor(0xFF000000);
+        d.setStroke(5,0xFFFFD700);
+        d.setCornerRadius(25);
+        b.setBackground(d);
+        return b;
+    }
+
+    private CheckBox mkCheck(String t) {
+        CheckBox c = new CheckBox(this);
+        c.setText(t);
+        c.setTextColor(Color.WHITE);
+        return c;
+    }
+    
+    // ============================================================
+// BASE DIALOG BOX (GEL STYLE)
+// ============================================================
+private LinearLayout buildBaseBox(String title) {
+
+    LinearLayout root = new LinearLayout(this);
+    root.setOrientation(LinearLayout.VERTICAL);
+    root.setPadding(dp(20), dp(20), dp(20), dp(20));
+
+    GradientDrawable bg = new GradientDrawable();
+    bg.setColor(0xFF111111);
+    bg.setCornerRadius(dp(16));
+    bg.setStroke(dp(2), 0xFFFFD700);
+    root.setBackground(bg);
+
+    TextView tvTitle = new TextView(this);
+    tvTitle.setText(title);
+    tvTitle.setTextColor(0xFFFFD700);
+    tvTitle.setTextSize(18f);
+    tvTitle.setTypeface(null, Typeface.BOLD);
+    tvTitle.setPadding(0, 0, 0, dp(16));
+
+    root.addView(tvTitle);
+
+    return root;
+}
+
+// ============================================================
+// CUSTOM GEL DIALOG
+// ============================================================
+private void showCustomDialog(View v) {
+
+    if (currentDialog != null && currentDialog.isShowing()) {
+        currentDialog.dismiss();
+    }
+
+    currentDialog = new AlertDialog.Builder(this)
+            .setView(v)
+            .setCancelable(false)
+            .create();
+
+    currentDialog.getWindow().setBackgroundDrawable(
+            new ColorDrawable(Color.TRANSPARENT)
+    );
+
+    currentDialog.show();
+}
+
+// ============================================================
+// PROGRESS TITLE
+// ============================================================
+private static final int TOTAL_STEPS = 8;  
+
+private String progressTitle(String title) {
+    return title + " (" + step + "/" + TOTAL_STEPS + ")";
+}
 }

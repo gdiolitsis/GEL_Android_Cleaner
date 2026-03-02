@@ -245,7 +245,7 @@ if (savedInstanceState == null) {
 // ==============================
 // GEL DP HELPER
 // ==============================
-private int dp(int v) {
+public int dp(int v) {
     return (int) (getResources().getDisplayMetrics().density * v);
 }
 

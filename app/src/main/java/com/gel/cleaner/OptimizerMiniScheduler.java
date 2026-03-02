@@ -46,9 +46,14 @@ public class OptimizerMiniScheduler extends Worker {
         long lastNotify = sp.getLong("last_mini_notify", 0);
         long now = System.currentTimeMillis();
 
-        if (now - lastNotify < 24L * 60L * 60L * 1000L) {
-            return Result.success();
-        }
+        boolean bypassCooldown =
+        r.crashSignal ||
+        (r.thermalHigh && r.temperature >= 45.0);
+
+if (!bypassCooldown &&
+        now - lastNotify < 24L * 60L * 60L * 1000L) {
+    return Result.success();
+}
 
         // ==============================
         // Cache Check

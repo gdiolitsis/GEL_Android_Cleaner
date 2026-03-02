@@ -1756,7 +1756,7 @@ showCustomDialog(scroll);
 }
 
 // ----------------------------------------------------
-// STEP 6 - UNUSED APPS
+// STEP 5 - UNUSED APPS (FIXED FOOTER)
 // ----------------------------------------------------
 
 private void showInactiveApps() {
@@ -1766,8 +1766,10 @@ private void showInactiveApps() {
         return;
     }
 
+    boolean gr = AppLang.isGreek(this);
+
     long now = System.currentTimeMillis();
-    long threshold = now - (30L * 24 * 60 * 60 * 1000); // 30 days
+    long threshold = now - (30L * 24 * 60 * 60 * 1000);
 
     ArrayList<UnusedApp> unused = new ArrayList<>();
 
@@ -1778,86 +1780,76 @@ private void showInactiveApps() {
 
         PackageManager pm = getPackageManager();
 
-// ----------------------------------------------------
-// 1️⃣ Build lastUsedMap from UsageStats (max lastTimeUsed per pkg)
-// ----------------------------------------------------
-HashMap<String, Long> lastUsedMap = new HashMap<>();
+        HashMap<String, Long> lastUsedMap = new HashMap<>();
 
-List<UsageStats> stats =
-        usm.queryUsageStats(
-                UsageStatsManager.INTERVAL_DAILY,
-                threshold,
-                now
-        );
+        List<UsageStats> stats =
+                usm.queryUsageStats(
+                        UsageStatsManager.INTERVAL_DAILY,
+                        threshold,
+                        now
+                );
 
-if (stats != null) {
-    for (UsageStats u : stats) {
+        if (stats != null) {
+            for (UsageStats u : stats) {
 
-        if (u == null) continue;
+                if (u == null) continue;
 
-        String pkg = u.getPackageName();
-        if (pkg == null) continue;
-        if (pkg.equals(getPackageName())) continue;
+                String pkg = u.getPackageName();
+                if (pkg == null) continue;
+                if (pkg.equals(getPackageName())) continue;
 
-        long last = 0L;
-        try { last = u.getLastTimeUsed(); } catch (Throwable ignore) {}
+                long last = 0L;
+                try { last = u.getLastTimeUsed(); } catch (Throwable ignore) {}
 
-        if (last > 0L) {
-            Long cur = lastUsedMap.get(pkg);
-            if (cur == null || last > cur) {
-                lastUsedMap.put(pkg, last);
+                if (last > 0L) {
+                    Long cur = lastUsedMap.get(pkg);
+                    if (cur == null || last > cur) {
+                        lastUsedMap.put(pkg, last);
+                    }
+                }
             }
         }
-    }
-    }
 
-// ----------------------------------------------------
-// 2️⃣ Iterate ALL installed apps
-// ----------------------------------------------------
-List<ApplicationInfo> installed =
-        pm.getInstalledApplications(0);
+        List<ApplicationInfo> installed =
+                pm.getInstalledApplications(0);
 
-for (ApplicationInfo ai : installed) {
+        for (ApplicationInfo ai : installed) {
 
-    String pkg = ai.packageName;
-    if (pkg == null) continue;
-    if (pkg.equals(getPackageName())) continue;
+            String pkg = ai.packageName;
+            if (pkg == null) continue;
+            if (pkg.equals(getPackageName())) continue;
 
-    // skip system apps
-    boolean isSystem =
-            (ai.flags & ApplicationInfo.FLAG_SYSTEM) != 0;
-    if (isSystem) continue;
+            boolean isSystem =
+                    (ai.flags & ApplicationInfo.FLAG_SYSTEM) != 0;
+            if (isSystem) continue;
 
-    long lastUsed =
-            lastUsedMap.containsKey(pkg)
-                    ? lastUsedMap.get(pkg)
-                    : 0L;
+            long lastUsed =
+                    lastUsedMap.containsKey(pkg)
+                            ? lastUsedMap.get(pkg)
+                            : 0L;
 
-    long installTime = 0L;
-    try {
-        installTime = pm.getPackageInfo(pkg, 0).firstInstallTime;
-    } catch (Throwable ignore) {}
+            long installTime = 0L;
+            try {
+                installTime = pm.getPackageInfo(pkg, 0).firstInstallTime;
+            } catch (Throwable ignore) {}
 
-    long basis = 0L;
+            long basis = 0L;
 
-if (lastUsed > 0L) {
-    basis = lastUsed;
-} else if (installTime > 0L && installTime <= now) {
-    basis = installTime;
-}
+            if (lastUsed > 0L) {
+                basis = lastUsed;
+            } else if (installTime > 0L && installTime <= now) {
+                basis = installTime;
+            }
 
-// Αν δεν έχουμε έγκυρη βάση → skip
-if (basis <= 0L || basis > now) continue;
+            if (basis <= 0L || basis > now) continue;
 
-    // Αν δεν έχουμε ούτε usage ούτε install time → skip
-    if (basis <= 0L) continue;
+            long daysSinceUse =
+                    (now - basis) / (1000L * 60 * 60 * 24);
 
-    long daysSinceUse = (now - basis) / (1000L * 60 * 60 * 24);
-
-    if (daysSinceUse >= 30) {
-        unused.add(new UnusedApp(pkg, daysSinceUse));
-    }
-}
+            if (daysSinceUse >= 30) {
+                unused.add(new UnusedApp(pkg, daysSinceUse));
+            }
+        }
 
     } catch (Throwable ignore) {}
 
@@ -1865,39 +1857,61 @@ if (basis <= 0L || basis > now) continue;
         go(STEP_CACHE);
         return;
     }
-    
-    java.util.Collections.sort(
-        unused,
-        (a, b) -> Long.compare(b.days, a.days)
-);
 
-    // ----------------------------------------------------
-    // UI
-    // ----------------------------------------------------
+    java.util.Collections.sort(
+            unused,
+            (a, b) -> Long.compare(b.days, a.days)
+    );
+
+    // =====================================================
+    // CONTAINER (VERTICAL)
+    // =====================================================
+
+    LinearLayout container = new LinearLayout(this);
+    container.setOrientation(LinearLayout.VERTICAL);
+
+    // =====================================================
+    // SCROLL AREA
+    // =====================================================
+
     ScrollView scroll = new ScrollView(this);
 
     LinearLayout root = buildBaseBox(
             progressTitle(
-    gr ? "ΒΗΜΑ 5 — Αδρανείς Εφαρμογές (30 ημέρες)"
-       : "STEP 5 — Unused Applications (30 days)"
-)
+                    gr ? "ΒΗΜΑ 5 — Αδρανείς Εφαρμογές (30 ημέρες)"
+                       : "STEP 5 — Unused Applications (30 days)"
+            )
     );
 
     scroll.addView(root);
 
+    LinearLayout.LayoutParams lpScroll =
+            new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    0,
+                    1f
+            );
+
+    scroll.setLayoutParams(lpScroll);
+    container.addView(scroll);
+
+    // =====================================================
+    // CONTENT
+    // =====================================================
+
     TextView info = new TextView(this);
-info.setText(
-        gr
-                ? "Εφαρμογές που δεν έχουν χρησιμοποιηθεί >30 ημέρες.\n"
-                  + "Ενδέχεται να πιάνουν χώρο ή δικαιώματα.\n\n"
-                  + "Συνιστάται η απεγκατάσταση όσων δεν χρειάζεσαι. \n\n"
-                : "Apps not used for over 30 days.\n"
-                  + "They may occupy storage or hold permissions.\n\n"
-                  + "It is recommended to uninstall those you don’t need. \n\n"
-);
-info.setTextColor(0xFFAAAAAA);
-info.setPadding(0, 0, 0, 25);
-root.addView(info);
+    info.setText(
+            gr
+                    ? "Εφαρμογές που δεν έχουν χρησιμοποιηθεί >30 ημέρες.\n"
+                      + "Ενδέχεται να πιάνουν χώρο ή δικαιώματα.\n\n"
+                      + "Συνιστάται η απεγκατάσταση όσων δεν χρειάζεσαι.\n\n"
+                    : "Apps not used for over 30 days.\n"
+                      + "They may occupy storage or hold permissions.\n\n"
+                      + "It is recommended to uninstall those you don’t need.\n\n"
+    );
+    info.setTextColor(0xFFAAAAAA);
+    info.setPadding(0, 0, 0, 25);
+    root.addView(info);
 
     PackageManager pm = getPackageManager();
 
@@ -1922,10 +1936,10 @@ root.addView(info);
         TextView meta = new TextView(this);
         meta.setText(
                 (gr ? "Χωρίς χρήση για "
-                    : "Unused for ")
-                + r.days
-                + (gr ? " ημέρες"
-                    : " days")
+                        : "Unused for ")
+                        + r.days
+                        + (gr ? " ημέρες"
+                        : " days")
         );
         meta.setTextColor(0xFFFFC107);
         meta.setPadding(0, 6, 0, 10);
@@ -1933,8 +1947,10 @@ root.addView(info);
         LinearLayout btnRow = new LinearLayout(this);
         btnRow.setOrientation(LinearLayout.HORIZONTAL);
 
-        Button uninstall = mkRedBtn(gr ? "Απεγκατάσταση" : "Uninstall");
-        Button details = mkBlackGoldBtn(gr ? "Λεπτομέρειες" : "Details");
+        Button uninstall =
+                mkRedBtn(gr ? "Απεγκατάσταση" : "Uninstall");
+        Button details =
+                mkBlackGoldBtn(gr ? "Λεπτομέρειες" : "Details");
 
         uninstall.setOnClickListener(v -> uninstallPkg(r.pkg));
         details.setOnClickListener(v -> openAppDetails(r.pkg));
@@ -1960,12 +1976,22 @@ root.addView(info);
         root.addView(row);
     }
 
-addActionButtons(
-    root,
-    () -> go(STEP_CACHE)
-);
+    // =====================================================
+    // FIXED ACTION BUTTONS (OUTSIDE SCROLL)
+    // =====================================================
 
-    showCustomDialog(scroll);
+    LinearLayout actions = new LinearLayout(this);
+    actions.setOrientation(LinearLayout.VERTICAL);
+    actions.setPadding(dp(16), dp(10), dp(16), dp(16));
+
+    addActionButtons(
+            actions,
+            () -> go(STEP_CACHE)
+    );
+
+    container.addView(actions);
+
+    showCustomDialog(container);
 }
 
 private static class UnusedApp {

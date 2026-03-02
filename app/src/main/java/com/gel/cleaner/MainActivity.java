@@ -135,7 +135,14 @@ boolean skipWelcomeOnce =
 
 if (savedInstanceState == null) {
 
-    if (!skipWelcomeOnce && (forceWelcome || !isWelcomeDisabled())) {
+    boolean fromMini = getIntent() != null &&
+                   getIntent().hasExtra("mini_cpu");
+
+if (savedInstanceState == null) {
+
+    if (!fromMini && !skipWelcomeOnce &&
+        (forceWelcome || !isWelcomeDisabled())) {
+
         showWelcomePopup();
     }
 }

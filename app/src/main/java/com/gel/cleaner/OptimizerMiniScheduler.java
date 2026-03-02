@@ -89,72 +89,121 @@ public class OptimizerMiniScheduler extends Worker {
             }
         } catch (Throwable ignore) {}
 
-        // ==============================
-        // Run Health Probes
-        // ==============================
-        OptimizerMiniHealthProbes.Result r =
-                OptimizerMiniHealthProbes.run(ctx, cacheHigh);
-
-        // DEBUG FORCE
-r.critical = true;
-r.cpuSpike = true;
-        
-        // ==============================
-        // Notification Text
-        // ==============================
-        boolean gr = AppLang.isGreek(ctx);
-
-        String title = gr
-                ? "Εντοπίστηκε ένδειξη επιβάρυνσης"
-                : "Device Health Signal";
-
-        String body = gr
-                ? "Παρατηρήθηκε πιθανή επιβάρυνση συστήματος."
-                : "Potential system load detected.";
-
-        try {
-
-            NotificationCompat.Builder nb =
-                    new NotificationCompat.Builder(ctx, "gel_default")
-                            .setSmallIcon(android.R.drawable.stat_notify_more)
-                            .setContentTitle(title)
-                            .setContentText(body)
-                            .setStyle(new NotificationCompat.BigTextStyle().bigText(body))
-                            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-                            .setAutoCancel(true);
+// ==============================
+// Run Health Probes
+// ==============================
+OptimizerMiniHealthProbes.Result r =
+        OptimizerMiniHealthProbes.run(ctx, cacheHigh);
 
 // ==============================
-// CLICK ACTION
+// SMART ESCALATION ENGINE
 // ==============================
-Intent intent = new Intent(ctx, MainActivity.class);
 
-// 🔴 force new clean task ώστε να περάσουν σίγουρα τα extras
-intent.setFlags(
-        Intent.FLAG_ACTIVITY_NEW_TASK |
-        Intent.FLAG_ACTIVITY_CLEAR_TASK
-);
+long nowTime = System.currentTimeMillis();
 
-intent.putExtra("mini_cpu", r.cpuSpike);
-intent.putExtra("mini_thermal", r.thermalHigh);
-intent.putExtra("mini_crash", r.crashSignal);
-intent.putExtra("mini_cache", r.cacheHigh);
-intent.putExtra("mini_temp", r.temperature);
+boolean isCritical =
+        r.crashSignal ||
+        (r.thermalHigh && r.temperature >= 45.0);
 
-PendingIntent pi = PendingIntent.getActivity(
-        ctx,
-        19001,
-        intent,
-        PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
-);
+boolean isModerate =
+        (!isCritical) &&
+        (r.cpuSpike || r.cacheHigh || r.thermalHigh);
 
-nb.setContentIntent(pi);
+if (isCritical) {
+    r.critical = true;
+}
+else if (isModerate) {
 
-            NotificationManagerCompat.from(ctx).notify(19001, nb.build());
+    int moderateCount = sp.getInt("mini_moderate_count", 0);
+    long firstModerateTime = sp.getLong("mini_moderate_first_time", 0);
 
-            sp.edit().putLong("last_mini_notify", now).apply();
+    if (firstModerateTime == 0 ||
+            nowTime - firstModerateTime > 24L * 60L * 60L * 1000L) {
 
-        } catch (Throwable ignore) {}
+        moderateCount = 1;
+        firstModerateTime = nowTime;
 
-        return Result.success();
+    } else {
+        moderateCount++;
+    }
+
+    sp.edit()
+            .putInt("mini_moderate_count", moderateCount)
+            .putLong("mini_moderate_first_time", firstModerateTime)
+            .apply();
+
+    if (moderateCount >= 3) {
+
+        r.critical = true;
+
+        sp.edit()
+                .putInt("mini_moderate_count", 0)
+                .putLong("mini_moderate_first_time", 0)
+                .apply();
+    }
+}
+
+if (!r.critical) {
+    return Result.success();
+}
+
+// ==============================
+// NOTIFICATION TEXT
+// ==============================
+
+boolean gr = AppLang.isGreek(ctx);
+
+String title = gr
+        ? "Εντοπίστηκε ένδειξη επιβάρυνσης"
+        : "Device Health Signal";
+
+String body = gr
+        ? "Παρατηρήθηκε πιθανή επιβάρυνση συστήματος."
+        : "Potential system load detected.";
+
+try {
+
+    NotificationCompat.Builder nb =
+            new NotificationCompat.Builder(ctx, "gel_default")
+                    .setSmallIcon(android.R.drawable.stat_notify_more)
+                    .setContentTitle(title)
+                    .setContentText(body)
+                    .setStyle(new NotificationCompat.BigTextStyle().bigText(body))
+                    .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                    .setAutoCancel(true);
+
+    // ==============================
+    // CLICK ACTION
+    // ==============================
+
+    Intent intent = new Intent(ctx, MainActivity.class);
+
+    intent.setFlags(
+            Intent.FLAG_ACTIVITY_NEW_TASK |
+            Intent.FLAG_ACTIVITY_CLEAR_TASK
+    );
+
+    intent.putExtra("mini_cpu", r.cpuSpike);
+    intent.putExtra("mini_thermal", r.thermalHigh);
+    intent.putExtra("mini_crash", r.crashSignal);
+    intent.putExtra("mini_cache", r.cacheHigh);
+    intent.putExtra("mini_temp", r.temperature);
+
+    PendingIntent pi = PendingIntent.getActivity(
+            ctx,
+            19001,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+    );
+
+    nb.setContentIntent(pi);
+
+    NotificationManagerCompat.from(ctx).notify(19001, nb.build());
+
+    sp.edit().putLong("last_mini_notify", nowTime).apply();
+
+} catch (Throwable ignore) {}
+
+return Result.success();
     }
 }

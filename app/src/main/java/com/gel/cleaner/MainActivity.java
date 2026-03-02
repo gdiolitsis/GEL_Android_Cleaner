@@ -222,7 +222,10 @@ private void handleMiniSignals(Intent intent) {
     boolean cache = intent.getBooleanExtra("mini_cache", false);
     double temp = intent.getDoubleExtra("mini_temp", 0);
 
-    showSmartMiniDiagnostic(cpu, thermal, crash, cache, temp);
+    new android.os.Handler(android.os.Looper.getMainLooper())
+            .post(() ->
+                    showSmartMiniDiagnostic(cpu, thermal, crash, cache, temp)
+            );
 }
 
 private void showSmartDiagnosticPopup(String issue) {

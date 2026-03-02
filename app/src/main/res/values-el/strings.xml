@@ -4,6 +4,7 @@
     <string name="app_name">GEL iDoctor</string>
 
     <!-- Ενότητες UI -->
+    <string name="settings">ΡΥΘΜΊΣΕΙΣ</string>
     <string name="system">🛠 Σύστημα</string>
     <string name="cleaner">🧹 Καθαρισμός</string>
     <string name="junk">🗑 Σκουπίδια</string>

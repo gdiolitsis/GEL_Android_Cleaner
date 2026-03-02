@@ -76,7 +76,7 @@ android:layout_marginTop="8dp">
 
 <TextView  
     android:id="@+id/btnLangGR"  
-    android:layout_with="wrap_content"  
+    android:layout_width="wrap_content"  
     android:layout_height="wrap_content"  
     android:text="GR 🇬🇷"  
     android:textSize="16sp"  
@@ -377,5 +377,5 @@ android:layout_marginTop="12dp">
         android:background="@color/gel_bg"/>  
 
 </LinearLayout>
-
-</ScrollView>
+    </ScrollView>
+</LinearLayout>

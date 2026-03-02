@@ -288,7 +288,7 @@ private void showSettingsDialog() {
     TextView miniHint = new TextView(this);
     miniHint.setText(gr
 ? "Διαρκεί λιγότερο από 1 δευτερόλεπτο και στέλνει ειδοποίηση μόνο σε κρίσιμες καταστάσεις (Crash / ≥45°C / Υπερφόρτωση CPU–GPU–Cache)."
-: "Runs in under 1 second and notifies only on critical conditions (Crash / ≥45°C / CPU–GPU–Cache overload).";
+: "Runs in under 1 second and notifies only on critical conditions (Crash / ≥45°C / CPU–GPU–Cache overload).");
     miniHint.setTextColor(Color.WHITE);
     miniHint.setTextSize(13f);
     miniHint.setPadding(0, 0, 0, dp(14));

@@ -258,10 +258,17 @@ private void showSmartMiniDiagnostic(
         boolean cache,
         double temp
 ) {
-	
-	Toast.makeText(this, "Mini diagnostic called", Toast.LENGTH_LONG).show();
 
-cpu = true;
+    Intent i = new Intent(this, OptimizerDiagnosticActivity.class);
+
+    i.putExtra("mini_cpu", cpu);
+    i.putExtra("mini_thermal", thermal);
+    i.putExtra("mini_crash", crash);
+    i.putExtra("mini_cache", cache);
+    i.putExtra("mini_temp", temp);
+
+    startActivity(i);
+}
 
     final boolean gr = AppLang.isGreek(this);
 

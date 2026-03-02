@@ -287,9 +287,9 @@ private void showSettingsDialog() {
 
     TextView miniHint = new TextView(this);
     miniHint.setText(gr
-            ? "Στέλνει ειδοποίηση μόνο σε Critical (Crash / ≥45°C / Escalation)."
-            : "Notifies only on Critical (Crash / ≥45°C / Escalation).");
-    miniHint.setTextColor(0xFFB0B0B0);
+? "Διαρκεί λιγότερο από 1 δευτερόλεπτο και στέλνει ειδοποίηση μόνο σε κρίσιμες καταστάσεις (Crash / ≥45°C / Υπερφόρτωση CPU–GPU–Cache)."
+: "Runs in under 1 second and notifies only on critical conditions (Crash / ≥45°C / CPU–GPU–Cache overload).";
+    miniHint.setTextColor(Color.WHITE);
     miniHint.setTextSize(13f);
     miniHint.setPadding(0, 0, 0, dp(14));
     box.addView(miniHint);
@@ -307,9 +307,9 @@ private void showSettingsDialog() {
     final android.widget.CheckBox cbSched = new android.widget.CheckBox(this);
     cbSched.setChecked(schedEnabled);
     cbSched.setText(gr
-            ? "Optimizer Scheduler — Υπενθύμιση"
-            : "Optimizer Scheduler — Reminder");
-    cbSched.setTextColor(0xFFFFD700);
+            ? "Optimizer Scheduler — Υπενθύμιση Κάθε..."
+            : "Optimizer Scheduler — Reminder Every...");
+    cbSched.setTextColor(0xFF00FF7F);
     cbSched.setPadding(0, dp(6), 0, dp(6));
     box.addView(cbSched);
 
@@ -318,15 +318,15 @@ private void showSettingsDialog() {
     rg.setPadding(0, dp(4), 0, dp(10));
 
     RadioButton r1 = new RadioButton(this);
-    r1.setText(gr ? "1 μέρα" : "1 day");
+    r1.setText(gr ? "1 Ημέρα" : "1 Day");
     r1.setTextColor(Color.WHITE);
 
     RadioButton r7 = new RadioButton(this);
-    r7.setText(gr ? "1 εβδομάδα" : "1 week");
+    r7.setText(gr ? "1 Εβδομάδα" : "1 Week");
     r7.setTextColor(Color.WHITE);
 
     RadioButton r30 = new RadioButton(this);
-    r30.setText(gr ? "1 μήνα" : "1 month");
+    r30.setText(gr ? "1 Μήνα" : "1 Month");
     r30.setTextColor(Color.WHITE);
 
     rg.addView(r1);
@@ -353,7 +353,7 @@ private void showSettingsDialog() {
     LinearLayout row = new LinearLayout(this);
     row.setOrientation(LinearLayout.HORIZONTAL);
     row.setGravity(Gravity.CENTER);
-    row.setPadding(0, dp(6), 0, 0);
+    row.setPadding(0, dp(18), 0, 0);
 
     android.widget.Button btnCancel = new android.widget.Button(this);
     btnCancel.setText(gr ? "Άκυρο" : "Cancel");

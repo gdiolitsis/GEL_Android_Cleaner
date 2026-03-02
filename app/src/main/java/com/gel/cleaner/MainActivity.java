@@ -270,47 +270,6 @@ private void showSmartMiniDiagnostic(
     startActivity(i);
 }
 
-    final boolean gr = AppLang.isGreek(this);
-
-    StringBuilder message = new StringBuilder();
-
-    if (crash) {
-        message.append(gr ?
-                "Εντοπίστηκε πρόσφατο crash/ANR.\n\n" :
-                "Recent crash/ANR detected.\n\n");
-    }
-
-    if (thermal) {
-        message.append(gr ?
-                "Υψηλή θερμοκρασία: " + temp + "°C\n\n" :
-                "High temperature detected: " + temp + "°C\n\n");
-    }
-
-    if (cpu && thermal) {
-        message.append(gr ?
-                "Υψηλό CPU load σε συνδυασμό με θερμοκρασία.\n\n" :
-                "High CPU load combined with thermal increase.\n\n");
-    }
-
-    if (cache) {
-        message.append(gr ?
-                "Υψηλή προσωρινή μνήμη εφαρμογών.\n\n" :
-                "High application cache detected.\n\n");
-    }
-
-    if (message.length() == 0) return;
-
-    new androidx.appcompat.app.AlertDialog.Builder(this)
-            .setTitle(gr ? "Mini Διάγνωση Συστήματος"
-                    : "Mini System Diagnostic")
-            .setMessage(message.toString())
-            .setPositiveButton(gr ? "Έλεγχος" : "Run Diagnostics",
-                    (d, w) -> startActivity(
-                            new Intent(this, ManualTestsActivity.class)))
-            .setNegativeButton(gr ? "Αργότερα" : "Later", null)
-            .show();
-}
-
 @Override
 public void onRequestPermissionsResult(int requestCode,
                                        @NonNull String[] permissions,

@@ -1466,36 +1466,83 @@ private void showAppleModelPicker(String type) {
 
 String[] models = "iphone".equals(type)
 ? new String[]{
+
+// =====================
+// iPhone 16 Series
+// =====================
+"iPhone 16",
+"iPhone 16 Pro",
+"iPhone 16 Pro Max",
+
+// =====================
+// iPhone 15 Series
+// =====================
 "iPhone 15",
 "iPhone 15 Pro",
 "iPhone 15 Pro Max",
 
+// =====================
+// iPhone 14 Series
+// =====================
 "iPhone 14",
 "iPhone 14 Pro",
 "iPhone 14 Pro Max",
 
+// =====================
+// iPhone 13 Series
+// =====================
 "iPhone 13",
 "iPhone 13 Pro",
 "iPhone 13 Pro Max",
 
+// =====================
+// iPhone 12 Series
+// =====================
 "iPhone 12",
 "iPhone 12 Pro",
 "iPhone 12 Pro Max",
 
+// =====================
+// iPhone 11 Series
+// =====================
 "iPhone 11",
 "iPhone 11 Pro",
 "iPhone 11 Pro Max"
 }
 : new String[]{
+
+// =====================
+// iPad Pro (M4)
+// =====================
+"iPad Pro 11 (M4)",
+"iPad Pro 13 (M4)",
+
+// =====================
+// iPad Pro (M2)
+// =====================
 "iPad Pro 11 (M2)",
 "iPad Pro 12.9 (M2)",
+
+// =====================
+// iPad Pro (M1)
+// =====================
 "iPad Pro 11 (M1)",
 "iPad Pro 12.9 (M1)",
-"iPad Air 11 (M2)",
+
+// =====================
+// iPad Air
+// =====================
 "iPad Air 13 (M2)",
+"iPad Air 11 (M2)",
 "iPad Air (M1)",
+
+// =====================
+// iPad mini
+// =====================
 "iPad mini 6"
 };
+
+}
 
 AlertDialog.Builder b =
 new AlertDialog.Builder(this,
@@ -1613,6 +1660,50 @@ getSharedPreferences(PREFS, MODE_PRIVATE)
 .putString("apple_type", type)
 .putString("apple_model", model)
 .apply();
+}
+
+private View buildAppleInfoLog() {
+
+    LinearLayout box = new LinearLayout(this);
+    box.setOrientation(LinearLayout.VERTICAL);
+    box.setPadding(dp(18), dp(18), dp(18), dp(18));
+
+    GradientDrawable bg = new GradientDrawable();
+    bg.setColor(0xFF000000);
+    bg.setCornerRadius(dp(16));
+    bg.setStroke(dp(3), 0xFFFFD700);
+    box.setBackground(bg);
+
+    TextView title = new TextView(this);
+    title.setText("ℹ Πληροφορίες Διάγνωσης Apple");
+    title.setTextColor(0xFFFFD700); // χρυσό 
+    title.setTextSize(16f);
+    title.setTypeface(null, Typeface.BOLD);
+    title.setPadding(0, 0, 0, dp(10));
+
+    TextView msg = new TextView(this);
+    msg.setTextColor(0xFF00FF66);
+    msg.setTextSize(14f);
+    msg.setLineSpacing(0f, 1.25f);
+
+    msg.setText(
+        "Για την διάγνωση των συσκευών Apple αναλύουμε τα panic logs "
+      + "της κάθε συσκευής, ανεξαρτήτως μοντέλου, σειράς, iPhone ή iPad.\n\n"
+
+      + "Οι πληροφορίες συσκευών που παρουσιάζουμε αφορούν ενδεικτικά "
+      + "τα τελευταία μοντέλα Apple που κυκλοφορούν στην αγορά.\n\n"
+
+      + "Εάν δεν βρείτε την συσκευή σας στην λίστα των μοντέλων, "
+      + "δεν σημαίνει ότι δεν μπορούμε να αναλύσουμε τα panic logs της.\n\n"
+
+      + "Τα panic logs παρέχουν τις ίδιες διαγνωστικές πληροφορίες "
+      + "σε οποιοδήποτε μοντέλο Apple, είτε πρόκειται για iPhone είτε για iPad."
+    );
+
+    box.addView(title);
+    box.addView(msg);
+
+    return box;
 }
 
 // =========================================================

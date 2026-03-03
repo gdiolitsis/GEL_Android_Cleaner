@@ -1,7 +1,11 @@
+// GDiolitsis Engine Lab (GEL) — Author & Developer
+// OptimizerDiagnosticActivity.java — FINAL (No crash path, Mini-focused)
+
 package com.gel.cleaner;
 
 import android.content.Intent;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.view.Gravity;
@@ -16,7 +20,6 @@ public class OptimizerDiagnosticActivity extends AppCompatActivity {
 
     private boolean cpu;
     private boolean thermal;
-    private boolean crash;
     private boolean cache;
     private double temp;
 
@@ -33,7 +36,6 @@ public class OptimizerDiagnosticActivity extends AppCompatActivity {
 
         cpu     = i.getBooleanExtra("mini_cpu", false);
         thermal = i.getBooleanExtra("mini_thermal", false);
-        crash   = i.getBooleanExtra("mini_crash", false);
         cache   = i.getBooleanExtra("mini_cache", false);
         temp    = i.getDoubleExtra("mini_temp", 0);
     }
@@ -53,9 +55,10 @@ public class OptimizerDiagnosticActivity extends AppCompatActivity {
 
         // ================= TITLE =================
         TextView title = new TextView(this);
-        title.setText("GEL Smart Diagnostic");
+        title.setText(gr ? "GEL iDoctor — Smart Diagnostic" : "GEL iDoctor — Smart Diagnostic");
         title.setTextColor(Color.parseColor("#FFD700"));
         title.setTextSize(22f);
+        title.setTypeface(Typeface.DEFAULT_BOLD);
         title.setGravity(Gravity.CENTER);
         root.addView(title);
 
@@ -93,7 +96,7 @@ public class OptimizerDiagnosticActivity extends AppCompatActivity {
         Button runBtn = buildButton(
                 gr ? "ΕΚΤΕΛΕΣΗ ΠΡΟΤΕΙΝΟΜΕΝΩΝ ΕΡΓΑΣΤΗΡΙΩΝ"
                    : "RUN RECOMMENDED TESTS",
-                0xFF00FF7F  // neon green
+                0xFF00FF7F
         );
 
         runBtn.setOnClickListener(v -> {
@@ -109,7 +112,7 @@ public class OptimizerDiagnosticActivity extends AppCompatActivity {
             Button cacheBtn = buildButton(
                     gr ? "ΚΑΘΑΡΙΣΜΟΣ CACHE"
                        : "CACHE CLEANER",
-                    0xFFFFC107 // strong yellow
+                    0xFFFFC107
             );
 
             cacheBtn.setOnClickListener(v -> {
@@ -125,7 +128,7 @@ public class OptimizerDiagnosticActivity extends AppCompatActivity {
         // ================= LATER BUTTON =================
         Button laterBtn = buildButton(
                 gr ? "ΑΡΓΟΤΕΡΑ" : "LATER",
-                0xFFD50000 // red
+                0xFFD50000
         );
 
         laterBtn.setOnClickListener(v -> finish());
@@ -147,7 +150,7 @@ public class OptimizerDiagnosticActivity extends AppCompatActivity {
         GradientDrawable bg = new GradientDrawable();
         bg.setColor(backgroundColor);
         bg.setCornerRadius(40);
-        bg.setStroke(6, Color.parseColor("#FFD700")); // gold border
+        bg.setStroke(6, Color.parseColor("#FFD700"));
 
         btn.setBackground(bg);
 
@@ -165,7 +168,11 @@ public class OptimizerDiagnosticActivity extends AppCompatActivity {
 
     private String getSeverityText(boolean gr) {
 
-        if (crash || (thermal && temp >= 45)) {
+        boolean thermalCritical = (thermal && temp >= 45.0);
+        boolean cpuThermalCritical = (cpu && thermalCritical);
+        boolean cacheCritical = cache; // cache≥85 triggers mini
+
+        if (thermalCritical || cpuThermalCritical || cacheCritical) {
             return gr ? "⚠ ΚΡΙΣΙΜΗ Κατάσταση"
                       : "⚠ CRITICAL Condition";
         }
@@ -178,20 +185,23 @@ public class OptimizerDiagnosticActivity extends AppCompatActivity {
 
         StringBuilder sb = new StringBuilder();
 
-        if (crash)
-            sb.append(gr
-                    ? "• Εντοπίστηκε πρόσφατο crash / ANR / low-memory.\n\n"
-                    : "• Recent crash / ANR / low-memory detected.\n\n");
-
-        if (thermal)
+        if (thermal) {
             sb.append(gr
                     ? "• Θερμοκρασία μπαταρίας: " + temp + "°C\n\n"
                     : "• Battery temperature: " + temp + "°C\n\n");
+        }
 
-        if (cache)
+        if (cpu) {
+            sb.append(gr
+                    ? "• Εντοπίστηκε αυξημένη χρήση CPU.\n\n"
+                    : "• High CPU usage detected.\n\n");
+        }
+
+        if (cache) {
             sb.append(gr
                     ? "• Υψηλή προσωρινή μνήμη (cache) εφαρμογών.\n\n"
                     : "• High application cache usage.\n\n");
+        }
 
         sb.append(gr
                 ? "Συνιστάται έλεγχος για επιβεβαίωση."

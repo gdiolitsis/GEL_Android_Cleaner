@@ -112,7 +112,7 @@ public final class OptimizerScheduler {
         AlarmManager am = (AlarmManager) c.getSystemService(Context.ALARM_SERVICE);
         if (am == null) return;
 
-        long first = SystemClock.elapsedRealtime() + (2L * 60L * 60L * 1000L);
+        long first = SystemClock.elapsedRealtime() + intervalMs;
 
         try { am.cancel(pi); } catch (Throwable ignore) {}
 

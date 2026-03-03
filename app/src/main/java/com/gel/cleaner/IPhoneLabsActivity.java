@@ -132,44 +132,57 @@ public class IPhoneLabsActivity extends AppCompatActivity {
         root.setPadding(dp(16), dp(16), dp(16), dp(16));
         root.setBackgroundColor(COLOR_BG);
 
-        // TITLE
-        TextView title = new TextView(this);
-        title.setLayoutParams(new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-        ));
-        title.setText("GEL iPhone Diagnostics");
-        title.setTextSize(TypedValue.COMPLEX_UNIT_SP, 22);
-        title.setTextColor(COLOR_WHITE);
-        title.setGravity(Gravity.CENTER_HORIZONTAL);
-        title.setIncludeFontPadding(false);
-        root.addView(title);
+        boolean gr = AppLang.isGreek(this);
 
-        // SUBTITLE
-        TextView sub = new TextView(this);
-        sub.setLayoutParams(new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-        ));
-        sub.setText(
-                "Laboratory diagnostics for iPhone using system files\n" +
-                "Service-grade log analysis (no direct device access)"
-        );
-        sub.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
-        sub.setTextColor(COLOR_GRAY);
-        sub.setGravity(Gravity.CENTER_HORIZONTAL);
-        sub.setPadding(0, dp(8), 0, dp(18));
-        sub.setIncludeFontPadding(false);
-        root.addView(sub);
+// TITLE
+TextView title = new TextView(this);
+title.setLayoutParams(new LinearLayout.LayoutParams(
+        ViewGroup.LayoutParams.MATCH_PARENT,
+        ViewGroup.LayoutParams.WRAP_CONTENT
+));
 
-        // ============================================================
-        // LAB BUTTONS (GUARDED)
-        // ============================================================
+title.setText(gr
+        ? "GEL Διαγνωστικά iPhone"
+        : "GEL iPhone Diagnostics"
+);
 
-        // 1) Import (replace mode)
+title.setTextSize(TypedValue.COMPLEX_UNIT_SP, 22);
+title.setTextColor(COLOR_WHITE);
+title.setGravity(Gravity.CENTER_HORIZONTAL);
+title.setIncludeFontPadding(false);
+root.addView(title);
+
+// SUBTITLE
+TextView sub = new TextView(this);
+sub.setLayoutParams(new LinearLayout.LayoutParams(
+        ViewGroup.LayoutParams.MATCH_PARENT,
+        ViewGroup.Layout_CONTENT
+));
+
+sub.setText(gr
+        ? "Εργαστηριακή διάγνωση iPhone μέσω αρχείων συστήματος\n"
+          + "Ανάλυση logs επιπέδου service (χωρίς άμεση πρόσβαση στη συσκευή)"
+        : "Laboratory diagnostics for iPhone using system files\n"
+          + "Service-grade log analysis (no direct device access)"
+);
+
+sub.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
+sub.setTextColor(COLOR_GRAY);
+sub.setGravity(Gravity.CENTER_HORIZONTAL);
+sub.setPadding(0, dp(8), 0, dp(18));
+sub.setIncludeFontPadding(false);
+root.addView(sub);
+
+// ============================================================
+// LAB BUTTONS (GUARDED)
+// ============================================================
+
+// 1) Import (replace mode)
 root.addView(makeLabButton(
-        "Panic Log Import (TXT / ZIP)",
-        "Auto unzip + load panic report",
+        gr ? "Εισαγωγή Panic Logs (TXT / ZIP)"
+           : "Panic Log Import (TXT / ZIP)",
+        gr ? "Αυτόματη αποσυμπίεση + φόρτωση αναφοράς"
+           : "Auto unzip + load panic report",
         false,
         v -> {
             appendMode = false;
@@ -179,8 +192,10 @@ root.addView(makeLabButton(
 
 // 1b) Add more logs (append mode)
 root.addView(makeLabButton(
-        "Add more panic logs",
-        "Append logs to current analysis",
+        gr ? "Προσθήκη επιπλέον panic logs"
+           : "Add more panic logs",
+        gr ? "Προσθήκη logs στην τρέχουσα ανάλυση"
+           : "Append logs to current analysis",
         false,
         v -> {
             appendMode = true;
@@ -188,46 +203,55 @@ root.addView(makeLabButton(
         }
 ));
 
-        // 2) Analyzer (guard)
-        root.addView(makeLabButton(
-                "LAB 1 -  Panic Log Analyzer",
-                "Pattern match • Domain • Cause • Severity • Recommendation",
-                true,
-                v -> runPanicLogAnalyzer()
-        ));
+// 2) Analyzer (guard)
+root.addView(makeLabButton(
+        gr ? "LAB 1 - Ανάλυση Panic Logs"
+           : "LAB 1 - Panic Log Analyzer",
+        gr ? "Μοτίβο • Domain • Αιτία • Σοβαρότητα • Σύσταση"
+           : "Pattern match • Domain • Cause • Severity • Recommendation",
+        true,
+        v -> runPanicLogAnalyzer()
+));
 
-        // 3) Signature Parser (guard)
-        root.addView(makeLabButton(
-                "LAB 2 -  Panic Signature Parser",
-                "Crash Type • Domain • Confidence • Evidence",
-                true,
-                v -> runPanicSignatureParser()
-        ));
+// 3) Signature Parser (guard)
+root.addView(makeLabButton(
+        gr ? "LAB 2 - Ανάλυση Υπογραφής Panic"
+           : "LAB 2 - Panic Signature Parser",
+        gr ? "Τύπος Crash • Domain • Βεβαιότητα • Τεκμηρίωση"
+           : "Crash Type • Domain • Confidence • Evidence",
+        true,
+        v -> runPanicSignatureParser()
+));
 
-        // 4) Stability (guard)
-        root.addView(makeLabButton(
-                "LAB 3 - System Stability Evaluation",
-                "Evaluate iOS stability from available logs",
-                true,
-                v -> runStabilityLab()
-        ));
+// 4) Stability (guard)
+root.addView(makeLabButton(
+        gr ? "LAB 3 - Αξιολόγηση Σταθερότητας Συστήματος"
+           : "LAB 3 - System Stability Evaluation",
+        gr ? "Αξιολόγηση σταθερότητας iOS από διαθέσιμα logs"
+           : "Evaluate iOS stability from available logs",
+        true,
+        v -> runStabilityLab()
+));
 
-        // 5) Impact (guard)
-        root.addView(makeLabButton(
-                "LAB 4 -  Impact Analysis",
-                "Correlate crash with probable hardware domain",
-                true,
-                v -> runImpactLab()
-        ));
+// 5) Impact (guard)
+root.addView(makeLabButton(
+        gr ? "LAB 4 - Ανάλυση Επιπτώσεων"
+           : "LAB 4 - Impact Analysis",
+        gr ? "Συσχέτιση crash με πιθανό hardware domain"
+           : "Correlate crash with probable hardware domain",
+        true,
+        v -> runImpactLab()
+));
 
-        // 6) Service Verdict (guard)
-        root.addView(makeLabButton(
-                "LAB 5 - Service Recommendation",
-                "Final service verdict (technician-friendly)",
-                true,
-                v -> runServiceRecommendationLab()
-        ));
-
+// 6) Service Verdict (guard)
+root.addView(makeLabButton(
+        gr ? "LAB 5 - Σύσταση Service"
+           : "LAB 5 - Service Recommendation",
+        gr ? "Τελική τεχνική αξιολόγηση (φιλική για τεχνικό)"
+           : "Final service verdict (technician-friendly)",
+        true,
+        v -> runServiceRecommendationLab()
+));
         // ============================================================
         // LOG AREA (BOTTOM) — LIKE MANUAL TESTS
         // ============================================================
@@ -309,12 +333,18 @@ if (panicGuidePopupOpen) {
 // ============================================================
 GELServiceLog.section("iPhone Labs — Panic Log & Stability Analysis");
 
+boolean gr = AppLang.isGreek(this);
+
 // Boot / intro entries (ONCE)
 logLine();
-logInfo("GEL iPhone Labs — ready.");
+logInfo(gr 
+        ? "GEL iPhone Labs — έτοιμο."
+        : "GEL iPhone Labs — ready.");
 logLine();
 
-logOk("Import a panic log to begin analysis.");
+logOk(gr
+        ? "Εισήγαγε panic log για να ξεκινήσει η ανάλυση."
+        : "Import a panic log to begin analysis.");
 
 } // onCreate ends here
 
@@ -385,7 +415,7 @@ private void showPanicLogsGuidePopup() {
 
         // ================= MESSAGE =================
         TextView msg = new TextView(this);
-        msg.setTextColor(0xFFDDDDDD);
+        msg.setTextColor(0xFF00FF7F);
         msg.setTextSize(15f);
         msg.setGravity(Gravity.START);
         msg.setText(getPanicGuideTextEN());

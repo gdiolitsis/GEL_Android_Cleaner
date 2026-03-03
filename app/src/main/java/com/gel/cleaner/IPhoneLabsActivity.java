@@ -495,30 +495,34 @@ private void showPanicLogsGuidePopup() {
         box.addView(msg);
 
         // ============================================================
-        // CONTROLS — MUTE + LANG
-        // ============================================================
-        LinearLayout controls = new LinearLayout(this);
-        controls.setOrientation(LinearLayout.HORIZONTAL);
-        controls.setGravity(Gravity.CENTER_VERTICAL);
-        controls.setPadding(0, dp(16), 0, dp(10));
+// CONTROLS — MUTE + LANG
+// ============================================================
+LinearLayout controls = new LinearLayout(this);
+controls.setOrientation(LinearLayout.HORIZONTAL);
+controls.setGravity(Gravity.CENTER_VERTICAL);
+controls.setPadding(0, dp(16), 0, dp(10));
 
-            try {
-                if (panicGuideMuted && tts != null && tts[0] != null) {
-                    tts[0].stop();
-                }
-            } catch (Throwable ignore) {}
+// 🔇 MUTE (αριστερά)
+controls.addView(buildMuteRow());
 
-        // 🌐 LANGUAGE SPINNER
-        Spinner langSpinner = new Spinner(this);
-        ArrayAdapter<String> langAdapter =
-                new ArrayAdapter<>(
-                        this,
-                        android.R.layout.simple_spinner_item,
-                        new String[]{"EN", "GR"}
-                );
-        langAdapter.setDropDownViewResource(
-                android.R.layout.simple_spinner_dropdown_item);
-        langSpinner.setAdapter(langAdapter);
+try {
+    if (panicGuideMuted && tts != null && tts[0] != null) {
+        tts[0].stop();
+    }
+} catch (Throwable ignore) {}
+
+
+// 🌐 LANGUAGE SPINNER
+Spinner langSpinner = new Spinner(this);
+ArrayAdapter<String> langAdapter =
+        new ArrayAdapter<>(
+                this,
+                android.R.layout.simple_spinner_item,
+                new String[]{"EN", "GR"}
+        );
+langAdapter.setDropDownViewResource(
+        android.R.layout.simple_spinner_dropdown_item);
+langSpinner.setAdapter(langAdapter);
         
         // ================= INITIAL LANGUAGE + TTS =================
 
@@ -576,15 +580,30 @@ box.postDelayed(() -> {
 
         // ================= LANGUAGE BOX =================
 LinearLayout.LayoutParams lpLangBox =
-        new LinearLayout.LayoutParams(0, dp(48), 1f);
+        new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                dp(48)
+        );
+
 lpLangBox.setMargins(dp(8), 0, 0, 0);
 langBox.setLayoutParams(lpLangBox);
 
 langBox.addView(langSpinner);
 
-// Controls (μόνο language — mute είναι global)
+// μόνο language εδώ
+controls.setGravity(Gravity.CENTER);
 controls.addView(langBox);
+
 box.addView(controls);
+
+// ================= CHECKBOX =================
+CheckBox cb = new CheckBox(this);
+cb.setText(AppLang.isGreek(this)
+? "Να μην εμφανιστεί ξανά"
+: "Do not show again");
+cb.setTextColor(Color.WHITE);
+cb.setPadding(0, dp(8), 0, dp(16));
+root.addView(cb);
 
 // ================= OK =================
 Button okBtn = new Button(this);

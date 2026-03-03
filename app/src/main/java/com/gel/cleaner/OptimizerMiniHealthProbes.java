@@ -1,15 +1,11 @@
 package com.gel.cleaner;
 
-import android.app.ActivityManager;
-import android.app.ApplicationExitInfo;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.BatteryManager;
-import android.os.Build;
 
 import java.io.RandomAccessFile;
-import java.util.List;
 
 public class OptimizerMiniHealthProbes {
 
@@ -17,7 +13,6 @@ public class OptimizerMiniHealthProbes {
 
         public boolean cpuSpike = false;
         public boolean thermalHigh = false;
-        public boolean crashSignal = false;
         public boolean cacheHigh = false;
 
         public double temperature = 0;
@@ -44,10 +39,6 @@ public class OptimizerMiniHealthProbes {
             r.thermalHigh = true;
         }
 
-        if (hasRecentSystemCrash(ctx)) {
-            r.crashSignal = true;
-        }
-
         if (cacheHigh) {
             r.cacheHigh = true;
         }
@@ -56,27 +47,16 @@ public class OptimizerMiniHealthProbes {
         // CRITICAL LOGIC
         // =========================
 
-        // Crash always critical
-        if (r.crashSignal) {
-            r.critical = true;
-        }
-
-        // Thermal critical (only if not charging)
         if (!charging && temp >= 45.0) {
             r.critical = true;
         }
 
-        // CPU + Thermal critical
         if (!charging && temp >= 45.0 && r.cpuSpike) {
             r.critical = true;
         }
 
         return r;
     }
-
-    // ======================================================
-    // CPU SPIKE CHECK
-    // ======================================================
 
     private static boolean isCpuSpike() {
         try {
@@ -117,10 +97,6 @@ public class OptimizerMiniHealthProbes {
         return vals;
     }
 
-    // ======================================================
-    // TEMPERATURE
-    // ======================================================
-
     private static double getBatteryTemperature(Context ctx) {
         try {
             IntentFilter iFilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
@@ -153,50 +129,5 @@ public class OptimizerMiniHealthProbes {
         } catch (Throwable ignore) {
             return false;
         }
-    }
-
-    // ======================================================
-    // CRASH DETECTION
-    // ======================================================
-
-    private static boolean hasRecentSystemCrash(Context ctx) {
-
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R)
-            return false;
-
-        try {
-
-            ActivityManager am =
-                    (ActivityManager) ctx.getSystemService(Context.ACTIVITY_SERVICE);
-
-            if (am == null)
-                return false;
-
-            List<ApplicationExitInfo> exits =
-                    am.getHistoricalProcessExitReasons(null, 0, 20);
-
-            long now = System.currentTimeMillis();
-
-            for (ApplicationExitInfo info : exits) {
-
-                long timestamp = info.getTimestamp();
-                long diff = now - timestamp;
-
-                if (diff > 24L * 60L * 60L * 1000L)
-                    continue;
-
-                int reason = info.getReason();
-
-                if (reason == ApplicationExitInfo.REASON_CRASH
-                        || reason == ApplicationExitInfo.REASON_ANR
-                        || reason == ApplicationExitInfo.REASON_LOW_MEMORY) {
-
-                    return true;
-                }
-            }
-
-        } catch (Throwable ignore) {}
-
-        return false;
     }
 }

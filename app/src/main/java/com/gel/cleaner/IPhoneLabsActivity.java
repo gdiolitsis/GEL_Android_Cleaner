@@ -511,7 +511,6 @@ private void showPanicLogsGuidePopup() {
                     tts[0].stop();
                 }
             } catch (Throwable ignore) {}
-        });
 
         // 🌐 LANGUAGE SPINNER
         Spinner langSpinner = new Spinner(this);

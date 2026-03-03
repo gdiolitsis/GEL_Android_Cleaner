@@ -183,36 +183,15 @@ private boolean isPulseEnabled() {
             .getBoolean(KEY_PULSE_ENABLED, false);
 }
 
-private void scheduleMiniPulse3xDaily() {
-    try {
-        androidx.work.Constraints c =
-                new androidx.work.Constraints.Builder()
-                        .setRequiresBatteryNotLow(false)
-                        .build();
-
-        androidx.work.PeriodicWorkRequest req =
-                new androidx.work.PeriodicWorkRequest.Builder(
-                        OptimizerMiniScheduler.class,
-                        8, java.util.concurrent.TimeUnit.HOURS
-                )
-                .setConstraints(c)
-                .addTag("gel_mini_pulse")
-                .build();
-
-        androidx.work.WorkManager.getInstance(this)
-                .enqueueUniquePeriodicWork(
-                        "gel_mini_pulse",
-                        androidx.work.ExistingPeriodicWorkPolicy.REPLACE,
-                        req
-                );
-
-    } catch (Throwable ignore) {}
-}
-
 private void cancelMiniPulse() {
     try {
-        androidx.work.WorkManager.getInstance(this)
-                .cancelUniqueWork("gel_mini_pulse");
+        WorkManager wm = WorkManager.getInstance(this);
+
+        wm.cancelUniqueWork("gel_mini_pulse");   // periodic
+        wm.cancelUniqueWork("mini_pulse_09");
+        wm.cancelUniqueWork("mini_pulse_15");
+        wm.cancelUniqueWork("mini_pulse_21");
+
     } catch (Throwable ignore) {}
 }
 
@@ -2964,13 +2943,13 @@ private void showMiniSchedulerPopup() {
 
     noBtn.setOnClickListener(v -> {
         setPulseEnabled(false);
-        cancelMiniPulse();
+        OptimizerMiniPulseScheduler.disable(this);
         go(STEP_FINAL);  // συνεχίζουμε στο Questionnaire
     });
 
     yesBtn.setOnClickListener(v -> {
         setPulseEnabled(true);
-        scheduleMiniPulse3xDaily();
+        OptimizerMiniPulseScheduler.enable(this);
         go(STEP_FINAL);  // συνεχίζουμε στο Questionnaire
     });
 

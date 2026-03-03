@@ -1,3 +1,6 @@
+// GDiolitsis Engine Lab (GEL) — Author & Developer
+// OptimizerMiniHealthProbes.java — FINAL (Mini = Temp≥45 / Cache≥85 / CPU+Thermal + Moderate Escalation helper)
+
 package com.gel.cleaner;
 
 import android.content.Context;
@@ -35,6 +38,7 @@ public class OptimizerMiniHealthProbes {
             r.cpuSpike = true;
         }
 
+        // "thermalHigh" = early warning (moderate tracking)
         if (temp >= 43.0) {
             r.thermalHigh = true;
         }
@@ -44,19 +48,20 @@ public class OptimizerMiniHealthProbes {
         }
 
         // =========================
-        // CRITICAL LOGIC
+        // MINI CRITICAL LOGIC (FINAL)
         // =========================
+        boolean thermalCritical = (!charging && temp >= 45.0);
+        boolean cpuThermalCritical = (r.cpuSpike && thermalCritical);
+        boolean cacheCritical = r.cacheHigh; // Cache ≥85% triggers mini
 
-        if (!charging && temp >= 45.0) {
-            r.critical = true;
-        }
-
-        if (!charging && temp >= 45.0 && r.cpuSpike) {
-            r.critical = true;
-        }
+        r.critical = thermalCritical || cpuThermalCritical || cacheCritical;
 
         return r;
     }
+
+    // ======================================================
+    // CPU SPIKE CHECK
+    // ======================================================
 
     private static boolean isCpuSpike() {
         try {
@@ -85,17 +90,25 @@ public class OptimizerMiniHealthProbes {
     private static long[] readCpu() throws Exception {
 
         RandomAccessFile reader = new RandomAccessFile("/proc/stat", "r");
-        String[] toks = reader.readLine().split("\\s+");
+        String line = reader.readLine();
         reader.close();
 
-        long[] vals = new long[toks.length - 1];
+        if (line == null) return new long[0];
+
+        String[] toks = line.split("\\s+");
+        long[] vals = new long[Math.max(0, toks.length - 1)];
 
         for (int i = 1; i < toks.length; i++) {
-            vals[i - 1] = Long.parseLong(toks[i]);
+            try { vals[i - 1] = Long.parseLong(toks[i]); }
+            catch (Throwable ignore) { vals[i - 1] = 0L; }
         }
 
         return vals;
     }
+
+    // ======================================================
+    // TEMPERATURE
+    // ======================================================
 
     private static double getBatteryTemperature(Context ctx) {
         try {

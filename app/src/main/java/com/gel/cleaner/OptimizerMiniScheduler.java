@@ -256,28 +256,21 @@ else {
               + "Reduce activity and consider running a system check.\n\n"
               + "Run a check now?";
 }
-        else if (cpuThermalCritical) {
-
-            title = gr
-                    ? "GEL iDoctor: Υπερφόρτωση CPU + Θερμοκρασία"
-                    : "GEL iDoctor: CPU + Thermal Overload";
-
-            body = gr
-                    ? "Εντοπίστηκε αυξημένη χρήση CPU μαζί με υψηλή θερμοκρασία.\n\nΘέλεις να γίνει έλεγχος τώρα;"
-                    : "High CPU load detected with high temperature.\n\nRun a check now?";
-
-        }
+        
         else if (cacheCritical) {
 
-            title = gr
-                    ? "GEL iDoctor: Υψηλή Cache"
-                    : "GEL iDoctor: High Cache Usage";
+    title = gr
+            ? "GEL iDoctor: Υψηλή Cache"
+            : "GEL iDoctor: High Cache Usage";
 
-            body = gr
-                    ? "Εντοπίστηκε υψηλή προσωρινή μνήμη (cache) εφαρμογών.\n\nΘέλεις να γίνει έλεγχος τώρα;"
-                    : "High application cache usage detected.\n\nRun a check now?";
-
-        }
+    body = gr
+            ? "Εντοπίστηκε υψηλή προσωρινή μνήμη (cache) εφαρμογών.\n"
+              + "Ο καθαρισμός μπορεί να βελτιώσει την απόδοση.\n\n"
+              + "Θέλεις να γίνει έλεγχος και καθαρισμός τώρα;"
+            : "High application cache usage detected.\n"
+              + "Cleaning may improve performance.\n\n"
+              + "Run diagnostics and cleanup now?";
+}
         else {
             // moderate escalation
             title = gr

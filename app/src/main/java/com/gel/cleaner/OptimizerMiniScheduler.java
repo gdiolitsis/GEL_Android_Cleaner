@@ -175,15 +175,87 @@ public class OptimizerMiniScheduler extends Worker {
 
         if (thermalCritical) {
 
-            title = gr
-                    ? "GEL iDoctor: Υψηλή Θερμοκρασία"
-                    : "GEL iDoctor: High Device Temperature";
+            double t = r.temperature;
 
-            body = gr
-                    ? "Θερμοκρασία: " + r.temperature + "°C\n\nΘέλεις να γίνει έλεγχος τώρα;"
-                    : "Temperature: " + r.temperature + "°C\n\nRun a check now?";
+if (t >= 50.0) {
 
-        }
+    title = gr
+            ? "GEL iDoctor: ΚΡΙΣΙΜΗ Υπερθέρμανση"
+            : "GEL iDoctor: CRITICAL Overheat";
+
+    body = gr
+            ? "Θερμοκρασία: " + t + "°C\n\n"
+              + "Η θερμοκρασία βρίσκεται σε επικίνδυνα επίπεδα.\n"
+              + "Διακόψτε άμεσα βαριές λειτουργίες και αποσυνδέστε τον φορτιστή.\n"
+              + "Αφήστε τη συσκευή να κρυώσει.\n\n"
+              + "Θέλεις να γίνει πλήρης διάγνωση τώρα;"
+            : "Temperature: " + t + "°C\n\n"
+              + "Temperature is at a critical level.\n"
+              + "Stop heavy activity and unplug the charger immediately.\n"
+              + "Allow the device to cool down.\n\n"
+              + "Run full diagnostics now?";
+
+}
+else if (t >= 47.0) {
+
+    title = gr
+            ? "GEL iDoctor: Πολύ Υψηλή Θερμοκρασία"
+            : "GEL iDoctor: Very High Temperature";
+
+    if (r.charging) {
+
+        body = gr
+                ? "Θερμοκρασία: " + t + "°C\n\n"
+                  + "Η συσκευή φορτίζει και αυτό μπορεί να συμβάλλει στην άνοδο θερμοκρασίας.\n"
+                  + "Αποσυνδέστε τον φορτιστή και αφήστε τη να κρυώσει.\n\n"
+                  + "Θέλεις να γίνει διάγνωση τώρα;"
+                : "Temperature: " + t + "°C\n\n"
+                  + "Device is charging which may contribute to heat.\n"
+                  + "Unplug and allow it to cool.\n\n"
+                  + "Run diagnostics now?";
+
+    } else if (r.cpuSpike) {
+
+        body = gr
+                ? "Θερμοκρασία: " + t + "°C\n\n"
+                  + "Ανιχνεύθηκε αυξημένη χρήση CPU σε συνδυασμό με θερμοκρασία.\n"
+                  + "Μειώστε τη δραστηριότητα και αφήστε τη συσκευή να κρυώσει.\n\n"
+                  + "Θέλεις να γίνει διάγνωση τώρα;"
+                : "Temperature: " + t + "°C\n\n"
+                  + "High CPU usage detected along with elevated temperature.\n"
+                  + "Reduce activity and allow the device to cool.\n\n"
+                  + "Run diagnostics now?";
+
+    } else {
+
+        body = gr
+                ? "Θερμοκρασία: " + t + "°C\n\n"
+                  + "Η συσκευή δεν φορτίζει και δεν ανιχνεύεται υψηλή χρήση CPU.\n"
+                  + "Αν έχει εκτεθεί σε ζεστό περιβάλλον (π.χ. άμεσο ήλιο), απομακρύνετέ την.\n\n"
+                  + "Εάν η θερμοκρασία παραμένει υψηλή, συνιστάται διαγνωστικός έλεγχος.\n\n"
+                  + "Θέλεις να γίνει διάγνωση τώρα;"
+                : "Temperature: " + t + "°C\n\n"
+                  + "Device is not charging and no high CPU usage is detected.\n"
+                  + "If exposed to a hot environment (e.g. direct sunlight), move it to a cooler place.\n\n"
+                  + "If temperature remains elevated, system diagnostics are recommended.\n\n"
+                  + "Run diagnostics now?";
+    }
+
+}
+else {
+
+    title = gr
+            ? "GEL iDoctor: Υψηλή Θερμοκρασία"
+            : "GEL iDoctor: High Device Temperature";
+
+    body = gr
+            ? "Θερμοκρασία: " + t + "°C\n\n"
+              + "Συνιστάται μείωση δραστηριότητας και έλεγχος συστήματος.\n\n"
+              + "Θέλεις να γίνει έλεγχος τώρα;"
+            : "Temperature: " + t + "°C\n\n"
+              + "Reduce activity and consider running a system check.\n\n"
+              + "Run a check now?";
+}
         else if (cpuThermalCritical) {
 
             title = gr

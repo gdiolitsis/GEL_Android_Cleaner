@@ -1,3 +1,6 @@
+// GDiolitsis Engine Lab (GEL) — Author & Developer
+// OptimizerMiniScheduler.java — FINAL (Mini Alerts Only)
+
 package com.gel.cleaner;
 
 import android.app.PendingIntent;
@@ -43,7 +46,7 @@ public class OptimizerMiniScheduler extends Worker {
         long nowTime = System.currentTimeMillis();
 
         // ==============================
-        // Cache Check
+        // Cache Check (>=85%)
         // ==============================
         boolean cacheHigh = false;
 
@@ -88,12 +91,20 @@ public class OptimizerMiniScheduler extends Worker {
                 OptimizerMiniHealthProbes.run(ctx, cacheHigh);
 
         // ==============================
-        // SMART ESCALATION ENGINE
+        // MINI SIGNAL ENGINE (FINAL)
+        // Critical triggers:
+        //  - Temp ≥45°C (not charging)
+        //  - CPU spike + Temp ≥45°C (not charging)
+        //  - Cache ≥85%
+        // Moderate escalation:
+        //  - cpuSpike OR cacheHigh OR thermalHigh (>=43) => 3 hits/24h => 1 notify
         // ==============================
 
-        boolean isCritical =
-                r.crashSignal ||
-                (r.thermalHigh && r.temperature >= 45.0);
+        boolean thermalCritical = (!r.charging && r.temperature >= 45.0);
+        boolean cpuThermalCritical = (r.cpuSpike && thermalCritical);
+        boolean cacheCritical = r.cacheHigh;
+
+        boolean isCritical = thermalCritical || cpuThermalCritical || cacheCritical;
 
         boolean isModerate =
                 (!isCritical) &&
@@ -134,26 +145,27 @@ public class OptimizerMiniScheduler extends Worker {
         }
 
         if (!r.critical) {
+            // Re-arm next day slot (only if enabled)
+            rearm(ctx, sp);
             return Result.success();
         }
 
         // ==============================
-        // COOLDOWN (Crash / 45°C bypass)
+        // COOLDOWN (24h) — Thermal ≥45°C bypass only
         // ==============================
 
         long lastNotify = sp.getLong("last_mini_notify", 0);
 
-        boolean bypassCooldown =
-                r.crashSignal ||
-                (r.thermalHigh && r.temperature >= 45.0);
+        boolean bypassCooldown = thermalCritical || cpuThermalCritical;
 
         if (!bypassCooldown &&
                 nowTime - lastNotify < 24L * 60L * 60L * 1000L) {
+            rearm(ctx, sp);
             return Result.success();
         }
 
         // ==============================
-        // DYNAMIC NOTIFICATION TEXT
+        // NOTIFICATION TEXT (TITLE ALWAYS "GEL iDoctor:")
         // ==============================
 
         boolean gr = AppLang.isGreek(ctx);
@@ -161,64 +173,48 @@ public class OptimizerMiniScheduler extends Worker {
         String title;
         String body;
 
-        if (r.crashSignal) {
+        if (thermalCritical) {
 
-            title = gr ? "⚠ Εντοπίστηκε Crash"
-                       : "⚠ System Crash Detected";
+            title = gr
+                    ? "GEL iDoctor: Υψηλή Θερμοκρασία"
+                    : "GEL iDoctor: High Device Temperature";
 
             body = gr
-                    ? "Παρατηρήθηκε πρόσφατο crash ή ANR."
-                    : "A recent crash or ANR was detected.";
+                    ? "Θερμοκρασία: " + r.temperature + "°C\n\nΘέλεις να γίνει έλεγχος τώρα;"
+                    : "Temperature: " + r.temperature + "°C\n\nRun a check now?";
 
         }
-        else if (r.thermalHigh && r.temperature >= 45.0) {
+        else if (cpuThermalCritical) {
 
-            title = gr ? "🔥 Υψηλή Θερμοκρασία"
-                       : "🔥 High Device Temperature";
+            title = gr
+                    ? "GEL iDoctor: Υπερφόρτωση CPU + Θερμοκρασία"
+                    : "GEL iDoctor: CPU + Thermal Overload";
 
             body = gr
-                    ? "Θερμοκρασία: " + r.temperature + "°C"
-                    : "Temperature: " + r.temperature + "°C";
+                    ? "Εντοπίστηκε αυξημένη χρήση CPU μαζί με υψηλή θερμοκρασία.\n\nΘέλεις να γίνει έλεγχος τώρα;"
+                    : "High CPU load detected with high temperature.\n\nRun a check now?";
 
         }
-        else if (r.cpuSpike && r.thermalHigh) {
+        else if (cacheCritical) {
 
-            title = gr ? "⚠ Υψηλό CPU & Θερμοκρασία"
-                       : "⚠ High CPU & Thermal Load";
-
-            body = gr
-                    ? "Αυξημένο CPU σε συνδυασμό με θερμοκρασία."
-                    : "High CPU load combined with temperature rise.";
-
-        }
-        else if (r.cpuSpike) {
-
-            title = gr ? "📈 Υψηλό CPU Load"
-                       : "📈 High CPU Usage";
+            title = gr
+                    ? "GEL iDoctor: Υψηλή Cache"
+                    : "GEL iDoctor: High Cache Usage";
 
             body = gr
-                    ? "Παρατηρήθηκε αυξημένη χρήση επεξεργαστή."
-                    : "High processor usage detected.";
-
-        }
-        else if (r.cacheHigh) {
-
-            title = gr ? "🧹 Υψηλή Cache Εφαρμογών"
-                       : "🧹 High App Cache Usage";
-
-            body = gr
-                    ? "Μεγάλη προσωρινή μνήμη εφαρμογών."
-                    : "Large application cache usage detected.";
+                    ? "Εντοπίστηκε υψηλή προσωρινή μνήμη (cache) εφαρμογών.\n\nΘέλεις να γίνει έλεγχος τώρα;"
+                    : "High application cache usage detected.\n\nRun a check now?";
 
         }
         else {
-
-            title = gr ? "Ένδειξη Επιβάρυνσης"
-                       : "Health Signal";
+            // moderate escalation
+            title = gr
+                    ? "GEL iDoctor: Πιθανή Επιβάρυνση"
+                    : "GEL iDoctor: Possible Load Detected";
 
             body = gr
-                    ? "Παρατηρήθηκε πιθανή επιβάρυνση."
-                    : "Potential load detected.";
+                    ? "Το σύστημα εντόπισε επαναλαμβανόμενες ενδείξεις επιβάρυνσης.\n\nΘέλεις να γίνει έλεγχος τώρα;"
+                    : "Repeated load signals detected.\n\nRun a check now?";
         }
 
         try {
@@ -241,7 +237,6 @@ public class OptimizerMiniScheduler extends Worker {
 
             intent.putExtra("mini_cpu", r.cpuSpike);
             intent.putExtra("mini_thermal", r.thermalHigh);
-            intent.putExtra("mini_crash", r.crashSignal);
             intent.putExtra("mini_cache", r.cacheHigh);
             intent.putExtra("mini_temp", r.temperature);
 
@@ -260,25 +255,29 @@ public class OptimizerMiniScheduler extends Worker {
 
         } catch (Throwable ignore) {}
 
-// =====================================================
-// RE-ARM SAME SLOT FOR NEXT DAY (FIXED HOURS SYSTEM)
-// =====================================================
-
-int hour = getInputData().getInt("hour", -1);
-String workName = getInputData().getString("workName");
-
-// ⚠ Guard — αν το pulse απενεργοποιήθηκε, ΜΗΝ ξαναπρογραμματίσεις
-if (sp.getBoolean(KEY_PULSE_ENABLED, false)) {
-
-    if (hour != -1 && workName != null) {
-        OptimizerMiniPulseScheduler.reschedule(
-                ctx,
-                hour,
-                workName
-        );
-    }
-}
+        // ==============================
+        // RE-ARM SAME SLOT FOR NEXT DAY
+        // ==============================
+        rearm(ctx, sp);
 
         return Result.success();
+    }
+
+    private void rearm(Context ctx, SharedPreferences sp) {
+
+        try {
+            int hour = getInputData().getInt("hour", -1);
+            String workName = getInputData().getString("workName");
+
+            if (!sp.getBoolean(KEY_PULSE_ENABLED, false)) return;
+
+            if (hour != -1 && workName != null) {
+                OptimizerMiniPulseScheduler.reschedule(
+                        ctx,
+                        hour,
+                        workName
+                );
+            }
+        } catch (Throwable ignore) {}
     }
 }

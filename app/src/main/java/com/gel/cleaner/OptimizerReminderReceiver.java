@@ -35,10 +35,10 @@ public final class OptimizerReminderReceiver extends BroadcastReceiver {
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
 
-        String title = gr ? "Υπενθύμιση ελέγχου υγείας" : "Health check reminder";
+        String title = gr ? "GEL iDoctor: Υπενθύμιση Εξυπνης Βελτιστοποίησης" : "GEL iDoctor: Guided Optimizer reminder";
         String text = gr
-                ? "Όταν βρεις λίγο χρόνο, τρέξε έναν γρήγορο έλεγχο για καλύτερη εικόνα."
-                : "When you have a moment, run a quick check for a better overview.";
+                ? "Όταν βρεις λίγο χρόνο, τρέξε έναν έλεγχο για καλύτερη απόδοση."
+                : "When you have a moment, run a check for a better performance.";
 
         NotificationCompat.Builder b = new NotificationCompat.Builder(c, CH_ID)
                 .setSmallIcon(android.R.drawable.stat_notify_more)

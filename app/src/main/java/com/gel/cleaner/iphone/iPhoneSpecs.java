@@ -13,6 +13,334 @@ public final class iPhoneSpecs {
     private static final Map<String, AppleDeviceSpec> MAP = new HashMap<>();
 
     static {
+      
+// =========================================================
+// 📱 iPHONE 16 SERIES — FULL SPECS
+// =========================================================
+
+// ---------------------------------------------------------
+// 📱 iPhone 16
+// ---------------------------------------------------------
+AppleDeviceSpec iphone16 = new AppleDeviceSpec("iphone", "iPhone 16");
+iphone16.year            = "2024";
+iphone16.identifier      = "iPhone17,3";
+iphone16.os              = "iOS";
+iphone16.soc             = "A18";
+iphone16.chipset         = "A18";
+iphone16.arch            = "ARMv9-A";
+iphone16.processNode     = "3 nm (2nd gen)";
+iphone16.cpu             = "Apple CPU";
+iphone16.cpuCores        = 6;
+iphone16.gpu             = "Apple GPU";
+iphone16.gpuCores        = 5;
+iphone16.metalFeatureSet = "Metal 3";
+
+iphone16.ram             = "8 GB";
+iphone16.ramType         = "LPDDR5X";
+iphone16.storageBase     = "128 GB";
+iphone16.storageOptions  = "128 / 256 / 512 GB";
+
+iphone16.screen          = "6.1\"";
+iphone16.display         = "OLED Super Retina XDR";
+iphone16.resolution      = "2556 × 1179";
+iphone16.refreshRate     = "60 Hz";
+iphone16.displayOut      = "DisplayPort (USB-C)";
+iphone16.displayVariants = "Standard 60 Hz (no ProMotion)";
+
+iphone16.has5G           = true;
+iphone16.hasLTE          = true;
+iphone16.cellular        = "5G NR / LTE";
+iphone16.modem           = "Qualcomm Snapdragon X75";
+iphone16.wifi            = "Wi-Fi 6E";
+iphone16.bluetooth       = "Bluetooth 5.4";
+iphone16.hasNFC          = true;
+iphone16.hasAirDrop      = true;
+iphone16.hasAirPlay      = true;
+iphone16.gps             = "GPS, GLONASS, Galileo, QZSS";
+iphone16.hasCompass      = true;
+iphone16.hasGyro         = true;
+iphone16.hasAccel        = true;
+iphone16.hasBarometer    = true;
+
+iphone16.simSlots        = "Dual eSIM";
+iphone16.hasESim         = true;
+iphone16.port            = "USB-C";
+iphone16.usbStandard     = "USB 2";
+
+iphone16.speakers        = "Stereo speakers";
+iphone16.microphones     = "Multiple microphones";
+iphone16.hasDolby        = true;
+iphone16.hasJack         = false;
+
+iphone16.cameraMain      = "48 MP Wide";
+iphone16.cameraUltraWide = "12 MP Ultra-Wide";
+iphone16.cameraTele      = null;
+iphone16.cameraFront     = "12 MP TrueDepth";
+iphone16.cameraVideo     = "4K@60fps HDR";
+iphone16.cameraVariants  =
+        "Dual-camera system (Wide + Ultra-Wide)";
+
+iphone16.hasFaceID       = true;
+iphone16.biometrics      = "Face ID";
+iphone16.hasFastCharge   = true;
+iphone16.hasWirelessCharge = true;
+
+// 🔋 Battery (model reference)
+iphone16.batteryMah          = 3561;
+iphone16.batteryVoltage      = 3.87f;
+iphone16.batteryWh           =
+        (iphone16.batteryMah * iphone16.batteryVoltage) / 1000f;
+iphone16.batteryChemistry    = "Lithium-Ion (pouch)";
+iphone16.batteryDesignCycles = 500;
+iphone16.batteryCharging     =
+        "Fast wired charging, MagSafe 15W, Qi wireless";
+iphone16.batteryNotes        =
+        "Improved efficiency over iPhone 15 with A18 architecture";
+
+iphone16.thermalNote =
+        "No public access to thermal sensors (Apple restriction)";
+iphone16.notes =
+        "Factory specifications only. No runtime system probing.";
+
+MAP.put("iphone 16", iphone16);
+
+// ---------------------------------------------------------
+// 📱 iPhone 16 Plus
+// ---------------------------------------------------------
+AppleDeviceSpec iphone16Plus = new AppleDeviceSpec("iphone", "iPhone 16 Plus");
+iphone16Plus.year            = "2024";
+iphone16Plus.identifier      = "iPhone17,4";
+iphone16Plus.os              = "iOS";
+iphone16Plus.soc             = "A18";
+iphone16Plus.chipset         = "A18";
+iphone16Plus.arch            = "ARMv9-A";
+iphone16Plus.processNode     = "3 nm (2nd gen)";
+iphone16Plus.cpu             = "Apple CPU";
+iphone16Plus.cpuCores        = 6;
+iphone16Plus.gpu             = "Apple GPU";
+iphone16Plus.gpuCores        = 5;
+iphone16Plus.metalFeatureSet = "Metal 3";
+
+iphone16Plus.ram             = "8 GB";
+iphone16Plus.ramType         = "LPDDR5X";
+iphone16Plus.storageBase     = "128 GB";
+iphone16Plus.storageOptions  = "128 / 256 / 512 GB";
+
+iphone16Plus.screen          = "6.7\"";
+iphone16Plus.display         = "OLED Super Retina XDR";
+iphone16Plus.resolution      = "2796 × 1290";
+iphone16Plus.refreshRate     = "60 Hz";
+iphone16Plus.displayOut      = "DisplayPort (USB-C)";
+
+iphone16Plus.has5G           = true;
+iphone16Plus.hasLTE          = true;
+iphone16Plus.cellular        = "5G NR / LTE";
+iphone16Plus.modem           = "Qualcomm Snapdragon X75";
+iphone16Plus.wifi            = "Wi-Fi 6E";
+iphone16Plus.bluetooth       = "Bluetooth 5.4";
+iphone16Plus.hasNFC          = true;
+iphone16Plus.hasAirDrop      = true;
+iphone16Plus.hasAirPlay      = true;
+iphone16Plus.gps             = "GPS, GLONASS, Galileo, QZSS";
+
+iphone16Plus.simSlots        = "Dual eSIM";
+iphone16Plus.hasESim         = true;
+iphone16Plus.port            = "USB-C";
+iphone16Plus.usbStandard     = "USB 2";
+
+iphone16Plus.speakers        = "Stereo speakers";
+iphone16Plus.microphones     = "Multiple microphones";
+
+iphone16Plus.cameraMain      = "48 MP Wide";
+iphone16Plus.cameraUltraWide = "12 MP Ultra-Wide";
+iphone16Plus.cameraFront     = "12 MP TrueDepth";
+
+iphone16Plus.hasFaceID       = true;
+iphone16Plus.biometrics      = "Face ID";
+
+// 🔋 Battery
+iphone16Plus.batteryMah      = 4674;
+iphone16Plus.batteryVoltage  = 3.87f;
+iphone16Plus.batteryWh       =
+        (iphone16Plus.batteryMah * iphone16Plus.batteryVoltage) / 1000f;
+iphone16Plus.batteryChemistry = "Lithium-Ion (pouch)";
+iphone16Plus.batteryDesignCycles = 500;
+
+MAP.put("iphone 16 plus", iphone16Plus);
+
+// ---------------------------------------------------------
+// 📱 iPhone 16 Pro
+// ---------------------------------------------------------
+AppleDeviceSpec iphone16Pro = new AppleDeviceSpec("iphone", "iPhone 16 Pro");
+iphone16Pro.year            = "2024";
+iphone16Pro.identifier      = "iPhone17,1";
+iphone16Pro.os              = "iOS";
+iphone16Pro.soc             = "A18 Pro";
+iphone16Pro.chipset         = "A18 Pro";
+iphone16Pro.arch            = "ARMv9-A";
+iphone16Pro.processNode     = "3 nm (2nd gen)";
+iphone16Pro.cpu             = "Apple CPU";
+iphone16Pro.cpuCores        = 6;
+iphone16Pro.gpu             = "Apple GPU";
+iphone16Pro.gpuCores        = 6;
+iphone16Pro.metalFeatureSet = "Metal 3 (Hardware Ray Tracing)";
+
+iphone16Pro.ram             = "8 GB";
+iphone16Pro.ramType         = "LPDDR5X";
+iphone16Pro.storageBase     = "128 GB";
+iphone16Pro.storageOptions  = "128 / 256 / 512 GB / 1 TB";
+
+iphone16Pro.screen          = "6.3\"";
+iphone16Pro.display         = "OLED Super Retina XDR (ProMotion)";
+iphone16Pro.resolution      = "2622 × 1206";
+iphone16Pro.refreshRate     = "1–120 Hz";
+iphone16Pro.displayOut      = "DisplayPort (USB-C)";
+iphone16Pro.displayVariants = "ProMotion with adaptive refresh (1–120 Hz)";
+
+iphone16Pro.has5G           = true;
+iphone16Pro.hasLTE          = true;
+iphone16Pro.cellular        = "5G NR / LTE";
+iphone16Pro.modem           = "Qualcomm Snapdragon X75";
+iphone16Pro.wifi            = "Wi-Fi 7";
+iphone16Pro.bluetooth       = "Bluetooth 5.4";
+iphone16Pro.hasNFC          = true;
+iphone16Pro.hasAirDrop      = true;
+iphone16Pro.hasAirPlay      = true;
+iphone16Pro.gps             = "Dual-frequency GPS (L1 + L5)";
+iphone16Pro.hasCompass      = true;
+iphone16Pro.hasGyro         = true;
+iphone16Pro.hasAccel        = true;
+iphone16Pro.hasBarometer    = true;
+
+iphone16Pro.simSlots        = "Dual eSIM";
+iphone16Pro.hasESim         = true;
+iphone16Pro.port            = "USB-C";
+iphone16Pro.usbStandard     = "USB 3 (up to 10 Gbps)";
+
+iphone16Pro.speakers        = "Stereo speakers";
+iphone16Pro.microphones     = "Multiple microphones";
+iphone16Pro.hasDolby        = true;
+iphone16Pro.hasJack         = false;
+
+iphone16Pro.cameraMain      = "48 MP Pro";
+iphone16Pro.cameraUltraWide = "48 MP Ultra-Wide";
+iphone16Pro.cameraTele      = "12 MP Telephoto (5× Tetraprism)";
+iphone16Pro.cameraFront     = "12 MP TrueDepth";
+iphone16Pro.cameraVideo     = "4K ProRes, Spatial Video support";
+iphone16Pro.cameraVariants  =
+        "Triple-camera Pro system (Wide + Ultra-Wide + 5× Telephoto)";
+
+iphone16Pro.hasFaceID       = true;
+iphone16Pro.biometrics      = "Face ID";
+iphone16Pro.hasFastCharge   = true;
+iphone16Pro.hasWirelessCharge = true;
+
+// 🔋 Battery (model reference)
+iphone16Pro.batteryMah          = 3355;
+iphone16Pro.batteryVoltage      = 3.87f;
+iphone16Pro.batteryWh           =
+        (iphone16Pro.batteryMah * iphone16Pro.batteryVoltage) / 1000f;
+iphone16Pro.batteryChemistry    = "Lithium-Ion (pouch)";
+iphone16Pro.batteryDesignCycles = 500;
+iphone16Pro.batteryCharging     =
+        "Fast wired charging, MagSafe 15W, Qi wireless";
+iphone16Pro.batteryNotes        =
+        "Higher sustained performance; improved thermal efficiency vs 15 Pro";
+
+iphone16Pro.thermalNote =
+        "Titanium frame improves heat dissipation under sustained load";
+iphone16Pro.notes =
+        "Pro model with A18 Pro, hardware ray tracing and 5× tetraprism zoom.";
+
+MAP.put("iphone 16 pro", iphone16Pro);
+
+
+// ---------------------------------------------------------
+// 📱 iPhone 16 Pro Max
+// ---------------------------------------------------------
+AppleDeviceSpec iphone16ProMax = new AppleDeviceSpec("iphone", "iPhone 16 Pro Max");
+iphone16ProMax.year            = "2024";
+iphone16ProMax.identifier      = "iPhone17,2";
+iphone16ProMax.os              = "iOS";
+iphone16ProMax.soc             = "A18 Pro";
+iphone16ProMax.chipset         = "A18 Pro";
+iphone16ProMax.arch            = "ARMv9-A";
+iphone16ProMax.processNode     = "3 nm (2nd gen)";
+iphone16ProMax.cpu             = "Apple CPU";
+iphone16ProMax.cpuCores        = 6;
+iphone16ProMax.gpu             = "Apple GPU";
+iphone16ProMax.gpuCores        = 6;
+iphone16ProMax.metalFeatureSet = "Metal 3 (Hardware Ray Tracing)";
+
+iphone16ProMax.ram             = "8 GB";
+iphone16ProMax.ramType         = "LPDDR5X";
+iphone16ProMax.storageBase     = "256 GB";
+iphone16ProMax.storageOptions  = "256 / 512 GB / 1 TB";
+
+iphone16ProMax.screen          = "6.9\"";
+iphone16ProMax.display         = "OLED Super Retina XDR (ProMotion)";
+iphone16ProMax.resolution      = "2868 × 1320";
+iphone16ProMax.refreshRate     = "1–120 Hz";
+iphone16ProMax.displayOut      = "DisplayPort (USB-C)";
+iphone16ProMax.displayVariants =
+        "Largest ProMotion display in the lineup (1–120 Hz)";
+
+iphone16ProMax.has5G           = true;
+iphone16ProMax.hasLTE          = true;
+iphone16ProMax.cellular        = "5G NR / LTE";
+iphone16ProMax.modem           = "Qualcomm Snapdragon X75";
+iphone16ProMax.wifi            = "Wi-Fi 7";
+iphone16ProMax.bluetooth       = "Bluetooth 5.4";
+iphone16ProMax.hasNFC          = true;
+iphone16ProMax.hasAirDrop      = true;
+iphone16ProMax.hasAirPlay      = true;
+iphone16ProMax.gps             = "Dual-frequency GPS (L1 + L5)";
+iphone16ProMax.hasCompass      = true;
+iphone16ProMax.hasGyro         = true;
+iphone16ProMax.hasAccel        = true;
+iphone16ProMax.hasBarometer    = true;
+
+iphone16ProMax.simSlots        = "Dual eSIM";
+iphone16ProMax.hasESim         = true;
+iphone16ProMax.port            = "USB-C";
+iphone16ProMax.usbStandard     = "USB 3 (up to 10 Gbps)";
+
+iphone16ProMax.speakers        = "Stereo speakers";
+iphone16ProMax.microphones     = "Multiple microphones";
+iphone16ProMax.hasDolby        = true;
+iphone16ProMax.hasJack         = false;
+
+iphone16ProMax.cameraMain      = "48 MP Pro";
+iphone16ProMax.cameraUltraWide = "48 MP Ultra-Wide";
+iphone16ProMax.cameraTele      = "12 MP Telephoto (5× Tetraprism)";
+iphone16ProMax.cameraFront     = "12 MP TrueDepth";
+iphone16ProMax.cameraVideo     = "4K ProRes, Spatial Video support";
+iphone16ProMax.cameraVariants  =
+        "Triple-camera Pro system (Wide + Ultra-Wide + 5× Telephoto)";
+
+iphone16ProMax.hasFaceID       = true;
+iphone16ProMax.biometrics      = "Face ID";
+iphone16ProMax.hasFastCharge   = true;
+iphone16ProMax.hasWirelessCharge = true;
+
+// 🔋 Battery
+iphone16ProMax.batteryMah          = 4685;
+iphone16ProMax.batteryVoltage      = 3.87f;
+iphone16ProMax.batteryWh           =
+        (iphone16ProMax.batteryMah * iphone16ProMax.batteryVoltage) / 1000f;
+iphone16ProMax.batteryChemistry    = "Lithium-Ion (pouch)";
+iphone16ProMax.batteryDesignCycles = 500;
+iphone16ProMax.batteryCharging     =
+        "Fast wired charging, MagSafe 15W, Qi wireless";
+iphone16ProMax.batteryNotes        =
+        "Largest capacity in the series; maximum sustained performance headroom";
+
+iphone16ProMax.thermalNote =
+        "Titanium frame and larger chassis provide improved sustained thermal behavior";
+iphone16ProMax.notes =
+        "Top-tier configuration with A18 Pro, 5× tetraprism zoom and highest endurance.";
+
+MAP.put("iphone 16 pro max", iphone16ProMax);
         
         // =====================================================
         // 📱 iPhone 15

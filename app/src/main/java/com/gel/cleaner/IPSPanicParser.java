@@ -1,6 +1,6 @@
 // GDiolitsis Engine Lab (GEL) — Author & Developer
 // IPSPanicParser.java — iOS Panic Log Signature Parser (Multi-Match)
-// FINAL • NO AI • RULE-BASED • SERVICE-GRADE
+// FINAL • NO AI • RULE-BASED • SERVICE-GRADE • HARDENED
 
 package com.gel.cleaner;
 
@@ -9,9 +9,11 @@ import android.content.Context;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public final class IPSPanicParser {
 
@@ -19,11 +21,9 @@ public final class IPSPanicParser {
     // RESULT MODEL (Primary + Secondary)
     // ============================================================
     public static class Result {
-        // container
         public Result primary;
         public List<Result> secondary = new ArrayList<>();
 
-        // single signature fields
         public String patternId;
         public String domain;
         public String cause;
@@ -41,40 +41,49 @@ public final class IPSPanicParser {
             return null;
 
         try {
+
+            String textLow = panicText.toLowerCase(Locale.US);
+
             JSONObject root = loadPatterns(ctx);
             JSONArray patterns = root.getJSONArray("patterns");
 
             List<Result> matches = new ArrayList<>();
 
             for (int i = 0; i < patterns.length(); i++) {
-                JSONObject p = patterns.getJSONObject(i);
 
+                JSONObject p = patterns.getJSONObject(i);
                 JSONArray tokens = p.getJSONArray("match");
+
                 boolean allFound = true;
 
                 for (int t = 0; t < tokens.length(); t++) {
                     String token = tokens.getString(t);
-                    if (!panicText.contains(token)) {
+                    if (token == null) continue;
+
+                    if (!textLow.contains(token.toLowerCase(Locale.US))) {
                         allFound = false;
                         break;
                     }
                 }
 
-                if (allFound) {
-                    Result r = new Result();
-                    r.patternId      = p.optString("id", "unknown");
-                    r.domain         = p.optString("domain", "Unknown");
-                    r.cause          = p.optString("cause", "Unknown");
-                    r.severity       = p.optString("severity", "LOW");
-                    r.confidence     = p.optString("confidence", "Low");
-                    r.recommendation = p.optString("recommendation", "Further inspection recommended.");
-                    matches.add(r);
-                }
+                if (!allFound) continue;
+
+                Result r = new Result();
+                r.patternId      = p.optString("id", "unknown");
+                r.domain         = p.optString("domain", "Unknown");
+                r.cause          = p.optString("cause", "Unknown");
+                r.severity       = p.optString("severity", "LOW");
+                r.confidence     = p.optString("confidence", "Low");
+                r.recommendation = p.optString(
+                        "recommendation",
+                        "Further inspection recommended."
+                );
+
+                matches.add(r);
             }
 
             if (matches.isEmpty()) return null;
 
-            // Sort by severity (DESC)
             matches.sort((a, b) ->
                     severityRank(b.severity) - severityRank(a.severity)
             );
@@ -88,7 +97,7 @@ public final class IPSPanicParser {
 
             return out;
 
-        } catch (Throwable e) {
+        } catch (Throwable ignore) {
             return null;
         }
     }
@@ -98,7 +107,7 @@ public final class IPSPanicParser {
     // ============================================================
     private static int severityRank(String s) {
         if (s == null) return 0;
-        switch (s.toUpperCase()) {
+        switch (s.toUpperCase(Locale.US)) {
             case "CRITICAL": return 4;
             case "HIGH":     return 3;
             case "MEDIUM":   return 2;
@@ -108,14 +117,23 @@ public final class IPSPanicParser {
     }
 
     // ============================================================
-    // LOAD JSON PATTERNS (assets)
+    // LOAD JSON PATTERNS (SAFE STREAM READ)
     // ============================================================
     private static JSONObject loadPatterns(Context ctx) throws Exception {
+
         InputStream is = ctx.getAssets().open("ips_panic_patterns.json");
-        byte[] buf = new byte[is.available()];
-        is.read(buf);
+
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        byte[] buffer = new byte[4096];
+        int read;
+
+        while ((read = is.read(buffer)) != -1) {
+            bos.write(buffer, 0, read);
+        }
+
         is.close();
-        String json = new String(buf, "UTF-8");
+
+        String json = new String(bos.toByteArray(), "UTF-8");
         return new JSONObject(json);
     }
 }

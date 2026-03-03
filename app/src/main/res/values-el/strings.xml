@@ -20,8 +20,8 @@
     <string name="cpu_ram_live">📈 CPU / RAM ΖΩΝΤΑΝΗ ΠΑΡΑΚΟΛΟΥΘΗΣΗ</string>
 
     <!-- DEVICE INFO -->
-    <string name="phone_info_internal">📱 ΠΛΗΡ. ΣΥΣΚΕΥΗΣ\n(Εσωτερικά)</string>
-    <string name="phone_info_peripherals">📡 ΠΛΗΡ. ΣΥΣΚΕΥΗΣ\n(Περιφερειακά)</string>
+    <string name="phone_info_internal">📱 ΠΛΗΡΟΦ. ΣΥΣΚΕΥΗΣ\n(Εσωτερικά)</string>
+    <string name="phone_info_peripherals">📡 ΠΛΗΡΟΦ. ΣΥΣΚΕΥΗΣ\n(Περιφερειακά)</string>
 
     <!-- Battery Capacity Popup -->
     <string name="battery_popup_title">Χωρητικότητα Μπαταρίας</string>

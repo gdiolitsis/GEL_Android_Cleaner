@@ -320,9 +320,10 @@ tts[0] = new TextToSpeech(this, status -> {
     if (status == TextToSpeech.SUCCESS) {
         ttsReady[0] = true;
 
-if (panicGuidePopupOpen) {
-    speakPanicGuideTTS();
-}
+        if (panicGuidePopupOpen && !isGlobalMuted()) {
+            speakPanicGuideTTS();
+        }
+
     } else {
         ttsReady[0] = false;
     }
@@ -429,28 +430,6 @@ private void showPanicLogsGuidePopup() {
         controls.setGravity(Gravity.CENTER_VERTICAL);
         controls.setPadding(0, dp(16), 0, dp(10));
 
-        // 🔕 MUTE
-        Button muteBtn = new Button(this);
-        muteBtn.setText(panicGuideMuted ? "Unmute" : "Mute");
-        muteBtn.setAllCaps(false);
-        muteBtn.setTextColor(0xFFFFFFFF);
-
-        GradientDrawable muteBg = new GradientDrawable();
-        muteBg.setColor(0xFF444444);
-        muteBg.setCornerRadius(dp(12));
-        muteBg.setStroke(dp(2), 0xFFFFD700);
-        muteBtn.setBackground(muteBg);
-
-        LinearLayout.LayoutParams lpMute =
-                new LinearLayout.LayoutParams(0,
-                        LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
-        lpMute.setMargins(0, 0, dp(8), 0);
-        muteBtn.setLayoutParams(lpMute);
-
-        muteBtn.setOnClickListener(v -> {
-            panicGuideMuted = !panicGuideMuted;
-            muteBtn.setText(panicGuideMuted ? "Unmute" : "Mute");
-
             try {
                 if (panicGuideMuted && tts != null && tts[0] != null) {
                     tts[0].stop();
@@ -523,64 +502,71 @@ box.postDelayed(() -> {
         langBg.setStroke(dp(2), 0xFFFFD700);
         langBox.setBackground(langBg);
 
-        LinearLayout.LayoutParams lpLangBox =
-                new LinearLayout.LayoutParams(0, dp(48), 1f);
-        lpLangBox.setMargins(dp(8), 0, 0, 0);
-        langBox.setLayoutParams(lpLangBox);
+        // ================= LANGUAGE BOX =================
+LinearLayout.LayoutParams lpLangBox =
+        new LinearLayout.LayoutParams(0, dp(48), 1f);
+lpLangBox.setMargins(dp(8), 0, 0, 0);
+langBox.setLayoutParams(lpLangBox);
 
-        langBox.addView(langSpinner);
+langBox.addView(langSpinner);
 
-        controls.addView(muteBtn);
-        controls.addView(langBox);
-        box.addView(controls);
+// Controls (μόνο language — mute είναι global)
+controls.addView(langBox);
+box.addView(controls);
 
-        // ================= OK =================
-        Button okBtn = new Button(this);
-        okBtn.setText("OK");
-        okBtn.setAllCaps(false);
-        okBtn.setTextColor(0xFFFFFFFF);
+// ================= OK =================
+Button okBtn = new Button(this);
+okBtn.setText("OK");
+okBtn.setAllCaps(false);
+okBtn.setTextColor(0xFFFFFFFF);
 
-        GradientDrawable okBg = new GradientDrawable();
-        okBg.setColor(0xFF0F8A3B);
-        okBg.setCornerRadius(dp(14));
-        okBg.setStroke(dp(3), 0xFFFFD700);
-        okBtn.setBackground(okBg);
+GradientDrawable okBg = new GradientDrawable();
+okBg.setColor(0xFF0F8A3B);
+okBg.setCornerRadius(dp(14));
+okBg.setStroke(dp(3), 0xFFFFD700);
+okBtn.setBackground(okBg);
 
-        LinearLayout.LayoutParams lpOk =
-                new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        dp(52)
-                );
-        lpOk.setMargins(0, dp(16), 0, 0);
-        okBtn.setLayoutParams(lpOk);
+LinearLayout.LayoutParams lpOk =
+        new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                dp(52)
+        );
+lpOk.setMargins(0, dp(16), 0, 0);
+okBtn.setLayoutParams(lpOk);
 
-        box.addView(okBtn);
+box.addView(okBtn);
 
-        b.setView(box);
-        final AlertDialog d = b.create();
-        if (d.getWindow() != null)
-            d.getWindow().setBackgroundDrawable(
-                    new ColorDrawable(Color.TRANSPARENT));
-        d.show();
-        
-        d.setOnDismissListener(dialog -> {
+// ================= DIALOG =================
+b.setView(box);
+final AlertDialog d = b.create();
+
+if (d.getWindow() != null) {
+    d.getWindow().setBackgroundDrawable(
+            new ColorDrawable(Color.TRANSPARENT)
+    );
+}
+
+panicGuidePopupOpen = true;
+d.show();
+
+// 🔇 Stop TTS when dialog closes
+d.setOnDismissListener(dialog -> {
     panicGuidePopupOpen = false;
 
     try {
         if (tts != null && tts[0] != null) {
-            tts[0].stop();   // 🔇 κόψε φωνή
+            tts[0].stop();
         }
     } catch (Throwable ignore) {}
 });
-        
-        panicGuidePopupOpen = true;
 
-        okBtn.setOnClickListener(v -> {
+// OK button
+okBtn.setOnClickListener(v -> {
     panicGuidePopupOpen = false;
 
     try {
         if (tts != null && tts[0] != null) {
-            tts[0].stop();   // 🔇 κόψε φωνή
+            tts[0].stop();
         }
     } catch (Throwable ignore) {}
 
@@ -591,57 +577,57 @@ box.postDelayed(() -> {
 }          
 
 // ============================================================
-// TEXT HELPERS
+// TEXT HELPERS (FINAL CLEAN VERSION)
 // ============================================================
 
 private String getPanicGuideTextEN() {
     return
-        "To analyze iPhone stability, you need to import system logs.\n\n" +
+        "To analyze iPhone stability, system logs must be imported.\n\n" +
 
         "Where to find them on iPhone:\n" +
-        "Settings. → Privacy & Security. → Analytics & Improvements. → Analytics Data.\n\n" +
+        "Settings → Privacy & Security → Analytics & Improvements → Analytics Data\n\n" +
 
         "Look for files named:\n" +
-        "• panic-full-xxxx.log.\n" +
-        "• panic-base-xxxx.log.\n" +
-        "• system-xxxx.ips.\n\n" +
+        "• panic-full-xxxx.log\n" +
+        "• panic-base-xxxx.log\n" +
+        "• system-xxxx.ips\n\n" +
 
         "How to export:\n" +
-        "Tap a file. → Share. → Save to Files, or, Send by Email.\n" +
-        "You must export all files.\n\n" +
+        "Open a file → Share → Save to Files or Send via Email\n" +
+        "Export all available files.\n\n" +
 
         "In this app:\n" +
-        "Press Import, and select all log files.\n" +
-        "The app, will analyze all of them together,\n" +
+        "Press Import and select all log files.\n" +
+        "The app analyzes them together\n" +
         "to detect stability patterns.\n\n" +
 
         "Tip:\n" +
-        "More logs, means better diagnosis accuracy.";
+        "More logs improve diagnostic accuracy.";
 }
 
 private String getPanicGuideTextGR() {
     return
-        "Για την ανάλυση σταθερότητας iPhone, χρειάζονται τα αρχεία καταγραφής.\n\n" +
+        "Για την ανάλυση σταθερότητας του iPhone, απαιτείται εισαγωγή αρχείων καταγραφής.\n\n" +
 
-        "Πού τα βρίσκεις στο iPhone:\n" +
-        "Ρυθμίσεις. → Απόρρητο & Ασφάλεια. → Ανάλυση & Βελτιώσεις. → Δεδομένα ανάλυσης.\n\n" +
+        "Πού θα τα βρεις στο iPhone:\n" +
+        "Ρυθμίσεις → Απόρρητο & Ασφάλεια → Ανάλυση & Βελτιώσεις → Δεδομένα Ανάλυσης\n\n" +
 
-        "Αναζήτησε αρχεία όπως:\n" +
-        "• panic-full-xxxx.log.\n" +
-        "• panic-base-xxxx.log.\n" +
-        "• system-xxxx.ips.\n\n" +
+        "Αναζήτησε αρχεία με ονόματα:\n" +
+        "• panic-full-xxxx.log\n" +
+        "• panic-base-xxxx.log\n" +
+        "• system-xxxx.ips\n\n" +
 
-        "Πώς τα εξάγεις:\n" +
-        "Πάτησε στο αρχείο. → Κοινή χρήση. → Αποθήκευση στα Αρχεία, ή, Αποστολή με email.\n" +
-        "Πρέπει να στείλεις όλα τα αρχεία.\n\n" +
+        "Πώς να τα εξαγάγεις:\n" +
+        "Άνοιξε το αρχείο → Κοινή χρήση → Αποθήκευση στα Αρχεία ή Αποστολή μέσω email\n" +
+        "Εξήγαγε όλα τα διαθέσιμα αρχεία.\n\n" +
 
         "Στην εφαρμογή:\n" +
-        "Πάτησε Import, και διάλεξε όλα τα logs.\n" +
-        "Η εφαρμογή τα αναλύει όλα μαζί,\n" +
-        "για να εντοπίσει μοτίβα αστάθειας.\n\n" +
+        "Πάτησε Import και επίλεξε όλα τα logs.\n" +
+        "Η εφαρμογή τα αναλύει συνολικά\n" +
+        "για εντοπισμό μοτίβων αστάθειας.\n\n" +
 
         "Συμβουλή:\n" +
-        "Όσο περισσότερα logs, τόσο πιο αξιόπιστο το αποτέλεσμα.";
+        "Όσο περισσότερα logs, τόσο πιο αξιόπιστη η διάγνωση.";
 }
 
 // ============================================================
@@ -683,9 +669,10 @@ private void speakPanicGuideTTS() {
 }
 
 // ============================================================
-// PANIC LOG IMPORT (SAF)
+// PANIC LOG IMPORT (SAF) — FINAL CLEAN
 // ============================================================
 private void openPanicLogPicker() {
+
     Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT);
     i.addCategory(Intent.CATEGORY_OPENABLE);
     i.setType("*/*");
@@ -700,24 +687,33 @@ private void openPanicLogPicker() {
 
     appendHtml("<br>");
     logLine();
-    logInfo("Panic Logs Import requested (SAF).");
+    logInfo(AppLang.isGreek(this)
+            ? "Ζητήθηκε εισαγωγή Panic Logs (SAF)."
+            : "Panic Logs import requested (SAF).");
     logLine();
 }
 
 @Override
-protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+protected void onActivityResult(int requestCode,
+                                int resultCode,
+                                @Nullable Intent data) {
+
     super.onActivityResult(requestCode, resultCode, data);
 
     if (requestCode != REQ_PANIC_LOG) return;
 
-    // reset ΜΟΝΟ όταν όντως γυρίσαμε από Panic Log picker
+    boolean gr = AppLang.isGreek(this);
+
     if (!appendMode) {
         panicLogCount = 0;
         panicLogText  = null;
+        panicLogLoaded = false;
     }
 
     if (resultCode != RESULT_OK || data == null) {
-        logWarn("Panic log import cancelled.");
+        logWarn(gr
+                ? "Η εισαγωγή ακυρώθηκε."
+                : "Panic log import cancelled.");
         return;
     }
 
@@ -735,17 +731,22 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
         }
 
         if (uris.isEmpty()) {
-            logWarn("No files selected.");
+            logWarn(gr
+                    ? "Δεν επιλέχθηκαν αρχεία."
+                    : "No files selected.");
             return;
         }
 
-        logOk("Panic logs selected: " + uris.size());
+        logOk((gr ? "Επιλέχθηκαν αρχεία: " : "Files selected: ") + uris.size());
 
         StringBuilder allLogs = new StringBuilder();
 
-if (appendMode && panicLogLoaded && panicLogText != null) {
-    allLogs.append(panicLogText);
-}
+        // append mode
+        if (appendMode && panicLogLoaded && panicLogText != null) {
+            allLogs.append(panicLogText);
+        }
+
+        int loadedCount = 0;
 
         for (Uri uri : uris) {
 
@@ -756,14 +757,19 @@ if (appendMode && panicLogLoaded && panicLogText != null) {
             if (is == null) continue;
 
             String text;
+
             if (looksLikeZip(safeName)) {
                 text = readPanicFromZip(is);
             } else {
                 text = readTextStream(is);
             }
 
+            try { is.close(); } catch (Throwable ignore) {}
+
             if (text == null || text.trim().isEmpty()) {
-                logWarn("Skipped empty file: " + safe(safeName));
+                logWarn((gr ? "Παράλειψη κενού αρχείου: "
+                            : "Skipped empty file: ")
+                        + safe(safeName));
                 continue;
             }
 
@@ -772,43 +778,59 @@ if (appendMode && panicLogLoaded && panicLogText != null) {
                    .append(" =====\n\n")
                    .append(text);
 
-            logOk("Loaded: " + safe(safeName));
+            loadedCount++;
+
+            logOk((gr ? "Φορτώθηκε: "
+                      : "Loaded: ")
+                    + safe(safeName));
         }
 
-           panicLogCount = uris.size();
-
-if (panicLogCount == 1) {
-    panicLogName = "Single panic log";
-} else {
-    panicLogName = "Multiple panic logs (" + panicLogCount + " files)";
-}
-
-        if (allLogs.length() == 0) {
-            throw new Exception("All files empty.");
+        if (loadedCount == 0) {
+            throw new Exception(gr
+                    ? "Όλα τα αρχεία ήταν κενά."
+                    : "All files were empty.");
         }
+
+        panicLogCount = appendMode
+                ? panicLogCount + loadedCount
+                : loadedCount;
+
+        panicLogName = (panicLogCount == 1)
+                ? (gr ? "Ένα panic log"
+                      : "Single panic log")
+                : (gr
+                   ? "Πολλαπλά panic logs (" + panicLogCount + " αρχεία)"
+                   : "Multiple panic logs (" + panicLogCount + " files)");
 
         panicLogText   = allLogs.toString();
-panicLogLoaded = true;
+        panicLogLoaded = true;
 
-panicLogName = (panicLogCount == 1)
-        ? "Single panic log"
-        : "Multiple panic logs (" + panicLogCount + " files)";
-        
-        // cache signature από ΟΛΑ
+        // cache signature από όλα
         parseAndCacheSignature(panicLogText);
 
-        logOk("Multi panic logs imported.");
-        logInfo("Total size:");
-        logOk(String.valueOf(panicLogText.length()) + " chars");
-        logOk("Ready for analysis.");
+        logLine();
+        logOk(gr
+                ? "Η εισαγωγή ολοκληρώθηκε."
+                : "Import completed.");
+        logInfo(gr
+                ? "Συνολικό μέγεθος:"
+                : "Total size:");
+        logOk(panicLogText.length() + " chars");
+        logOk(gr
+                ? "Έτοιμο για ανάλυση."
+                : "Ready for analysis.");
+        logLine();
 
     } catch (Exception e) {
 
         panicLogLoaded = false;
         panicLogText   = null;
 
-        logError("Panic logs import failed.");
-        logInfo("Reason:");
+        logError(gr
+                ? "Αποτυχία εισαγωγής."
+                : "Panic logs import failed.");
+
+        logInfo(gr ? "Αιτία:" : "Reason:");
         logWarn(safe(e.getMessage()));
     }
 }

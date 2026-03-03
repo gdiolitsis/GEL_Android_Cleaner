@@ -375,13 +375,11 @@ btnExport.setOnClickListener(v -> {
 
 root.addView(btnExport);
 
-showPanicLogsGuidePopup();
-
-// ============================================================
-// FINAL BIND
-// ============================================================
 scroll.addView(root);
 setContentView(scroll);
+
+// popup AFTER layout ready
+showPanicLogsGuidePopup();
 
 // ==========================
 // TTS INIT

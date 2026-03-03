@@ -1163,7 +1163,7 @@ hide(R.id.btnAppCache);
 hide(R.id.btnAppManager);
 hide(R.id.btnGuidedOptimizer);
 
-hide(R.id.txtLogs);
+show(R.id.txtLogs);
 
 show(R.id.btnDonate);
 show(R.id.btnPhoneInfoInternal);

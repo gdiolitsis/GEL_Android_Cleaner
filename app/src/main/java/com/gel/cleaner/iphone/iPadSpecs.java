@@ -21,6 +21,8 @@ public final class iPadSpecs {
     // =========================================================
     static {
 
+
+
 // -----------------------------------------------------
 // 📱 iPad Pro 12.9" (M2)
 // -----------------------------------------------------
@@ -956,6 +958,236 @@ ipadAir13M2.notes =
         "13-inch Air bridges Air and Pro; large display without ProMotion or LiDAR, OS-limited sustained workloads";
 
 MAP.put("ipad air 13 m2", ipadAir13M2);
+
+// -----------------------------------------------------
+// 📱 iPad Pro 11" (M4)
+// -----------------------------------------------------
+AppleDeviceSpec ipadPro11M4 = new AppleDeviceSpec();
+ipadPro11M4.type = "ipad";
+ipadPro11M4.model = "iPad Pro 11 (M4)";
+ipadPro11M4.year = "2024";
+ipadPro11M4.identifier = "iPad16,3 / iPad16,4";
+ipadPro11M4.modelNumber = "A2836 / A2837 / A3006";
+
+// =====================================================
+// OS / PLATFORM
+// =====================================================
+ipadPro11M4.os = "iPadOS";
+
+// =====================================================
+// SOC / CPU / GPU
+// =====================================================
+ipadPro11M4.soc = "Apple M4";
+ipadPro11M4.chipset = "M4";
+ipadPro11M4.processNode = "3 nm";
+ipadPro11M4.cpu = "Apple CPU";
+ipadPro11M4.cpuCores = 9; // 3 performance + 6 efficiency
+ipadPro11M4.gpu = "Apple GPU";
+ipadPro11M4.gpuCores = 10;
+ipadPro11M4.metalFeatureSet = "Metal 3";
+
+// =====================================================
+// MEMORY / STORAGE
+// =====================================================
+ipadPro11M4.ram = "8 GB / 16 GB";
+ipadPro11M4.ramType = "Unified Memory";
+ipadPro11M4.storageBase = "256 GB";
+ipadPro11M4.storageOptions = "256 / 512 GB / 1 TB / 2 TB";
+ipadPro11M4.storageVariants =
+        "16 GB RAM available with 1 TB / 2 TB models";
+
+// =====================================================
+// DISPLAY
+// =====================================================
+ipadPro11M4.screen = "11\"";
+ipadPro11M4.display = "Ultra Retina XDR (OLED)";
+ipadPro11M4.resolution = "2420 × 1668";
+ipadPro11M4.refreshRate = "ProMotion 120 Hz";
+ipadPro11M4.displayOut = "Thunderbolt / USB-C DisplayPort";
+ipadPro11M4.displayVariants =
+        "Tandem OLED panel with high brightness and contrast";
+
+// =====================================================
+// NETWORK / WIRELESS
+// =====================================================
+ipadPro11M4.has5G = true;
+ipadPro11M4.hasLTE = true;
+ipadPro11M4.cellular = "5G / LTE (cellular models)";
+ipadPro11M4.modem = "Qualcomm Snapdragon X75";
+ipadPro11M4.wifi = "Wi-Fi 6E";
+ipadPro11M4.bluetooth = "Bluetooth 5.3";
+ipadPro11M4.hasNFC = false;
+ipadPro11M4.hasAirDrop = true;
+ipadPro11M4.hasAirPlay = true;
+ipadPro11M4.gps = "GPS / GNSS (cellular models)";
+ipadPro11M4.hasCompass = true;
+ipadPro11M4.hasGyro = true;
+ipadPro11M4.hasAccel = true;
+ipadPro11M4.hasBarometer = true;
+
+// =====================================================
+// SIM / PORTS
+// =====================================================
+ipadPro11M4.simSlots = "eSIM only (cellular models)";
+ipadPro11M4.hasESim = true;
+ipadPro11M4.port = "USB-C / Thunderbolt";
+ipadPro11M4.usbStandard = "Thunderbolt 4";
+
+// =====================================================
+// AUDIO
+// =====================================================
+ipadPro11M4.speakers = "4-speaker audio system";
+ipadPro11M4.microphones = "Studio-quality microphones";
+ipadPro11M4.hasDolby = true;
+ipadPro11M4.hasJack = false;
+
+// =====================================================
+// CAMERA
+// =====================================================
+ipadPro11M4.cameraMain = "12 MP Wide";
+ipadPro11M4.cameraFront = "12 MP Landscape Ultra-Wide (Center Stage)";
+ipadPro11M4.cameraVideo = "4K@60fps HDR";
+ipadPro11M4.cameraVariants =
+        "Single rear camera; landscape front camera";
+
+// =====================================================
+// BIOMETRICS
+// =====================================================
+ipadPro11M4.hasFaceID = true;
+ipadPro11M4.hasTouchID = false;
+ipadPro11M4.biometrics = "Face ID";
+
+// =====================================================
+// POWER
+// =====================================================
+ipadPro11M4.hasFastCharge = true;
+ipadPro11M4.hasWirelessCharge = false;
+
+// =====================================================
+// 🔋 BATTERY
+// =====================================================
+ipadPro11M4.batteryMah = 8160; // approx reference
+ipadPro11M4.batteryVoltage = 3.80f;
+ipadPro11M4.batteryWh =
+        (ipadPro11M4.batteryMah * ipadPro11M4.batteryVoltage) / 1000f;
+ipadPro11M4.batteryChemistry = "Lithium-Polymer";
+ipadPro11M4.batteryDesignCycles = 1000;
+ipadPro11M4.batteryCharging =
+        "USB-C fast charging (Thunderbolt port)";
+ipadPro11M4.batteryNotes =
+        "OLED panel; Apple rates up to 10 hours usage";
+
+// =====================================================
+ipadPro11M4.thermalNote =
+        "Thermal sensors not accessible to apps (Apple restriction)";
+ipadPro11M4.notes =
+        "First OLED 11-inch iPad Pro; ultra-thin chassis with M4 silicon";
+
+MAP.put("ipad pro 11 m4", ipadPro11M4);
+
+// -----------------------------------------------------
+// 📱 iPad Pro 13" (M4)
+// -----------------------------------------------------
+AppleDeviceSpec ipadPro13M4 = new AppleDeviceSpec();
+ipadPro13M4.type = "ipad";
+ipadPro13M4.model = "iPad Pro 13 (M4)";
+ipadPro13M4.year = "2024";
+ipadPro13M4.identifier = "iPad16,1 / iPad16,2";
+ipadPro13M4.modelNumber = "A2925 / A2926 / A3007";
+
+// =====================================================
+ipadPro13M4.os = "iPadOS";
+
+// SOC
+ipadPro13M4.soc = "Apple M4";
+ipadPro13M4.chipset = "M4";
+ipadPro13M4.processNode = "3 nm";
+ipadPro13M4.cpu = "Apple CPU";
+ipadPro13M4.cpuCores = 10; // 4 performance + 6 efficiency
+ipadPro13M4.gpu = "Apple GPU";
+ipadPro13M4.gpuCores = 10;
+ipadPro13M4.metalFeatureSet = "Metal 3";
+
+// MEMORY
+ipadPro13M4.ram = "8 GB / 16 GB";
+ipadPro13M4.ramType = "Unified Memory";
+ipadPro13M4.storageBase = "256 GB";
+ipadPro13M4.storageOptions = "256 / 512 GB / 1 TB / 2 TB";
+ipadPro13M4.storageVariants =
+        "16 GB RAM available with 1 TB / 2 TB models";
+
+// DISPLAY
+ipadPro13M4.screen = "13\"";
+ipadPro13M4.display = "Ultra Retina XDR (OLED)";
+ipadPro13M4.resolution = "2752 × 2064";
+ipadPro13M4.refreshRate = "ProMotion 120 Hz";
+ipadPro13M4.displayOut = "Thunderbolt / USB-C DisplayPort";
+ipadPro13M4.displayVariants =
+        "Tandem OLED panel; high brightness and contrast";
+
+// NETWORK
+ipadPro13M4.has5G = true;
+ipadPro13M4.hasLTE = true;
+ipadPro13M4.cellular = "5G / LTE (cellular models)";
+ipadPro13M4.modem = "Qualcomm Snapdragon X75";
+ipadPro13M4.wifi = "Wi-Fi 6E";
+ipadPro13M4.bluetooth = "Bluetooth 5.3";
+ipadPro13M4.hasNFC = false;
+ipadPro13M4.hasAirDrop = true;
+ipadPro13M4.hasAirPlay = true;
+ipadPro13M4.gps = "GPS / GNSS (cellular models)";
+ipadPro13M4.hasCompass = true;
+ipadPro13M4.hasGyro = true;
+ipadPro13M4.hasAccel = true;
+ipadPro13M4.hasBarometer = true;
+
+// PORTS
+ipadPro13M4.simSlots = "eSIM only (cellular models)";
+ipadPro13M4.hasESim = true;
+ipadPro13M4.port = "USB-C / Thunderbolt";
+ipadPro13M4.usbStandard = "Thunderbolt 4";
+
+// AUDIO
+ipadPro13M4.speakers = "4-speaker audio system";
+ipadPro13M4.microphones = "Studio-quality microphones";
+ipadPro13M4.hasDolby = true;
+ipadPro13M4.hasJack = false;
+
+// CAMERA
+ipadPro13M4.cameraMain = "12 MP Wide";
+ipadPro13M4.cameraFront = "12 MP Landscape Ultra-Wide (Center Stage)";
+ipadPro13M4.cameraVideo = "4K@60fps HDR";
+ipadPro13M4.cameraVariants =
+        "Single rear camera; landscape front camera";
+
+// BIOMETRICS
+ipadPro13M4.hasFaceID = true;
+ipadPro13M4.hasTouchID = false;
+ipadPro13M4.biometrics = "Face ID";
+
+// POWER
+ipadPro13M4.hasFastCharge = true;
+ipadPro13M4.hasWirelessCharge = false;
+
+// BATTERY
+ipadPro13M4.batteryMah = 10290; // approx reference
+ipadPro13M4.batteryVoltage = 3.80f;
+ipadPro13M4.batteryWh =
+        (ipadPro13M4.batteryMah * ipadPro13M4.batteryVoltage) / 1000f;
+ipadPro13M4.batteryChemistry = "Lithium-Polymer";
+ipadPro13M4.batteryDesignCycles = 1000;
+ipadPro13M4.batteryCharging =
+        "USB-C fast charging (Thunderbolt port)";
+ipadPro13M4.batteryNotes =
+        "Large OLED panel; Apple rates up to 10 hours usage";
+
+// NOTES
+ipadPro13M4.thermalNote =
+        "Thermal sensors not accessible to apps (Apple restriction)";
+ipadPro13M4.notes =
+        "Thinnest iPad ever released; M4-class performance with OLED display";
+
+MAP.put("ipad pro 13 m4", ipadPro13M4);
         
 // -----------------------------------------------------
 // 📱 iPad mini (6th generation)
@@ -1129,6 +1361,12 @@ public static AppleDeviceSpec get(String modelName) {
 
     if (m.contains("ipad air") && m.contains("m1"))
         return MAP.get("ipad air m1");
+
+    if (m.contains("ipad pro") && m.contains("13") && m.contains("m4"))
+    return MAP.get("ipad pro 13 m4");
+
+    if (m.contains("ipad pro") && m.contains("11") && m.contains("m4"))
+    return MAP.get("ipad pro 11 m4");
 
     // iPad mini
     if (m.contains("ipad mini"))

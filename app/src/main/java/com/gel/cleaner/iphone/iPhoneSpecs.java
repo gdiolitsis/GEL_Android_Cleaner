@@ -2089,6 +2089,18 @@ public static AppleDeviceSpec get(String modelName) {
     // SERIES RESOLUTION — CRITICAL
     // =====================================================
 
+    if (m.contains("iphone 16 pro max"))
+        return MAP.get("iphone 16 pro max");
+
+    if (m.contains("iphone 16 pro"))
+        return MAP.get("iphone 16 pro");
+
+    if (m.contains("iphone 16 plus"))
+        return MAP.get("iphone 16 plus");
+
+    if (m.contains("iphone 16"))
+        return MAP.get("iphone 16");
+    
     if (m.contains("iphone 15")) {
         if (m.contains("pro max")) return MAP.get("iphone 15 pro max");
         if (m.contains("pro"))     return MAP.get("iphone 15 pro");

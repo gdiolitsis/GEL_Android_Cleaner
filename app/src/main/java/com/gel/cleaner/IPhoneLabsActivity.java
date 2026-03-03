@@ -390,7 +390,7 @@ tts[0] = new TextToSpeech(this, status -> {
     if (status == TextToSpeech.SUCCESS) {
         ttsReady[0] = true;
 
-        if (panicGuidePopupOpen && !isGlobalMuted()) {
+        if (panicGuidePopupOpen && !panicGuideMuted) {
             speakPanicGuideTTS();
         }
 
@@ -403,8 +403,6 @@ tts[0] = new TextToSpeech(this, status -> {
 // SERVICE LOG — SECTION HEADER (iPhone Labs)
 // ============================================================
 GELServiceLog.section("iPhone Labs — Panic Log & Stability Analysis");
-
-boolean gr = AppLang.isGreek(this);
 
 // Boot / intro entries (ONCE)
 logLine();

@@ -1,3 +1,6 @@
+// GDiolitsis Engine Lab (GEL) — Author & Developer
+// OptimizerMiniPulseScheduler.java — FINAL
+
 package com.gel.cleaner;
 
 import android.content.Context;

@@ -199,7 +199,7 @@ root.addView(sub);
 // ============================================================
 
 // 1) Import (replace mode)
-root.addView(makeLabButton(
+View importBtn = makeLabButton(
         gr ? "Εισαγωγή Panic Logs (TXT / ZIP)"
            : "Panic Log Import (TXT / ZIP)",
         gr ? "Αυτόματη αποσυμπίεση + φόρτωση αναφοράς"
@@ -209,10 +209,14 @@ root.addView(makeLabButton(
             appendMode = false;
             openPanicLogPicker();
         }
-));
+);
+
+setButtonTextGold(importBtn);
+root.addView(importBtn);
+
 
 // 1b) Add more logs (append mode)
-root.addView(makeLabButton(
+View appendBtn = makeLabButton(
         gr ? "Προσθήκη επιπλέον panic logs"
            : "Add more panic logs",
         gr ? "Προσθήκη logs στην τρέχουσα ανάλυση"
@@ -222,7 +226,11 @@ root.addView(makeLabButton(
             appendMode = true;
             openPanicLogPicker();
         }
-));
+);
+
+setButtonTextGold(appendBtn);
+root.addView(appendBtn);
+
 
 // 2) Analyzer (guard)
 root.addView(makeLabButton(
@@ -1905,6 +1913,25 @@ container.setOnClickListener(v -> {
 });
 
     return container;
+}
+
+private void setButtonTextGold(View container) {
+
+    if (!(container instanceof ViewGroup)) return;
+
+    ViewGroup vg = (ViewGroup) container;
+
+    for (int i = 0; i < vg.getChildCount(); i++) {
+        View child = vg.getChildAt(i);
+
+        if (child instanceof TextView) {
+            ((TextView) child).setTextColor(0xFFFFD700);
+        }
+
+        if (child instanceof ViewGroup) {
+            setButtonTextGold(child);
+        }
+    }
 }
 
 // ============================================================

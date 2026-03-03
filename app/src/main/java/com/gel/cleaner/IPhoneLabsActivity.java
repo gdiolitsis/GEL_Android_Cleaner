@@ -211,7 +211,7 @@ View importBtn = makeLabButton(
         }
 );
 
-setButtonTextGold(importBtn);
+setButtonTextWhite(importBtn);
 root.addView(importBtn);
 
 
@@ -228,7 +228,7 @@ View appendBtn = makeLabButton(
         }
 );
 
-setButtonTextGold(appendBtn);
+setButtonTextWhite(appendBtn);
 root.addView(appendBtn);
 
 
@@ -1997,7 +1997,7 @@ container.setOnClickListener(v -> {
     return container;
 }
 
-private void setButtonTextGold(View container) {
+private void setButtonTextWhite(View container) {
 
     if (!(container instanceof ViewGroup)) return;
 
@@ -2007,11 +2007,11 @@ private void setButtonTextGold(View container) {
         View child = vg.getChildAt(i);
 
         if (child instanceof TextView) {
-            ((TextView) child).setTextColor(0xFFFFD700);
+            ((TextView) child).setTextColor(0xFFFFFFFF);
         }
 
         if (child instanceof ViewGroup) {
-            setButtonTextGold(child);
+            setButtonTextWhite(child);
         }
     }
 }

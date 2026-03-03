@@ -647,7 +647,7 @@ cb.setText(AppLang.isGreek(this)
 : "Do not show again");
 cb.setTextColor(Color.WHITE);
 cb.setPadding(0, dp(8), 0, dp(16));
-root.addView(cb);
+box.addView(cb);
 
 // ================= OK =================
 Button okBtn = new Button(this);

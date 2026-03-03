@@ -443,9 +443,11 @@ private void handleMiniSignals(Intent intent) {
 
     boolean cpu = intent.getBooleanExtra("mini_cpu", false);
     boolean thermal = intent.getBooleanExtra("mini_thermal", false);
-    boolean crash = intent.getBooleanExtra("mini_crash", false);
     boolean cache = intent.getBooleanExtra("mini_cache", false);
     double temp = intent.getDoubleExtra("mini_temp", 0);
+
+    // 🚫 Crash disabled for Mini
+    boolean crash = false;
 
     new android.os.Handler(android.os.Looper.getMainLooper())
             .post(() ->
@@ -462,8 +464,8 @@ private void showSmartDiagnosticPopup(String issue) {
             : "Health Signal Detected";
 
     String message = gr
-            ? "Το σύστημα εντόπισε πιθανή επιβάρυνση.\n\nΘέλεις να γίνει έλεγχος τώρα;"
-            : "The system detected a possible load issue.\n\nRun diagnostic now?";
+            ? "GEL iDoctor: Το σύστημα εντόπισε πιθανή επιβάρυνση.\n\nΘέλεις να γίνει έλεγχος τώρα;"
+            : "GEL iDoctor: The system detected a possible load issue.\n\nRun diagnostic now?";
 
     new androidx.appcompat.app.AlertDialog.Builder(this)
             .setTitle(title)

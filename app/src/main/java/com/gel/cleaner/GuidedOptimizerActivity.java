@@ -2860,6 +2860,12 @@ private void showLabRecommendation() {
 
     private void showReminder() {
 
+    // Αν υπάρχει ήδη ενεργό reminder → μην το ξαναδείξεις
+    if (OptimizerScheduler.isReminderEnabled(this)) {
+        go(STEP_MINI_REMINDER);
+        return;
+    }
+
     LinearLayout root = buildBaseBox(
             gr ? "Αν έμεινες ευχαριστημένος/η από το αποτέλεσμα, θα ήθελες να σου υπενθυμίζουμε τακτικά, να κάνουμε την ίδια επιθεώρηση στη συσκευή σου; \n\n"
                : "If you're satisfied with the results, would you like regular reminders, to run the same device inspection? \n\n"
@@ -2899,6 +2905,12 @@ skip.setOnClickListener(v -> {
 }
 
 private void showMiniSchedulerPopup() {
+
+    // Αν είναι ήδη ενεργό το mini pulse → μην το ξαναδείξεις
+    if (isPulseEnabled()) {
+        go(STEP_FINAL);
+        return;
+    }
 
     final boolean gr = AppLang.isGreek(this);
 

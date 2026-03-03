@@ -1542,8 +1542,6 @@ String[] models = "iphone".equals(type)
 "iPad mini 6"
 };
 
-}
-
 AlertDialog.Builder b =
 new AlertDialog.Builder(this,
 android.R.style.Theme_Material_Dialog_Alert);

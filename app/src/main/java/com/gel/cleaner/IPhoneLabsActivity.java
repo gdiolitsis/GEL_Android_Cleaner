@@ -18,7 +18,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
 import android.text.Html;
-import android.text.method.ScrollingMovementMethod;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
@@ -340,6 +339,7 @@ root.addView(makeLabButton(
         root.addView(logTitle);
 
         txtLog = new TextView(this);
+        txtLog.setTextIsSelectable(true);
         txtLog.setLayoutParams(new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
@@ -347,7 +347,6 @@ root.addView(makeLabButton(
         txtLog.setTextColor(COLOR_WHITE);
         txtLog.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
         txtLog.setLineSpacing(0f, 1.12f);
-        txtLog.setMovementMethod(new ScrollingMovementMethod());
         txtLog.setPadding(dp(12), dp(12), dp(12), dp(12));
         txtLog.setIncludeFontPadding(false);
         root.addView(txtLog);
@@ -2078,27 +2077,29 @@ private void setButtonTextWhite(View container) {
 private static final int MAX_LOG_BUFFER = 250_000; // προστασία από UI lag
 
 private void appendHtml(String htmlLine) {
+
     if (txtLog == null || htmlLine == null) return;
 
     logHtmlBuffer.append(htmlLine).append("<br>");
 
-    // 🔒 Prevent unbounded growth (large panic logs protection)
+    // προστασία buffer
     if (logHtmlBuffer.length() > MAX_LOG_BUFFER) {
         logHtmlBuffer.delete(
                 0,
                 logHtmlBuffer.length() - MAX_LOG_BUFFER
         );
+        txtLog.setText(""); // reset view
     }
 
     try {
-        txtLog.setText(
+        txtLog.append(
                 Html.fromHtml(
-                        logHtmlBuffer.toString(),
+                        htmlLine + "<br>",
                         Html.FROM_HTML_MODE_LEGACY
                 )
         );
     } catch (Throwable ignore) {
-        txtLog.setText(logHtmlBuffer.toString());
+        txtLog.append(stripHtml(htmlLine) + "\n");
     }
 }
 

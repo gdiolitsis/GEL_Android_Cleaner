@@ -380,7 +380,7 @@ scroll.addView(root);
 setContentView(scroll);
 
 // popup AFTER layout ready
-showPanicLogsGuidePopup();
+root.post(this::showPanicLogsGuidePopup);
 
 // ==========================
 // TTS INIT
@@ -502,11 +502,7 @@ private void showPanicLogsGuidePopup() {
 
     runOnUiThread(() -> {
 
-        AlertDialog.Builder b =
-                new AlertDialog.Builder(
-        IPhoneLabsActivity.this,
-        android.R.style.Theme_Material_Dialog_NoActionBar
-);
+        AlertDialog.Builder b = new AlertDialog.Builder(this);
         b.setCancelable(true);
 
         // ================= ROOT =================
@@ -545,9 +541,6 @@ LinearLayout controls = new LinearLayout(this);
 controls.setOrientation(LinearLayout.HORIZONTAL);
 controls.setGravity(Gravity.CENTER_VERTICAL);
 controls.setPadding(0, dp(16), 0, dp(10));
-
-// 🔇 MUTE (αριστερά)
-controls.addView(buildMuteRow());
 
 try {
     if (panicGuideMuted && tts != null && tts[0] != null) {
@@ -648,6 +641,9 @@ cb.setText(AppLang.isGreek(this)
 cb.setTextColor(Color.WHITE);
 cb.setPadding(0, dp(8), 0, dp(16));
 box.addView(cb);
+
+// 🔇 MUTE (αριστερά)
+controls.addView(buildMuteRow());
 
 // ================= OK =================
 Button okBtn = new Button(this);
@@ -2008,8 +2004,6 @@ private void parseAndCacheSignature(String text) {
     container.setPadding(dp(16), dp(16), dp(16), dp(16));
     container.setBackgroundResource(R.drawable.gel_btn_outline_selector);
     container.setClickable(true);
-    container.setFocusable(true);
-    container.setFocusableInTouchMode(false);
 
     TextView t = new TextView(this);
     t.setText(title);

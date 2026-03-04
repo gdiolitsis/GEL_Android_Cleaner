@@ -3075,6 +3075,7 @@ private void addActionButtons(LinearLayout root, Runnable okAction) {
         d.setStroke(5,0xFFFFD700);
         d.setCornerRadius(25);
         b.setBackground(d);
+        b.setOnTouchListener(UIHelpers.pressEffect());
         return b;
     }
 
@@ -3087,6 +3088,7 @@ private void addActionButtons(LinearLayout root, Runnable okAction) {
         d.setStroke(5,0xFFFFD700);
         d.setCornerRadius(25);
         b.setBackground(d);
+        b.setOnTouchListener(UIHelpers.pressEffect());
         return b;
     }
 
@@ -3099,6 +3101,7 @@ private void addActionButtons(LinearLayout root, Runnable okAction) {
         d.setStroke(5,0xFFFFD700);
         d.setCornerRadius(25);
         b.setBackground(d);
+        b.setOnTouchListener(UIHelpers.pressEffect());
         return b;
     }
 
@@ -3109,7 +3112,7 @@ private void addActionButtons(LinearLayout root, Runnable okAction) {
         return c;
     }
     
-    // ============================================================
+// ============================================================
 // BASE DIALOG BOX (GEL STYLE)
 // ============================================================
 private LinearLayout buildBaseBox(String title) {

@@ -1,15 +1,20 @@
+// GDiolitsis Engine Lab (GEL) — Author & Developer
+// UIHelpers.java — Global UI Utilities
+
 package com.gel.cleaner;
 
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 
 public class UIHelpers {
 
+    // ============================================================
+    // PRESS EFFECT (SINGLE VIEW)
+    // ============================================================
     public static void applyPressEffect(View v) {
 
         if (v == null) return;
-
-        v.setClickable(true);
 
         v.setOnTouchListener((view, event) -> {
 
@@ -35,5 +40,32 @@ public class UIHelpers {
 
             return false;
         });
+    }
+
+    // ============================================================
+    // PRESS EFFECT (RECURSIVE FOR ENTIRE LAYOUT)
+    // ============================================================
+    public static void applyPressEffectRecursive(View root) {
+
+        if (root == null) return;
+
+        try {
+
+            if (root.isClickable()) {
+                applyPressEffect(root);
+            }
+
+            if (root instanceof ViewGroup) {
+
+                ViewGroup vg = (ViewGroup) root;
+
+                for (int i = 0; i < vg.getChildCount(); i++) {
+
+                    applyPressEffectRecursive(vg.getChildAt(i));
+
+                }
+            }
+
+        } catch (Throwable ignore) {}
     }
 }

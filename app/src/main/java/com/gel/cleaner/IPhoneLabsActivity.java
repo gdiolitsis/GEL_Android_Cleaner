@@ -5,7 +5,6 @@
 package com.gel.cleaner;
 
 import com.gel.cleaner.base.*;
-import com.gel.cleaner.UIHelpers;
 
 import android.app.AlertDialog;
 import android.content.ContentResolver;
@@ -36,7 +35,7 @@ import android.widget.AdapterView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.annotation.Nullable;
 
-import com.gel.cleaner.base.UIHelpers;
+import com.gel.cleaner.UIHelpers;
 import com.gel.cleaner.iphone.IPSPanicParser;
 
 import java.io.BufferedInputStream;

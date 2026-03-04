@@ -142,7 +142,7 @@ private boolean looksCorruptedPanic(String text) {
                 ViewGroup.LayoutParams.MATCH_PARENT
         ));
         scroll.setOverScrollMode(View.OVER_SCROLL_IF_CONTENT_SCROLLS);
-        scroll.setFillViewport(false);
+        scroll.setFillViewport(true);
 
         // CONTENT ROOT
         LinearLayout root = new LinearLayout(this);
@@ -379,7 +379,7 @@ root.addView(btnExport);
 scroll.addView(root);
 setContentView(scroll);
 
-UIHelpers.applyPressEffectRecursive(getWindow().getDecorView());
+UIHelpers.applyPressEffectRecursive(root);
 
 // popup AFTER layout ready
 root.post(this::showPanicLogsGuidePopup);

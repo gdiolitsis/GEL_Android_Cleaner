@@ -17,6 +17,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.gel.cleaner.R;
+import com.gel.cleaner.UIHelpers;
 import com.gel.cleaner.base.AppleSpecProvider;
 
 public class AppleDeviceInfoPeripheralsActivity extends Activity {

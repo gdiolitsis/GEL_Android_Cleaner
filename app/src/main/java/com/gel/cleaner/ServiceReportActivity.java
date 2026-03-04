@@ -77,6 +77,8 @@ public class ServiceReportActivity extends AppCompatActivity {
 
         scroll.addView(root);
         setContentView(scroll);
+
+        UIHelpers.applyPressEffectRecursive(getWindow().getDecorView());
     }
 
     // ==========================================================

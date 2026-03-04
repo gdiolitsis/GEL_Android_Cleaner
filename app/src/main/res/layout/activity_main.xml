@@ -385,3 +385,7 @@
         android:lineSpacingMultiplier="1.2"/>
 
 </LinearLayout>
+
+</LinearLayout>
+</ScrollView>
+</LinearLayout>

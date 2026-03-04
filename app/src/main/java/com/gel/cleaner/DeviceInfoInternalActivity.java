@@ -6,6 +6,7 @@
 package com.gel.cleaner;
 
 import com.gel.cleaner.base.*;
+import com.gel.cleaner.UIHelpers;
 
 import android.app.ActivityManager;
 import android.bluetooth.BluetoothAdapter;
@@ -1398,4 +1399,5 @@ private String padRight(String s, int n) {
     return sb.toString();
 }
 }
+
 

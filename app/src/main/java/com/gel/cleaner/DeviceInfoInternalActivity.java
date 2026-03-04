@@ -89,6 +89,8 @@ public class DeviceInfoInternalActivity extends GELAutoActivityHook
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_device_info_internal);
 
+            UIHelpers.applyPressEffectRecursive(getWindow().getDecorView());
+
         foldUI = new GELFoldableUIManager(this);
         foldDetector = new GELFoldableDetector(this, this);
 
@@ -1396,3 +1398,4 @@ private String padRight(String s, int n) {
     return sb.toString();
 }
 }
+

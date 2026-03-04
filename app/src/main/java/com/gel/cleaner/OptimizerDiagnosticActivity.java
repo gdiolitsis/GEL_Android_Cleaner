@@ -136,6 +136,8 @@ public class OptimizerDiagnosticActivity extends AppCompatActivity {
         root.addView(laterBtn);
 
         setContentView(scroll);
+
+        UIHelpers.applyPressEffectRecursive(getWindow().getDecorView());
     }
 
     private Button buildButton(String text, int backgroundColor) {

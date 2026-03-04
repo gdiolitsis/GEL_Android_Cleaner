@@ -533,12 +533,15 @@ private void showPanicLogsGuidePopup() {
         msg.setText(getPanicGuideTextEN());
         box.addView(msg);
 
-        // ============================================================
+// ============================================================
 // CONTROLS — MUTE + LANG
+// ============================================================
+// ============================================================
+// CONTROLS — LANGUAGE ONLY
 // ============================================================
 LinearLayout controls = new LinearLayout(this);
 controls.setOrientation(LinearLayout.HORIZONTAL);
-controls.setGravity(Gravity.CENTER_VERTICAL);
+controls.setGravity(Gravity.END);
 controls.setPadding(0, dp(16), 0, dp(10));
 
 try {
@@ -604,45 +607,39 @@ box.postDelayed(() -> {
                 });
 
         LinearLayout langBox = new LinearLayout(this);
-        langBox.setOrientation(LinearLayout.HORIZONTAL);
-        langBox.setGravity(Gravity.CENTER_VERTICAL);
-        langBox.setPadding(dp(10), dp(6), dp(10), dp(6));
+langBox.setOrientation(LinearLayout.HORIZONTAL);
+langBox.setGravity(Gravity.CENTER_VERTICAL);
+langBox.setPadding(dp(10), dp(6), dp(10), dp(6));
 
-        GradientDrawable langBg = new GradientDrawable();
-        langBg.setColor(0xFF1A1A1A);
-        langBg.setCornerRadius(dp(12));
-        langBg.setStroke(dp(2), 0xFFFFD700);
-        langBox.setBackground(langBg);
+GradientDrawable langBg = new GradientDrawable();
+langBg.setColor(0xFF1A1A1A);
+langBg.setCornerRadius(dp(12));
+langBg.setStroke(dp(2), 0xFFFFD700);
+langBox.setBackground(langBg);
 
-        // ================= LANGUAGE BOX =================
 LinearLayout.LayoutParams lpLangBox =
         new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 dp(48)
         );
 
-lpLangBox.setMargins(dp(8), 0, 0, 0);
 langBox.setLayoutParams(lpLangBox);
-
 langBox.addView(langSpinner);
 
-// μόνο language εδώ
-controls.setGravity(Gravity.CENTER);
 controls.addView(langBox);
-
 box.addView(controls);
+
+controls.addView(buildMuteRow());
 
 // ================= CHECKBOX =================
 CheckBox cb = new CheckBox(this);
 cb.setText(AppLang.isGreek(this)
-? "Να μην εμφανιστεί ξανά"
-: "Do not show again");
+        ? "Να μην εμφανιστεί ξανά"
+        : "Do not show again");
 cb.setTextColor(Color.WHITE);
-cb.setPadding(0, dp(8), 0, dp(16));
-box.addView(cb);
+cb.setPadding(0, dp(6), 0, dp(16));
 
-// 🔇 MUTE (αριστερά)
-controls.addView(buildMuteRow());
+box.addView(cb);
 
 // ================= OK =================
 Button okBtn = new Button(this);

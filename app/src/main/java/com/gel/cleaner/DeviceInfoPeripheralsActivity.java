@@ -144,6 +144,8 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
+import com.gel.cleaner.UIHelpers;
+
 import java.util.List;
 import java.util.Set;
 
@@ -3643,4 +3645,5 @@ private void animateCollapse(TextView v) {
 
 // 🔥 END OF CLASS
 }
+
 

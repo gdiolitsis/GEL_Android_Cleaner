@@ -1,6 +1,7 @@
 package com.gel.cleaner;
 
 import com.gel.cleaner.base.*;
+import com.gel.cleaner.UIHelpers;
 
 import android.content.Context;
 import android.os.Bundle;

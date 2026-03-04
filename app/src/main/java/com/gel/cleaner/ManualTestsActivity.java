@@ -512,6 +512,8 @@ protected void onCreate(@Nullable Bundle savedInstanceState) {
 
     scroll.addView(root);
     setContentView(scroll);
+    
+    UIHelpers.applyPressEffectRecursive(getWindow().getDecorView());
 
     // ============================================================
     // TITLE

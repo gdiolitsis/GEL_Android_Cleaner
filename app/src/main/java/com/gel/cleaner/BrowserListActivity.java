@@ -13,6 +13,8 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 
+import com.gel.cleaner.UIHelpers;
+
 import java.util.ArrayList;
 import java.util.List;
 

@@ -24,6 +24,8 @@ import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.gel.cleaner.UIHelpers;
+
 public class DisplayProTestActivity extends Activity {
 
     // ============================================================
@@ -234,6 +236,8 @@ Button start  = gelButton(gr ? "ΕΝΑΡΞΗ" : "START",  0xFF0F8A3B);
 
         root.addView(exitBtn);
         setContentView(root);
+
+        UIHelpers.applyPressEffectRecursive(getWindow().getDecorView());
 
         startTimeMs = System.currentTimeMillis();
         stepIndex = 0;

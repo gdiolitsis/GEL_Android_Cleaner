@@ -100,6 +100,8 @@ public class AppListActivity extends GELAutoActivityHook {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_app_cache);
 
+        UIHelpers.applyPressEffectRecursive(getWindow().getDecorView());
+
         recyclerView = findViewById(R.id.listApps);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 

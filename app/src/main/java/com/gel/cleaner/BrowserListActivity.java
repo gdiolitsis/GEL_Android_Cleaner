@@ -42,6 +42,8 @@ public class BrowserListActivity extends GELAutoActivityHook
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_browser_list);
 
+            UIHelpers.applyPressEffectRecursive(getWindow().getDecorView());
+
         uiManager    = new GELFoldableUIManager(this);
         animPack     = new GELFoldableAnimationPack(this);
         foldDetector = new GELFoldableDetector(this, this);

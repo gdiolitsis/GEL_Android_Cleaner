@@ -67,7 +67,6 @@ private boolean welcomeShown = false;
 private TextView welcomeTitle;
 private TextView welcomeMessage;
 
-private TextView txtLogs;
 private ScrollView scroll;
 
 // ==============================
@@ -156,7 +155,6 @@ if (getIntent() != null && getIntent().hasExtra("mini_cpu")) {
     }
 }
 
-    txtLogs = findViewById(R.id.txtLogs);
     scroll = findViewById(R.id.scrollRoot);
 
     setupLangButtons();
@@ -1185,6 +1183,7 @@ applyAppleModeUI();
 private void applyAndroidModeUI() {
 
 hide(R.id.btnAppleDeviceDeclaration);
+hide(R.id.appleInfoPanel);
 
 show(R.id.section_system);
 show(R.id.section_clean);
@@ -1229,13 +1228,12 @@ hide(R.id.btnAppCache);
 hide(R.id.btnAppManager);
 hide(R.id.btnGuidedOptimizer);
 
-hide(R.id.txtLogs);
-
 show(R.id.btnDonate);
 show(R.id.btnPhoneInfoInternal);
 show(R.id.btnPhoneInfoPeripherals);
 show(R.id.btnDiagnostics);
 show(R.id.btnAppleDeviceDeclaration);
+show(R.id.appleInfoPanel);
 
 // APPLE DIAGNOSTICS - LOCALIZED + EMPHASIZED
 View v = findViewById(R.id.btnDiagnostics);

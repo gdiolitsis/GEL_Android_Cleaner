@@ -32,6 +32,8 @@ public class CpuRamLiveActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_cpu_ram_live);
 
+        UIHelpers.applyPressEffectRecursive(getWindow().getDecorView());
+
         txtLive = findViewById(R.id.txtLiveInfo);
 
         Button btnCore = findViewById(R.id.btnCoreMonitor);

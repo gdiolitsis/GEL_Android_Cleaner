@@ -278,6 +278,8 @@ protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_device_info_peripherals);
 
+        UIHelpers.applyPressEffectRecursive(getWindow().getDecorView());
+
     // ✅ ROOT FLAG — MUST BE HERE
     isRooted = isDeviceRooted();
 
@@ -3641,3 +3643,4 @@ private void animateCollapse(TextView v) {
 
 // 🔥 END OF CLASS
 }
+

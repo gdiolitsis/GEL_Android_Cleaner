@@ -42,6 +42,8 @@ import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.gel.cleaner.UIHelpers;
+
 import java.text.Collator;
 import java.util.List;
 import java.util.ArrayList;

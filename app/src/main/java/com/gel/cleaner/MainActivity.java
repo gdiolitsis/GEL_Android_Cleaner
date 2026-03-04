@@ -6,7 +6,6 @@ package com.gel.cleaner;
 
 import com.gel.cleaner.iphone.*;
 import com.gel.cleaner.base.*;
-import com.gel.cleaner.UIHelpers;
 
 import android.app.AppOpsManager;
 import android.app.NotificationChannel;
@@ -47,6 +46,8 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+
+import com.gel.cleaner.UIHelpers;
 
 import java.util.ArrayList;
 import java.util.Locale;
@@ -117,9 +118,12 @@ super.onResume();
 protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_main);
+
+LinearLayout root = findViewById(R.id.contentRoot);
+root.addView(buildAppleInfoLog());
+
+UIHelpers.applyPressEffectRecursive(getWindow().getDecorView());
     
-    UIHelpers.applyPressEffectRecursive(getWindow().getDecorView());
-   
    androidx.appcompat.widget.Toolbar toolbar =
         findViewById(R.id.gelToolbar);
 
@@ -243,6 +247,65 @@ if (savedInstanceState == null) {
             }
         });
     }
+}
+
+private View buildAppleInfoLog() {
+
+    LinearLayout box = new LinearLayout(this);
+    box.setOrientation(LinearLayout.VERTICAL);
+    box.setPadding(dp(18), dp(18), dp(18), dp(18));
+
+    GradientDrawable bg = new GradientDrawable();
+    bg.setColor(0xFF000000);
+    bg.setCornerRadius(dp(16));
+    bg.setStroke(dp(3), 0xFFFFD700);
+    box.setBackground(bg);
+
+    TextView title = new TextView(this);
+    title.setText("ℹ Πληροφορίες Διάγνωσης Apple");
+    title.setTextColor(0xFFFFD700); // χρυσό 
+    title.setTextSize(16f);
+    title.setTypeface(null, Typeface.BOLD);
+    title.setPadding(0, 0, 0, dp(10));
+
+    TextView msg = new TextView(this);
+    msg.setTextColor(0xFF00FF66);
+    msg.setTextSize(14f);
+    msg.setLineSpacing(0f, 1.25f);
+
+    boolean gr = AppLang.isGreek(this);
+
+msg.setText(
+        gr
+        ? "Για την διάγνωση των συσκευών Apple αναλύουμε τα panic logs "
+        + "της κάθε συσκευής, ανεξαρτήτως μοντέλου, σειράς, iPhone ή iPad.\n\n"
+
+        + "Οι πληροφορίες συσκευών που παρουσιάζουμε αφορούν ενδεικτικά "
+        + "τα τελευταία μοντέλα Apple που κυκλοφορούν στην αγορά.\n\n"
+
+        + "Εάν δεν βρείτε την συσκευή σας στην λίστα των μοντέλων, "
+        + "δεν σημαίνει ότι δεν μπορούμε να αναλύσουμε τα panic logs της.\n\n"
+
+        + "Τα panic logs παρέχουν τις ίδιες διαγνωστικές πληροφορίες "
+        + "σε οποιοδήποτε μοντέλο Apple, είτε πρόκειται για iPhone είτε για iPad."
+
+        : "Apple diagnostics in GEL are performed by analyzing device panic logs, "
+        + "regardless of model, generation, iPhone or iPad.\n\n"
+
+        + "The device specifications we display refer indicatively "
+        + "to recent Apple models available on the market.\n\n"
+
+        + "If your specific device is not listed, it does not mean "
+        + "that we cannot analyze its panic logs.\n\n"
+
+        + "Panic logs contain the same diagnostic information "
+        + "for any Apple device, whether it is an iPhone or an iPad."
+);
+
+    box.addView(title);
+    box.addView(msg);
+
+    return box;
 }
 
 private void showSettingsDialog() {
@@ -1166,7 +1229,7 @@ hide(R.id.btnAppCache);
 hide(R.id.btnAppManager);
 hide(R.id.btnGuidedOptimizer);
 
-show(R.id.txtLogs);
+hide(R.id.txtLogs);
 
 show(R.id.btnDonate);
 show(R.id.btnPhoneInfoInternal);

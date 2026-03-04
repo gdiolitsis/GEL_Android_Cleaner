@@ -368,34 +368,44 @@
 <!-- APPLE DIAGNOSTIC INFO -->
 <!-- ================================================= -->
 
-<LinearLayout
-    android:id="@+id/appleInfoPanel"
+<ScrollView
+    android:id="@+id/appleInfoScroll"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:padding="14dp"
-    android:layout_marginBottom="12dp"
-    android:background="@drawable/gel_panel_gold">
+    android:layout_height="0dp"
+    android:layout_weight="1"
+    android:fillViewport="true"
+    android:visibility="gone">
 
-    <TextView
+    <LinearLayout
+        android:id="@+id/appleInfoPanel"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="ℹ Πληροφορίες Διάγνωσης Apple"
-        android:textColor="#FFD700"
-        android:textStyle="bold"
-        android:textSize="16sp"
-        android:paddingBottom="8dp"/>
+        android:orientation="vertical"
+        android:padding="14dp"
+        android:layout_marginBottom="12dp"
+        android:background="@drawable/gel_panel_gold">
 
-    <TextView
-        android:id="@+id/txtAppleInfo"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textColor="#00FF9C"
-        android:textSize="14sp"
-        android:lineSpacingMultiplier="1.2"/>
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="ℹ Πληροφορίες Διάγνωσης Apple"
+            android:textColor="#FFD700"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:paddingBottom="8dp"/>
 
-</LinearLayout>
+        <TextView
+            android:id="@+id/txtAppleInfo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#00FF9C"
+            android:textSize="14sp"
+            android:lineSpacingMultiplier="1.2"/>
 
+    </LinearLayout>
+
+</ScrollView>
+            
             <!-- ================================================= -->
             <!-- LOGS -->
             <!-- ================================================= -->

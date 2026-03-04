@@ -195,12 +195,6 @@ sub.setIncludeFontPadding(false);
 root.addView(sub);
 
 // ============================================================
-// APPLE DIAGNOSTICS INFO
-// ============================================================
-
-root.addView(buildAppleInfoLog());
-
-// ============================================================
 // LAB BUTTONS (GUARDED)
 // ============================================================
 
@@ -423,50 +417,6 @@ logOk(gr
 
 } // onCreate ends here
 
-private View buildAppleInfoLog() {
-
-    LinearLayout box = new LinearLayout(this);
-    box.setOrientation(LinearLayout.VERTICAL);
-    box.setPadding(dp(18), dp(18), dp(18), dp(18));
-
-    GradientDrawable bg = new GradientDrawable();
-    bg.setColor(0xFF000000);
-    bg.setCornerRadius(dp(16));
-    bg.setStroke(dp(3), 0xFFFFD700);
-    box.setBackground(bg);
-
-    TextView title = new TextView(this);
-    title.setText("ℹ Πληροφορίες Διάγνωσης Apple");
-    title.setTextColor(0xFFFFD700); // χρυσό 
-    title.setTextSize(16f);
-    title.setTypeface(null, Typeface.BOLD);
-    title.setPadding(0, 0, 0, dp(10));
-
-    TextView msg = new TextView(this);
-    msg.setTextColor(0xFF00FF66);
-    msg.setTextSize(14f);
-    msg.setLineSpacing(0f, 1.25f);
-
-    msg.setText(
-        "Για την διάγνωση των συσκευών Apple αναλύουμε τα panic logs "
-      + "της κάθε συσκευής, ανεξαρτήτως μοντέλου, σειράς, iPhone ή iPad.\n\n"
-
-      + "Οι πληροφορίες συσκευών που παρουσιάζουμε αφορούν ενδεικτικά "
-      + "τα τελευταία μοντέλα Apple που κυκλοφορούν στην αγορά.\n\n"
-
-      + "Εάν δεν βρείτε την συσκευή σας στην λίστα των μοντέλων, "
-      + "δεν σημαίνει ότι δεν μπορούμε να αναλύσουμε τα panic logs της.\n\n"
-
-      + "Τα panic logs παρέχουν τις ίδιες διαγνωστικές πληροφορίες "
-      + "σε οποιοδήποτε μοντέλο Apple, είτε πρόκειται για iPhone είτε για iPad."
-    );
-
-    box.addView(title);
-    box.addView(msg);
-
-    return box;
-}
-
 private LinearLayout buildMuteRow() {
 
     final boolean gr = AppLang.isGreek(this);
@@ -474,21 +424,17 @@ private LinearLayout buildMuteRow() {
     LinearLayout row = new LinearLayout(this);
     row.setOrientation(LinearLayout.HORIZONTAL);
     row.setGravity(Gravity.CENTER_VERTICAL);
-    row.setPadding(dp(12), dp(8), dp(12), dp(12));
-
-    GradientDrawable bg = new GradientDrawable();
-    bg.setColor(0xFF1A1A1A);
-    bg.setCornerRadius(dp(12));
-    bg.setStroke(dp(2), 0xFFFFD700);
-    row.setBackground(bg);
+    row.setPadding(0, dp(8), 0, dp(10));
 
     CheckBox muteCheck = new CheckBox(this);
     muteCheck.setChecked(AppTTS.isMuted(this));
-    muteCheck.setPadding(0, 0, dp(8), 0);
+    muteCheck.setPadding(0, 0, dp(6), 0);
 
     TextView label = new TextView(this);
-    label.setText(gr ? "Σίγαση φωνητικών οδηγιών"
-                     : "Mute voice instructions");
+    label.setText(gr
+            ? "Σίγαση φωνητικών οδηγιών"
+            : "Mute voice instructions");
+
     label.setTextColor(Color.WHITE);
     label.setTextSize(14f);
 
@@ -563,6 +509,21 @@ private void toast(String msg) {
 // ============================================================
 
 private void showPanicLogsGuidePopup() {
+
+    // ============================================================
+    // CHECK IF USER DISABLED POPUP
+    // ============================================================
+
+    try {
+
+        SharedPreferences prefs =
+                getSharedPreferences("gel_prefs", MODE_PRIVATE);
+
+        if (prefs.getBoolean("panic_guide_hidden", false)) {
+            return;
+        }
+
+    } catch (Throwable ignore) {}
 
     runOnUiThread(() -> {
 
@@ -805,16 +766,27 @@ private void showPanicLogsGuidePopup() {
 
         okBtn.setOnClickListener(v -> {
 
-            panicGuidePopupOpen = false;
+    panicGuidePopupOpen = false;
 
-            try {
-                if (tts != null && tts[0] != null) {
-                    tts[0].stop();
-                }
-            } catch (Throwable ignore) {}
+    try {
+        if (tts != null && tts[0] != null) {
+            tts[0].stop();
+        }
+    } catch (Throwable ignore) {}
 
-            d.dismiss();
-        });
+    // SAVE "DO NOT SHOW AGAIN"
+    try {
+        SharedPreferences prefs =
+                getSharedPreferences("gel_prefs", MODE_PRIVATE);
+
+        prefs.edit()
+                .putBoolean("panic_guide_hidden", cb.isChecked())
+                .apply();
+
+    } catch (Throwable ignore) {}
+
+    d.dismiss();
+});
 
     });
 }
@@ -2106,14 +2078,6 @@ private void parseAndCacheSignature(String text) {
     LinearLayout container = new LinearLayout(this);
     container.setOrientation(LinearLayout.VERTICAL);
     
-    View indicator = new View(this);
-
-LinearLayout.LayoutParams lpIndicator =
-        new LinearLayout.LayoutParams(dp(3), ViewGroup.LayoutParams.MATCH_PARENT);
-
-indicator.setLayoutParams(lpIndicator);
-indicator.setBackgroundColor(0xFF39FF14); // neon green
-
     LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.WRAP_CONTENT
@@ -2124,6 +2088,7 @@ indicator.setBackgroundColor(0xFF39FF14); // neon green
     container.setPadding(dp(16), dp(16), dp(16), dp(16));
     container.setBackgroundResource(R.drawable.gel_btn_outline_selector);
     container.setClickable(true);
+    container.setFocusable(true);
 
     TextView t = new TextView(this);
     t.setText(title);

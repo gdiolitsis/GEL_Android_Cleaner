@@ -384,6 +384,8 @@ root.addView(btnExport);
 scroll.addView(root);
 setContentView(scroll);
 
+UIHelpers.applyPressEffectRecursive(getWindow().getDecorView());
+
 // popup AFTER layout ready
 root.post(this::showPanicLogsGuidePopup);
 
@@ -465,18 +467,24 @@ private View buildAppleInfoLog() {
     return box;
 }
 
-
 private LinearLayout buildMuteRow() {
+
     final boolean gr = AppLang.isGreek(this);
 
     LinearLayout row = new LinearLayout(this);
     row.setOrientation(LinearLayout.HORIZONTAL);
     row.setGravity(Gravity.CENTER_VERTICAL);
-    row.setPadding(0, dp(8), 0, dp(16));
+    row.setPadding(dp(12), dp(8), dp(12), dp(12));
+
+    GradientDrawable bg = new GradientDrawable();
+    bg.setColor(0xFF1A1A1A);
+    bg.setCornerRadius(dp(12));
+    bg.setStroke(dp(2), 0xFFFFD700);
+    row.setBackground(bg);
 
     CheckBox muteCheck = new CheckBox(this);
     muteCheck.setChecked(AppTTS.isMuted(this));
-    muteCheck.setPadding(0, 0, dp(6), 0);
+    muteCheck.setPadding(0, 0, dp(8), 0);
 
     TextView label = new TextView(this);
     label.setText(gr ? "Σίγαση φωνητικών οδηγιών"
@@ -485,9 +493,12 @@ private LinearLayout buildMuteRow() {
     label.setTextSize(14f);
 
     View.OnClickListener toggle = v -> {
+
         boolean newState = !AppTTS.isMuted(this);
+
         AppTTS.setMuted(this, newState);
         muteCheck.setChecked(newState);
+
         if (newState) {
             try { AppTTS.stop(); } catch (Throwable ignore) {}
         }
@@ -496,8 +507,11 @@ private LinearLayout buildMuteRow() {
     label.setOnClickListener(toggle);
 
     muteCheck.setOnCheckedChangeListener((button, checked) -> {
+
         if (checked == AppTTS.isMuted(this)) return;
+
         AppTTS.setMuted(this, checked);
+
         if (checked) {
             try { AppTTS.stop(); } catch (Throwable ignore) {}
         }
@@ -552,10 +566,19 @@ private void showPanicLogsGuidePopup() {
 
     runOnUiThread(() -> {
 
-        AlertDialog.Builder b = new AlertDialog.Builder(this);
+        boolean gr = AppLang.isGreek(this);
+
+        AlertDialog.Builder b = new AlertDialog.Builder(
+                IPhoneLabsActivity.this,
+                android.R.style.Theme_Material_Dialog_NoActionBar
+        );
+
         b.setCancelable(true);
 
-        // ================= ROOT =================
+        // ============================================================
+        // ROOT
+        // ============================================================
+
         LinearLayout box = new LinearLayout(this);
         box.setOrientation(LinearLayout.VERTICAL);
         box.setPadding(dp(24), dp(20), dp(24), dp(18));
@@ -564,193 +587,237 @@ private void showPanicLogsGuidePopup() {
         bg.setColor(0xFF101010);
         bg.setCornerRadius(dp(18));
         bg.setStroke(dp(4), 0xFFFFD700);
+
         box.setBackground(bg);
 
-        // ================= TITLE =================
+        // ============================================================
+        // TITLE
+        // ============================================================
+
         TextView title = new TextView(this);
+
         title.setText("PANIC LOGS — Import Guide");
-        title.setTextColor(0xFFFFFFFF);
+        title.setTextColor(Color.WHITE);
         title.setTextSize(18f);
         title.setTypeface(null, Typeface.BOLD);
         title.setGravity(Gravity.CENTER);
         title.setPadding(0, 0, 0, dp(12));
+
         box.addView(title);
 
-        // ================= MESSAGE =================
+        // ============================================================
+        // MESSAGE
+        // ============================================================
+
         TextView msg = new TextView(this);
+
         msg.setTextColor(COLOR_NEON);
         msg.setTextSize(15f);
         msg.setGravity(Gravity.START);
-        msg.setText(getPanicGuideTextEN());
+
+        panicGuideLang = gr ? "GR" : "EN";
+
+        if (gr) {
+            msg.setText(getPanicGuideTextGR());
+        } else {
+            msg.setText(getPanicGuideTextEN());
+        }
+
         box.addView(msg);
 
-// ============================================================
-// CONTROLS — MUTE + LANG
-// ============================================================
+        // ============================================================
+        // LANGUAGE CONTROLS
+        // ============================================================
 
-controls.addView(buildMuteRow());
+        LinearLayout controls = new LinearLayout(this);
+        controls.setOrientation(LinearLayout.HORIZONTAL);
+        controls.setGravity(Gravity.END);
+        controls.setPadding(0, dp(16), 0, dp(10));
 
-LinearLayout controls = new LinearLayout(this);
-controls.setOrientation(LinearLayout.HORIZONTAL);
-controls.setGravity(Gravity.END);
-controls.setPadding(0, dp(16), 0, dp(10));
+        Spinner langSpinner = new Spinner(this);
 
-try {
-    if (panicGuideMuted && tts != null && tts[0] != null) {
-        tts[0].stop();
-    }
-} catch (Throwable ignore) {}
+        ArrayAdapter<String> langAdapter =
+                new ArrayAdapter<>(
+                        this,
+                        android.R.layout.simple_spinner_item,
+                        new String[]{"EN", "GR"}
+                );
 
-
-// 🌐 LANGUAGE SPINNER
-Spinner langSpinner = new Spinner(this);
-ArrayAdapter<String> langAdapter =
-        new ArrayAdapter<>(
-                this,
-                android.R.layout.simple_spinner_item,
-                new String[]{"EN", "GR"}
+        langAdapter.setDropDownViewResource(
+                android.R.layout.simple_spinner_dropdown_item
         );
-langAdapter.setDropDownViewResource(
-        android.R.layout.simple_spinner_dropdown_item);
-langSpinner.setAdapter(langAdapter);
-        
-        // ================= INITIAL LANGUAGE + TTS =================
 
-// διάλεξε αρχική γλώσσα από ρύθμιση / state
-if ("GR".equals(panicGuideLang)) {
-    langSpinner.setSelection(1);
-    msg.setText(getPanicGuideTextGR());
-} else {
-    langSpinner.setSelection(0);
-    msg.setText(getPanicGuideTextEN());
-}
+        langSpinner.setAdapter(langAdapter);
+        langSpinner.setSelection(gr ? 1 : 0);
 
-// μίλα όταν το TTS είναι έτοιμο (delayed trigger)
-box.postDelayed(() -> {
-    if (panicGuidePopupOpen) {
-        speakPanicGuideTTS();
-    }
-}, 700);
+        LinearLayout langBox = new LinearLayout(this);
+        langBox.setOrientation(LinearLayout.HORIZONTAL);
+        langBox.setGravity(Gravity.CENTER_VERTICAL);
+        langBox.setPadding(dp(10), dp(6), dp(10), dp(6));
+
+        GradientDrawable langBg = new GradientDrawable();
+        langBg.setColor(0xFF1A1A1A);
+        langBg.setCornerRadius(dp(12));
+        langBg.setStroke(dp(2), 0xFFFFD700);
+
+        langBox.setBackground(langBg);
+
+        LinearLayout.LayoutParams lpLangBox =
+                new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                        dp(48)
+                );
+
+        langBox.setLayoutParams(lpLangBox);
+        langBox.addView(langSpinner);
+
+        controls.addView(langBox);
+
+        box.addView(controls);
+
+        // ============================================================
+        // MUTE ROW
+        // ============================================================
+
+        box.addView(buildMuteRow());
+
+        // ============================================================
+        // DO NOT SHOW AGAIN
+        // ============================================================
+
+        CheckBox cb = new CheckBox(this);
+
+        cb.setText(gr
+                ? "Να μην εμφανιστεί ξανά"
+                : "Do not show again");
+
+        cb.setTextColor(Color.WHITE);
+        cb.setPadding(0, dp(6), 0, dp(16));
+
+        box.addView(cb);
+
+        // ============================================================
+        // OK BUTTON
+        // ============================================================
+
+        Button okBtn = new Button(this);
+
+        okBtn.setText("OK");
+        okBtn.setAllCaps(false);
+        okBtn.setTypeface(null, Typeface.BOLD);
+        okBtn.setTextSize(16f);
+        okBtn.setTextColor(0xFFFFFFFF);
+
+        GradientDrawable okBg = new GradientDrawable();
+        okBg.setColor(0xFF0F8A3B);
+        okBg.setCornerRadius(dp(14));
+        okBg.setStroke(dp(3), 0xFFFFD700);
+
+        okBtn.setBackground(okBg);
+
+        LinearLayout.LayoutParams lpOk =
+                new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        dp(52)
+                );
+
+        lpOk.setMargins(0, dp(16), 0, 0);
+
+        okBtn.setLayoutParams(lpOk);
+
+        box.addView(okBtn);
+
+        // ============================================================
+        // DIALOG
+        // ============================================================
+
+        b.setView(box);
+
+        AlertDialog d = b.create();
+
+        if (d.getWindow() != null) {
+            d.getWindow().setBackgroundDrawable(
+                    new ColorDrawable(Color.TRANSPARENT)
+            );
+        }
+
+        panicGuidePopupOpen = true;
+
+        d.show();
+
+        // ============================================================
+        // SPINNER LANGUAGE CHANGE
+        // ============================================================
 
         langSpinner.setOnItemSelectedListener(
                 new AdapterView.OnItemSelectedListener() {
+
                     @Override
                     public void onItemSelected(
-                            AdapterView<?> p,
-                            View v,
-                            int pos,
+                            AdapterView<?> parent,
+                            View view,
+                            int position,
                             long id) {
 
-                        panicGuideLang = (pos == 0) ? "EN" : "GR";
+                        panicGuideLang = (position == 0) ? "EN" : "GR";
 
                         if ("GR".equals(panicGuideLang)) {
                             msg.setText(getPanicGuideTextGR());
                         } else {
                             msg.setText(getPanicGuideTextEN());
                         }
-                        
-                  if (!panicGuidePopupOpen) return;
+
+                        if (!panicGuidePopupOpen) return;
+
                         speakPanicGuideTTS();
                     }
 
                     @Override
-                    public void onNothingSelected(AdapterView<?> p) {}
+                    public void onNothingSelected(AdapterView<?> parent) {}
                 });
 
-        LinearLayout langBox = new LinearLayout(this);
-langBox.setOrientation(LinearLayout.HORIZONTAL);
-langBox.setGravity(Gravity.CENTER_VERTICAL);
-langBox.setPadding(dp(10), dp(6), dp(10), dp(6));
+        // ============================================================
+        // START TTS AFTER SHOW
+        // ============================================================
 
-GradientDrawable langBg = new GradientDrawable();
-langBg.setColor(0xFF1A1A1A);
-langBg.setCornerRadius(dp(12));
-langBg.setStroke(dp(2), 0xFFFFD700);
-langBox.setBackground(langBg);
+        box.postDelayed(() -> {
 
-LinearLayout.LayoutParams lpLangBox =
-        new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                dp(48)
-        );
+            if (!panicGuidePopupOpen) return;
 
-langBox.setLayoutParams(lpLangBox);
-langBox.addView(langSpinner);
+            speakPanicGuideTTS();
 
-controls.addView(langBox);
-box.addView(controls);
+        }, 600);
 
-// ================= CHECKBOX =================
-CheckBox cb = new CheckBox(this);
-cb.setText(AppLang.isGreek(this)
-        ? "Να μην εμφανιστεί ξανά"
-        : "Do not show again");
-cb.setTextColor(Color.WHITE);
-cb.setPadding(0, dp(6), 0, dp(16));
+        // ============================================================
+        // CLOSE EVENTS
+        // ============================================================
 
-box.addView(cb);
+        d.setOnDismissListener(dialog -> {
 
-// ================= OK =================
-Button okBtn = new Button(this);
-okBtn.setText("OK");
-okBtn.setAllCaps(false);
-okBtn.setTextColor(0xFFFFFFFF);
+            panicGuidePopupOpen = false;
 
-GradientDrawable okBg = new GradientDrawable();
-okBg.setColor(0xFF0F8A3B);
-okBg.setCornerRadius(dp(14));
-okBg.setStroke(dp(3), 0xFFFFD700);
-okBtn.setBackground(okBg);
+            try {
+                if (tts != null && tts[0] != null) {
+                    tts[0].stop();
+                }
+            } catch (Throwable ignore) {}
+        });
 
-LinearLayout.LayoutParams lpOk =
-        new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                dp(52)
-        );
-lpOk.setMargins(0, dp(16), 0, 0);
-okBtn.setLayoutParams(lpOk);
+        okBtn.setOnClickListener(v -> {
 
-box.addView(okBtn);
+            panicGuidePopupOpen = false;
 
-// ================= DIALOG =================
-b.setView(box);
-final AlertDialog d = b.create();
+            try {
+                if (tts != null && tts[0] != null) {
+                    tts[0].stop();
+                }
+            } catch (Throwable ignore) {}
 
-if (d.getWindow() != null) {
-    d.getWindow().setBackgroundDrawable(
-            new ColorDrawable(Color.TRANSPARENT)
-    );
+            d.dismiss();
+        });
+
+    });
 }
-
-panicGuidePopupOpen = true;
-d.show();
-
-// 🔇 Stop TTS when dialog closes
-d.setOnDismissListener(dialog -> {
-    panicGuidePopupOpen = false;
-
-    try {
-        if (tts != null && tts[0] != null) {
-            tts[0].stop();
-        }
-    } catch (Throwable ignore) {}
-});
-
-// OK button
-okBtn.setOnClickListener(v -> {
-    panicGuidePopupOpen = false;
-
-    try {
-        if (tts != null && tts[0] != null) {
-            tts[0].stop();
-        }
-    } catch (Throwable ignore) {}
-
-    d.dismiss();
-});
-
-        }); 
-}          
 
 // ============================================================
 // TEXT HELPERS (FINAL CLEAN VERSION)
@@ -2038,6 +2105,14 @@ private void parseAndCacheSignature(String text) {
 ) {
     LinearLayout container = new LinearLayout(this);
     container.setOrientation(LinearLayout.VERTICAL);
+    
+    View indicator = new View(this);
+
+LinearLayout.LayoutParams lpIndicator =
+        new LinearLayout.LayoutParams(dp(3), ViewGroup.LayoutParams.MATCH_PARENT);
+
+indicator.setLayoutParams(lpIndicator);
+indicator.setBackgroundColor(0xFF39FF14); // neon green
 
     LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
@@ -2068,9 +2143,6 @@ private void parseAndCacheSignature(String text) {
 
     container.addView(t);
     container.addView(s);
-
-    // εφέ πατήματος (μία φορά για όλα τα buttons)
-    UIHelpers.applyPressEffect(container);
 
     // guarded click
 container.setOnClickListener(v -> {

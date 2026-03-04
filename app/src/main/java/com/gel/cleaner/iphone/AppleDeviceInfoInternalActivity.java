@@ -63,6 +63,8 @@ protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_device_info_internal);
 
+    UIHelpers.applyPressEffectRecursive(getWindow().getDecorView());
+    
     bind();   // 1️⃣ ΠΡΩΤΑ bind
 
     SharedPreferences prefs =

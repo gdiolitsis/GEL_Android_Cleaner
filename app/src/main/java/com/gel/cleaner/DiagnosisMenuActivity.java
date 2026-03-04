@@ -138,6 +138,8 @@ if (isAppleMode) {
         // ============================================================
         scroll.addView(root);
         setContentView(scroll);
+
+            UIHelpers.applyPressEffectRecursive(getWindow().getDecorView());
     }
 
     // ============================================================

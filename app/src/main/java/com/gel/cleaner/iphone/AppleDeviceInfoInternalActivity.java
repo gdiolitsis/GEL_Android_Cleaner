@@ -16,6 +16,7 @@ import android.widget.TextView;
 
 import com.gel.cleaner.base.AppleSpecProvider;
 import com.gel.cleaner.R;
+import com.gel.cleaner.UIHelpers;
 
 public class AppleDeviceInfoInternalActivity extends Activity {
 

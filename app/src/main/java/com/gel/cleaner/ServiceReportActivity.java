@@ -21,6 +21,8 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatButton;
 
+import com.gel.cleaner.UIHelpers;
+
 import java.io.File;
 import java.io.FileOutputStream;
 

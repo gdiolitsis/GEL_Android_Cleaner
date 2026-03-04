@@ -207,8 +207,6 @@ if (savedInstanceState == null) {
 
     syncReturnButtonText();
 
-    log("📱 Device ready", false);
-
     // ================= APP MANAGER =================
     View btnAppManager = findViewById(R.id.btnAppManager);
     if (btnAppManager != null) {
@@ -304,6 +302,11 @@ msg.setText(
     box.addView(msg);
 
     return box;
+}
+
+@Override
+public void log(String msg, boolean isError) {
+    // no UI log here
 }
 
 private void showSettingsDialog() {

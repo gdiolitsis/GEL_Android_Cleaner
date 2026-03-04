@@ -3,6 +3,8 @@
 
 package com.gel.cleaner;
 
+import com.gel.cleaner.UIHelpers;
+
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Typeface;

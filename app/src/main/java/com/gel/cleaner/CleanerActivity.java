@@ -32,6 +32,8 @@ public class CleanerActivity extends GELAutoActivityHook
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_cleaner);
 
+            UIHelpers.applyPressEffectRecursive(getWindow().getDecorView());
+
         // Foldable Core
         uiManager    = new GELFoldableUIManager(this);
         animPack     = new GELFoldableAnimationPack(this);   // stub-safe

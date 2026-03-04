@@ -386,15 +386,6 @@
         android:background="@drawable/gel_panel_gold">
 
         <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="ℹ Πληροφορίες Διάγνωσης Apple"
-            android:textColor="#FFD700"
-            android:textStyle="bold"
-            android:textSize="16sp"
-            android:paddingBottom="8dp"/>
-
-        <TextView
             android:id="@+id/txtAppleInfo"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

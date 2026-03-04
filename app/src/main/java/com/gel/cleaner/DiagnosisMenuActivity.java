@@ -19,6 +19,8 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.gel.cleaner.UIHelpers;
+
 public class DiagnosisMenuActivity extends GELAutoActivityHook
         implements GELFoldableCallback {
 

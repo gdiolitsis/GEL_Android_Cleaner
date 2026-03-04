@@ -1823,22 +1823,6 @@ window.setBackgroundDrawable(bg);
 }
 
 // =========================================================
-// LOGGING,
-// =========================================================
-@Override
-public void log(String msg, boolean isError) {
-runOnUiThread(() -> {
-if (txtLogs == null) return;
-
-String prev = txtLogs.getText() == null ? "" : txtLogs.getText().toString();
-txtLogs.setText(prev.isEmpty()?msg:prev+"\n"+msg);
-
-if (scroll != null)
-scroll.post(() -> scroll.fullScroll(ScrollView.FOCUS_DOWN));
-});
-}
-
-// =========================================================
 // OPEN APP INFO (for Browser Picker)
 // =========================================================
 private void openAppInfo(String pkg) {

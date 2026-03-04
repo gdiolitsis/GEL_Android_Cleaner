@@ -5,6 +5,7 @@
 package com.gel.cleaner;
 
 import com.gel.cleaner.base.*;
+import com.gel.cleaner.UIHelpers;
 
 import android.app.AlertDialog;
 import android.content.ContentResolver;

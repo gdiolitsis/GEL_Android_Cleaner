@@ -418,6 +418,26 @@ logOk(gr
 
 } // onCreate ends here
 
+private boolean isPanicGuideHidden() {
+    try {
+        SharedPreferences prefs =
+                getSharedPreferences("gel_prefs", MODE_PRIVATE);
+        return prefs.getBoolean("panic_guide_hidden", false);
+    } catch (Throwable ignore) {
+        return false;
+    }
+}
+
+private void setPanicGuideHidden(boolean hidden) {
+    try {
+        SharedPreferences prefs =
+                getSharedPreferences("gel_prefs", MODE_PRIVATE);
+        prefs.edit()
+                .putBoolean("panic_guide_hidden", hidden)
+                .apply();
+    } catch (Throwable ignore) {}
+}
+
 private LinearLayout buildMuteRow() {
 
     final boolean gr = AppLang.isGreek(this);
@@ -517,12 +537,9 @@ private void showPanicLogsGuidePopup() {
 
     try {
 
-        SharedPreferences prefs =
-                getSharedPreferences("gel_prefs", MODE_PRIVATE);
-
-        if (prefs.getBoolean("panic_guide_hidden", false)) {
-            return;
-        }
+        if (isPanicGuideHidden()) {
+    return;
+}
 
     } catch (Throwable ignore) {}
 
@@ -777,12 +794,7 @@ private void showPanicLogsGuidePopup() {
 
     // SAVE "DO NOT SHOW AGAIN"
     try {
-        SharedPreferences prefs =
-                getSharedPreferences("gel_prefs", MODE_PRIVATE);
-
-        prefs.edit()
-                .putBoolean("panic_guide_hidden", cb.isChecked())
-                .apply();
+        setPanicGuideHidden(cb.isChecked());
 
     } catch (Throwable ignore) {}
 

@@ -106,6 +106,8 @@ private TextView iconOtherPeripherals;
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_device_info_peripherals);
 
+     UIHelpers.applyPressEffectRecursive(getWindow().getDecorView());
+        
         bind();
         setupPeripheralsToggles();
 

@@ -501,48 +501,38 @@ private void runAllAppleDiagnostics() {
 
     new Thread(() -> {
 
-        appendHtml("<br>");
+appendHtml("<br>");
 logSection(AppLang.isGreek(this)
         ? "APPLE DIAGNOSTICS — ΕΚΤΕΛΕΣΗ ΟΛΩΝ ΤΩΝ ΕΡΓΑΣΤΗΡΙΩΝ"
         : "APPLE DIAGNOSTICS — RUN ALL");
 
 try {
 
-SystemClock.sleep(400);
+    runPanicLogAnalyzer();
+    SystemClock.sleep(400);
 
-runPanicLogAnalyzer();
+    runPanicSignatureParser();
+    SystemClock.sleep(400);
 
-SystemClock.sleep(400);
+    runStabilityLab();
+    SystemClock.sleep(400);
 
-runStabilityLab();
+    runImpactLab();
+    SystemClock.sleep(400);
 
-SystemClock.sleep(400);
+    runPanicFrequencyLab();
+    SystemClock.sleep(400);
 
-runCrashPatternLab();
+    runPanicClusteringLab();
+    SystemClock.sleep(400);
 
-SystemClock.sleep(400);
+    runRecurringDomainLab();
+    SystemClock.sleep(400);
 
-runCrashTimelineLab();
+    runStabilityIndexLab();
+    SystemClock.sleep(400);
 
-SystemClock.sleep(400);
-
-runStabilityScoreLab();
-
-SystemClock.sleep(400);
-
-runSubsystemDiagnosisLab();
-
-SystemClock.sleep(400);
-
-runHardwareCorrelationLab();
-
-SystemClock.sleep(400);
-
-runRiskAssessmentLab();
-
-SystemClock.sleep(400);
-
-runFinalReportLab();
+    runFinalServiceRecommendationLab();
 
     logOk(AppLang.isGreek(this)
             ? "Ο πλήρης έλεγχος ολοκληρώθηκε."
@@ -551,8 +541,8 @@ runFinalReportLab();
 } catch (Throwable t) {
 
     logError(AppLang.isGreek(this)
-        ? "Αποτυχία διάγνωσης: " + safe(t.getMessage())
-        : "Diagnostics failed: " + safe(t.getMessage()));
+            ? "Αποτυχία εκτέλεσης ελέγχου: " + t.getMessage()
+            : "Diagnostics failed: " + t.getMessage());
 }
 
     }).start();
@@ -2266,41 +2256,31 @@ logLine();
             // φόρτωση demo panic logs
 loadDemoPanicLogs();
 
-SystemClock.sleep(400);
-
 runPanicLogAnalyzer();
+    SystemClock.sleep(400);
 
-SystemClock.sleep(400);
+    runPanicSignatureParser();
+    SystemClock.sleep(400);
 
-runStabilityLab();
+    runStabilityLab();
+    SystemClock.sleep(400);
 
-SystemClock.sleep(400);
+    runImpactLab();
+    SystemClock.sleep(400);
 
-runCrashPatternLab();
+    runPanicFrequencyLab();
+    SystemClock.sleep(400);
 
-SystemClock.sleep(400);
+    runPanicClusteringLab();
+    SystemClock.sleep(400);
 
-runCrashTimelineLab();
+    runRecurringDomainLab();
+    SystemClock.sleep(400);
 
-SystemClock.sleep(400);
+    runStabilityIndexLab();
+    SystemClock.sleep(400);
 
-runStabilityScoreLab();
-
-SystemClock.sleep(400);
-
-runSubsystemDiagnosisLab();
-
-SystemClock.sleep(400);
-
-runHardwareCorrelationLab();
-
-SystemClock.sleep(400);
-
-runRiskAssessmentLab();
-
-SystemClock.sleep(400);
-
-runFinalReportLab();
+    runFinalServiceRecommendationLab();
 
             logOk(AppLang.isGreek(this)
                     ? "Η διάγνωση των ενσωματωμένων panic logs ολοκληρώθηκε."

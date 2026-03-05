@@ -17,6 +17,7 @@ import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.speech.tts.TextToSpeech;
 import android.text.Html;
 import android.util.TypedValue;
@@ -472,7 +473,9 @@ tts[0] = new TextToSpeech(this, status -> {
 // ============================================================
 // SERVICE LOG — SECTION HEADER (iPhone Labs)
 // ============================================================
-GELServiceLog.section("iPhone Labs — Panic Log & Stability Analysis");
+GELServiceLog.section(AppLang.isGreek(this)
+        ? "iPhone Labs — Ανάλυση Panic Log & Σταθερότητας"
+        : "iPhone Labs — Panic Log & Stability Analysis");
 
 // Boot / intro entries (ONCE)
 logLine();
@@ -499,28 +502,58 @@ private void runAllAppleDiagnostics() {
     new Thread(() -> {
 
         appendHtml("<br>");
-        logSection("APPLE DIAGNOSTICS — RUN ALL");
+logSection(AppLang.isGreek(this)
+        ? "APPLE DIAGNOSTICS — ΕΚΤΕΛΕΣΗ ΟΛΩΝ ΤΩΝ ΕΡΓΑΣΤΗΡΙΩΝ"
+        : "APPLE DIAGNOSTICS — RUN ALL");
 
-        try {
+try {
 
-            analyzePanicLogs();
+SystemClock.sleep(400);
 
-            SystemClock.sleep(400);
+runPanicLogAnalyzer();
 
-            analyzeStability();
+SystemClock.sleep(400);
 
-            SystemClock.sleep(400);
+runStabilityLab();
 
-            detectCrashPatterns();
+SystemClock.sleep(400);
 
-            logOk(AppLang.isGreek(this)
-                    ? "Ο έλεγχος ολοκληρώθηκε."
-                    : "Diagnostics completed.");
+runCrashPatternLab();
 
-        } catch (Throwable t) {
+SystemClock.sleep(400);
 
-            logError("Diagnostics failed: " + t.getMessage());
-        }
+runCrashTimelineLab();
+
+SystemClock.sleep(400);
+
+runStabilityScoreLab();
+
+SystemClock.sleep(400);
+
+runSubsystemDiagnosisLab();
+
+SystemClock.sleep(400);
+
+runHardwareCorrelationLab();
+
+SystemClock.sleep(400);
+
+runRiskAssessmentLab();
+
+SystemClock.sleep(400);
+
+runFinalReportLab();
+
+    logOk(AppLang.isGreek(this)
+            ? "Ο πλήρης έλεγχος ολοκληρώθηκε."
+            : "Full diagnostics completed.");
+
+} catch (Throwable t) {
+
+    logError(AppLang.isGreek(this)
+        ? "Αποτυχία διάγνωσης: " + safe(t.getMessage())
+        : "Diagnostics failed: " + safe(t.getMessage()));
+}
 
     }).start();
 }
@@ -2224,33 +2257,50 @@ private void runDemoDiagnostics() {
 
     new Thread(() -> {
 
-        appendHtml("<br>");
-        logSection("DEMO MODE — APPLE DIAGNOSTICS");
+        logLine();
+logInfo("DEMO MODE — APPLE DIAGNOSTICS");
+logLine();
 
         try {
 
             // φόρτωση demo panic logs
-            loadDemoPanicLogs();
+loadDemoPanicLogs();
 
-            SystemClock.sleep(400);
+SystemClock.sleep(400);
 
-            analyzePanicLogs();
+runPanicLogAnalyzer();
 
-            SystemClock.sleep(400);
+SystemClock.sleep(400);
 
-            analyzeStability();
+runStabilityLab();
 
-            SystemClock.sleep(400);
+SystemClock.sleep(400);
 
-            detectCrashPatterns();
+runCrashPatternLab();
 
-            SystemClock.sleep(400);
+SystemClock.sleep(400);
 
-            buildCrashTimeline();
+runCrashTimelineLab();
 
-            SystemClock.sleep(400);
+SystemClock.sleep(400);
 
-            computeStabilityScore();
+runStabilityScoreLab();
+
+SystemClock.sleep(400);
+
+runSubsystemDiagnosisLab();
+
+SystemClock.sleep(400);
+
+runHardwareCorrelationLab();
+
+SystemClock.sleep(400);
+
+runRiskAssessmentLab();
+
+SystemClock.sleep(400);
+
+runFinalReportLab();
 
             logOk(AppLang.isGreek(this)
                     ? "Η διάγνωση των ενσωματωμένων panic logs ολοκληρώθηκε."

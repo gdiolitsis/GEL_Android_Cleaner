@@ -1084,10 +1084,15 @@ appleBtn.setLayoutParams(lpBtn2);
 root.addView(androidBtn);
 root.addView(appleBtn);
 
+// ================= SET VIEW =================
+b.setView(root);
+
+AlertDialog d = b.create();
+
 if (d.getWindow() != null) {
-d.getWindow().setBackgroundDrawable(
-new ColorDrawable(Color.TRANSPARENT)
-);
+    d.getWindow().setBackgroundDrawable(
+            new ColorDrawable(Color.TRANSPARENT)
+    );
 }
 
 // --------------------------------------------

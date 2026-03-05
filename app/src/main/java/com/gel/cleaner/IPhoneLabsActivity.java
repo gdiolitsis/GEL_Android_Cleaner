@@ -410,8 +410,8 @@ btnExport.setOnClickListener(v -> {
 
 root.addView(btnExport);
 
-scroll.addView(root);
-setContentView(scroll);
+mainScroll.addView(root);
+setContentView(mainScroll);
 
 UIHelpers.applyPressEffectRecursive(root);
 
@@ -749,9 +749,6 @@ new AlertDialog.Builder(IPhoneLabsActivity.this);
 
 b.setCancelable(true);
 
-ScrollView scroll = new ScrollView(IPhoneLabsActivity.this);
-scroll.setFillViewport(true);
-
 // ================= ROOT =================
 LinearLayout root = new LinearLayout(IPhoneLabsActivity.this);
 root.setOrientation(LinearLayout.VERTICAL);
@@ -934,37 +931,42 @@ okBtn.setLayoutParams(okLp);
 
 root.addView(okBtn);
 
+// ================= SCROLL WRAPPER =================
+ScrollView scroll = new ScrollView(IPhoneLabsActivity.this);
+scroll.setFillViewport(true);
+scroll.addView(root);
+
 // ================= SET VIEW =================
 b.setView(scroll);
 
 final AlertDialog d = b.create();
 
 if (d.getWindow() != null) {
-d.getWindow().setBackgroundDrawable(
-new ColorDrawable(Color.TRANSPARENT)
-);
+    d.getWindow().setBackgroundDrawable(
+            new ColorDrawable(Color.TRANSPARENT)
+    );
 }
 
 // --------------------------------------------
 // STOP ALWAYS ON DISMISS - CANCEL
 // --------------------------------------------
 d.setOnDismissListener(dialog -> {
-try { AppTTS.stop(); } catch (Throwable ignore) {}
-panicGuideShown = false;
+    try { AppTTS.stop(); } catch (Throwable ignore) {}
+    panicGuideShown = false;
 });
 
 d.setOnCancelListener(dialog -> {
-try { AppTTS.stop(); } catch (Throwable ignore) {}
-panicGuideShown = false;
+    try { AppTTS.stop(); } catch (Throwable ignore) {}
+    panicGuideShown = false;
 });
 
 // --------------------------------------------
 // SPEAK ONLY WHEN DIALOG IS ACTUALLY SHOWN
 // --------------------------------------------
 d.setOnShowListener(dialog -> {
-if (!AppTTS.isMuted(IPhoneLabsActivity.this) && panicGuideShown) {
-speakPanicGuideTTS();
-}
+    if (!AppTTS.isMuted(IPhoneLabsActivity.this) && panicGuideShown) {
+        speakPanicGuideTTS();
+    }
 });
 
 // --------------------------------------------
@@ -983,17 +985,17 @@ if (d.getWindow() != null) {
 // OK BUTTON
 // --------------------------------------------
 okBtn.setOnClickListener(v -> {
-try { AppTTS.stop(); } catch (Throwable ignore) {}
 
-panicGuideShown = false;
+    try { AppTTS.stop(); } catch (Throwable ignore) {}
 
-if (cb.isChecked()) {
-disablePanicGuideForever();
-}
+    panicGuideShown = false;
 
-d.dismiss();
+    if (cb.isChecked()) {
+        disablePanicGuideForever();
+    }
+
+    d.dismiss();
 });
-}
 
 // ============================================================
 // PANIC LOG IMPORT (SAF) — FINAL CLEAN

@@ -450,6 +450,18 @@ logOk(gr
 
 } // onCreate ends here
 
+private void disablePanicGuideForever() {
+    try {
+        SharedPreferences prefs =
+                getSharedPreferences("gel_prefs", MODE_PRIVATE);
+
+        prefs.edit()
+                .putBoolean("panic_guide_hidden", true)
+                .apply();
+
+    } catch (Throwable ignore) {}
+}
+
 private Button mkRedBtn(String t) {
 
     Button b = new Button(this);
@@ -747,32 +759,32 @@ bg.setStroke(dp(4), 0xFFFFD700); // Χρυσό περίγραμμα
 root.setBackground(bg);
 
 // ================= TITLE =================
-PanicGuideTitle = new TextView(IPhoneLabsActivity.this);
-PanicGuideTitle.setText(
+panicGuideTitle = new TextView(IPhoneLabsActivity.this);
+panicGuideTitle.setText(
         AppLang.isGreek(this)
                 ? "PANIC LOGS — Οδηγός Εισαγωγής"
                 : "PANIC LOGS — Import Guide"
 );
-PanicGuideTitle.setTextColor(Color.WHITE);
-PanicGuideTitle.setTextSize(19f);
-PanicGuideTitle.setTypeface(null, Typeface.BOLD);
-PanicGuideTitle.setGravity(Gravity.CENTER);
-PanicGuideTitle.setPadding(0, 0, 0, dp(14));
-root.addView(PanicGuideTitle);
+panicGuideTitle.setTextColor(Color.WHITE);
+panicGuideTitle.setTextSize(19f);
+panicGuideTitle.setTypeface(null, Typeface.BOLD);
+panicGuideTitle.setGravity(Gravity.CENTER);
+panicGuideTitle.setPadding(0, 0, 0, dp(14));
+root.addView(panicGuideTitle);
 
 // ================= MESSAGE =================
-PanicGuideMessage = new TextView(IPhoneLabsActivity.this);
-PanicGuideMessage.setText(
+panicGuideMessage = new TextView(IPhoneLabsActivity.this);
+panicGuideMessage.setText(
 AppLang.isGreek(this)
 ? getPanicGuideTextGR()
 : getPanicGuideTextEN()
 );
-PanicGuideMessage.setTextColor(0xFF00FF9C); // Neon green
-PanicGuideMessage.setTextSize(15f);
-PanicGuideMessage.setGravity(Gravity.CENTER);
-PanicGuideMessage.setLineSpacing(0f, 1.15f);
-PanicGuideMessage.setPadding(dp(6), 0, dp(6), dp(18));
-root.addView(PanicGuideMessage);
+panicGuideMessage.setTextColor(0xFF00FF9C); // Neon green
+panicGuideMessage.setTextSize(15f);
+panicGuideMessage.setGravity(Gravity.CENTER);
+panicGuideMessage.setLineSpacing(0f, 1.15f);
+panicGuideMessage.setPadding(dp(6), 0, dp(6), dp(18));
+root.addView(panicGuideMessage);
 
 // ================= MUTE ROW =================
 root.addView(buildMuteRow());
@@ -956,7 +968,6 @@ disablePanicGuideForever();
 }
 
 d.dismiss();
-showPlatformSelectPopup();
 });
 }
 

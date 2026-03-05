@@ -1963,7 +1963,7 @@ private void runFinalServiceRecommendationLab() {
 boolean likelyHardware = false;
 boolean likelySoftware = false;
 
-if (dominant != null && ratio >= 0.6 && isHighRiskDomain(dominant))
+if (dominant != null && ratio >= 0.6 && isHighRiskDomain(dominant)) {
     likelyHardware = true;
 }
 else if (ratio < 0.4 && domainCount.size() >= 3) {

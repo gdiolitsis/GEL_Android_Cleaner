@@ -1503,27 +1503,6 @@ new ColorDrawable(Color.TRANSPARENT));
 // --------------------------------------------
 d.show();
 
-if (d.getWindow() != null) {
-    d.getWindow().setLayout(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            (int)(getResources().getDisplayMetrics().heightPixels * 0.85)
-    );
-}
-
-// ==========================
-// ACTIONS
-// ==========================
-iphoneBtn.setOnClickListener(v -> {
-d.dismiss();
-showAppleModelPicker("iphone");
-});
-
-ipadBtn.setOnClickListener(v -> {
-d.dismiss();
-showAppleModelPicker("ipad");
-});
-}
-
 // =========================================================
 //  MODEL PICKER - GEL STYLE (FINAL)
 // =========================================================

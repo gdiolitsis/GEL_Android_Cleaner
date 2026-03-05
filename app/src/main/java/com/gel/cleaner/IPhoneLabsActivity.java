@@ -58,6 +58,8 @@ TextView panicGuideMessage;
 	
 	private CheckBox muteCheck;
     private CheckBox dontShowCheck;
+    
+    private ScrollView mainScroll;
 	
 	// ==========================
     // TTS ENGINE
@@ -141,17 +143,17 @@ protected void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
 
     // ROOT SCROLL
-    ScrollView scroll = new ScrollView(this);
-    scroll.setLayoutParams(new ScrollView.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.MATCH_PARENT
-    ));
-    scroll.setOverScrollMode(View.OVER_SCROLL_IF_CONTENT_SCROLLS);
-    scroll.setFillViewport(true);
+mainScroll = new ScrollView(this);
+mainScroll.setLayoutParams(new ScrollView.LayoutParams(
+        ViewGroup.LayoutParams.MATCH_PARENT,
+        ViewGroup.LayoutParams.MATCH_PARENT
+));
+mainScroll.setOverScrollMode(View.OVER_SCROLL_IF_CONTENT_SCROLLS);
+mainScroll.setFillViewport(true);
 
-    if (!isPanicGuideHidden()) {
-        showPanicGuidePopup();
-    }
+if (!isPanicGuideHidden()) {
+    showPanicGuidePopup();
+}
 
         // CONTENT ROOT
         LinearLayout root = new LinearLayout(this);
@@ -747,6 +749,9 @@ new AlertDialog.Builder(IPhoneLabsActivity.this);
 
 b.setCancelable(true);
 
+ScrollView scroll = new ScrollView(IPhoneLabsActivity.this);
+scroll.setFillViewport(true);
+
 // ================= ROOT =================
 LinearLayout root = new LinearLayout(IPhoneLabsActivity.this);
 root.setOrientation(LinearLayout.VERTICAL);
@@ -775,15 +780,27 @@ root.addView(panicGuideTitle);
 // ================= MESSAGE =================
 panicGuideMessage = new TextView(IPhoneLabsActivity.this);
 panicGuideMessage.setText(
-AppLang.isGreek(this)
-? getPanicGuideTextGR()
-: getPanicGuideTextEN()
+        AppLang.isGreek(this)
+                ? getPanicGuideTextGR()
+                : getPanicGuideTextEN()
 );
+
 panicGuideMessage.setTextColor(0xFF00FF9C); // Neon green
 panicGuideMessage.setTextSize(15f);
 panicGuideMessage.setGravity(Gravity.CENTER);
 panicGuideMessage.setLineSpacing(0f, 1.15f);
 panicGuideMessage.setPadding(dp(6), 0, dp(6), dp(18));
+
+// ενεργοποίηση scroll μέσα στο TextView
+panicGuideMessage.setVerticalScrollBarEnabled(true);
+panicGuideMessage.setMovementMethod(
+        android.text.method.ScrollingMovementMethod.getInstance()
+);
+
+// βοηθά το scroll να λειτουργεί σε όλες τις συσκευές
+panicGuideMessage.setFocusable(true);
+panicGuideMessage.setFocusableInTouchMode(true);
+
 root.addView(panicGuideMessage);
 
 // ================= MUTE ROW =================
@@ -918,7 +935,7 @@ okBtn.setLayoutParams(okLp);
 root.addView(okBtn);
 
 // ================= SET VIEW =================
-b.setView(root);
+b.setView(scroll);
 
 final AlertDialog d = b.create();
 
@@ -954,6 +971,13 @@ speakPanicGuideTTS();
 // SHOW
 // --------------------------------------------
 d.show();
+
+if (d.getWindow() != null) {
+    d.getWindow().setLayout(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            (int)(getResources().getDisplayMetrics().heightPixels * 0.85)
+    );
+}
 
 // --------------------------------------------
 // OK BUTTON
@@ -2417,13 +2441,12 @@ private void appendHtml(String htmlLine) {
 
     logHtmlBuffer.append(htmlLine).append("<br>");
 
-    // προστασία buffer
     if (logHtmlBuffer.length() > MAX_LOG_BUFFER) {
         logHtmlBuffer.delete(
                 0,
                 logHtmlBuffer.length() - MAX_LOG_BUFFER
         );
-        txtLog.setText(""); // reset view
+        txtLog.setText("");
     }
 
     try {
@@ -2435,6 +2458,11 @@ private void appendHtml(String htmlLine) {
         );
     } catch (Throwable ignore) {
         txtLog.append(stripHtml(htmlLine) + "\n");
+    }
+
+    // AUTO SCROLL
+    if (mainScroll != null) {
+        mainScroll.post(() -> mainScroll.fullScroll(View.FOCUS_DOWN));
     }
 }
 

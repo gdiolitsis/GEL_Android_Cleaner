@@ -223,8 +223,9 @@ root.addView(demoBtn);
 // description
 TextView demoDesc = new TextView(this);
 demoDesc.setText(
-        gr ? "Εκτελεί όλα τα labs με ενσωματωμένα panic logs"
-           : "Runs all labs using built-in panic logs"
+        gr
+        ? "Εκτελεί πλήρη διάγνωση χρησιμοποιώντας ενσωματωμένα panic logs"
+        : "Runs full diagnostics using built-in panic logs"
 );
 
 demoDesc.setTextColor(0xFFAAAAAA);
@@ -241,7 +242,17 @@ View importBtn = makeLabButton(
            : "Auto unzip + load panic report",
         false,
         v -> {
+
+            // CLEAN PREVIOUS LOGS
+            panicLogText = null;
+            panicLogLoaded = false;
+            panicLogCount = 0;
             appendMode = false;
+
+            logInfo(gr
+                    ? "Τα προηγούμενα panic logs διαγράφηκαν."
+                    : "Previous panic logs cleared.");
+
             openPanicLogPicker();
         }
 );
@@ -266,6 +277,28 @@ View appendBtn = makeLabButton(
 setButtonTextWhite(appendBtn);
 root.addView(appendBtn);
 
+// 1c) RUN ALL DIAGNOSTICS
+Button runAllBtn = mkGreenBtn(
+        gr ? "ΕΚΤΕΛΕΣΗ ΟΛΩΝ ΤΩΝ ΕΛΕΓΧΩΝ"
+           : "RUN ALL DIAGNOSTICS"
+);
+
+runAllBtn.setOnClickListener(v -> runAllAppleDiagnostics());
+
+root.addView(runAllBtn);
+
+// description
+TextView runAllDesc = new TextView(this);
+runAllDesc.setText(
+        gr ? "Αναλύει τα panic logs και εκτελεί όλα τα διαθέσιμα labs"
+           : "Analyzes panic logs and runs all available labs"
+);
+
+runAllDesc.setTextColor(0xFFAAAAAA);
+runAllDesc.setTextSize(13f);
+runAllDesc.setPadding(0, dp(4), 0, dp(12));
+
+root.addView(runAllDesc);
 
 // 2) Analyzer (guard)
 root.addView(makeLabButton(
@@ -451,6 +484,44 @@ logOk(gr
         : "Import a panic log to begin analysis.");
 
 } // onCreate ends here
+
+private void runAllAppleDiagnostics() {
+
+    if (!panicLogLoaded) {
+        logWarn(AppLang.isGreek(this)
+                ? "Δεν έχουν φορτωθεί panic logs."
+                : "No panic logs loaded.");
+        return;
+    }
+
+    new Thread(() -> {
+
+        appendHtml("<br>");
+        logSection("APPLE DIAGNOSTICS — RUN ALL");
+
+        try {
+
+            analyzePanicLogs();
+
+            SystemClock.sleep(400);
+
+            analyzeStability();
+
+            SystemClock.sleep(400);
+
+            detectCrashPatterns();
+
+            logOk(AppLang.isGreek(this)
+                    ? "Ο έλεγχος ολοκληρώθηκε."
+                    : "Diagnostics completed.");
+
+        } catch (Throwable t) {
+
+            logError("Diagnostics failed: " + t.getMessage());
+        }
+
+    }).start();
+}
 
 private void disablePanicGuideForever() {
     try {
@@ -901,10 +972,20 @@ root.addView(langBox);
 // ================= CHECKBOX =================
 CheckBox cb = new CheckBox(this);
 cb.setText(AppLang.isGreek(this)
-? "Να μην εμφανιστεί ξανά"
-: "Do not show again");
+        ? "Να μην εμφανιστεί ξανά"
+        : "Do not show again");
 cb.setTextColor(Color.WHITE);
-cb.setPadding(0, dp(8), 0, dp(16));
+cb.setGravity(Gravity.CENTER);
+
+// margins αντί για padding
+LinearLayout.LayoutParams lp =
+        new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+lp.setMargins(0, dp(8), 0, dp(16));
+cb.setLayoutParams(lp);
+
 root.addView(cb);
 
 // ================= OK BUTTON =================
@@ -924,7 +1005,7 @@ okBtn.setBackground(okBg);
 LinearLayout.LayoutParams okLp =
 new LinearLayout.LayoutParams(
 LinearLayout.LayoutParams.MATCH_PARENT,
-dp(140)
+dp(28)
 );
 okLp.setMargins(dp(6), dp(6), dp(6), 0);
 okBtn.setLayoutParams(okLp);
@@ -1130,47 +1211,55 @@ if (looksCorruptedPanic(text)) {
         }
 
         panicLogCount = appendMode
-                ? panicLogCount + loadedCount
-                : loadedCount;
+        ? panicLogCount + loadedCount
+        : loadedCount;
 
-        panicLogName = (panicLogCount == 1)
-                ? (gr ? "Ένα panic log"
-                      : "Single panic log")
-                : (gr
-                   ? "Πολλαπλά panic logs (" + panicLogCount + " αρχεία)"
-                   : "Multiple panic logs (" + panicLogCount + " files)");
+panicLogName = (panicLogCount == 1)
+        ? (gr ? "Ένα panic log"
+              : "Single panic log")
+        : (gr
+           ? "Πολλαπλά panic logs (" + panicLogCount + " αρχεία)"
+           : "Multiple panic logs (" + panicLogCount + " files)");
 
-        panicLogText   = allLogs.toString();
-        panicLogLoaded = true;
+panicLogText   = allLogs.toString();
+panicLogLoaded = true;
 
-        // cache signature από όλα
-        parseAndCacheSignature(panicLogText);
+// cache signature από όλα
+parseAndCacheSignature(panicLogText);
 
-        logLine();
-        logOk(gr
-                ? "Η εισαγωγή ολοκληρώθηκε."
-                : "Import completed.");
-        logInfo(gr
-                ? "Συνολικό μέγεθος:"
-                : "Total size:");
-        logOk(panicLogText.length() + " chars");
-        logOk(gr
-                ? "Έτοιμο για ανάλυση."
-                : "Ready for analysis.");
-        logLine();
+logLine();
+logOk(gr
+        ? "Η εισαγωγή ολοκληρώθηκε."
+        : "Import completed.");
 
-    } catch (Exception e) {
+// 👇 νέο μήνυμα με το όνομα των logs
+logInfo(gr
+        ? "Φορτώθηκαν panic logs: " + panicLogName
+        : "Loaded panic logs: " + panicLogName);
 
-        panicLogLoaded = false;
-        panicLogText   = null;
+logInfo(gr
+        ? "Συνολικό μέγεθος:"
+        : "Total size:");
 
-        logError(gr
-                ? "Αποτυχία εισαγωγής."
-                : "Panic logs import failed.");
+logOk(panicLogText.length() + " chars");
 
-        logInfo(gr ? "Αιτία:" : "Reason:");
-        logWarn(safe(e.getMessage()));
-    }
+logOk(gr
+        ? "Έτοιμο για ανάλυση."
+        : "Ready for analysis.");
+
+logLine();
+
+} catch (Exception e) {
+
+    panicLogLoaded = false;
+    panicLogText   = null;
+
+    logError(gr
+            ? "Αποτυχία εισαγωγής."
+            : "Panic logs import failed.");
+
+    logInfo(gr ? "Αιτία:" : "Reason:");
+    logWarn(safe(e.getMessage()));
 }
 
 // ============================================================
@@ -2121,23 +2210,46 @@ if (dominant != null) {
 
 private void runDemoDiagnostics() {
 
-    boolean gr = AppLang.isGreek(this);
+    new Thread(() -> {
 
-    appendHtml("<br>");
-    logLine();
-    logInfo(gr
-            ? "DEMO MODE — Φόρτωση ενσωματωμένων panic logs"
-            : "DEMO MODE — Loading built-in panic logs");
-    logLine();
+        appendHtml("<br>");
+        logSection("DEMO MODE — APPLE DIAGNOSTICS");
 
-    panicLogText = buildDemoPanicLogs();
-panicLogLoaded = true;
-panicLogName = "Demo panic logs";
-panicLogCount = 5;
+        try {
 
-runPanicLogAnalyzer();
-runFinalServiceRecommendationLab();
+            // φόρτωση demo panic logs
+            loadDemoPanicLogs();
 
+            SystemClock.sleep(400);
+
+            analyzePanicLogs();
+
+            SystemClock.sleep(400);
+
+            analyzeStability();
+
+            SystemClock.sleep(400);
+
+            detectCrashPatterns();
+
+            SystemClock.sleep(400);
+
+            buildCrashTimeline();
+
+            SystemClock.sleep(400);
+
+            computeStabilityScore();
+
+            logOk(AppLang.isGreek(this)
+                    ? "Η διάγνωση των ενσωματωμένων panic logs ολοκληρώθηκε."
+                     : "Built-in panic log diagnostics completed.");
+
+        } catch (Throwable t) {
+
+            logError("Demo failed: " + t.getMessage());
+        }
+
+    }).start();
 }
 
 // ============================================================

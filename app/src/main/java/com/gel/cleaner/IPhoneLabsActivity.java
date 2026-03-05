@@ -281,10 +281,10 @@ setButtonTextWhite(appendBtn);
 root.addView(appendBtn);
 
 // 1c) RUN ALL DIAGNOSTICS
-Button runAllBtn = mkGreenBtn(
-        gr ? "ΕΚΤΕΛΕΣΗ ΟΛΩΝ ΤΩΝ ΕΛΕΓΧΩΝ"
-           : "RUN ALL DIAGNOSTICS"
-);
+Button runAllBtn = new Button(this);
+runAllBtn.setText(gr
+        ? "ΕΚΤΕΛΕΣΗ ΟΛΩΝ ΤΩΝ ΕΡΓΑΣΤΗΡΙΩΝ"
+        : "RUN ALL LABS");
 
 runAllBtn.setOnClickListener(v -> runAllAppleDiagnostics());
 
@@ -293,7 +293,7 @@ root.addView(runAllBtn);
 // description
 TextView runAllDesc = new TextView(this);
 runAllDesc.setText(
-        gr ? "Αναλύει τα panic logs και εκτελεί όλα τα διαθέσιμα labs"
+        gr ? "Αναλύει τα panic logs και εκτελεί όλα τα διαθέσιμα εργαστήρια"
            : "Analyzes panic logs and runs all available labs"
 );
 
@@ -502,9 +502,9 @@ private void runAllAppleDiagnostics() {
     new Thread(() -> {
 
 appendHtml("<br>");
-logSection(AppLang.isGreek(this)
-        ? "APPLE DIAGNOSTICS — ΕΚΤΕΛΕΣΗ ΟΛΩΝ ΤΩΝ ΕΡΓΑΣΤΗΡΙΩΝ"
-        : "APPLE DIAGNOSTICS — RUN ALL");
+logInfo(AppLang.isGreek(this)
+        ? "ΕΚΤΕΛΕΣΗ ΟΛΩΝ ΤΩΝ ΕΡΓΑΣΤΗΡΙΩΝ"
+        : "RUN ALL LABS");
 
 try {
 
@@ -2247,48 +2247,75 @@ private void runDemoDiagnostics() {
 
     new Thread(() -> {
 
+        boolean gr = AppLang.isGreek(this);
+
         logLine();
-logInfo("DEMO MODE — APPLE DIAGNOSTICS");
-logLine();
+        boolean gr = AppLang.isGreek(this);
+
+logInfo(gr
+        ? "DEMO MODE — ΔΙΑΓΝΩΣΗ APPLE"
+        : "DEMO MODE — APPLE DIAGNOSTICS");
+        logLine();
 
         try {
 
-            // φόρτωση demo panic logs
-loadDemoPanicLogs();
+            // ====================================================
+            // LOAD BUILT-IN DEMO LOGS
+            // ====================================================
 
-runPanicLogAnalyzer();
-    SystemClock.sleep(400);
+            panicLogText   = buildDemoPanicLogs();
+            panicLogLoaded = true;
+            panicLogName   = gr
+                    ? "Ενσωματωμένα demo panic logs"
+                    : "Built-in demo panic logs";
 
-    runPanicSignatureParser();
-    SystemClock.sleep(400);
+            panicLogCount = 5;
 
-    runStabilityLab();
-    SystemClock.sleep(400);
+            logOk(gr
+                    ? "Φορτώθηκαν ενσωματωμένα demo panic logs."
+                    : "Built-in demo panic logs loaded.");
 
-    runImpactLab();
-    SystemClock.sleep(400);
+            SystemClock.sleep(400);
 
-    runPanicFrequencyLab();
-    SystemClock.sleep(400);
+            // ====================================================
+            // RUN ALL LABS
+            // ====================================================
 
-    runPanicClusteringLab();
-    SystemClock.sleep(400);
+            runPanicLogAnalyzer();
+            SystemClock.sleep(400);
 
-    runRecurringDomainLab();
-    SystemClock.sleep(400);
+            runPanicSignatureParser();
+            SystemClock.sleep(400);
 
-    runStabilityIndexLab();
-    SystemClock.sleep(400);
+            runStabilityLab();
+            SystemClock.sleep(400);
 
-    runFinalServiceRecommendationLab();
+            runImpactLab();
+            SystemClock.sleep(400);
 
-            logOk(AppLang.isGreek(this)
-                    ? "Η διάγνωση των ενσωματωμένων panic logs ολοκληρώθηκε."
-                     : "Built-in panic log diagnostics completed.");
+            runPanicFrequencyLab();
+            SystemClock.sleep(400);
+
+            runPanicClusteringLab();
+            SystemClock.sleep(400);
+
+            runRecurringDomainLab();
+            SystemClock.sleep(400);
+
+            runStabilityIndexLab();
+            SystemClock.sleep(400);
+
+            runFinalServiceRecommendationLab();
+
+            logOk(gr
+                    ? "Η διάγνωση των demo panic logs ολοκληρώθηκε."
+                    : "Demo panic log diagnostics completed.");
 
         } catch (Throwable t) {
 
-            logError("Demo failed: " + t.getMessage());
+            logError(gr
+                    ? "Αποτυχία demo διάγνωσης: " + t.getMessage()
+                    : "Demo diagnostics failed: " + t.getMessage());
         }
 
     }).start();

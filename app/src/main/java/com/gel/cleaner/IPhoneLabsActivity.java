@@ -149,7 +149,7 @@ protected void onCreate(@Nullable Bundle savedInstanceState) {
     scroll.setOverScrollMode(View.OVER_SCROLL_IF_CONTENT_SCROLLS);
     scroll.setFillViewport(true);
 
-    if (!isPanicGuideDisabled()) {
+    if (!isPanicGuideHidden()) {
         showPanicGuidePopup();
     }
 
@@ -414,7 +414,7 @@ setContentView(scroll);
 UIHelpers.applyPressEffectRecursive(root);
 
 // popup AFTER layout ready
-root.post(this::showPanicLogsGuidePopup);
+root.post(this::showPanicGuidePopup);
 
 // ==========================
 // TTS INIT

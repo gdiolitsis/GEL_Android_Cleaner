@@ -252,7 +252,7 @@ private void buildAppleInfoLog() {
 
     msg.setTextColor(0xFF00FF66);
     msg.setTextSize(14f);
-    msg.setLineSpacing(0f, 1.25f)
+    msg.setLineSpacing(0f, 1.25f);
     msg.setPadding(dp(6), dp(6), dp(6), dp(6));
     // enable scroll
     msg.setVerticalScrollBarEnabled(true);

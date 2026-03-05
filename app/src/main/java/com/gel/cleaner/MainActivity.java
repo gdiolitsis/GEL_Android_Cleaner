@@ -252,7 +252,17 @@ private void buildAppleInfoLog() {
 
     msg.setTextColor(0xFF00FF66);
     msg.setTextSize(14f);
-    msg.setLineSpacing(0f, 1.25f);
+    msg.setLineSpacing(0f, 1.25f)
+    msg.setPadding(dp(6), dp(6), dp(6), dp(6));
+    // enable scroll
+    msg.setVerticalScrollBarEnabled(true);
+    msg.setMovementMethod(android.text.method.ScrollingMovementMethod.getInstance());
+    msg.setFocusable(true);
+    msg.setFocusableInTouchMode(true);
+
+// max height ~40% screen
+int maxH = (int)(getResources().getDisplayMetrics().heightPixels * 0.40);
+msg.setMaxHeight(maxH);
 
     boolean gr = AppLang.isGreek(this);
 

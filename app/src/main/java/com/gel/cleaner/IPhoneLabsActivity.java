@@ -443,6 +443,22 @@ logOk(gr
 
 } // onCreate ends here
 
+private Button mkRedBtn(String t) {
+
+    Button b = new Button(this);
+    b.setText(t);
+    b.setTextColor(Color.WHITE);
+
+    GradientDrawable d = new GradientDrawable();
+    d.setColor(0xFFC62828);
+    d.setStroke(5,0xFFFFD700);
+    d.setCornerRadius(3);
+
+    b.setBackground(d);
+
+    return b;
+}
+
 private String buildDemoPanicLogs() {
 
     String log1 =
@@ -617,31 +633,24 @@ private void showPanicLogsGuidePopup() {
     // ============================================================
     // CHECK IF USER DISABLED POPUP
     // ============================================================
-
     try {
-
-        if (isPanicGuideHidden()) {
-    return;
-}
-
+        if (isPanicGuideHidden()) return;
     } catch (Throwable ignore) {}
 
     runOnUiThread(() -> {
 
-        boolean gr = AppLang.isGreek(this);
+        final boolean sysGreek = AppLang.isGreek(IPhoneLabsActivity.this);
 
         AlertDialog.Builder b = new AlertDialog.Builder(
                 IPhoneLabsActivity.this,
                 android.R.style.Theme_Material_Dialog_NoActionBar
         );
-
         b.setCancelable(true);
 
         // ============================================================
         // ROOT
         // ============================================================
-
-        LinearLayout box = new LinearLayout(this);
+        LinearLayout box = new LinearLayout(IPhoneLabsActivity.this);
         box.setOrientation(LinearLayout.VERTICAL);
         box.setPadding(dp(24), dp(20), dp(24), dp(18));
 
@@ -649,70 +658,55 @@ private void showPanicLogsGuidePopup() {
         bg.setColor(0xFF101010);
         bg.setCornerRadius(dp(18));
         bg.setStroke(dp(4), 0xFFFFD700);
-
         box.setBackground(bg);
 
         // ============================================================
         // TITLE
         // ============================================================
-
-        TextView title = new TextView(this);
-
-        title.setText("PANIC LOGS — Import Guide");
+        TextView title = new TextView(IPhoneLabsActivity.this);
+        title.setText(sysGreek ? "PANIC LOGS — Οδηγός Εισαγωγής" : "PANIC LOGS — Import Guide");
         title.setTextColor(Color.WHITE);
         title.setTextSize(18f);
         title.setTypeface(null, Typeface.BOLD);
         title.setGravity(Gravity.CENTER);
         title.setPadding(0, 0, 0, dp(12));
-
         box.addView(title);
 
         // ============================================================
         // MESSAGE
         // ============================================================
-
-        TextView msg = new TextView(this);
-
+        TextView msg = new TextView(IPhoneLabsActivity.this);
         msg.setTextColor(COLOR_NEON);
         msg.setTextSize(15f);
         msg.setGravity(Gravity.START);
-
-        panicGuideLang = gr ? "GR" : "EN";
-
-        if (gr) {
-            msg.setText(getPanicGuideTextGR());
-        } else {
-            msg.setText(getPanicGuideTextEN());
-        }
-
         box.addView(msg);
+
+        // initial language
+        panicGuideLang = sysGreek ? "GR" : "EN";
+        msg.setText(sysGreek ? getPanicGuideTextGR() : getPanicGuideTextEN());
 
         // ============================================================
         // LANGUAGE CONTROLS
         // ============================================================
-
-        LinearLayout controls = new LinearLayout(this);
+        LinearLayout controls = new LinearLayout(IPhoneLabsActivity.this);
         controls.setOrientation(LinearLayout.HORIZONTAL);
         controls.setGravity(Gravity.END);
         controls.setPadding(0, dp(16), 0, dp(10));
 
-        Spinner langSpinner = new Spinner(this);
+        Spinner langSpinner = new Spinner(IPhoneLabsActivity.this);
 
         ArrayAdapter<String> langAdapter =
                 new ArrayAdapter<>(
-                        this,
+                        IPhoneLabsActivity.this,
                         android.R.layout.simple_spinner_item,
                         new String[]{"EN", "GR"}
                 );
-
-        langAdapter.setDropDownViewResource(
-                android.R.layout.simple_spinner_dropdown_item
-        );
+        langAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
         langSpinner.setAdapter(langAdapter);
-        langSpinner.setSelection(gr ? 1 : 0);
+        langSpinner.setSelection(sysGreek ? 1 : 0);
 
-        LinearLayout langBox = new LinearLayout(this);
+        LinearLayout langBox = new LinearLayout(IPhoneLabsActivity.this);
         langBox.setOrientation(LinearLayout.HORIZONTAL);
         langBox.setGravity(Gravity.CENTER_VERTICAL);
         langBox.setPadding(dp(10), dp(6), dp(10), dp(6));
@@ -721,7 +715,6 @@ private void showPanicLogsGuidePopup() {
         langBg.setColor(0xFF1A1A1A);
         langBg.setCornerRadius(dp(12));
         langBg.setStroke(dp(2), 0xFFFFD700);
-
         langBox.setBackground(langBg);
 
         LinearLayout.LayoutParams lpLangBox =
@@ -729,41 +722,32 @@ private void showPanicLogsGuidePopup() {
                         LinearLayout.LayoutParams.WRAP_CONTENT,
                         dp(48)
                 );
-
         langBox.setLayoutParams(lpLangBox);
         langBox.addView(langSpinner);
 
         controls.addView(langBox);
-
         box.addView(controls);
 
         // ============================================================
-        // MUTE ROW
+        // MUTE ROW (buildMuteRow uses muteCheck field)
         // ============================================================
-
         box.addView(buildMuteRow());
 
         // ============================================================
-        // DO NOT SHOW AGAIN
+        // DO NOT SHOW AGAIN  (MUST BE FIELD, NOT LOCAL)
         // ============================================================
-
-        CheckBox cb = new CheckBox(this);
-
-        cb.setText(gr
+        dontShowCheck = new CheckBox(IPhoneLabsActivity.this);
+        dontShowCheck.setText("GR".equals(panicGuideLang)
                 ? "Να μην εμφανιστεί ξανά"
                 : "Do not show again");
-
-        cb.setTextColor(Color.WHITE);
-        cb.setPadding(0, dp(6), 0, dp(16));
-
-        box.addView(cb);
+        dontShowCheck.setTextColor(Color.WHITE);
+        dontShowCheck.setPadding(0, dp(6), 0, dp(16));
+        box.addView(dontShowCheck);
 
         // ============================================================
         // OK BUTTON
         // ============================================================
-
-        Button okBtn = new Button(this);
-
+        Button okBtn = new Button(IPhoneLabsActivity.this);
         okBtn.setText("OK");
         okBtn.setAllCaps(false);
         okBtn.setTypeface(null, Typeface.BOLD);
@@ -774,7 +758,6 @@ private void showPanicLogsGuidePopup() {
         okBg.setColor(0xFF0F8A3B);
         okBg.setCornerRadius(dp(14));
         okBg.setStroke(dp(3), 0xFFFFD700);
-
         okBtn.setBackground(okBg);
 
         LinearLayout.LayoutParams lpOk =
@@ -782,9 +765,7 @@ private void showPanicLogsGuidePopup() {
                         LinearLayout.LayoutParams.MATCH_PARENT,
                         dp(52)
                 );
-
         lpOk.setMargins(0, dp(16), 0, 0);
-
         okBtn.setLayoutParams(lpOk);
 
         box.addView(okBtn);
@@ -792,113 +773,91 @@ private void showPanicLogsGuidePopup() {
         // ============================================================
         // DIALOG
         // ============================================================
-
         b.setView(box);
-
         AlertDialog d = b.create();
 
         if (d.getWindow() != null) {
-            d.getWindow().setBackgroundDrawable(
-                    new ColorDrawable(Color.TRANSPARENT)
-            );
+            d.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         }
 
         panicGuidePopupOpen = true;
-
         d.show();
 
         // ============================================================
         // SPINNER LANGUAGE CHANGE
         // ============================================================
+        langSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
 
-        langSpinner.setOnItemSelectedListener(
-                new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(
+                    AdapterView<?> parent,
+                    View view,
+                    int position,
+                    long id) {
 
-@Override
-public void onItemSelected(
-        AdapterView<?> parent,
-        View view,
-        int position,
-        long id) {
+                panicGuideLang = (position == 0) ? "EN" : "GR";
+                boolean gr = "GR".equals(panicGuideLang);
 
-    panicGuideLang = (position == 0) ? "EN" : "GR";
+                // main text
+                msg.setText(gr ? getPanicGuideTextGR() : getPanicGuideTextEN());
 
-    boolean gr = "GR".equals(panicGuideLang);
+                // mute row label/state
+                if (muteCheck != null) {
+                    muteCheck.setText(gr
+                            ? "Σίγαση φωνητικών οδηγιών"
+                            : "Mute voice instructions");
+                    muteCheck.setChecked(AppTTS.isMuted(IPhoneLabsActivity.this));
+                }
 
-    // main text
-    msg.setText(gr ? getPanicGuideTextGR() : getPanicGuideTextEN());
+                // dont show again label
+                if (dontShowCheck != null) {
+                    dontShowCheck.setText(gr
+                            ? "Να μην εμφανιστεί ξανά"
+                            : "Do not show again");
+                }
 
-    // checkbox texts (με null guards)
-    if (muteCheck != null) {
-        muteCheck.setText(
-                gr ? "Σίγαση φωνητικών οδηγιών"
-                   : "Mute voice instructions"
-        );
-        // κράτα συγχρονισμένο το state
-        muteCheck.setChecked(AppTTS.isMuted(this));
-    }
+                if (!panicGuidePopupOpen) return;
 
-    if (dontShowCheck != null) {
-        dontShowCheck.setText(
-                gr ? "Να μην εμφανιστεί ξανά"
-                   : "Do not show again"
-        );
-    }
+                speakPanicGuideTTS();
+            }
 
-    if (!panicGuidePopupOpen) return;
-
-    speakPanicGuideTTS();
-}
-
-                    @Override
-                    public void onNothingSelected(AdapterView<?> parent) {}
-                });
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {}
+        });
 
         // ============================================================
         // START TTS AFTER SHOW
         // ============================================================
-
         box.postDelayed(() -> {
-
             if (!panicGuidePopupOpen) return;
-
             speakPanicGuideTTS();
-
         }, 600);
 
         // ============================================================
         // CLOSE EVENTS
         // ============================================================
-
         d.setOnDismissListener(dialog -> {
-
             panicGuidePopupOpen = false;
-
             try {
-                if (tts != null && tts[0] != null) {
-                    tts[0].stop();
-                }
+                if (tts != null && tts[0] != null) tts[0].stop();
             } catch (Throwable ignore) {}
         });
 
         okBtn.setOnClickListener(v -> {
 
-    panicGuidePopupOpen = false;
+            panicGuidePopupOpen = false;
 
-    try {
-        if (tts != null && tts[0] != null) {
-            tts[0].stop();
-        }
-    } catch (Throwable ignore) {}
+            try {
+                if (tts != null && tts[0] != null) tts[0].stop();
+            } catch (Throwable ignore) {}
 
-    // SAVE "DO NOT SHOW AGAIN"
-    try {
-        setPanicGuideHidden(cb.isChecked());
+            // SAVE "DO NOT SHOW AGAIN"
+            try {
+                setPanicGuideHidden(dontShowCheck != null && dontShowCheck.isChecked());
+            } catch (Throwable ignore) {}
 
-    } catch (Throwable ignore) {}
-
-    d.dismiss();
-});
+            d.dismiss();
+        });
 
     });
 }

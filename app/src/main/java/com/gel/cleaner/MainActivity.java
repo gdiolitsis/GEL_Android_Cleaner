@@ -1502,6 +1502,7 @@ new ColorDrawable(Color.TRANSPARENT));
 // SHOW
 // --------------------------------------------
 d.show();
+}
 
 // =========================================================
 //  MODEL PICKER - GEL STYLE (FINAL)

@@ -39,6 +39,27 @@ public class UIHelpers {
         });
     }
 
+    public static View.OnTouchListener pressEffect() {
+
+    return (v, event) -> {
+
+        if (event.getAction() == MotionEvent.ACTION_DOWN) {
+            v.setAlpha(0.6f);
+            v.setScaleX(0.97f);
+            v.setScaleY(0.97f);
+        }
+        else if (event.getAction() == MotionEvent.ACTION_UP ||
+                 event.getAction() == MotionEvent.ACTION_CANCEL) {
+
+            v.setAlpha(1f);
+            v.setScaleX(1f);
+            v.setScaleY(1f);
+        }
+
+        return false;
+    };
+}
+
     // ============================================================
     // RECURSIVE PRESS EFFECT FOR WHOLE LAYOUT
     // ============================================================

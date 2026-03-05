@@ -60,6 +60,8 @@ TextView panicGuideMessage;
     private CheckBox dontShowCheck;
     
     private ScrollView mainScroll;
+    
+    private static final int MAX_PANIC_LOG_SIZE = 2_000_000; // ~2MB
 	
 	// ==========================
     // TTS ENGINE
@@ -1192,10 +1194,19 @@ if (looksCorruptedPanic(text)) {
     continue;
 }
 
-            allLogs.append("\n\n===== FILE: ")
-                   .append(safeName)
-                   .append(" =====\n\n")
-                   .append(text);
+            if (allLogs.length() + text.length() > MAX_PANIC_LOG_SIZE) {
+
+    logWarn(gr
+            ? "Το μέγεθος των panic logs είναι πολύ μεγάλο. Η φόρτωση περιορίστηκε."
+            : "Panic logs too large. Import truncated.");
+
+    break;
+}
+
+allLogs.append("\n\n===== FILE: ")
+       .append(safeName)
+       .append(" =====\n\n")
+       .append(text);
 
             loadedCount++;
 
@@ -1219,7 +1230,7 @@ panicLogName = (panicLogCount == 1)
               : "Single panic log")
         : (gr
            ? "Πολλαπλά panic logs (" + panicLogCount + " αρχεία)"
-           : "Multiple panic logs (" + panicLogCount + " files)");
+           : "Panic log archive (" + panicLogCount + " files)");
 
 panicLogText   = allLogs.toString();
 panicLogLoaded = true;
@@ -1260,6 +1271,7 @@ logLine();
 
     logInfo(gr ? "Αιτία:" : "Reason:");
     logWarn(safe(e.getMessage()));
+}
 }
 
 // ============================================================
@@ -1441,7 +1453,7 @@ private void runStabilityLab() {
 
     logOk(gr
             ? "Αξιολόγηση εάν το crash υποδηλώνει ευρύτερη αστάθεια συστήματος."
-            : "Assessing whether the crash indicates broader system instability.");
+            : "Evaluating whether the crash indicates broader system instability.");
 
     parseAndCacheSignature(panicLogText);
 
@@ -1455,12 +1467,12 @@ private void runStabilityLab() {
 
         logWarn(gr
                 ? "Τέτοια crashes συχνά σχετίζονται με επανεκκινήσεις ή παγώματα."
-                : "Such crashes are often associated with reboots or freezes.");
+                : "Such crashes are often associated with unexpected reboots or system freezes.");
 
         logInfo(gr ? "Με απλά λόγια:" : "In simple terms:");
         logWarn(gr
                 ? "Η συσκευή δεν κατάφερε να διατηρήσει σταθερή λειτουργία υπό συγκεκριμένες συνθήκες."
-                : "The device was unable to maintain stable operation under certain conditions.");
+                : "The device could not maintain stable operation under certain conditions.");
 
     } else if ("Medium".equalsIgnoreCase(sigConfidence)) {
 
@@ -1488,7 +1500,7 @@ private void runStabilityLab() {
     logInfo(gr ? "Επόμενο βήμα:" : "Next step:");
     logOk(gr
             ? "Το LAB 4 θα αναλύσει ποια περιοχή hardware ενδέχεται να εμπλέκεται."
-            : "LAB 4 will analyze which hardware area is most likely involved.");
+            : "LAB 4 will analyze which hardware area is most likely involved in the crash.");
 
     appendHtml("<br>");
     logOk(gr ? "Το Lab 3 ολοκληρώθηκε." : "Lab 3 finished.");

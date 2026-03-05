@@ -631,16 +631,6 @@ private void toast(String msg) {
     catch (Throwable ignore) {}
 }
 
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            TextView tv = (TextView) super.getView(position, convertView, parent);
-            tv.setTextColor(0xFF00FF9C); // neon green
-            tv.setTypeface(null, Typeface.BOLD);
-            return tv;
-        }
-    };
-}
-
 // =========================================================
 // TTS - PANIC LOG IMPORT GUIDE
 // =========================================================
@@ -757,18 +747,18 @@ bg.setStroke(dp(4), 0xFFFFD700); // Χρυσό περίγραμμα
 root.setBackground(bg);
 
 // ================= TITLE =================
-PanicGuidTitle = new TextView(IPhoneLabsActivity.this);
-PanicGuidTitle.setText(
+PanicGuideTitle = new TextView(IPhoneLabsActivity.this);
+PanicGuideTitle.setText(
         AppLang.isGreek(this)
                 ? "PANIC LOGS — Οδηγός Εισαγωγής"
                 : "PANIC LOGS — Import Guide"
 );
-PanicGuidTitle.setTextColor(Color.WHITE);
-PanicGuidTitle.setTextSize(19f);
-PanicGuidTitle.setTypeface(null, Typeface.BOLD);
-PanicGuidTitle.setGravity(Gravity.CENTER);
-PanicGuidTitle.setPadding(0, 0, 0, dp(14));
-root.addView(PanicGuidTitle);
+PanicGuideTitle.setTextColor(Color.WHITE);
+PanicGuideTitle.setTextSize(19f);
+PanicGuideTitle.setTypeface(null, Typeface.BOLD);
+PanicGuideTitle.setGravity(Gravity.CENTER);
+PanicGuideTitle.setPadding(0, 0, 0, dp(14));
+root.addView(PanicGuideTitle);
 
 // ================= MESSAGE =================
 PanicGuideMessage = new TextView(IPhoneLabsActivity.this);
@@ -968,44 +958,6 @@ disablePanicGuideForever();
 d.dismiss();
 showPlatformSelectPopup();
 });
-}
-
-// ============================================================
-// TTS — LAB 28 (CALLED ONLY ON LANGUAGE CHANGE)
-// ============================================================
-private void speakPanicGuideTTS() {
-
-    if (panicGuideMuted) return;
-
-    try {
-        if (tts == null || tts[0] == null || !ttsReady[0]) return;
-
-        tts[0].stop();
-
-        if ("GR".equals(panicGuideLang)) {
-
-            tts[0].setLanguage(new Locale("el", "GR"));
-
-            tts[0].speak(
-                getPanicGuideTextGR(),
-                TextToSpeech.QUEUE_FLUSH,
-                null,
-                "PANIC_GUIDE_GR"
-            );
-
-        } else {
-
-            tts[0].setLanguage(Locale.US);
-
-            tts[0].speak(
-                getPanicGuideTextEN(),
-                TextToSpeech.QUEUE_FLUSH,
-                null,
-                "PANIC_GUIDE_EN"
-            );
-        }
-
-    } catch (Throwable ignore) {}
 }
 
 // ============================================================
@@ -2580,11 +2532,7 @@ private String safe(String s) {
     // ============================================================
     // HELPERS (dp/sp + I/O)
     // ============================================================
-    private int dp(float v) {
-        return (int) TypedValue.applyDimension(
-                TypedValue.COMPLEX_UNIT_DIP, v, getResources().getDisplayMetrics());
-    }
-
+    
     private float sp(float v) {
         return TypedValue.applyDimension(
                 TypedValue.COMPLEX_UNIT_SP, v, getResources().getDisplayMetrics());

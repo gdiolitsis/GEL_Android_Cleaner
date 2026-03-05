@@ -938,7 +938,6 @@ root.addView(okBtn);
 
 // ================= SET VIEW =================
 b.setView(root);
-
 final AlertDialog d = b.create();
 
 if (d.getWindow() != null) {
@@ -947,12 +946,8 @@ if (d.getWindow() != null) {
     );
 }
 
-// --------------------------------------------
-// SHOW
-// --------------------------------------------
 d.show();
 
-// adaptive dialog height (85% screen)
 if (d.getWindow() != null) {
     d.getWindow().setLayout(
             ViewGroup.LayoutParams.MATCH_PARENT,

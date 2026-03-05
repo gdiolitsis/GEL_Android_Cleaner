@@ -946,9 +946,6 @@ if (d.getWindow() != null) {
     );
 }
 
-// --------------------------------------------
-// STOP ALWAYS ON DISMISS - CANCEL
-// --------------------------------------------
 d.setOnDismissListener(dialog -> {
     try { AppTTS.stop(); } catch (Throwable ignore) {}
     welcomeShown = false;
@@ -959,18 +956,21 @@ d.setOnCancelListener(dialog -> {
     welcomeShown = false;
 });
 
-// --------------------------------------------
-// SPEAK ONLY WHEN DIALOG IS ACTUALLY SHOWN
-// --------------------------------------------
 d.setOnShowListener(dialog -> {
+
     if (!AppTTS.isMuted(MainActivity.this) && welcomeShown) {
         speakWelcomeTTS();
     }
+
+    Window w = d.getWindow();
+    if (w != null) {
+        w.setLayout(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                (int)(getResources().getDisplayMetrics().heightPixels * 0.85)
+        );
+    }
 });
 
-// --------------------------------------------
-// SHOW
-// --------------------------------------------
 d.show();
 
 if (d.getWindow() != null) {

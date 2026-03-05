@@ -788,11 +788,21 @@ AppLang.isGreek(this)
 ? getWelcomeTextGR()
 : getWelcomeTextEN()
 );
+
 welcomeMessage.setTextColor(0xFF00FF9C); // Neon green
 welcomeMessage.setTextSize(15f);
 welcomeMessage.setGravity(Gravity.CENTER);
 welcomeMessage.setLineSpacing(0f, 1.15f);
 welcomeMessage.setPadding(dp(6), 0, dp(6), dp(18));
+
+welcomeMessage.setVerticalScrollBarEnabled(true);
+welcomeMessage.setMovementMethod(
+        android.text.method.ScrollingMovementMethod.getInstance()
+);
+
+welcomeMessage.setFocusable(true);
+welcomeMessage.setFocusableInTouchMode(true);
+
 root.addView(welcomeMessage);
 
 // ================= MUTE ROW =================
@@ -932,13 +942,26 @@ b.setView(root);
 final AlertDialog d = b.create();
 
 if (d.getWindow() != null) {
-d.getWindow().setBackgroundDrawable(
-new ColorDrawable(Color.TRANSPARENT)
-);
+    d.getWindow().setBackgroundDrawable(
+            new ColorDrawable(Color.TRANSPARENT)
+    );
 }
 
 // --------------------------------------------
-// STATE BEFORE SHOW
+// SHOW
+// --------------------------------------------
+d.show();
+
+// adaptive dialog height (85% screen)
+if (d.getWindow() != null) {
+    d.getWindow().setLayout(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            (int)(getResources().getDisplayMetrics().heightPixels * 0.85)
+    );
+}
+
+// --------------------------------------------
+// STATE
 // --------------------------------------------
 welcomeShown = true;
 
@@ -1072,9 +1095,6 @@ appleBtn.setLayoutParams(lpBtn2);
 
 root.addView(androidBtn);
 root.addView(appleBtn);
-
-b.setView(root);
-final AlertDialog d = b.create();
 
 if (d.getWindow() != null) {
 d.getWindow().setBackgroundDrawable(
@@ -1490,7 +1510,17 @@ if (d.getWindow() != null)
 d.getWindow().setBackgroundDrawable(
 new ColorDrawable(Color.TRANSPARENT));
 
+// --------------------------------------------
+// SHOW
+// --------------------------------------------
 d.show();
+
+if (d.getWindow() != null) {
+    d.getWindow().setLayout(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            (int)(getResources().getDisplayMetrics().heightPixels * 0.85)
+    );
+}
 
 // ==========================
 // ACTIONS

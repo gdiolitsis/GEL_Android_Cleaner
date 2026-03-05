@@ -946,40 +946,26 @@ if (d.getWindow() != null) {
     );
 }
 
-d.show();
-
-if (d.getWindow() != null) {
-    d.getWindow().setLayout(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            (int)(getResources().getDisplayMetrics().heightPixels * 0.85)
-    );
-}
-
-// --------------------------------------------
-// STATE
-// --------------------------------------------
-welcomeShown = true;
-
 // --------------------------------------------
 // STOP ALWAYS ON DISMISS - CANCEL
 // --------------------------------------------
 d.setOnDismissListener(dialog -> {
-try { AppTTS.stop(); } catch (Throwable ignore) {}
-welcomeShown = false;
+    try { AppTTS.stop(); } catch (Throwable ignore) {}
+    welcomeShown = false;
 });
 
 d.setOnCancelListener(dialog -> {
-try { AppTTS.stop(); } catch (Throwable ignore) {}
-welcomeShown = false;
+    try { AppTTS.stop(); } catch (Throwable ignore) {}
+    welcomeShown = false;
 });
 
 // --------------------------------------------
 // SPEAK ONLY WHEN DIALOG IS ACTUALLY SHOWN
 // --------------------------------------------
 d.setOnShowListener(dialog -> {
-if (!AppTTS.isMuted(MainActivity.this) && welcomeShown) {
-speakWelcomeTTS();
-}
+    if (!AppTTS.isMuted(MainActivity.this) && welcomeShown) {
+        speakWelcomeTTS();
+    }
 });
 
 // --------------------------------------------
@@ -987,20 +973,27 @@ speakWelcomeTTS();
 // --------------------------------------------
 d.show();
 
+if (d.getWindow() != null) {
+    d.getWindow().setLayout(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            (int) (getResources().getDisplayMetrics().heightPixels * 0.85)
+    );
+}
+
 // --------------------------------------------
 // OK BUTTON
 // --------------------------------------------
 okBtn.setOnClickListener(v -> {
-try { AppTTS.stop(); } catch (Throwable ignore) {}
+    try { AppTTS.stop(); } catch (Throwable ignore) {}
 
-welcomeShown = false;
+    welcomeShown = false;
 
-if (cb.isChecked()) {
-disableWelcomeForever();
-}
+    if (cb.isChecked()) {
+        disableWelcomeForever();
+    }
 
-d.dismiss();
-showPlatformSelectPopup();
+    d.dismiss();
+    showPlatformSelectPopup();
 });
 }
 

@@ -53,6 +53,9 @@ public class IPhoneLabsActivity extends AppCompatActivity {
 	
 	private boolean panicGuidePopupOpen = false;
 	
+	private CheckBox muteCheck;
+    private CheckBox dontShowCheck;
+	
 	// ==========================
     // TTS ENGINE
     // ==========================
@@ -67,19 +70,18 @@ private boolean looksCorruptedPanic(String text) {
 
     String t = text.toLowerCase(Locale.US);
 
-    if (t.length() < 120) return true;
+    if (t.length() < 80) return true;
 
-    boolean hasCoreSignal =
-            t.contains("panic") ||
-            t.contains("bug_type") ||
-            t.contains("incident") ||
-            t.contains("kernel") ||
-            t.contains("exception") ||
-            t.contains("termination") ||
-            t.contains("reason") ||
-            t.contains("panicstring");
+    // βασικά panic signals (πολύ πιο ασφαλές)
+    if (t.contains("panic(")) return false;
+    if (t.contains("panicstring")) return false;
+    if (t.contains("bug_type")) return false;
+    if (t.contains("incident")) return false;
+    if (t.contains("watchdog")) return false;
+    if (t.contains("thermal")) return false;
+    if (t.contains("jetsam")) return false;
 
-    return !hasCoreSignal;
+    return true;
 }
 
     // ============================================================
@@ -198,6 +200,29 @@ root.addView(sub);
 // ============================================================
 // LAB BUTTONS (GUARDED)
 // ============================================================
+
+// 0) DEMO BUTTON
+Button demoBtn = mkRedBtn(
+        gr ? "DEMO MODE — Εκτέλεση δοκιμαστικής διάγνωσης"
+           : "DEMO MODE — Run diagnostic simulation"
+);
+
+demoBtn.setOnClickListener(v -> runDemoDiagnostics());
+
+root.addView(demoBtn);
+
+// description
+TextView demoDesc = new TextView(this);
+demoDesc.setText(
+        gr ? "Εκτελεί όλα τα labs με ενσωματωμένα panic logs"
+           : "Runs all labs using built-in panic logs"
+);
+
+demoDesc.setTextColor(0xFFAAAAAA);
+demoDesc.setTextSize(13f);
+demoDesc.setPadding(0, dp(4), 0, dp(12));
+
+root.addView(demoDesc);
 
 // 1) Import (replace mode)
 View importBtn = makeLabButton(
@@ -418,6 +443,61 @@ logOk(gr
 
 } // onCreate ends here
 
+private String buildDemoPanicLogs() {
+
+    String log1 =
+            "===== ZIP FILE: camera =====\n" +
+            "panic(cpu 0 caller): i2c bus error\n" +
+            "applecam sensor timeout\n" +
+            "cam_i2c transfer failed\n";
+
+    String log2 =
+            "===== ZIP FILE: storage =====\n" +
+            "panic(cpu 2 caller): nvme command timeout\n" +
+            "apfs_vfsop_mount disk error\n";
+
+    String log3 =
+            "===== ZIP FILE: baseband =====\n" +
+            "panic(cpu 1 caller): baseband watchdog timeout\n" +
+            "commcenter crash\n";
+
+    String log4 =
+            "===== ZIP FILE: thermal =====\n" +
+            "panic(cpu 0 caller): thermal shutdown\n" +
+            "thermalmonitord triggered\n";
+
+    String log5 =
+            "===== ZIP FILE: jetsam =====\n" +
+            "bug_type: 298\n" +
+            "jetsam memory pressure\n" +
+            "process terminated\n";
+
+    return log1 + log2 + log3 + log4 + log5;
+}
+
+private String normalizeDomain(String domain) {
+
+    if (domain == null) return "Unknown";
+
+    String d = domain.toLowerCase(Locale.US);
+
+    if (d.contains("baseband")) return "Baseband";
+    if (d.contains("nand") || d.contains("storage") || d.contains("nvme") || d.contains("apfs"))
+        return "Storage";
+    if (d.contains("power") || d.contains("pmic") || d.contains("brownout"))
+        return "Power";
+    if (d.contains("thermal"))
+        return "Thermal";
+    if (d.contains("gpu") || d.contains("agx"))
+        return "GPU";
+    if (d.contains("memory") || d.contains("jetsam"))
+        return "Memory";
+    if (d.contains("sensor") || d.contains("camera") || d.contains("touch"))
+        return "Sensors";
+
+    return domain;
+}
+
 private boolean isPanicGuideHidden() {
     try {
         SharedPreferences prefs =
@@ -447,7 +527,7 @@ private LinearLayout buildMuteRow() {
     row.setGravity(Gravity.CENTER_VERTICAL);
     row.setPadding(0, dp(8), 0, dp(10));
 
-    CheckBox muteCheck = new CheckBox(this);
+    muteCheck = new CheckBox(this);
     muteCheck.setChecked(AppTTS.isMuted(this));
     muteCheck.setPadding(0, 0, dp(6), 0);
 
@@ -459,17 +539,20 @@ private LinearLayout buildMuteRow() {
     label.setTextColor(Color.WHITE);
     label.setTextSize(14f);
 
-    View.OnClickListener toggle = v -> {
+View.OnClickListener toggle = v -> {
 
-        boolean newState = !AppTTS.isMuted(this);
+    boolean newState = !AppTTS.isMuted(this);
 
-        AppTTS.setMuted(this, newState);
+    AppTTS.setMuted(this, newState);
+
+    if (muteCheck.isChecked() != newState) {
         muteCheck.setChecked(newState);
+    }
 
-        if (newState) {
-            try { AppTTS.stop(); } catch (Throwable ignore) {}
-        }
-    };
+    if (newState) {
+        try { AppTTS.stop(); } catch (Throwable ignore) {}
+    }
+};
 
     label.setOnClickListener(toggle);
 
@@ -731,25 +814,41 @@ private void showPanicLogsGuidePopup() {
         langSpinner.setOnItemSelectedListener(
                 new AdapterView.OnItemSelectedListener() {
 
-                    @Override
-                    public void onItemSelected(
-                            AdapterView<?> parent,
-                            View view,
-                            int position,
-                            long id) {
+@Override
+public void onItemSelected(
+        AdapterView<?> parent,
+        View view,
+        int position,
+        long id) {
 
-                        panicGuideLang = (position == 0) ? "EN" : "GR";
+    panicGuideLang = (position == 0) ? "EN" : "GR";
 
-                        if ("GR".equals(panicGuideLang)) {
-                            msg.setText(getPanicGuideTextGR());
-                        } else {
-                            msg.setText(getPanicGuideTextEN());
-                        }
+    boolean gr = "GR".equals(panicGuideLang);
 
-                        if (!panicGuidePopupOpen) return;
+    // main text
+    msg.setText(gr ? getPanicGuideTextGR() : getPanicGuideTextEN());
 
-                        speakPanicGuideTTS();
-                    }
+    // checkbox texts (με null guards)
+    if (muteCheck != null) {
+        muteCheck.setText(
+                gr ? "Σίγαση φωνητικών οδηγιών"
+                   : "Mute voice instructions"
+        );
+        // κράτα συγχρονισμένο το state
+        muteCheck.setChecked(AppTTS.isMuted(this));
+    }
+
+    if (dontShowCheck != null) {
+        dontShowCheck.setText(
+                gr ? "Να μην εμφανιστεί ξανά"
+                   : "Do not show again"
+        );
+    }
+
+    if (!panicGuidePopupOpen) return;
+
+    speakPanicGuideTTS();
+}
 
                     @Override
                     public void onNothingSelected(AdapterView<?> parent) {}
@@ -1454,7 +1553,7 @@ private void runPanicClusteringLab() {
         resetSignatureCache();
 parseAndCacheSignature(block);
 
-        String key = sigDomain;
+        String key = normalizeDomain(sigDomain);
         domainCount.put(key, domainCount.getOrDefault(key, 0) + 1);
     }
 
@@ -1509,7 +1608,7 @@ private void runRecurringDomainLab() {
         resetSignatureCache();
 parseAndCacheSignature(block);
 
-        String key = sigDomain;
+        String key = normalizeDomain(sigDomain);
         domainCount.put(key, domainCount.getOrDefault(key, 0) + 1);
         total++;
     }
@@ -1727,9 +1826,10 @@ parseAndCacheSignature(block);
 }
 
 // ============================================================
-// LAB 9 — FINAL SERVICE RECOMMENDATION (Integrated Engine)
+// LAB 9 — FINAL SERVICE RECOMMENDATION (Complete Engine)
 // ============================================================
 private void runFinalServiceRecommendationLab() {
+
     if (!guardPanicLog()) return;
 
     boolean gr = AppLang.isGreek(this);
@@ -1741,35 +1841,47 @@ private void runFinalServiceRecommendationLab() {
             : "LAB 9 — Final Service Recommendation");
     logLine();
 
-    String[] blocks = panicLogText.split("===== FILE:");
+    // ------------------------------------------------------------
+    // SPLIT LOGS
+    // ------------------------------------------------------------
+    String[] blocks = panicLogText.split("===== ZIP FILE:");
 
     if (blocks.length <= 1) {
+
         logOk(gr
                 ? "Απαιτούνται πολλαπλά logs για πλήρη τεχνική αξιολόγηση."
                 : "Multiple logs are required for full technical evaluation.");
+
         return;
     }
 
-    java.util.Map<String, Integer> domainCount = new java.util.HashMap<>();
-    java.util.Map<String, Integer> crashCount = new java.util.HashMap<>();
+    java.util.Map<String,Integer> domainCount = new java.util.HashMap<>();
+    java.util.Map<String,Integer> crashCount  = new java.util.HashMap<>();
 
     int total = 0;
     int highConfidenceCount = 0;
     int criticalCrashCount = 0;
 
+    // ------------------------------------------------------------
+    // PARSE LOGS
+    // ------------------------------------------------------------
     for (String block : blocks) {
-        if (block.trim().isEmpty()) continue;
+
+        if (block == null || block.trim().isEmpty()) continue;
 
         resetSignatureCache();
-parseAndCacheSignature(block);
+        parseAndCacheSignature(block);
 
         total++;
 
-        crashCount.put(sigCrashType,
-                crashCount.getOrDefault(sigCrashType, 0) + 1);
+        String domain = normalizeDomain(sigDomain);
+        String crash  = sigCrashType;
 
-        domainCount.put(sigDomain,
-                domainCount.getOrDefault(sigDomain, 0) + 1);
+        crashCount.put(crash,
+                crashCount.getOrDefault(crash,0) + 1);
+
+        domainCount.put(domain,
+                domainCount.getOrDefault(domain,0) + 1);
 
         if (isHighConfidence(sigConfidence))
             highConfidenceCount++;
@@ -1779,7 +1891,11 @@ parseAndCacheSignature(block);
     }
 
     if (total == 0) {
-        logWarn(gr ? "Δεν βρέθηκαν έγκυρα logs." : "No valid logs found.");
+
+        logWarn(gr
+                ? "Δεν βρέθηκαν έγκυρα logs."
+                : "No valid logs found.");
+
         return;
     }
 
@@ -1789,19 +1905,20 @@ parseAndCacheSignature(block);
     String dominant = null;
     int max = 0;
 
-    for (String d : domainCount.keySet()) {
-        int c = domainCount.get(d);
-        if (c > max) {
-            max = c;
-            dominant = d;
+    for (java.util.Map.Entry<String,Integer> e : domainCount.entrySet()) {
+
+        if (e.getValue() > max) {
+
+            dominant = e.getKey();
+            max = e.getValue();
         }
     }
 
     double ratio = (double) max / (double) total;
-    int percent = (int) (ratio * 100);
+    int percent = (int)(ratio * 100);
 
     // ------------------------------------------------------------
-    // STABILITY SCORE (Deterministic)
+    // STABILITY SCORE
     // ------------------------------------------------------------
     int score = 100;
 
@@ -1809,19 +1926,22 @@ parseAndCacheSignature(block);
     score -= (criticalCrashCount * 10);
 
     if (ratio >= 0.5) {
-        if (isHighRiskDomain(dominant)) {
+
+        if (isHighRiskDomain(dominant))
             score -= 30;
-        } else {
+        else
             score -= 15;
-        }
-    } else if (max >= 2) {
+
+    }
+    else if (max >= 2) {
+
         score -= 10;
     }
 
     if (score < 0) score = 0;
-
+    
     // ------------------------------------------------------------
-    // OUTPUT SUMMARY
+    // SUMMARY
     // ------------------------------------------------------------
     logInfo(gr ? "Συνολικά logs:" : "Total logs:");
     logOk(String.valueOf(total));
@@ -1836,9 +1956,92 @@ parseAndCacheSignature(block);
     logOk(score + " / 100");
 
     logLine();
+    
+// ------------------------------------------------------------
+// HARDWARE vs SOFTWARE PROBABILITY
+// ------------------------------------------------------------
+boolean likelyHardware = false;
+boolean likelySoftware = false;
+
+if (dominant != null && ratio >= 0.6 && isHighRiskDomain(dominant))
+    likelyHardware = true;
+}
+else if (ratio < 0.4 && domainCount.size() >= 3) {
+    likelySoftware = true;
+}
+
+logInfo(gr ? "Τύπος προβλήματος:" : "Issue type:");
+
+if (likelyHardware) {
+
+    logError(gr
+            ? "Πιθανή βλάβη υλικού."
+            : "Probable hardware fault.");
+
+}
+else if (likelySoftware) {
+
+    logWarn(gr
+            ? "Πιθανό πρόβλημα λογισμικού."
+            : "Likely software instability.");
+
+}
+else {
+
+    logOk(gr
+            ? "Μη καθορισμένη αιτία."
+            : "Cause not clearly determined.");
+}
 
     // ------------------------------------------------------------
-    // FINAL VERDICT ENGINE
+    // HARDWARE SUSPECT MAPPER
+    // ------------------------------------------------------------
+    String suspect = "Unknown";
+
+if (dominant != null) {
+
+    String d = dominant.toLowerCase();
+    String text = panicLogText.toLowerCase();
+
+    if (d.contains("storage") || d.contains("nand") || d.contains("nvme"))
+        suspect = "Storage / NAND";
+
+    else if (d.contains("baseband"))
+        suspect = "Cellular / Modem";
+
+    else if (d.contains("power") || d.contains("pmic"))
+        suspect = "Power / PMIC";
+
+    else if (d.contains("thermal"))
+        suspect = "Thermal subsystem";
+
+    else if (d.contains("gpu"))
+        suspect = "GPU / Graphics";
+
+    else if (d.contains("i2c") || d.contains("sensor"))
+        suspect = "Camera / Sensors / Peripheral bus";
+
+    // EXTRA SERVICE PATTERNS
+    if (text.contains("applecam") || text.contains("cam_i2c"))
+        suspect = "Camera module";
+
+    else if (text.contains("sep panic") || text.contains("sepd"))
+        suspect = "FaceID / Secure Enclave";
+
+    else if (text.contains("mic") && text.contains("i2c"))
+        suspect = "Microphone / Audio flex";
+
+    else if (text.contains("thermalmonitord"))
+        suspect = "Thermal sensor subsystem";
+}
+
+    logInfo(gr ? "Πιθανό υποσύστημα:" : "Probable subsystem:");
+    logWarn(suspect);
+
+    logLine();
+
+    // ------------------------------------------------------------
+    // FINAL VERDICT
     // ------------------------------------------------------------
     if (score >= 85) {
 
@@ -1850,7 +2053,8 @@ parseAndCacheSignature(block);
                 ? "Δεν εντοπίστηκαν σοβαρά επαναλαμβανόμενα μοτίβα."
                 : "No significant recurring crash patterns detected.");
 
-    } else if (score >= 60) {
+    }
+    else if (score >= 60) {
 
         logWarn(gr
                 ? "Μέτρια ένδειξη αστάθειας."
@@ -1860,7 +2064,8 @@ parseAndCacheSignature(block);
                 ? "Συνιστάται παρακολούθηση εάν τα συμπτώματα συνεχιστούν."
                 : "Monitoring is advised if symptoms persist.");
 
-    } else if (score >= 40) {
+    }
+    else if (score >= 40) {
 
         logWarn(gr
                 ? "Αυξημένες ενδείξεις αστάθειας."
@@ -1868,13 +2073,14 @@ parseAndCacheSignature(block);
 
         logWarn(gr
                 ? "Εντοπίστηκε επαναλαμβανόμενο domain με σημαντική συχνότητα."
-                : "A recurring hardware domain was detected with notable frequency.");
+                : "Recurring hardware domain detected.");
 
         logOk(gr
-                ? "Συνιστάται τεχνικός έλεγχος εφόσον το φαινόμενο επαναλαμβάνεται."
-                : "Professional inspection is recommended if recurrence continues.");
+                ? "Συνιστάται τεχνικός έλεγχος."
+                : "Professional inspection recommended.");
 
-    } else {
+    }
+    else {
 
         logError(gr
                 ? "Χαμηλή σταθερότητα συστήματος."
@@ -1882,11 +2088,11 @@ parseAndCacheSignature(block);
 
         logWarn(gr
                 ? "Εντοπίστηκαν επαναλαμβανόμενα κρίσιμα μοτίβα crash."
-                : "Recurring critical crash patterns were detected.");
+                : "Recurring critical crash patterns detected.");
 
         logError(gr
                 ? "Συνιστάται άμεσος τεχνικός έλεγχος."
-                : "Technical inspection is strongly recommended.");
+                : "Immediate technical inspection recommended.");
     }
 
     logLine();
@@ -1898,15 +2104,32 @@ parseAndCacheSignature(block);
 
     logOk(gr
             ? "Η ανάλυση βασίζεται σε διαθέσιμα panic logs και δεν αντικαθιστά φυσικό τεχνικό έλεγχο."
-            : "This analysis is based on available panic logs and does not replace physical device inspection.");
+            : "This analysis is based on panic logs and does not replace physical inspection.");
 
     logOk(gr
             ? "Τα συμπεράσματα πρέπει να συσχετίζονται με τα πραγματικά συμπτώματα της συσκευής."
-            : "Conclusions should be correlated with real-world device symptoms.");
+            : "Conclusions must be correlated with actual device symptoms.");
 
     appendHtml("<br>");
     logOk(gr ? "Το Lab 9 ολοκληρώθηκε." : "Lab 9 finished.");
     logLine();
+}
+
+private void runDemoDiagnostics() {
+
+    boolean gr = AppLang.isGreek(this);
+
+    appendHtml("<br>");
+    logLine();
+    logInfo(gr
+            ? "DEMO MODE — Φόρτωση ενσωματωμένων panic logs"
+            : "DEMO MODE — Loading built-in panic logs");
+    logLine();
+
+    panicLogText = buildDemoPanicLogs();
+
+    runPanicLogAnalyzer();
+    runFinalServiceRecommendationLab();
 }
 
 // ============================================================
@@ -1968,27 +2191,36 @@ private String readPanicFromZip(InputStream is) throws Exception {
 
     try {
 
-        while ((entry = zis.getNextEntry()) != null && scanned < ZIP_SCAN_CAP) {
-            scanned++;
+StringBuilder all = new StringBuilder();
 
-            String name = (entry.getName() != null)
-                    ? entry.getName().toLowerCase(Locale.US)
-                    : "";
+while ((entry = zis.getNextEntry()) != null && scanned < ZIP_SCAN_CAP) {
 
-            boolean candidate =
-                    name.contains("panic") ||
-                    name.endsWith(".ips") ||
-                    name.endsWith(".log") ||
-                    name.endsWith(".txt");
+    scanned++;
 
-            if (!candidate) continue;
+    String name = entry.getName().toLowerCase(Locale.US);
 
-            String text = readTextStream(zis);
+    boolean candidate =
+            name.contains("panic") ||
+            name.endsWith(".ips") ||
+            name.endsWith(".log") ||
+            name.endsWith(".txt");
 
-            if (text != null && !text.trim().isEmpty()) {
-                return text;
-            }
-        }
+    if (!candidate) continue;
+
+    String text = readTextStream(zis);
+
+    if (text != null && !text.trim().isEmpty()) {
+
+        all.append("\n\n===== ZIP FILE: ")
+           .append(name)
+           .append(" =====\n\n")
+           .append(text);
+    }
+}
+
+if (all.length() > 0) {
+    return all.toString();
+}
 
     } finally {
         try { zis.close(); } catch (Throwable ignore) {}
@@ -2034,15 +2266,31 @@ private void parseAndCacheSignature(String text) {
         boolean isPower      = low.contains("power") && (low.contains("pmu") || low.contains("brownout") || low.contains("sudden"));
         boolean isGpu        = low.contains("gpu") || low.contains("agx") || low.contains("metal");
         boolean isSensor     = low.contains("sensor") || low.contains("mic") || low.contains("camera") || low.contains("touch");
+        boolean isIPS =
+        low.contains("bug_type") ||
+        low.contains("incident") ||
+        low.contains("termination") ||
+        low.contains("exception");
+        boolean isUserSpaceWatchdog =
+        low.contains("bug_type\": \"210") ||
+        low.contains("bug_type\":210") ||
+        low.contains("bug_type: 210");
+        boolean isNVME = low.contains("nvme") || low.contains("apfs_vfsop");
+        boolean isWatchdogBaseband =
+        low.contains("baseband watchdog") ||
+        (low.contains("baseband") && low.contains("watchdog"));
 
         if (isWatchdog) sigCrashType = "Watchdog / Hang";
+        else if (isUserSpaceWatchdog) sigCrashType = "Userspace Watchdog Timeout";
         else if (isJetsam) sigCrashType = "Jetsam / Memory Pressure";
         else if (isThermal) sigCrashType = "Thermal Shutdown / Throttle";
         else if (isKernelPanic) sigCrashType = "Kernel Panic";
+        else if (isWatchdogBaseband) sigCrashType = "Baseband Watchdog";
+        else if (isIPS) sigCrashType = "iOS Crash Report";
         else sigCrashType = "Unknown / Generic";
 
         if (isBaseband) sigDomain = "Baseband / Cellular";
-        else if (isNand) sigDomain = "Storage / NAND / FS";
+        else if (isNVME || isNand) sigDomain = "Storage / NAND / FS";
         else if (isGpu) sigDomain = "GPU / Graphics";
         else if (isI2C) sigDomain = "I2C / Peripheral Bus";
         else if (isPower || low.contains("brownout") || low.contains("pmu") || low.contains("pwr")) sigDomain = "Power / PMIC";
@@ -2050,21 +2298,32 @@ private void parseAndCacheSignature(String text) {
         else if (isJetsam) sigDomain = "Memory / OS Pressure";
         else if (isSensor) sigDomain = "Sensors / I/O";
         else if (isKernelPanic) sigDomain = "Kernel / OS Core";
+        else if (isWatchdogBaseband) sigDomain = "Baseband / Cellular";
         else sigDomain = "Unknown";
 
         int points = 0;
         StringBuilder ev = new StringBuilder();
 
-        if (isWatchdog)              { points += 30; evAppend(ev, "watchdog"); }
-        if (low.contains("panicstring")) { points += 30; evAppend(ev, "panicString"); }
-        if (low.contains("bug_type"))    { points += 20; evAppend(ev, "bug_type"); }
-        if (low.contains("panic cpu"))   { points += 20; evAppend(ev, "panic cpu"); }
-        if (low.contains("0x8badf00d"))  { points += 25; evAppend(ev, "0x8badf00d"); }
-        if (isBaseband)              { points += 20; evAppend(ev, "baseband"); }
-        if (isNand)                  { points += 20; evAppend(ev, "storage"); }
-        if (isGpu)                   { points += 20; evAppend(ev, "gpu/agx"); }
-        if (isThermal)               { points += 20; evAppend(ev, "thermal"); }
-        if (isJetsam)                { points += 20; evAppend(ev, "jetsam"); }
+if (isWatchdog)              { points += 30; evAppend(ev, "watchdog"); }
+if (low.contains("panicstring")) { points += 30; evAppend(ev, "panicString"); }
+if (low.contains("bug_type"))    { points += 20; evAppend(ev, "bug_type"); }
+if (low.contains("incident"))    { points += 20; evAppend(ev, "incident"); }
+if (low.contains("panic cpu"))   { points += 20; evAppend(ev, "panic cpu"); }
+if (low.contains("0x8badf00d"))  { points += 25; evAppend(ev, "0x8badf00d"); }
+
+if (isWatchdogBaseband) {
+    points += 30;
+    evAppend(ev, "baseband watchdog");
+}
+else if (isBaseband) {
+    points += 20;
+    evAppend(ev, "baseband");
+}
+
+if (isNand || isNVME)        { points += 25; evAppend(ev, "storage/nvme"); }
+if (isGpu)                   { points += 20; evAppend(ev, "gpu/agx"); }
+if (isThermal)               { points += 20; evAppend(ev, "thermal"); }
+if (isJetsam)                { points += 20; evAppend(ev, "jetsam"); }
 
         if (points >= 70) sigConfidence = "High";
         else if (points >= 40) sigConfidence = "Medium";

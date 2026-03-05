@@ -282,11 +282,6 @@ msg.setText(
         + "Panic logs contain the same diagnostic information "
         + "for any Apple device, whether it is an iPhone or an iPad."
 );
-
-    box.addView(title);
-    box.addView(msg);
-
-    return box;
 }
 
 @Override

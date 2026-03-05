@@ -117,9 +117,9 @@ super.onResume();
 protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_main);
+    buildAppleInfoLog();
 
 LinearLayout root = findViewById(R.id.contentRoot);
-root.addView(buildAppleInfoLog());
 
 UIHelpers.applyPressEffectRecursive(getWindow().getDecorView());
     
@@ -245,26 +245,11 @@ if (savedInstanceState == null) {
     }
 }
 
-private View buildAppleInfoLog() {
+private void buildAppleInfoLog() {
 
-    LinearLayout box = new LinearLayout(this);
-    box.setOrientation(LinearLayout.VERTICAL);
-    box.setPadding(dp(18), dp(18), dp(18), dp(18));
+    TextView msg = findViewById(R.id.txtAppleInfo);
+    if (msg == null) return;
 
-    GradientDrawable bg = new GradientDrawable();
-    bg.setColor(0xFF000000);
-    bg.setCornerRadius(dp(16));
-    bg.setStroke(dp(3), 0xFFFFD700);
-    box.setBackground(bg);
-
-    TextView title = new TextView(this);
-    title.setText("ℹ Πληροφορίες Διάγνωσης Apple");
-    title.setTextColor(0xFFFFD700); // χρυσό 
-    title.setTextSize(16f);
-    title.setTypeface(null, Typeface.BOLD);
-    title.setPadding(0, 0, 0, dp(10));
-
-    TextView msg = new TextView(this);
     msg.setTextColor(0xFF00FF66);
     msg.setTextSize(14f);
     msg.setLineSpacing(0f, 1.25f);

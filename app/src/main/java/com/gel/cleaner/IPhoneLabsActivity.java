@@ -67,11 +67,6 @@ TextView panicGuideMessage;
     
     private ScrollView mainScroll;
     
-    // FAST LOG BUFFER
-private final StringBuilder uiLogBuffer = new StringBuilder(4096);
-private final Handler uiLogHandler = new Handler(Looper.getMainLooper());
-private boolean uiLogScheduled = false;
-    
     private static final int MAX_PANIC_LOG_SIZE = 2_000_000; // ~2MB
 	
 	// ==========================
@@ -469,27 +464,6 @@ GELServiceLog.section(AppLang.isGreek(this)
         : "iPhone Labs — Panic Log & Stability Analysis");
 
 } // onCreate ends here
-
-private void flushUiLog() {
-
-    if (txtLog == null) return;
-
-    String out = uiLogBuffer.toString();
-    uiLogBuffer.setLength(0);
-    uiLogScheduled = false;
-
-    try {
-        txtLog.append(
-                Html.fromHtml(out, Html.FROM_HTML_MODE_LEGACY)
-        );
-    } catch (Throwable ignore) {
-        txtLog.append(stripHtml(out));
-    }
-
-    if (mainScroll != null) {
-        mainScroll.post(() -> mainScroll.fullScroll(View.FOCUS_DOWN));
-    }
-}
 
 private String detectDeviceType(String text) {
 
@@ -2714,18 +2688,13 @@ private void setButtonTextWhite(View container) {
 
 private static final int MAX_LOG_BUFFER = 250_000; // προστασία από UI lag
 
-private void appendHtml(String htmlLine) {
-
-    if (txtLog == null || htmlLine == null) return;
-
-    uiLogBuffer.append(htmlLine).append("<br>");
-
-    if (!uiLogScheduled) {
-
-        uiLogScheduled = true;
-
-        uiLogHandler.postDelayed(() -> flushUiLog(), 30);
-    }
+private void appendHtml(String html) {
+    ui.post(() -> {
+        CharSequence cur = txtLog.getText();
+        CharSequence add = Html.fromHtml(html + "<br>");
+        txtLog.setText(TextUtils.concat(cur, add));
+        scroll.post(() -> scroll.fullScroll(ScrollView.FOCUS_DOWN));
+    });
 }
 
 private void logInfo(String msg) {

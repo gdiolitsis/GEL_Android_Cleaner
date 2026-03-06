@@ -2625,10 +2625,10 @@ private void appendHtml(String htmlLine) {
     }
 
     // AUTO SCROLL
-    if (mainScroll != null) {
-        if (txtLog != null) {
-    txtLog.post(() -> txtLog.scrollTo(0, txtLog.getBottom()));
+    if (mainScroll != null && txtLog != null) {
+        txtLog.post(() -> txtLog.scrollTo(0, txtLog.getBottom()));
     }
+
 }
 
 private void logInfo(String msg) {

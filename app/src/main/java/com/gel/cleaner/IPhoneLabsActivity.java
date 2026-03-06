@@ -609,45 +609,40 @@ private Button mkRedBtn(String t) {
 
 private String buildDemoPanicLogs() {
 
-    String header =
-            "Device: iPhone\n" +
-            "Model Identifier: iPhone14,3\n" +
-            "Board ID: D63AP\n" +
-            "Darwin Kernel Version 23.1.0\n";
-
     String log1 =
-            "===== ZIP FILE: camera =====\n" +
-            header +
-            "panic(cpu 0 caller): i2c bus error\n" +
-            "applecam sensor timeout\n" +
-            "cam_i2c transfer failed\n";
+            "===== ZIP FILE: PanicLog1 =====\n" +
+            "panic(cpu 2 caller 0xfffffff01a2c3d44): Kernel panic: watchdog timeout\n" +
+            "Debugger message: panic\n" +
+            "OS version: iPhone OS 17.1.2 (21B101)\n" +
+            "Kernel version: Darwin Kernel Version 23.1.0\n" +
+            "\n" +
+            "Backtrace:\n" +
+            "0xfffffff01a2c3d44\n" +
+            "0xfffffff01a1f8e30\n" +
+            "0xfffffff01a1f8c00\n" +
+            "\n" +
+            "Panicked task: watchdogd\n" +
+            "Boot args: -v\n" +
+            "\n" +
+            "System uptime in nanoseconds: 18446744073709551615\n" +
+            "Last reboot reason: watchdog\n" +
+            "\n" +
+            "Hardware model: iPhone14,3\n" +
+            "Baseband version: 3.20.01\n";
 
     String log2 =
-            "===== ZIP FILE: storage =====\n" +
-            header +
-            "panic(cpu 2 caller): nvme command timeout\n" +
-            "apfs_vfsop_mount disk error\n";
+            "===== ZIP FILE: PanicLog2 =====\n" +
+            "{\"bug_type\":\"210\",\"timestamp\":\"2026-01-13 11:42:03.00 +0200\",\"os_version\":\"iPhone OS 17.1.2 (21B101)\",\"incident_id\":\"C7F1A1B2-3344-4D11-9E02-AAA123BBB999\"}\n" +
+            "\n" +
+            "{\"crashReporterKey\":\"9f3a7c2b1d\",\"deviceModel\":\"iPhone14,3\",\"process\":\"kernel\",\"process_id\":0}\n" +
+            "\n" +
+            "{\"panicString\":\"panic(cpu 0 caller 0xfffffff01b22aa90): thermal shutdown\"}\n" +
+            "\n" +
+            "{\"confidence\":\"0.67\",\"domain\":\"Thermal\",\"reason\":\"Overtemperature condition detected\"}\n" +
+            "\n" +
+            "{\"uptime\":\"2h34m21s\",\"shutdownCause\":\"thermal\"}\n";
 
-    String log3 =
-            "===== ZIP FILE: baseband =====\n" +
-            header +
-            "panic(cpu 1 caller): baseband watchdog timeout\n" +
-            "commcenter crash\n";
-
-    String log4 =
-            "===== ZIP FILE: thermal =====\n" +
-            header +
-            "panic(cpu 0 caller): thermal shutdown\n" +
-            "thermalmonitord triggered\n";
-
-    String log5 =
-            "===== ZIP FILE: jetsam =====\n" +
-            header +
-            "bug_type: 298\n" +
-            "jetsam memory pressure\n" +
-            "process terminated\n";
-
-    return log1 + log2 + log3 + log4 + log5;
+    return log1 + "\n" + log2;
 }
 
 private String normalizeDomain(String domain) {
@@ -2144,6 +2139,33 @@ private void runFinalServiceRecommendationLab() {
     logOk(score + " / 100");
 
     logLine();
+    
+    // ------------------------------------------------------------
+// SYNTHESIS (REAL DIAGNOSTIC RESULT)
+// ------------------------------------------------------------
+
+if (dominant != null && ratio >= 0.5 && score < 60) {
+
+    String domainText = safe(dominant);
+
+    logInfo(gr ? "Τεχνικό συμπέρασμα:" : "Technical conclusion:");
+
+    logWarn(gr
+            ? "Εντοπίστηκε επαναλαμβανόμενο μοτίβο crash."
+            : "Recurring crash pattern detected.");
+
+    logWarn(gr
+            ? "Κυρίαρχο υποσύστημα: " + domainText
+            : "Dominant subsystem: " + domainText);
+
+    logWarn(gr
+            ? "Η σταθερότητα του συστήματος έχει μειωθεί (" + score + "/100)."
+            : "System stability is reduced (" + score + "/100).");
+
+    logOk(gr
+            ? "Εάν τα crashes συνεχιστούν, συνιστάται τεχνικός έλεγχος."
+            : "If crashes persist, professional inspection is recommended.");
+}
     
 // ------------------------------------------------------------
 // HARDWARE vs SOFTWARE PROBABILITY

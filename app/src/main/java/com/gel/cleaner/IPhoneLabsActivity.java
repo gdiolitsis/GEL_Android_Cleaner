@@ -609,29 +609,40 @@ private Button mkRedBtn(String t) {
 
 private String buildDemoPanicLogs() {
 
+    String header =
+            "Device: iPhone\n" +
+            "Model Identifier: iPhone14,3\n" +
+            "Board ID: D63AP\n" +
+            "Darwin Kernel Version 23.1.0\n";
+
     String log1 =
             "===== ZIP FILE: camera =====\n" +
+            header +
             "panic(cpu 0 caller): i2c bus error\n" +
             "applecam sensor timeout\n" +
             "cam_i2c transfer failed\n";
 
     String log2 =
             "===== ZIP FILE: storage =====\n" +
+            header +
             "panic(cpu 2 caller): nvme command timeout\n" +
             "apfs_vfsop_mount disk error\n";
 
     String log3 =
             "===== ZIP FILE: baseband =====\n" +
+            header +
             "panic(cpu 1 caller): baseband watchdog timeout\n" +
             "commcenter crash\n";
 
     String log4 =
             "===== ZIP FILE: thermal =====\n" +
+            header +
             "panic(cpu 0 caller): thermal shutdown\n" +
             "thermalmonitord triggered\n";
 
     String log5 =
             "===== ZIP FILE: jetsam =====\n" +
+            header +
             "bug_type: 298\n" +
             "jetsam memory pressure\n" +
             "process terminated\n";

@@ -65,6 +65,11 @@ TextView panicGuideMessage;
     
     private ScrollView mainScroll;
     
+    // FAST LOG BUFFER
+private final StringBuilder uiLogBuffer = new StringBuilder(4096);
+private final Handler uiLogHandler = new Handler(Looper.getMainLooper());
+private boolean uiLogScheduled = false;
+    
     private static final int MAX_PANIC_LOG_SIZE = 2_000_000; // ~2MB
 	
 	// ==========================
@@ -372,13 +377,22 @@ root.addView(makeLabButton(
     // ============================================================  
     // LOG AREA  
     // ============================================================  
-    txtLog = new TextView(this);  
-    txtLog.setTextSize(13f);  
-    txtLog.setTextColor(0xFFEEEEEE);  
-    txtLog.setPadding(0, dp(16), 0, dp(8));  
-    txtLog.setMovementMethod(new ScrollingMovementMethod());  
-    txtLog.setText(Html.fromHtml("<b>" + getString(R.string.manual_log_title) + "</b><br>"));  
-    root.addView(txtLog);
+txtLog = new TextView(this);
+txtLog.setTextSize(13f);
+txtLog.setTextColor(0xFFEEEEEE);
+txtLog.setPadding(0, dp(16), 0, dp(8));
+txtLog.setMovementMethod(new ScrollingMovementMethod());
+txtLog.setText(Html.fromHtml("<b>" + getString(R.string.manual_log_title) + "</b><br>"));
+
+// disable press behaviour
+txtLog.setClickable(false);
+txtLog.setFocusable(false);
+txtLog.setLongClickable(false);
+txtLog.setSoundEffectsEnabled(false);
+txtLog.setHapticFeedbackEnabled(false);
+txtLog.setBackground(null);
+
+root.addView(txtLog);
     
     appendHtml("<br>");
 logLine();
@@ -454,6 +468,27 @@ GELServiceLog.section(AppLang.isGreek(this)
 
 } // onCreate ends here
 
+private void flushUiLog() {
+
+    if (txtLog == null) return;
+
+    String out = uiLogBuffer.toString();
+    uiLogBuffer.setLength(0);
+    uiLogScheduled = false;
+
+    try {
+        txtLog.append(
+                Html.fromHtml(out, Html.FROM_HTML_MODE_LEGACY)
+        );
+    } catch (Throwable ignore) {
+        txtLog.append(stripHtml(out));
+    }
+
+    if (mainScroll != null) {
+        mainScroll.post(() -> mainScroll.fullScroll(View.FOCUS_DOWN));
+    }
+}
+
 private String detectDeviceType(String text) {
 
     if (text == null) return "Unknown";
@@ -526,28 +561,28 @@ logInfo(AppLang.isGreek(this)
 try {
 
     runPanicLogAnalyzer();
-    SystemClock.sleep(400);
+    SystemClock.sleep(100);
 
     runPanicSignatureParser();
-    SystemClock.sleep(400);
+    SystemClock.sleep(100);
 
     runStabilityLab();
-    SystemClock.sleep(400);
+    SystemClock.sleep(100);
 
     runImpactLab();
-    SystemClock.sleep(400);
+    SystemClock.sleep(100);
 
     runPanicFrequencyLab();
-    SystemClock.sleep(400);
+    SystemClock.sleep(100);
 
     runPanicClusteringLab();
-    SystemClock.sleep(400);
+    SystemClock.sleep(100);
 
     runRecurringDomainLab();
-    SystemClock.sleep(400);
+    SystemClock.sleep(100);
 
     runStabilityIndexLab();
-    SystemClock.sleep(400);
+    SystemClock.sleep(100);
 
     runFinalServiceRecommendationLab();
 
@@ -2313,35 +2348,35 @@ logInfo(gr
                     ? "Φορτώθηκαν ενσωματωμένα demo panic logs."
                     : "Built-in demo panic logs loaded.");
 
-            SystemClock.sleep(400);
+            SystemClock.sleep(100);
 
             // ====================================================
             // RUN ALL LABS
             // ====================================================
 
             runPanicLogAnalyzer();
-            SystemClock.sleep(400);
+            SystemClock.sleep(100);
 
             runPanicSignatureParser();
-            SystemClock.sleep(400);
+            SystemClock.sleep(100);
 
             runStabilityLab();
-            SystemClock.sleep(400);
+            SystemClock.sleep(100);
 
             runImpactLab();
-            SystemClock.sleep(400);
+            SystemClock.sleep(100);
 
             runPanicFrequencyLab();
-            SystemClock.sleep(400);
+            SystemClock.sleep(100);
 
             runPanicClusteringLab();
-            SystemClock.sleep(400);
+            SystemClock.sleep(100);
 
             runRecurringDomainLab();
-            SystemClock.sleep(400);
+            SystemClock.sleep(100);
 
             runStabilityIndexLab();
-            SystemClock.sleep(400);
+            SystemClock.sleep(100);
 
             runFinalServiceRecommendationLab();
 
@@ -2681,35 +2716,14 @@ private void appendHtml(String htmlLine) {
 
     if (txtLog == null || htmlLine == null) return;
 
-    runOnUiThread(() -> {
+    uiLogBuffer.append(htmlLine).append("<br>");
 
-        logHtmlBuffer.append(htmlLine).append("<br>");
+    if (!uiLogScheduled) {
 
-        if (logHtmlBuffer.length() > MAX_LOG_BUFFER) {
-            logHtmlBuffer.delete(
-                    0,
-                    logHtmlBuffer.length() - MAX_LOG_BUFFER
-            );
-            txtLog.setText("");
-        }
+        uiLogScheduled = true;
 
-        try {
-            txtLog.append(
-                    Html.fromHtml(
-                            htmlLine + "<br>",
-                            Html.FROM_HTML_MODE_LEGACY
-                    )
-            );
-        } catch (Throwable ignore) {
-            txtLog.append(stripHtml(htmlLine) + "\n");
-        }
-
-        if (mainScroll != null && txtLog != null) {
-            txtLog.post(() -> txtLog.scrollTo(0, txtLog.getBottom()));
-            mainScroll.post(() -> mainScroll.fullScroll(View.FOCUS_DOWN));
-        }
-
-    });
+        uiLogHandler.postDelayed(() -> flushUiLog(), 30);
+    }
 }
 
 private void logInfo(String msg) {

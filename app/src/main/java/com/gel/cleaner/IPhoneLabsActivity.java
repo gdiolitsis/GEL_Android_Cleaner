@@ -290,6 +290,16 @@ root.addView(makeLabButton(
         v -> runAllAppleDiagnostics()
 ));
 
+// 2) Panic Log Analyzer
+root.addView(makeLabButton(
+        gr ? "LAB 1 - Ανάλυση Panic Logs"
+           : "LAB 1 - Panic Log Analyzer",
+        gr ? "Αρχικός έλεγχος crash signatures"
+           : "Initial crash signature screening",
+        true,
+        v -> runPanicLogAnalyzer()
+));
+
 // 3) Signature Parser (guard)
 root.addView(makeLabButton(
         gr ? "LAB 2 - Ανάλυση Υπογραφής Panic"
@@ -374,41 +384,16 @@ root.addView(makeLabButton(
         // LOG AREA (BOTTOM) — LIKE MANUAL TESTS
         // ============================================================
 
-        TextView logTitle = new TextView(this);
-        logTitle.setLayoutParams(new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-        ));
-        logTitle.setText("iPhone Labs Log");
-        logTitle.setTextColor(COLOR_WHITE);
-        logTitle.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
-        logTitle.setPadding(0, dp(18), 0, dp(8));
-        logTitle.setIncludeFontPadding(false);
-        root.addView(logTitle);
-
-        ScrollView logScroll = new ScrollView(this);
-
-logScroll.setLayoutParams(new LinearLayout.LayoutParams(
-        ViewGroup.LayoutParams.MATCH_PARENT,
-        dp(260)   // ύψος log area
-));
-
-txtLog = new TextView(this);
-txtLog.setTextIsSelectable(true);
-txtLog.setLayoutParams(new ScrollView.LayoutParams(
-        ViewGroup.LayoutParams.MATCH_PARENT,
-        ViewGroup.LayoutParams.WRAP_CONTENT
-));
-
-txtLog.setTextColor(COLOR_WHITE);
-txtLog.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
-txtLog.setLineSpacing(0f, 1.12f);
-txtLog.setPadding(dp(12), dp(12), dp(12), dp(12));
-txtLog.setIncludeFontPadding(false);
-
-logScroll.addView(txtLog);
-
-root.addView(logScroll);
+    // ============================================================  
+    // LOG AREA  
+    // ============================================================  
+    txtLog = new TextView(this);  
+    txtLog.setTextSize(13f);  
+    txtLog.setTextColor(0xFFEEEEEE);  
+    txtLog.setPadding(0, dp(16), 0, dp(8));  
+    txtLog.setMovementMethod(new ScrollingMovementMethod());  
+    txtLog.setText(Html.fromHtml("<b>" + getString(R.string.manual_log_title) + "</b><br>"));  
+    root.addView(txtLog);
 
  // ============================================================
 // EXPORT SERVICE REPORT BUTTON (iPhone Labs)

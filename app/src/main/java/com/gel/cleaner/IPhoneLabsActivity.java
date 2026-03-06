@@ -477,8 +477,11 @@ private String extractModelIdentifier(String text) {
     if (m.find()) {
         return m.group(1);
     }
-    
-    private String extractKernelVersion(String text) {
+
+    return "Unknown";
+}
+
+private String extractKernelVersion(String text) {
 
     if (text == null) return "Unknown";
 

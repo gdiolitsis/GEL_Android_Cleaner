@@ -22,6 +22,7 @@ import android.os.Bundle;
 import android.os.SystemClock;
 import android.speech.tts.TextToSpeech;
 import android.text.Html;
+import android.text.TextUtils;
 import android.text.method.ScrollingMovementMethod;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -66,6 +67,9 @@ TextView panicGuideMessage;
     private CheckBox dontShowCheck;
     
     private ScrollView mainScroll;
+    private ScrollView scroll;
+    
+    private Handler ui = new Handler(Looper.getMainLooper());
     
     private static final int MAX_PANIC_LOG_SIZE = 2_000_000; // ~2MB
 	
@@ -430,6 +434,7 @@ root.addView(btnExport);
 
 mainScroll.addView(root);
 setContentView(mainScroll);
+scroll = mainScroll;
 
 UIHelpers.applyPressEffectRecursive(root);
 

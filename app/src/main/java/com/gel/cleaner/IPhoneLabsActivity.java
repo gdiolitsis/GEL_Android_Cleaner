@@ -2250,8 +2250,6 @@ private void runDemoDiagnostics() {
         boolean gr = AppLang.isGreek(this);
 
         logLine();
-        boolean gr = AppLang.isGreek(this);
-
 logInfo(gr
         ? "DEMO MODE — ΔΙΑΓΝΩΣΗ APPLE"
         : "DEMO MODE — APPLE DIAGNOSTICS");

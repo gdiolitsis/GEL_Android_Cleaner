@@ -2704,16 +2704,10 @@ private void appendHtml(String htmlLine) {
 
         if (mainScroll != null && txtLog != null) {
             txtLog.post(() -> txtLog.scrollTo(0, txtLog.getBottom()));
+            mainScroll.post(() -> mainScroll.fullScroll(View.FOCUS_DOWN));
         }
 
     });
-}
-
-    // AUTO SCROLL
-    if (mainScroll != null && txtLog != null) {
-        mainScroll.post(() -> mainScroll.fullScroll(View.FOCUS_DOWN));
-    }
-
 }
 
 private void logInfo(String msg) {

@@ -215,28 +215,14 @@ root.addView(sub);
 // ============================================================
 
 // 0) DEMO BUTTON
-Button demoBtn = mkRedBtn(
+root.addView(makeLabButton(
         gr ? "DEMO MODE — Εκτέλεση δοκιμαστικής διάγνωσης"
-           : "DEMO MODE — Run diagnostic simulation"
-);
-
-demoBtn.setOnClickListener(v -> runDemoDiagnostics());
-
-root.addView(demoBtn);
-
-// description
-TextView demoDesc = new TextView(this);
-demoDesc.setText(
-        gr
-        ? "Εκτελεί πλήρη διάγνωση χρησιμοποιώντας ενσωματωμένα panic logs"
-        : "Runs full diagnostics using built-in panic logs"
-);
-
-demoDesc.setTextColor(0xFFAAAAAA);
-demoDesc.setTextSize(13f);
-demoDesc.setPadding(0, dp(4), 0, dp(12));
-
-root.addView(demoDesc);
+           : "DEMO MODE — Run diagnostic simulation",
+        gr ? "Εκτελεί πλήρη διάγνωση χρησιμοποιώντας ενσωματωμένα panic logs"
+           : "Runs full diagnostics using built-in panic logs",
+        false,
+        v -> runDemoDiagnostics()
+));
 
 // 1) Import (replace mode)
 View importBtn = makeLabButton(
@@ -426,7 +412,11 @@ setContentView(mainScroll);
 UIHelpers.applyPressEffectRecursive(root);
 
 // popup AFTER layout ready
-root.post(this::showPanicGuidePopup);
+root.post(() -> {
+    if (!isPanicGuideHidden()) {
+        showPanicGuidePopup();
+    }
+});
 
 // ==========================
 // TTS INIT
@@ -523,13 +513,13 @@ try {
 }
 
 private void disablePanicGuideForever() {
-    try {
-        SharedPreferences prefs =
-                getSharedPreferences("gel_prefs", MODE_PRIVATE);
+    SharedPreferences prefs =
+            getSharedPreferences("gel_prefs", MODE_PRIVATE);
 
-        prefs.edit()
-                .putBoolean("panic_guide_hidden", true)
-                .apply();
+    prefs.edit()
+         .putBoolean("panic_guide_hidden", true)
+         .apply();
+}
 
     } catch (Throwable ignore) {}
 }
@@ -2524,16 +2514,31 @@ if (isJetsam)                { points += 20; evAppend(ev, "jetsam"); }
     container.setFocusable(true);
 
     TextView t = new TextView(this);
-    t.setText(title);
-    t.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18);
-    if (title.contains("AUTO") || title.contains("Εκτέλεση όλων")) {
-    t.setTextColor(0xFFFFD700); // gold primary action
-} else {
+t.setText(title);
+t.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18);
+
+// PRIMARY BUTTON COLORS
+if (title.contains("AUTO") || title.contains("Εκτέλεση όλων")) {
+
+    // RUN ALL
+    t.setTextColor(0xFFFFD700); // gold
+
+}
+else if (title.contains("DEMO")) {
+
+    // DEMO MODE
+    t.setTextColor(0xFFFF4444); // red
+
+}
+else {
+
+    // NORMAL LABS
     t.setTextColor(COLOR_NEON);
 }
-    t.setIncludeFontPadding(false);
-    t.setClickable(false);
-    t.setFocusable(false);
+
+t.setIncludeFontPadding(false);
+t.setClickable(false);
+t.setFocusable(false);
 
     TextView s = new TextView(this);
     s.setText(subtitle);

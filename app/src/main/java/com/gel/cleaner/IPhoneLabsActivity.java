@@ -155,10 +155,6 @@ mainScroll.setLayoutParams(new ScrollView.LayoutParams(
 mainScroll.setOverScrollMode(View.OVER_SCROLL_IF_CONTENT_SCROLLS);
 mainScroll.setFillViewport(true);
 
-if (!isPanicGuideHidden()) {
-    showPanicGuidePopup();
-}
-
         // CONTENT ROOT
         LinearLayout root = new LinearLayout(this);
         root.setLayoutParams(new LinearLayout.LayoutParams(
@@ -513,15 +509,13 @@ try {
 }
 
 private void disablePanicGuideForever() {
+
     SharedPreferences prefs =
             getSharedPreferences("gel_prefs", MODE_PRIVATE);
 
     prefs.edit()
-         .putBoolean("panic_guide_hidden", true)
-         .apply();
-}
-
-    } catch (Throwable ignore) {}
+            .putBoolean("panic_guide_hidden", true)
+            .apply();
 }
 
 private Button mkRedBtn(String t) {
@@ -1066,8 +1060,7 @@ okBtn.setOnClickListener(v -> {
 
     d.dismiss();
 });
-
-} 
+}
 
 // ============================================================
 // PANIC LOG IMPORT (SAF) — FINAL CLEAN

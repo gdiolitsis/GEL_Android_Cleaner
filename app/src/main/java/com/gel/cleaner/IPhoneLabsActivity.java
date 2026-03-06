@@ -281,36 +281,13 @@ setButtonTextWhite(appendBtn);
 root.addView(appendBtn);
 
 // 1c) RUN ALL DIAGNOSTICS
-Button runAllBtn = new Button(this);
-runAllBtn.setText(gr
-        ? "ΕΚΤΕΛΕΣΗ ΟΛΩΝ ΤΩΝ ΕΡΓΑΣΤΗΡΙΩΝ"
-        : "RUN ALL LABS");
-
-runAllBtn.setOnClickListener(v -> runAllAppleDiagnostics());
-
-root.addView(runAllBtn);
-
-// description
-TextView runAllDesc = new TextView(this);
-runAllDesc.setText(
-        gr ? "Αναλύει τα panic logs και εκτελεί όλα τα διαθέσιμα εργαστήρια"
-           : "Analyzes panic logs and runs all available labs"
-);
-
-runAllDesc.setTextColor(0xFFAAAAAA);
-runAllDesc.setTextSize(13f);
-runAllDesc.setPadding(0, dp(4), 0, dp(12));
-
-root.addView(runAllDesc);
-
-// 2) Analyzer (guard)
 root.addView(makeLabButton(
-        gr ? "LAB 1 - Ανάλυση Panic Logs"
-           : "LAB 1 - Panic Log Analyzer",
-        gr ? "Μοτίβο • Domain • Αιτία • Σοβαρότητα • Σύσταση"
-           : "Pattern match • Domain • Cause • Severity • Recommendation",
+        gr ? "AUTO — Εκτέλεση όλων των εργαστηρίων"
+           : "AUTO — Run All Labs",
+        gr ? "Πλήρης διάγνωση όλων των panic logs"
+           : "Full diagnostics across all panic logs",
         true,
-        v -> runPanicLogAnalyzer()
+        v -> runAllAppleDiagnostics()
 ));
 
 // 3) Signature Parser (guard)
@@ -1030,7 +1007,7 @@ okBtn.setBackground(okBg);
 LinearLayout.LayoutParams okLp =
 new LinearLayout.LayoutParams(
 LinearLayout.LayoutParams.MATCH_PARENT,
-dp(28)
+dp(56)
 );
 okLp.setMargins(dp(6), dp(6), dp(6), 0);
 okBtn.setLayoutParams(okLp);
@@ -1617,7 +1594,7 @@ private void runPanicFrequencyLab() {
             : "LAB 5 — Panic Frequency Analyzer");
     logLine();
 
-    String[] blocks = panicLogText.split("===== .* =====");
+    String[] blocks = panicLogText.split("===== (FILE|ZIP FILE):");
 
     if (blocks.length <= 1) {
         logWarn(gr
@@ -1664,7 +1641,7 @@ private void runPanicClusteringLab() {
             : "LAB 6 — Panic Domain Clustering");
     logLine();
 
-    String[] blocks = panicLogText.split("===== .* =====");
+    String[] blocks = panicLogText.split("===== (FILE|ZIP FILE):");
 
     if (blocks.length <= 1) {
         logWarn(gr
@@ -1717,7 +1694,7 @@ private void runRecurringDomainLab() {
             : "LAB 7 — Recurring Domain Detection");
     logLine();
 
-    String[] blocks = panicLogText.split("===== .* =====");
+    String[] blocks = panicLogText.split("===== (FILE|ZIP FILE):");
 
     if (blocks.length <= 1) {
         logOk(gr
@@ -1823,7 +1800,7 @@ private void runStabilityIndexLab() {
             : "LAB 8 — Stability Index");
     logLine();
 
-    String[] blocks = panicLogText.split("===== .* =====");
+    String[] blocks = panicLogText.split("===== (FILE|ZIP FILE):");
 
     if (blocks.length <= 1) {
         logOk(gr
@@ -2267,7 +2244,7 @@ logInfo(gr
                     ? "Ενσωματωμένα demo panic logs"
                     : "Built-in demo panic logs";
 
-            panicLogCount = 5;
+            panicLogCount = panicLogText.split("===== ZIP FILE:").length - 1;
 
             logOk(gr
                     ? "Φορτώθηκαν ενσωματωμένα demo panic logs."
@@ -2552,7 +2529,11 @@ if (isJetsam)                { points += 20; evAppend(ev, "jetsam"); }
     TextView t = new TextView(this);
     t.setText(title);
     t.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18);
+    if (title.contains("AUTO") || title.contains("Εκτέλεση όλων")) {
+    t.setTextColor(0xFFFFD700); // gold primary action
+} else {
     t.setTextColor(COLOR_NEON);
+}
     t.setIncludeFontPadding(false);
     t.setClickable(false);
     t.setFocusable(false);
@@ -2645,7 +2626,8 @@ private void appendHtml(String htmlLine) {
 
     // AUTO SCROLL
     if (mainScroll != null) {
-        mainScroll.post(() -> mainScroll.fullScroll(View.FOCUS_DOWN));
+        if (txtLog != null) {
+    txtLog.post(() -> txtLog.scrollTo(0, txtLog.getBottom()));
     }
 }
 

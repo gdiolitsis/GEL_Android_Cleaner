@@ -505,9 +505,6 @@ private String extractBoardId(String text) {
     return "Unknown";
 }
 
-    return "Unknown";
-}
-
 private void runAllAppleDiagnostics() {
 
     if (!panicLogLoaded) {

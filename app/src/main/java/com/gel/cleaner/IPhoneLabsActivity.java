@@ -377,6 +377,19 @@ root.addView(makeLabButton(
     txtLog.setMovementMethod(new ScrollingMovementMethod());  
     txtLog.setText(Html.fromHtml("<b>" + getString(R.string.manual_log_title) + "</b><br>"));  
     root.addView(txtLog);
+    
+    appendHtml("<br>");
+logLine();
+
+logInfo(gr
+        ? "GEL iPhone Labs — έτοιμο."
+        : "GEL iPhone Labs — ready.");
+
+logLine();
+
+logOk(gr
+        ? "Εισήγαγε panic log για να ξεκινήσει η ανάλυση."
+        : "Import a panic log to begin analysis.");
 
  // ============================================================
 // EXPORT SERVICE REPORT BUTTON (iPhone Labs)
@@ -437,18 +450,60 @@ GELServiceLog.section(AppLang.isGreek(this)
         ? "iPhone Labs — Ανάλυση Panic Log & Σταθερότητας"
         : "iPhone Labs — Panic Log & Stability Analysis");
 
-// Boot / intro entries (ONCE)
-logLine();
-logInfo(gr 
-        ? "GEL iPhone Labs — έτοιμο."
-        : "GEL iPhone Labs — ready.");
-logLine();
-
-logOk(gr
-        ? "Εισήγαγε panic log για να ξεκινήσει η ανάλυση."
-        : "Import a panic log to begin analysis.");
-
 } // onCreate ends here
+
+private String detectDeviceType(String text) {
+
+    if (text == null) return "Unknown";
+
+    String t = text.toLowerCase(Locale.US);
+
+    if (t.contains("iphone")) return "iPhone";
+    if (t.contains("ipad")) return "iPad";
+
+    if (t.contains("baseband") || t.contains("commcenter"))
+        return "iPhone";
+
+    return "Apple Device";
+}
+
+private String extractModelIdentifier(String text) {
+
+    if (text == null) return "Unknown";
+
+    Pattern p = Pattern.compile("(iphone\\d+,\\d+|ipad\\d+,\\d+)", Pattern.CASE_INSENSITIVE);
+    Matcher m = p.matcher(text);
+
+    if (m.find()) {
+        return m.group(1);
+    }
+    
+    private String extractKernelVersion(String text) {
+
+    if (text == null) return "Unknown";
+
+    Pattern p = Pattern.compile("Darwin Kernel Version ([0-9.]+)", Pattern.CASE_INSENSITIVE);
+    Matcher m = p.matcher(text);
+
+    if (m.find()) return m.group(1);
+
+    return "Unknown";
+}
+
+private String extractBoardId(String text) {
+
+    if (text == null) return "Unknown";
+
+    Pattern p = Pattern.compile("(?:board[-_ ]?id|model)[:= ]+([A-Z0-9]+AP)", Pattern.CASE_INSENSITIVE);
+    Matcher m = p.matcher(text);
+
+    if (m.find()) return m.group(1);
+
+    return "Unknown";
+}
+
+    return "Unknown";
+}
 
 private void runAllAppleDiagnostics() {
 
@@ -1222,6 +1277,25 @@ logLine();
 logOk(gr
         ? "Η εισαγωγή ολοκληρώθηκε."
         : "Import completed.");
+        
+String device = detectDeviceType(panicLogText);
+String model  = extractModelIdentifier(panicLogText);
+String kernel = extractKernelVersion(panicLogText);
+String board  = extractBoardId(panicLogText);
+
+logInfo(gr ? "Συσκευή: " + device : "Device: " + device);
+
+logInfo(gr
+        ? "Model Identifier: " + model
+        : "Model Identifier: " + model);
+
+logInfo(gr
+        ? "Kernel: " + kernel
+        : "Kernel: " + kernel);
+
+logInfo(gr
+        ? "Board ID: " + board
+        : "Board ID: " + board);
 
 // 👇 νέο μήνυμα με το όνομα των logs
 logInfo(gr
@@ -2220,6 +2294,13 @@ logInfo(gr
 
             panicLogText   = buildDemoPanicLogs();
             panicLogLoaded = true;
+            
+            String device = detectDeviceType(panicLogText);
+
+logInfo(gr
+        ? "Συσκευή: " + device
+        : "Device: " + device);
+        
             panicLogName   = gr
                     ? "Ενσωματωμένα demo panic logs"
                     : "Built-in demo panic logs";
@@ -2598,30 +2679,39 @@ private void appendHtml(String htmlLine) {
 
     if (txtLog == null || htmlLine == null) return;
 
-    logHtmlBuffer.append(htmlLine).append("<br>");
+    runOnUiThread(() -> {
 
-    if (logHtmlBuffer.length() > MAX_LOG_BUFFER) {
-        logHtmlBuffer.delete(
-                0,
-                logHtmlBuffer.length() - MAX_LOG_BUFFER
-        );
-        txtLog.setText("");
-    }
+        logHtmlBuffer.append(htmlLine).append("<br>");
 
-    try {
-        txtLog.append(
-                Html.fromHtml(
-                        htmlLine + "<br>",
-                        Html.FROM_HTML_MODE_LEGACY
-                )
-        );
-    } catch (Throwable ignore) {
-        txtLog.append(stripHtml(htmlLine) + "\n");
-    }
+        if (logHtmlBuffer.length() > MAX_LOG_BUFFER) {
+            logHtmlBuffer.delete(
+                    0,
+                    logHtmlBuffer.length() - MAX_LOG_BUFFER
+            );
+            txtLog.setText("");
+        }
+
+        try {
+            txtLog.append(
+                    Html.fromHtml(
+                            htmlLine + "<br>",
+                            Html.FROM_HTML_MODE_LEGACY
+                    )
+            );
+        } catch (Throwable ignore) {
+            txtLog.append(stripHtml(htmlLine) + "\n");
+        }
+
+        if (mainScroll != null && txtLog != null) {
+            txtLog.post(() -> txtLog.scrollTo(0, txtLog.getBottom()));
+        }
+
+    });
+}
 
     // AUTO SCROLL
     if (mainScroll != null && txtLog != null) {
-        txtLog.post(() -> txtLog.scrollTo(0, txtLog.getBottom()));
+        mainScroll.post(() -> mainScroll.fullScroll(View.FOCUS_DOWN));
     }
 
 }

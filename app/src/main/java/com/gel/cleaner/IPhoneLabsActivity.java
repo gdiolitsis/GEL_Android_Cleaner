@@ -2803,6 +2803,46 @@ private void logLine() {
     appendHtml("--------------------------------------------------");
     GELServiceLog.logLine();
 }
+
+// ============================================================
+// LABEL + VALUE HELPERS (WHITE LABEL + COLORED VALUE)
+// ============================================================
+private void logLabelOkValue(String label, String value) {
+    String l = safe(label);
+    String v = safe(value);
+
+    appendHtml(
+            "<font color='#FFFFFF'>" + escape(l) + "</font> " +
+            "<font color='#39FF14'>" + escape(v) + "</font>"
+    );
+
+    GELServiceLog.logInfo(l + " " + v);
+}
+
+private void logLabelWarnValue(String label, String value) {
+    String l = safe(label);
+    String v = safe(value);
+
+    appendHtml(
+            "<font color='#FFFFFF'>" + escape(l) + "</font> " +
+            "<font color='#FFD966'>" + escape(v) + "</font>"
+    );
+
+    GELServiceLog.logWarn(l + " " + v);
+}
+
+private void logLabelErrorValue(String label, String value) {
+    String l = safe(label);
+    String v = safe(value);
+
+    appendHtml(
+            "<font color='#FFFFFF'>" + escape(l) + "</font> " +
+            "<font color='#FF5555'>" + escape(v) + "</font>"
+    );
+
+    GELServiceLog.logError(l + " " + v);
+}
+
 // ------------------------------------------------------------
 // UI APPENDER
 // ------------------------------------------------------------

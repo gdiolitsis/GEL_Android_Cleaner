@@ -11872,19 +11872,19 @@ if (!Float.isNaN(internalResistance[0])) {
                     );
                 }
 
-                // voltage stability
-                if (!Float.isNaN(voltageStability[0])) {
+                    // voltage stability
+if (!Float.isNaN(voltageStability[0])) {
 
-                    String recLabel;
+    String recLabel;
 
-                    if (voltageStability[0] >= 85f)
-                        label = gr ? "Πολύ σταθερή τάση" : "Very stable voltage";
-                    else if (voltageStability[0] >= 70f)
-                        label = gr ? "Σταθερή τάση" : "Stable voltage";
-                    else if (voltageStability[0] >= 50f)
-                        label = gr ? "Μέτρια αστάθεια τάσης" : "Moderate instability";
-                    else
-                        label = gr ? "Ασταθής τάση" : "Unstable voltage";
+    if (voltageStability[0] >= 85f)
+        recLabel = gr ? "Πολύ σταθερή τάση" : "Very stable voltage";
+    else if (voltageStability[0] >= 70f)
+        recLabel = gr ? "Σταθερή τάση" : "Stable voltage";
+    else if (voltageStability[0] >= 50f)
+        recLabel = gr ? "Μέτρια αστάθεια τάσης" : "Moderate instability";
+    else
+        recLabel = gr ? "Ασταθής τάση" : "Unstable voltage";
 
                     logLabelValue(
                             gr ? "Σταθερότητα τάσης μπαταρίας"

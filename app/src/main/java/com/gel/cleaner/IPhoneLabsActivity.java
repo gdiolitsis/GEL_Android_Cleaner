@@ -1818,7 +1818,7 @@ private void runPanicFrequencyLab() {
             : "LAB 5 — Panic Frequency Analyzer");
     logLine();
 
-    String[] blocks = panicLogText.split("===== (FILE|ZIP FILE):");
+    String[] blocks = panicLogText.split("(?m)^===== ZIP FILE:");
 
     if (blocks.length <= 1) {
         logWarn(gr
@@ -1933,7 +1933,7 @@ private void runRecurringDomainLab() {
             : "LAB 7 — Recurring Domain Detection");
     logLine();
 
-    String[] blocks = panicLogText.split("===== (FILE|ZIP FILE):");
+    String[] blocks = panicLogText.split("(?m)^===== ZIP FILE:");
 
     if (blocks.length <= 1) {
         logOk(gr
@@ -2049,17 +2049,7 @@ private void runFinalServiceRecommendationLab() {
     // ------------------------------------------------------------
     // SPLIT LOGS
     // ------------------------------------------------------------
-    String[] blocks = panicLogText.split("===== ZIP FILE:");
-
-    if (blocks.length <= 1) {
-
-        logOk(gr
-                ? "Απαιτούνται πολλαπλά logs για πλήρη τεχνική αξιολόγηση."
-                : "Multiple logs are required for full technical evaluation.");
-
-        return;
-    }
-
+    
     java.util.Map<String,Integer> domainCount = new java.util.HashMap<>();
     java.util.Map<String,Integer> crashCount  = new java.util.HashMap<>();
 
@@ -2107,17 +2097,23 @@ private void runFinalServiceRecommendationLab() {
     // ------------------------------------------------------------
     // DOMINANT DOMAIN
     // ------------------------------------------------------------
-    String dominant = null;
-    int max = 0;
+String dominant = null;
+int max = 0;
 
-    for (java.util.Map.Entry<String,Integer> e : domainCount.entrySet()) {
+boolean highRiskFound = false;
 
-        if (e.getValue() > max) {
+for (java.util.Map.Entry<String,Integer> e : domainCount.entrySet()) {
 
-            dominant = e.getKey();
-            max = e.getValue();
-        }
+    if (isHighRiskDomain(e.getKey()) && !highRiskFound) {
+        dominant = e.getKey();
+        max = e.getValue();
+        highRiskFound = true;
     }
+    else if (!highRiskFound && e.getValue() > max) {
+        dominant = e.getKey();
+        max = e.getValue();
+    }
+}
 
     double ratio = (double) max / (double) total;
     int percent = (int)(ratio * 100);
@@ -2130,18 +2126,18 @@ private void runFinalServiceRecommendationLab() {
     score -= (highConfidenceCount * 15);
     score -= (criticalCrashCount * 10);
 
-    if (ratio >= 0.5) {
+    if (total > 1 && ratio >= 0.5) {
 
-        if (isHighRiskDomain(dominant))
-            score -= 30;
-        else
-            score -= 15;
+    if (isHighRiskDomain(dominant))
+        score -= 30;
+    else
+        score -= 15;
 
-    }
-    else if (max >= 2) {
+}
+else if (max >= 2) {
 
-        score -= 10;
-    }
+    score -= 10;
+}
 
     if (score < 0) score = 0;
     
@@ -2170,14 +2166,25 @@ logLabelOkValue(
 appendHtml("<br>");
 
 boolean singleLog = total == 1;
+
+if (singleLog) {
+
+    logWarn(gr
+            ? "Η αξιολόγηση βασίζεται σε ένα μόνο panic log."
+            : "Evaluation is based on a single panic log.");
+
+    logOk(gr
+            ? "Η τεχνική εκτίμηση προκύπτει από την ανάλυση crash υπογραφής."
+            : "Technical estimation is based on crash signature analysis.");
+
+    appendHtml("<br>");
+}
     
 // ------------------------------------------------------------
 // SYNTHESIS (REAL DIAGNOSTIC RESULT)
 // ------------------------------------------------------------
 
-boolean criticalCrash =
-        "Kernel Panic".equalsIgnoreCase(sigCrashType) ||
-        "Watchdog / Hang".equalsIgnoreCase(sigCrashType);
+boolean criticalCrash = criticalCrashCount > 0;
 
 if (dominant != null && (
         (ratio >= 0.5 && score < 60) ||
@@ -2267,7 +2274,34 @@ if (dominant != null) {
     String d = dominant.toLowerCase();
     String text = panicLogText.toLowerCase();
 
-    if (d.contains("storage") || d.contains("nand") || d.contains("nvme"))
+    // ------------------------------------------------------------
+    // EXTRA SERVICE PATTERNS (πιο αξιόπιστα από domain)
+    // ------------------------------------------------------------
+    if (text.contains("baseband") || text.contains("commcenter"))
+        suspect = "Cellular / Baseband";
+
+    else if (text.contains("nvme") || text.contains("apfs"))
+        suspect = "Storage / NAND";
+
+    else if (text.contains("watchdog") && text.contains("thermal"))
+        suspect = "Thermal / Power management";
+
+    else if (text.contains("applecam") || text.contains("cam_i2c"))
+        suspect = "Camera module";
+
+    else if (text.contains("sep panic") || text.contains("sepd"))
+        suspect = "FaceID / Secure Enclave";
+
+    else if (text.contains("mic") && text.contains("i2c"))
+        suspect = "Microphone / Audio flex";
+
+    else if (text.contains("thermalmonitord"))
+        suspect = "Thermal sensor subsystem";
+
+    // ------------------------------------------------------------
+    // DOMAIN FALLBACK
+    // ------------------------------------------------------------
+    else if (d.contains("storage") || d.contains("nand") || d.contains("nvme"))
         suspect = "Storage / NAND";
 
     else if (d.contains("baseband"))
@@ -2284,19 +2318,6 @@ if (dominant != null) {
 
     else if (d.contains("i2c") || d.contains("sensor"))
         suspect = "Camera / Sensors / Peripheral bus";
-
-    // EXTRA SERVICE PATTERNS
-    if (text.contains("applecam") || text.contains("cam_i2c"))
-        suspect = "Camera module";
-
-    else if (text.contains("sep panic") || text.contains("sepd"))
-        suspect = "FaceID / Secure Enclave";
-
-    else if (text.contains("mic") && text.contains("i2c"))
-        suspect = "Microphone / Audio flex";
-
-    else if (text.contains("thermalmonitord"))
-        suspect = "Thermal sensor subsystem";
 }
 
     logLabelWarnValue(

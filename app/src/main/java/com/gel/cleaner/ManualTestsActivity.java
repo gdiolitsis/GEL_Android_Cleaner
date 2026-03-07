@@ -11274,7 +11274,7 @@ final float[] percentDeviation = {Float.NaN};
             sag2 = vRecover - vLoad2;
 
         if (!Float.isNaN(sag1) && !Float.isNaN(sag2))
-            sagAvg = (sag1 + sag2) / 2f;
+            sagAvg[0] = (sag1 + sag2) / 2f;
 
         if (!Float.isNaN(vStart) &&
                 !Float.isNaN(vLoad1) &&
@@ -11285,8 +11285,8 @@ final float[] percentDeviation = {Float.NaN};
                     Math.abs(vStart - vLoad1)
                             + Math.abs(vRecover - vLoad2);
 
-            voltageStability =
-                    Math.max(0f, 100f - variance * 120f);
+            voltageStability[0] =
+        Math.max(0f, 100f - variance * 120f);
         }
 
         if (!Float.isNaN(sag1) && !Float.isNaN(sag2)) {
@@ -11547,32 +11547,33 @@ if (!Float.isNaN(percentDeviation) && percentDeviation > 15f) {
                     }
                 }
 
-                if (!Float.isNaN(internalResistance) &&
-                        !Float.isNaN(voltageRecovery)) {
+                if (!Float.isNaN(internalResistance[0]) &&
+    !Float.isNaN(voltageRecovery[0])) {
 
-                    if (internalResistance > 0.18f &&
-                            voltageRecovery < 0.07f) {
-                        collapseRisk[0] = true;
-                    }
-                }
+    if (internalResistance[0] > 0.18f &&
+        voltageRecovery[0] < 0.07f) {
 
-                if (mahPerHour > 1200)
-                    collapseRisk[0] = true;
+        collapseRisk[0] = true;
+    }
+}
 
-                if (!Float.isNaN(internalResistance) &&
-                        !Float.isNaN(tempStart) &&
-                        !Float.isNaN(tempEnd)) {
+if (mahPerHour > 1200)
+    collapseRisk[0] = true;
+
+if (!Float.isNaN(internalResistance[0]) &&
+    !Float.isNaN(tempStart) &&
+    !Float.isNaN(tempEnd)) {
 
                     float tempRise = tempEnd - tempStart;
 
-                    if (internalResistance > 0.20f &&
+                    if (internalResistance[0] > 0.20f &&
                             tempRise > 8.0f) {
                         swellingRisk[0] = true;
                     }
                 }
 
-                if (!Float.isNaN(voltageRecovery) &&
-                        voltageRecovery < 0.04f) {
+                if (!Float.isNaN(voltageRecovery[0]) &&
+                        voltageRecovery[0] < 0.04f) {
                     swellingRisk[0] = true;
                 }
 
@@ -11874,7 +11875,7 @@ if (!Float.isNaN(internalResistance[0])) {
                 // voltage stability
                 if (!Float.isNaN(voltageStability[0])) {
 
-                    String label;
+                    String recLabel;
 
                     if (voltageStability[0] >= 85f)
                         label = gr ? "Πολύ σταθερή τάση" : "Very stable voltage";
@@ -12191,7 +12192,7 @@ p.edit()
         .putBoolean("lab14_unstable_measurement", variabilityDetected)
         .putBoolean("lab14_collapse_risk", collapseRisk[0])
         .putBoolean("lab14_swelling_risk", swellingRisk[0])
-        .putBoolean("lab14_calibration_drift", calibrationDrift[0])
+        .putBoolean("lab14_calibration_drift", calibrationDrift)
         .putFloat("lab14_health_score", finalScore)
         .putInt("lab14_aging_index", agingIndex)
         .putLong("lab14_last_ts", System.currentTimeMillis())

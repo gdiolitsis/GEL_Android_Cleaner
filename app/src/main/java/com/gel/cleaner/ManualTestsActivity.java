@@ -11845,8 +11845,6 @@ if (!Float.isNaN(internalResistance[0])) {
                 // voltage recovery
                 if (!Float.isNaN(voltageRecovery[0])) {
 
-                    String label;
-
                     if (voltageRecovery[0] > 0.18f) label = "Excellent";
                     else if (voltageRecovery[0] > 0.10f) label = "Normal";
                     else if (voltageRecovery[0] > 0.05f) label = "Weak";

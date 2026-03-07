@@ -1236,9 +1236,26 @@ for (Uri uri : uris) {
         continue;
     }
 
-    // =====================================================
-    // IMPORTANT: delimiter για τα LAB parsers
-    // =====================================================
+    if (looksCorruptedPanic(text)) {
+
+        logLabelErrorValue(
+                gr ? "Μη έγκυρο panic log:" : "Invalid panic log:",
+                safe(safeName)
+        );
+
+        continue;
+    }
+
+    if (allLogs.length() + text.length() > MAX_PANIC_LOG_SIZE) {
+
+        logWarn(gr
+                ? "Το μέγεθος των panic logs είναι πολύ μεγάλο. Η φόρτωση περιορίστηκε."
+                : "Panic logs too large. Import truncated.");
+
+        break;
+    }
+
+    // delimiter για τα LAB parsers
     allLogs.append("\n===== ZIP FILE: ")
            .append(safe(safeName))
            .append(" =====\n");
@@ -1246,36 +1263,11 @@ for (Uri uri : uris) {
     allLogs.append(text).append("\n");
 
     loadedCount++;
+
+    logOk((gr ? "Φορτώθηκε: "
+              : "Loaded: ")
+            + safe(safeName));
 }
-
-if (looksCorruptedPanic(text)) {
-    logLabelErrorValue(
-        gr ? "Μη έγκυρο panic log:" : "Invalid panic log:",
-        safe(safeName)
-);
-    continue;
-}
-
-            if (allLogs.length() + text.length() > MAX_PANIC_LOG_SIZE) {
-
-    logWarn(gr
-            ? "Το μέγεθος των panic logs είναι πολύ μεγάλο. Η φόρτωση περιορίστηκε."
-            : "Panic logs too large. Import truncated.");
-
-    break;
-}
-
-allLogs.append("\n\n===== FILE: ")
-       .append(safeName)
-       .append(" =====\n\n")
-       .append(text);
-
-            loadedCount++;
-
-            logOk((gr ? "Φορτώθηκε: "
-                      : "Loaded: ")
-                    + safe(safeName));
-        }
 
         if (loadedCount == 0) {
             throw new Exception(gr

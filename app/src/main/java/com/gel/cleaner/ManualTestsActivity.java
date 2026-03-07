@@ -11722,7 +11722,7 @@ if (!Float.isNaN(percentDeviation[0]) && percentDeviation[0] > 15f) {
                         else if (internalResistance >= 0.18f) finalScore -= 8;
                     }
 
-                    if (collapseRisk) finalScore -= 10;
+                    if (collapseRisk[0]) finalScore -= 10;
                     if (calibrationDrift) finalScore -= 5;
 
                     if (finalScore < 0) finalScore = 0;
@@ -11825,9 +11825,9 @@ if (!Float.isNaN(percentDeviation[0]) && percentDeviation[0] > 15f) {
 
                     String label;
 
-                    if (voltageRecovery > 0.18f) label = "Excellent";
-                    else if (voltageRecovery > 0.10f) label = "Normal";
-                    else if (voltageRecovery > 0.05f) label = "Weak";
+                    if (voltageRecovery[0] > 0.18f) label = "Excellent";
+                    else if (voltageRecovery[0] > 0.10f) label = "Normal";
+                    else if (voltageRecovery[0] > 0.05f) label = "Weak";
                     else label = "Unstable";
 
                     logLabelValue(
@@ -11851,15 +11851,15 @@ if (!Float.isNaN(percentDeviation[0]) && percentDeviation[0] > 15f) {
                 }
 
                 // voltage stability
-                if (!Float.isNaN(voltageStability)) {
+                if (!Float.isNaN(voltageStability[0])) {
 
                     String label;
 
-                    if (voltageStability >= 85f)
+                    if (voltageStability[0] >= 85f)
                         label = gr ? "Πολύ σταθερή τάση" : "Very stable voltage";
-                    else if (voltageStability >= 70f)
+                    else if (voltageStability[0] >= 70f)
                         label = gr ? "Σταθερή τάση" : "Stable voltage";
-                    else if (voltageStability >= 50f)
+                    else if (voltageStability[0] >= 50f)
                         label = gr ? "Μέτρια αστάθεια τάσης" : "Moderate instability";
                     else
                         label = gr ? "Ασταθής τάση" : "Unstable voltage";
@@ -11885,7 +11885,7 @@ if (!Float.isNaN(percentDeviation[0]) && percentDeviation[0] > 15f) {
                 }
 
                 // collapse risk
-                if (collapseRisk) {
+                if (collapseRisk[0]) {
                     logLabelWarnValue(
                             gr ? "Κίνδυνος κατάρρευσης μπαταρίας"
                                : "Battery collapse risk",
@@ -11902,7 +11902,7 @@ if (!Float.isNaN(percentDeviation[0]) && percentDeviation[0] > 15f) {
                 }
 
                 // swelling
-                if (swellingRisk) {
+                if (swellingRisk[0]) {
                     logLabelWarnValue(
                             gr ? "Πιθανή διόγκωση μπαταρίας"
                                : "Possible battery swelling",
@@ -11920,7 +11920,7 @@ if (!Float.isNaN(percentDeviation[0]) && percentDeviation[0] > 15f) {
                 }
 
                 // calibration drift
-                if (calibrationDrift[0]) {
+                if (calibrationDrift) {
                     logLabelWarnValue(
                             gr ? "Απόκλιση βαθμονόμησης μπαταρίας"
                                : "Battery calibration drift",
@@ -12155,7 +12155,7 @@ p.edit()
         .putBoolean("lab14_unstable_measurement", variabilityDetected)
         .putBoolean("lab14_collapse_risk", collapseRisk[0])
         .putBoolean("lab14_swelling_risk", swellingRisk[0])
-        .putBoolean("lab14_calibration_drift", calibrationDrift[0])
+        .putBoolean("lab14_calibration_drift", calibrationDrift)
         .putFloat("lab14_health_score", finalScore)
         .putInt("lab14_aging_index", agingIndex)
         .putLong("lab14_last_ts", System.currentTimeMillis())
@@ -18414,7 +18414,7 @@ if (thermalIssue) dri -= 15;
 boolean swellingRisk =
         p.getBoolean("lab14_swelling_risk", false);
 
-if (swellingRisk) dri -= 15;
+if (swellingRisk[0]) dri -= 15;
 
 // root risk
 boolean rooted =
@@ -18432,7 +18432,7 @@ if (calibrationDrift) dri -= 10;
 boolean collapseRisk =
         p.getBoolean("lab14_collapse_risk", false);
 
-if (collapseRisk) dri -= 20;
+if (collapseRisk[0]) dri -= 20;
 
 if (dri > 100) dri = 100;
 if (dri < 0) dri = 0;

@@ -243,7 +243,7 @@ View importBtn = makeLabButton(
             panicLogCount = 0;
             appendMode = false;
 
-            logInfo(gr
+            logOk(gr
                     ? "Τα προηγούμενα panic logs διαγράφηκαν."
                     : "Previous panic logs cleared.");
 
@@ -351,20 +351,10 @@ root.addView(makeLabButton(
         v -> runRecurringDomainLab()
 ));
 
-// 9) Stability Index
+// 9) FINAL Service Recommendation
 root.addView(makeLabButton(
-        gr ? "LAB 8 - Δείκτης Σταθερότητας"
-           : "LAB 8 - Stability Index",
-        gr ? "Συνολική αξιολόγηση βάσει επαναλαμβανόμενων μοτίβων"
-           : "Overall evaluation based on recurring crash patterns",
-        true,
-        v -> runStabilityIndexLab()
-));
-
-// 10) FINAL Service Recommendation
-root.addView(makeLabButton(
-        gr ? "LAB 9 - Τελική Σύσταση Service"
-           : "LAB 9 - Final Service Recommendation",
+        gr ? "LAB 8 - Τελική Σύσταση Service"
+           : "LAB 8 - Final Service Recommendation",
         gr ? "Ολοκληρωμένη τεχνική αξιολόγηση βάσει όλων των εργαστηρίων"
            : "Integrated technical verdict based on all analysis",
         true,
@@ -465,8 +455,8 @@ tts[0] = new TextToSpeech(this, status -> {
 // SERVICE LOG — SECTION HEADER (iPhone Labs)
 // ============================================================
 GELServiceLog.section(AppLang.isGreek(this)
-        ? "iPhone Labs — Ανάλυση Panic Log & Σταθερότητας"
-        : "iPhone Labs — Panic Log & Stability Analysis");
+        ? "iPhone Labs — Ανάλυση Panic Logs & Σταθερότητας"
+        : "iPhone Labs — Panic Logs & Stability Analysis");
 
 } // onCreate ends here
 
@@ -560,9 +550,6 @@ try {
     SystemClock.sleep(100);
 
     runRecurringDomainLab();
-    SystemClock.sleep(100);
-
-    runStabilityIndexLab();
     SystemClock.sleep(100);
 
     runFinalServiceRecommendationLab();
@@ -1240,16 +1227,18 @@ protected void onActivityResult(int requestCode,
             try { is.close(); } catch (Throwable ignore) {}
 
             if (text == null || text.trim().isEmpty()) {
-    logWarn(gr
-            ? "Κενό αρχείο: " + safe(safeName)
-            : "Empty file: " + safe(safeName));
+    logLabelWarnValue(
+        gr ? "Κενό αρχείο:" : "Empty file:",
+        safe(safeName)
+);
     continue;
 }
 
 if (looksCorruptedPanic(text)) {
-    logError(gr
-            ? "Μη έγκυρο ή κατεστραμμένο panic log: " + safe(safeName)
-            : "Corrupted or invalid panic log: " + safe(safeName));
+    logLabelErrorValue(
+        gr ? "Μη έγκυρο panic log:" : "Invalid panic log:",
+        safe(safeName)
+);
     continue;
 }
 
@@ -1307,30 +1296,36 @@ String model  = extractModelIdentifier(panicLogText);
 String kernel = extractKernelVersion(panicLogText);
 String board  = extractBoardId(panicLogText);
 
-logInfo(gr ? "Συσκευή: " + device : "Device: " + device);
+logLabelOkValue(
+        gr ? "Συσκευή:" : "Device:",
+        safe(device)
+);
 
-logInfo(gr
-        ? "Model Identifier: " + model
-        : "Model Identifier: " + model);
+logLabelOkValue(
+        "Model Identifier:",
+        safe(model)
+);
 
-logInfo(gr
-        ? "Kernel: " + kernel
-        : "Kernel: " + kernel);
+logLabelOkValue(
+        gr ? "Kernel:" : "Kernel:",
+        safe(kernel)
+);
 
-logInfo(gr
-        ? "Board ID: " + board
-        : "Board ID: " + board);
+logLabelOkValue(
+        "Board ID:",
+        safe(board)
+);
 
 // 👇 νέο μήνυμα με το όνομα των logs
-logInfo(gr
-        ? "Φορτώθηκαν panic logs: " + panicLogName
-        : "Loaded panic logs: " + panicLogName);
+logLabelOkValue(
+        gr ? "Φορτώθηκαν panic logs:" : "Loaded panic logs:",
+        safe(panicLogName)
+);
 
-logInfo(gr
-        ? "Συνολικό μέγεθος:"
-        : "Total size:");
-
-logOk(panicLogText.length() + " chars");
+logLabelOkValue(
+        gr ? "Συνολικό μέγεθος:" : "Total size:",
+        panicLogText.length() + " chars"
+);
 
 logOk(gr
         ? "Έτοιμο για ανάλυση."
@@ -1344,11 +1339,13 @@ logLine();
     panicLogText   = null;
 
     logError(gr
-            ? "Αποτυχία εισαγωγής."
-            : "Panic logs import failed.");
+        ? "Αποτυχία εισαγωγής panic logs."
+        : "Panic logs import failed.");
 
-    logInfo(gr ? "Αιτία:" : "Reason:");
-    logWarn(safe(e.getMessage()));
+logLabelWarnValue(
+        gr ? "Αιτία:" : "Reason:",
+        safe(e.getMessage())
+);
 }
 }
 
@@ -1376,26 +1373,34 @@ private void runPanicLogAnalyzer() {
     if (r == null) {
 
         logWarn(gr
-                ? "Δεν εντοπίστηκε γνωστή υπογραφή panic."
-                : "No known panic signature matched.");
+        ? "Δεν εντοπίστηκε γνωστή υπογραφή panic."
+        : "No known panic signature matched.");
 
-        logInfo(gr ? "Τι σημαίνει αυτό:" : "What this means:");
-        logOk(gr
-                ? "Το log είναι έγκυρο, αλλά δεν αντιστοιχεί σε προκαθορισμένο μοτίβο crash."
-                : "The log is valid, but it does not match a predefined crash pattern.");
+logLabelOkValue(
+        gr ? "Τι σημαίνει αυτό:" : "What this means:",
+        gr
+                ? "Το log είναι έγκυρο αλλά δεν αντιστοιχεί σε προκαθορισμένο μοτίβο crash."
+                : "The log is valid but does not match a predefined crash pattern."
+);
 
-        logInfo(gr ? "Γιατί έχει σημασία:" : "Why this matters:");
-        logOk(gr
-                ? "Ορισμένα crashes απαιτούν συμπεριφορική ανάλυση και όχι μόνο σύγκριση υπογραφών."
-                : "Some crashes require behavioral analysis rather than signature matching.");
+logLabelOkValue(
+        gr ? "Γιατί έχει σημασία:" : "Why this matters:",
+        gr
+                ? "Ορισμένα crashes απαιτούν συμπεριφορική ανάλυση."
+                : "Some crashes require behavioral analysis."
+);
 
-        logInfo(gr ? "Επόμενο βήμα:" : "Next step:");
-        logOk(gr
-                ? "Το επόμενο LAB θα ερμηνεύσει τη συμπεριφορά του crash πέρα από σταθερές υπογραφές."
-                : "The next lab will interpret crash behavior beyond fixed signatures.");
+logLabelOkValue(
+        gr ? "Επόμενο βήμα:" : "Next step:",
+        gr
+                ? "Το επόμενο LAB θα αναλύσει τη συμπεριφορά του crash."
+                : "The next lab will analyze crash behavior."
+);
 
-        logInfo(gr ? "Αρχείο που αναλύθηκε:" : "File analyzed:");
-        logOk(safe(panicLogName));
+logLabelOkValue(
+        gr ? "Αρχείο που αναλύθηκε:" : "File analyzed:",
+        safe(panicLogName)
+);
 
         appendHtml("<br>");
         logOk(gr ? "Το Lab 1 ολοκληρώθηκε." : "Lab 1 finished.");
@@ -1407,40 +1412,72 @@ private void runPanicLogAnalyzer() {
             ? "Εντοπίστηκε υπογραφή panic."
             : "Panic signature matched.");
 
-    logInfo(gr ? "Pattern ID:" : "Pattern ID:");
-    logOk(safe(r.patternId));
+    logLabelOkValue(
+        "Pattern ID:",
+        safe(r.patternId)
+);
 
-    logInfo(gr ? "Πιθανό Domain:" : "Domain (hint):");
-    logWarn(safe(r.domain));
+logLabelWarnValue(
+        gr ? "Πιθανό Domain:" : "Domain (hint):",
+        safe(r.domain)
+);
 
-    logInfo(gr ? "Αναφερόμενη Αιτία:" : "Reported Cause:");
-    logOk(safe(r.cause));
+logLabelOkValue(
+        gr ? "Αναφερόμενη Αιτία:" : "Reported Cause:",
+        safe(r.cause)
+);
 
-    logInfo(gr ? "Σοβαρότητα:" : "Severity:");
-    if ("High".equalsIgnoreCase(r.severity)) {
-        logError(safe(r.severity));
-    } else if ("Medium".equalsIgnoreCase(r.severity)) {
-        logWarn(safe(r.severity));
-    } else {
-        logOk(safe(r.severity));
-    }
+// Severity
+if ("High".equalsIgnoreCase(r.severity)) {
+    logLabelErrorValue(
+            gr ? "Σοβαρότητα:" : "Severity:",
+            safe(r.severity)
+    );
+}
+else if ("Medium".equalsIgnoreCase(r.severity)) {
+    logLabelWarnValue(
+            gr ? "Σοβαρότητα:" : "Severity:",
+            safe(r.severity)
+    );
+}
+else {
+    logLabelOkValue(
+            gr ? "Σοβαρότητα:" : "Severity:",
+            safe(r.severity)
+    );
+}
 
-    logInfo(gr ? "Επίπεδο Βεβαιότητας:" : "Confidence:");
-    if ("High".equalsIgnoreCase(r.confidence)) {
-        logOk(safe(r.confidence));
-    } else if ("Medium".equalsIgnoreCase(r.confidence)) {
-        logWarn(safe(r.confidence));
-    } else {
-        logOk(safe(r.confidence));
-    }
+// Confidence
+if ("High".equalsIgnoreCase(r.confidence)) {
+    logLabelOkValue(
+            gr ? "Επίπεδο Βεβαιότητας:" : "Confidence:",
+            safe(r.confidence)
+    );
+}
+else if ("Medium".equalsIgnoreCase(r.confidence)) {
+    logLabelWarnValue(
+            gr ? "Επίπεδο Βεβαιότητας:" : "Confidence:",
+            safe(r.confidence)
+    );
+}
+else {
+    logLabelOkValue(
+            gr ? "Επίπεδο Βεβαιότητας:" : "Confidence:",
+            safe(r.confidence)
+    );
+}
 
-    logInfo(gr ? "Αρχική Σύσταση:" : "Initial Recommendation:");
-    logOk(safe(r.recommendation));
+logLabelOkValue(
+        gr ? "Αρχική Σύσταση:" : "Initial Recommendation:",
+        safe(r.recommendation)
+);
 
-    logInfo(gr ? "Επόμενο βήμα:" : "Next step:");
-    logOk(gr
-            ? "Η υπογραφή θα ερμηνευθεί αναλυτικά στο LAB 2."
-            : "The extracted signature will be interpreted in detail in LAB 2.");
+logLabelOkValue(
+        gr ? "Επόμενο βήμα:" : "Next step:",
+        gr
+                ? "Η υπογραφή θα ερμηνευθεί αναλυτικά στο LAB 2."
+                : "The extracted signature will be interpreted in detail in LAB 2."
+);
 
     appendHtml("<br>");
     logOk(gr ? "Το Lab 1 ολοκληρώθηκε." : "Lab 1 finished.");
@@ -1468,46 +1505,87 @@ private void runPanicSignatureParser() {
 
     parseAndCacheSignature(panicLogText);
 
-    logInfo(gr ? "Αρχείο:" : "File:");
-    logOk(safe(panicLogName));
+    logLabelOkValue(
+        gr ? "Αρχείο:" : "File:",
+        safe(panicLogName)
+);
 
-    logInfo(gr ? "Τύπος Crash:" : "Crash Type:");
-    if ("Kernel Panic".equalsIgnoreCase(sigCrashType)
-            || "Watchdog / Hang".equalsIgnoreCase(sigCrashType)) {
+// Crash type
+if ("Kernel Panic".equalsIgnoreCase(sigCrashType)
+        || "Watchdog / Hang".equalsIgnoreCase(sigCrashType)) {
 
-        logError(safe(sigCrashType));
-        logWarn(gr
-                ? "Αυτό υποδηλώνει σοβαρή διακοπή λειτουργίας σε επίπεδο συστήματος."
-                : "This represents a serious system-level interruption.");
-    } else {
-        logOk(safe(sigCrashType));
-    }
+    logLabelErrorValue(
+            gr ? "Τύπος Crash:" : "Crash Type:",
+            safe(sigCrashType)
+    );
 
-    logInfo(gr ? "Πιθανό Υποσύστημα:" : "Subsystem Hint:");
-    logWarn(safe(sigDomain));
+    logLabelWarnValue(
+            gr ? "Σημασία:" : "Implication:",
+            gr
+                    ? "Σοβαρή διακοπή λειτουργίας σε επίπεδο συστήματος."
+                    : "Serious system-level interruption."
+    );
+}
+else {
 
-    logWarn(gr
-            ? "Υποδεικνύει πιθανή εμπλοκή υποσυστήματος, όχι επιβεβαιωμένη βλάβη."
-            : "This indicates a possible subsystem involved, not a confirmed fault.");
+    logLabelOkValue(
+            gr ? "Τύπος Crash:" : "Crash Type:",
+            safe(sigCrashType)
+    );
+}
 
-    logInfo(gr ? "Επίπεδο Βεβαιότητας:" : "Confidence Level:");
-    if ("High".equalsIgnoreCase(sigConfidence)) {
-        logOk(safe(sigConfidence));
-    } else if ("Medium".equalsIgnoreCase(sigConfidence)) {
-        logWarn(safe(sigConfidence));
-    } else {
-        logOk(safe(sigConfidence));
-    }
+// Subsystem hint
+logLabelWarnValue(
+        gr ? "Πιθανό Υποσύστημα:" : "Subsystem Hint:",
+        safe(sigDomain)
+);
 
-    if (sigKeyEvidence != null && !sigKeyEvidence.trim().isEmpty()) {
-        logInfo(gr ? "Βασικά Στοιχεία:" : "Key Evidence Found:");
-        logOk(safe(sigKeyEvidence));
-    }
+logLabelWarnValue(
+        gr ? "Ερμηνεία:" : "Interpretation:",
+        gr
+                ? "Πιθανή εμπλοκή υποσυστήματος, όχι επιβεβαιωμένη βλάβη."
+                : "Possible subsystem involvement, not a confirmed fault."
+);
 
-    logInfo(gr ? "Επόμενο βήμα:" : "Next step:");
-    logOk(gr
-            ? "Η ανάλυση σταθερότητας θα συνεχιστεί στο LAB 3."
-            : "The extracted signature will be interpreted further in LAB 3.");
+// Confidence
+if ("High".equalsIgnoreCase(sigConfidence)) {
+
+    logLabelOkValue(
+            gr ? "Επίπεδο Βεβαιότητας:" : "Confidence Level:",
+            safe(sigConfidence)
+    );
+}
+else if ("Medium".equalsIgnoreCase(sigConfidence)) {
+
+    logLabelWarnValue(
+            gr ? "Επίπεδο Βεβαιότητας:" : "Confidence Level:",
+            safe(sigConfidence)
+    );
+}
+else {
+
+    logLabelOkValue(
+            gr ? "Επίπεδο Βεβαιότητας:" : "Confidence Level:",
+            safe(sigConfidence)
+    );
+}
+
+// Evidence
+if (sigKeyEvidence != null && !sigKeyEvidence.trim().isEmpty()) {
+
+    logLabelOkValue(
+            gr ? "Βασικά Στοιχεία:" : "Key Evidence Found:",
+            safe(sigKeyEvidence)
+    );
+}
+
+// Next step
+logLabelOkValue(
+        gr ? "Επόμενο βήμα:" : "Next step:",
+        gr
+                ? "Η ανάλυση σταθερότητας θα συνεχιστεί στο LAB 3."
+                : "The extracted signature will be interpreted further in LAB 3."
+);
 
     appendHtml("<br>");
     logOk(gr ? "Το Lab 2 ολοκληρώθηκε." : "Lab 2 finished.");
@@ -1547,38 +1625,66 @@ private void runStabilityLab() {
                 ? "Τέτοια crashes συχνά σχετίζονται με επανεκκινήσεις ή παγώματα."
                 : "Such crashes are often associated with unexpected reboots or system freezes.");
 
-        logInfo(gr ? "Με απλά λόγια:" : "In simple terms:");
-        logWarn(gr
+        logLabelWarnValue(
+        gr ? "Με απλά λόγια:" : "In simple terms:",
+        gr
                 ? "Η συσκευή δεν κατάφερε να διατηρήσει σταθερή λειτουργία υπό συγκεκριμένες συνθήκες."
-                : "The device could not maintain stable operation under certain conditions.");
+                : "The device could not maintain stable operation under certain conditions."
+);
 
-    } else if ("Medium".equalsIgnoreCase(sigConfidence)) {
+} else if ("Medium".equalsIgnoreCase(sigConfidence)) {
 
-        logWarn(gr
-                ? "Εντοπίστηκε μέτριος κίνδυνος αστάθειας."
-                : "Moderate stability risk detected.");
+    logWarn(gr
+            ? "Εντοπίστηκε μέτριος κίνδυνος αστάθειας."
+            : "Moderate stability risk detected.");
 
-        logOk(gr
-                ? "Το σύστημα ενδέχεται να γίνει ασταθές σε συγκεκριμένα σενάρια."
-                : "The system may become unstable under specific scenarios.");
+    logLabelOkValue(
+            gr ? "Ερμηνεία:" : "Interpretation:",
+            gr
+                    ? "Το σύστημα ενδέχεται να γίνει ασταθές σε συγκεκριμένα σενάρια."
+                    : "The system may become unstable under specific scenarios."
+    );
 
-    } else {
+} else {
 
-        logOk(gr
-                ? "Δεν εντοπίστηκαν ισχυρές ενδείξεις συνεχιζόμενης αστάθειας."
-                : "No strong indicators of ongoing system instability found.");
-    }
-
-    logInfo(gr ? "Τύπος Crash:" : "Crash Type:");
-    logOk(safe(sigCrashType));
-
-    logInfo(gr ? "Επίπεδο Βεβαιότητας:" : "Confidence Level:");
-    logOk(safe(sigConfidence));
-
-    logInfo(gr ? "Επόμενο βήμα:" : "Next step:");
     logOk(gr
-            ? "Το LAB 4 θα αναλύσει ποια περιοχή hardware ενδέχεται να εμπλέκεται."
-            : "LAB 4 will analyze which hardware area is most likely involved in the crash.");
+            ? "Δεν εντοπίστηκαν ισχυρές ενδείξεις συνεχιζόμενης αστάθειας."
+            : "No strong indicators of ongoing system instability found.");
+}
+
+logLabelOkValue(
+        gr ? "Τύπος Crash:" : "Crash Type:",
+        safe(sigCrashType)
+);
+
+if ("High".equalsIgnoreCase(sigConfidence)) {
+
+    logLabelOkValue(
+            gr ? "Επίπεδο Βεβαιότητας:" : "Confidence Level:",
+            safe(sigConfidence)
+    );
+
+} else if ("Medium".equalsIgnoreCase(sigConfidence)) {
+
+    logLabelWarnValue(
+            gr ? "Επίπεδο Βεβαιότητας:" : "Confidence Level:",
+            safe(sigConfidence)
+    );
+
+} else {
+
+    logLabelOkValue(
+            gr ? "Επίπεδο Βεβαιότητας:" : "Confidence Level:",
+            safe(sigConfidence)
+    );
+}
+
+logLabelOkValue(
+        gr ? "Επόμενο βήμα:" : "Next step:",
+        gr
+                ? "Το LAB 4 θα αναλύσει ποια περιοχή hardware ενδέχεται να εμπλέκεται."
+                : "LAB 4 will analyze which hardware area is most likely involved in the crash."
+);
 
     appendHtml("<br>");
     logOk(gr ? "Το Lab 3 ολοκληρώθηκε." : "Lab 3 finished.");
@@ -1606,51 +1712,77 @@ private void runImpactLab() {
 
     parseAndCacheSignature(panicLogText);
 
-    logInfo(gr ? "Τύπος Crash:" : "Crash Type:");
-    logOk(safe(sigCrashType));
+    logLabelOkValue(
+        gr ? "Τύπος Crash:" : "Crash Type:",
+        safe(sigCrashType)
+);
 
-    logInfo(gr ? "Πιθανό Domain:" : "Suspected Domain:");
-    logWarn(safe(sigDomain));
+logLabelWarnValue(
+        gr ? "Πιθανό Domain:" : "Suspected Domain:",
+        safe(sigDomain)
+);
 
-    if ("Power / PMIC".equals(sigDomain)
-            || "Storage / NAND / FS".equals(sigDomain)
-            || "Baseband / Cellular".equals(sigDomain)) {
+if ("Power / PMIC".equals(sigDomain)
+        || "Storage / NAND / FS".equals(sigDomain)
+        || "Baseband / Cellular".equals(sigDomain)) {
 
-        logInfo(gr ? "Σημαντική διευκρίνιση:" : "Important clarification:");
-        logOk(gr
-                ? "Αυτό δεν επιβεβαιώνει ελαττωματικό εξάρτημα."
-                : "This does not confirm a faulty component.");
+    logLabelOkValue(
+            gr ? "Σημαντική διευκρίνιση:" : "Important clarification:",
+            gr
+                    ? "Αυτό δεν επιβεβαιώνει ελαττωματικό εξάρτημα."
+                    : "This does not confirm a faulty component."
+    );
 
-        logError(gr
-                ? "Υποδεικνύεται κρίσιμη διαδρομή σχετιζόμενη με hardware."
-                : "A critical hardware-related path is suggested.");
+    logLabelErrorValue(
+            gr ? "Τεχνική ένδειξη:" : "Technical indication:",
+            gr
+                    ? "Υποδεικνύεται κρίσιμη διαδρομή σχετιζόμενη με hardware."
+                    : "A critical hardware-related path is suggested."
+    );
 
-        logWarn(gr
-                ? "Εάν τα crashes επαναλαμβάνονται, συνιστάται τεχνικός έλεγχος."
-                : "If crashes repeat, professional inspection is advised.");
+    logLabelWarnValue(
+            gr ? "Σύσταση:" : "Recommendation:",
+            gr
+                    ? "Εάν τα crashes επαναλαμβάνονται, συνιστάται τεχνικός έλεγχος."
+                    : "If crashes repeat, professional inspection is advised."
+    );
 
-    } else if ("Thermal / Cooling".equals(sigDomain)
-            || "Memory / OS Pressure".equals(sigDomain)) {
+}
+else if ("Thermal / Cooling".equals(sigDomain)
+        || "Memory / OS Pressure".equals(sigDomain)) {
 
-        logWarn(gr
-                ? "Υποδεικνύεται επίδραση λόγω φόρτου ή stress συστήματος."
-                : "System stress-related impact suggested.");
+    logLabelWarnValue(
+            gr ? "Ερμηνεία:" : "Interpretation:",
+            gr
+                    ? "Υποδεικνύεται επίδραση λόγω φόρτου ή stress συστήματος."
+                    : "System stress-related impact suggested."
+    );
 
-        logOk(gr
-                ? "Συχνά σχετίζεται με θερμοκρασία, φόρτο ή παρατεταμένη χρήση."
-                : "Often linked to heat, load, or prolonged usage.");
+    logLabelOkValue(
+            gr ? "Συνήθης αιτία:" : "Typical cause:",
+            gr
+                    ? "Συχνά σχετίζεται με θερμοκρασία, φόρτο ή παρατεταμένη χρήση."
+                    : "Often linked to heat, load, or prolonged usage."
+    );
 
-    } else {
+}
+else {
 
-        logOk(gr
-                ? "Δεν εντοπίστηκε σαφής επίπτωση hardware μόνο από αυτό το log."
-                : "No clear hardware impact identified from this log alone.");
-    }
+    logLabelOkValue(
+            gr ? "Ερμηνεία:" : "Interpretation:",
+            gr
+                    ? "Δεν εντοπίστηκε σαφής επίπτωση hardware μόνο από αυτό το log."
+                    : "No clear hardware impact identified from this log alone."
+    );
+}
 
-    if (sigKeyEvidence != null && !sigKeyEvidence.trim().isEmpty()) {
-        logInfo(gr ? "Υποστηρικτικά Στοιχεία:" : "Supporting Evidence:");
-        logOk(safe(sigKeyEvidence));
-    }
+if (sigKeyEvidence != null && !sigKeyEvidence.trim().isEmpty()) {
+
+    logLabelOkValue(
+            gr ? "Υποστηρικτικά Στοιχεία:" : "Supporting Evidence:",
+            safe(sigKeyEvidence)
+    );
+}
 
     appendHtml("<br>");
     logOk(gr ? "Το Lab 4 ολοκληρώθηκε." : "Lab 4 finished.");
@@ -1695,9 +1827,14 @@ parseAndCacheSignature(block);
 
     logInfo(gr ? "Συχνότητα Crash Types:" : "Crash Type Frequency:");
 
-    for (String k : crashCount.keySet()) {
-        logOk(k + " → " + crashCount.get(k));
-    }
+for (String k : crashCount.keySet()) {
+
+    logLabelOkValue(
+            safe(k),
+            String.valueOf(crashCount.get(k))
+    );
+
+}
 
     appendHtml("<br>");
     logOk(gr ? "Το Lab 5 ολοκληρώθηκε." : "Lab 5 finished.");
@@ -1742,15 +1879,25 @@ parseAndCacheSignature(block);
 
     logInfo(gr ? "Συχνότητα Domain:" : "Domain Frequency:");
 
-    for (String k : domainCount.keySet()) {
-        int count = domainCount.get(k);
+for (String k : domainCount.keySet()) {
 
-        if (count >= 2) {
-            logError(k + " → " + count);
-        } else {
-            logOk(k + " → " + count);
-        }
+    int count = domainCount.get(k);
+
+    if (count >= 2) {
+
+        logLabelErrorValue(
+                safe(k) + ":",
+                String.valueOf(count)
+        );
+
+    } else {
+
+        logLabelOkValue(
+                safe(k) + ":",
+                String.valueOf(count)
+        );
     }
+}
 
     appendHtml("<br>");
     logOk(gr ? "Το Lab 6 ολοκληρώθηκε." : "Lab 6 finished.");
@@ -1816,14 +1963,20 @@ parseAndCacheSignature(block);
     double ratio = (double) max / (double) total;
     int percent = (int) (ratio * 100);
 
-    logInfo(gr ? "Συνολικά logs:" : "Total logs:");
-    logOk(String.valueOf(total));
+    logLabelOkValue(
+        gr ? "Συνολικά logs:" : "Total logs:",
+        String.valueOf(total)
+);
 
-    logInfo(gr ? "Κυρίαρχο domain:" : "Dominant domain:");
-    logWarn(dominant + " (" + max + "/" + total + ")");
+logLabelWarnValue(
+        gr ? "Κυρίαρχο domain:" : "Dominant domain:",
+        safe(dominant) + " (" + max + "/" + total + ")"
+);
 
-    logInfo(gr ? "Ποσοστό επανάληψης:" : "Repetition ratio:");
-    logOk(percent + "%");
+logLabelOkValue(
+        gr ? "Ποσοστό επανάληψης:" : "Repetition ratio:",
+        percent + "%"
+);
 
     // -------------------------------
     // PATTERN INTERPRETATION
@@ -1841,7 +1994,7 @@ parseAndCacheSignature(block);
                     : "Recurring domain pattern detected.");
         }
 
-        logOk(gr
+        logWarn(gr
                 ? "Αυτό δεν επιβεβαιώνει βλάβη, αλλά δείχνει σταθερή επανάληψη."
                 : "This does not confirm hardware failure, but indicates stable recurrence.");
 
@@ -1864,152 +2017,7 @@ parseAndCacheSignature(block);
 }
 
 // ============================================================
-// LAB 8 — STABILITY INDEX (Deterministic Score Engine)
-// ============================================================
-private void runStabilityIndexLab() {
-    if (!guardPanicLog()) return;
-
-    boolean gr = AppLang.isGreek(this);
-
-    appendHtml("<br>");
-    logLine();
-    logInfo(gr
-            ? "LAB 8 — Δείκτης Σταθερότητας"
-            : "LAB 8 — Stability Index");
-    logLine();
-
-    String[] blocks = panicLogText.split("===== (FILE|ZIP FILE):");
-
-    if (blocks.length <= 1) {
-        logOk(gr
-                ? "Απαιτούνται πολλαπλά logs για υπολογισμό δείκτη."
-                : "Multiple logs are required to calculate index.");
-        return;
-    }
-
-    java.util.Map<String, Integer> domainCount = new java.util.HashMap<>();
-    int total = 0;
-
-    int highConfidenceCount = 0;
-    int criticalCrashCount = 0;
-
-    for (String block : blocks) {
-        if (block.trim().isEmpty()) continue;
-
-        resetSignatureCache();
-parseAndCacheSignature(block);
-
-        total++;
-
-        if (isHighConfidence(sigConfidence)) {
-            highConfidenceCount++;
-        }
-
-        if (isCriticalCrash(sigCrashType)) {
-            criticalCrashCount++;
-        }
-
-        domainCount.put(sigDomain,
-                domainCount.getOrDefault(sigDomain, 0) + 1);
-    }
-
-    if (total == 0) {
-        logWarn(gr ? "Δεν βρέθηκαν έγκυρα logs." : "No valid logs found.");
-        return;
-    }
-
-    // ------------------------------------------------------------
-    // SCORE ENGINE
-    // ------------------------------------------------------------
-
-    int score = 100;
-
-    // High confidence crashes
-    score -= (highConfidenceCount * 15);
-
-    // Critical crash types (Kernel / Watchdog)
-    score -= (criticalCrashCount * 10);
-
-    // Domain recurrence
-    String dominant = null;
-    int max = 0;
-
-    for (String d : domainCount.keySet()) {
-        int c = domainCount.get(d);
-        if (c > max) {
-            max = c;
-            dominant = d;
-        }
-    }
-
-    double ratio = (double) max / (double) total;
-
-    if (ratio >= 0.5) {
-        if (isHighRiskDomain(dominant)) {
-            score -= 30;
-        } else {
-            score -= 15;
-        }
-    } else if (max >= 2) {
-        score -= 10;
-    }
-
-    if (score < 0) score = 0;
-
-    // ------------------------------------------------------------
-    // OUTPUT
-    // ------------------------------------------------------------
-
-    logInfo(gr ? "Συνολικά logs:" : "Total logs:");
-    logOk(String.valueOf(total));
-
-    logInfo(gr ? "Δείκτης Σταθερότητας:" : "Stability Index:");
-    logOk(score + " / 100");
-
-    // ------------------------------------------------------------
-    // INTERPRETATION
-    // ------------------------------------------------------------
-
-    if (score >= 85) {
-
-        logOk(gr
-                ? "Υψηλή σταθερότητα. Δεν εντοπίστηκαν σοβαρά μοτίβα."
-                : "High stability. No significant instability patterns detected.");
-
-    } else if (score >= 60) {
-
-        logWarn(gr
-                ? "Μέτρια ένδειξη αστάθειας. Συνιστάται παρακολούθηση."
-                : "Moderate instability indicators. Monitoring advised.");
-
-    } else if (score >= 40) {
-
-        logWarn(gr
-                ? "Αυξημένες ενδείξεις αστάθειας."
-                : "Elevated instability indicators detected.");
-
-        logOk(gr
-                ? "Εάν τα συμπτώματα επαναλαμβάνονται, συνιστάται τεχνικός έλεγχος."
-                : "If symptoms persist, professional inspection is recommended.");
-
-    } else {
-
-        logError(gr
-                ? "Χαμηλή σταθερότητα συστήματος."
-                : "Low system stability detected.");
-
-        logWarn(gr
-                ? "Εντοπίστηκαν επαναλαμβανόμενα κρίσιμα μοτίβα."
-                : "Recurring critical patterns were detected.");
-    }
-
-    appendHtml("<br>");
-    logOk(gr ? "Το Lab 8 ολοκληρώθηκε." : "Lab 8 finished.");
-    logLine();
-}
-
-// ============================================================
-// LAB 9 — FINAL SERVICE RECOMMENDATION (Complete Engine)
+// LAB 8 — FINAL SERVICE RECOMMENDATION (Complete Engine)
 // ============================================================
 private void runFinalServiceRecommendationLab() {
 
@@ -2020,8 +2028,8 @@ private void runFinalServiceRecommendationLab() {
     appendHtml("<br>");
     logLine();
     logInfo(gr
-            ? "LAB 9 — Τελική Σύσταση Service"
-            : "LAB 9 — Final Service Recommendation");
+            ? "LAB 8 — Τελική Σύσταση Service"
+            : "LAB 8 — Final Service Recommendation");
     logLine();
 
     // ------------------------------------------------------------
@@ -2126,21 +2134,29 @@ private void runFinalServiceRecommendationLab() {
     // ------------------------------------------------------------
     // SUMMARY
     // ------------------------------------------------------------
-    logInfo(gr ? "Συνολικά logs:" : "Total logs:");
-    logOk(String.valueOf(total));
+    logLabelOkValue(
+        gr ? "Συνολικά logs:" : "Total logs:",
+        String.valueOf(total)
+);
 
-    logInfo(gr ? "Κυρίαρχο domain:" : "Dominant domain:");
-    logWarn(safe(dominant) + " (" + max + "/" + total + ")");
+logLabelWarnValue(
+        gr ? "Κυρίαρχο domain:" : "Dominant domain:",
+        safe(dominant) + " (" + max + "/" + total + ")"
+);
 
-    logInfo(gr ? "Ποσοστό επανάληψης:" : "Repetition ratio:");
-    logOk(percent + "%");
+logLabelOkValue(
+        gr ? "Ποσοστό επανάληψης:" : "Repetition ratio:",
+        percent + "%"
+);
 
-    logInfo(gr ? "Δείκτης Σταθερότητας:" : "Stability Index:");
-    logOk(score + " / 100");
+logLabelOkValue(
+        gr ? "Δείκτης Σταθερότητας:" : "Stability Index:",
+        score + " / 100"
+);
 
     logLine();
     
-    // ------------------------------------------------------------
+// ------------------------------------------------------------
 // SYNTHESIS (REAL DIAGNOSTIC RESULT)
 // ------------------------------------------------------------
 
@@ -2150,21 +2166,29 @@ if (dominant != null && ratio >= 0.5 && score < 60) {
 
     logInfo(gr ? "Τεχνικό συμπέρασμα:" : "Technical conclusion:");
 
-    logWarn(gr
-            ? "Εντοπίστηκε επαναλαμβανόμενο μοτίβο crash."
-            : "Recurring crash pattern detected.");
+logLabelWarnValue(
+        gr ? "Μοτίβο crash:" : "Crash pattern:",
+        gr
+                ? "Εντοπίστηκε επαναλαμβανόμενο μοτίβο."
+                : "Recurring crash pattern detected."
+);
 
-    logWarn(gr
-            ? "Κυρίαρχο υποσύστημα: " + domainText
-            : "Dominant subsystem: " + domainText);
+logLabelWarnValue(
+        gr ? "Κυρίαρχο υποσύστημα:" : "Dominant subsystem:",
+        safe(domainText)
+);
 
-    logWarn(gr
-            ? "Η σταθερότητα του συστήματος έχει μειωθεί (" + score + "/100)."
-            : "System stability is reduced (" + score + "/100).");
+logLabelWarnValue(
+        gr ? "Σταθερότητα συστήματος:" : "System stability:",
+        score + "/100"
+);
 
-    logOk(gr
-            ? "Εάν τα crashes συνεχιστούν, συνιστάται τεχνικός έλεγχος."
-            : "If crashes persist, professional inspection is recommended.");
+logLabelOkValue(
+        gr ? "Σύσταση:" : "Recommendation:",
+        gr
+                ? "Εάν τα crashes συνεχιστούν, συνιστάται τεχνικός έλεγχος."
+                : "If crashes persist, professional inspection is recommended."
+);
 }
     
 // ------------------------------------------------------------
@@ -2180,27 +2204,34 @@ else if (ratio < 0.4 && domainCount.size() >= 3) {
     likelySoftware = true;
 }
 
-logInfo(gr ? "Τύπος προβλήματος:" : "Issue type:");
-
 if (likelyHardware) {
 
-    logError(gr
-            ? "Πιθανή βλάβη υλικού."
-            : "Probable hardware fault.");
+    logLabelErrorValue(
+            gr ? "Τύπος προβλήματος:" : "Issue type:",
+            gr
+                    ? "Πιθανή βλάβη υλικού."
+                    : "Probable hardware fault."
+    );
 
 }
 else if (likelySoftware) {
 
-    logWarn(gr
-            ? "Πιθανό πρόβλημα λογισμικού."
-            : "Likely software instability.");
+    logLabelWarnValue(
+            gr ? "Τύπος προβλήματος:" : "Issue type:",
+            gr
+                    ? "Πιθανό πρόβλημα λογισμικού."
+                    : "Likely software instability."
+    );
 
 }
 else {
 
-    logOk(gr
-            ? "Μη καθορισμένη αιτία."
-            : "Cause not clearly determined.");
+    logLabelOkValue(
+            gr ? "Τύπος προβλήματος:" : "Issue type:",
+            gr
+                    ? "Μη καθορισμένη αιτία."
+                    : "Cause not clearly determined."
+    );
 }
 
     // ------------------------------------------------------------
@@ -2245,8 +2276,10 @@ if (dominant != null) {
         suspect = "Thermal sensor subsystem";
 }
 
-    logInfo(gr ? "Πιθανό υποσύστημα:" : "Probable subsystem:");
-    logWarn(suspect);
+    logLabelWarnValue(
+        gr ? "Πιθανό υποσύστημα:" : "Probable subsystem:",
+        safe(suspect)
+);
 
     logLine();
 
@@ -2310,18 +2343,22 @@ if (dominant != null) {
     // ------------------------------------------------------------
     // PROFESSIONAL NOTE
     // ------------------------------------------------------------
-    logInfo(gr ? "Τελική σημείωση:" : "Final note:");
+    logLabelOkValue(
+        gr ? "Τελική σημείωση:" : "Final note:",
+        gr
+                ? "Η ανάλυση βασίζεται σε διαθέσιμα panic logs και δεν αντικαθιστά φυσικό τεχνικό έλεγχο."
+                : "This analysis is based on panic logs and does not replace physical inspection."
+);
 
-    logOk(gr
-            ? "Η ανάλυση βασίζεται σε διαθέσιμα panic logs και δεν αντικαθιστά φυσικό τεχνικό έλεγχο."
-            : "This analysis is based on panic logs and does not replace physical inspection.");
-
-    logOk(gr
-            ? "Τα συμπεράσματα πρέπει να συσχετίζονται με τα πραγματικά συμπτώματα της συσκευής."
-            : "Conclusions must be correlated with actual device symptoms.");
+logLabelOkValue(
+        gr ? "Διευκρίνιση:" : "Clarification:",
+        gr
+                ? "Τα συμπεράσματα πρέπει να συσχετίζονται με τα πραγματικά συμπτώματα της συσκευής."
+                : "Conclusions must be correlated with actual device symptoms."
+);
 
     appendHtml("<br>");
-    logOk(gr ? "Το Lab 9 ολοκληρώθηκε." : "Lab 9 finished.");
+    logOk(gr ? "Το Lab 8 ολοκληρώθηκε." : "Lab 8 finished.");
     logLine();
 }
 
@@ -2348,9 +2385,10 @@ logInfo(gr
             
             String device = detectDeviceType(panicLogText);
 
-logInfo(gr
-        ? "Συσκευή: " + device
-        : "Device: " + device);
+logLabelOkValue(
+        gr ? "Συσκευή:" : "Device:",
+        safe(device)
+);
         
             panicLogName   = gr
                     ? "Ενσωματωμένα demo panic logs"
@@ -2388,10 +2426,7 @@ logInfo(gr
 
             runRecurringDomainLab();
             SystemClock.sleep(100);
-
-            runStabilityIndexLab();
-            SystemClock.sleep(100);
-
+            
             runFinalServiceRecommendationLab();
 
             logOk(gr
@@ -2400,9 +2435,10 @@ logInfo(gr
 
         } catch (Throwable t) {
 
-            logError(gr
-                    ? "Αποτυχία demo διάγνωσης: " + t.getMessage()
-                    : "Demo diagnostics failed: " + t.getMessage());
+            logLabelErrorValue(
+        gr ? "Αποτυχία demo διάγνωσης:" : "Demo diagnostics failed:",
+        safe(t.getMessage())
+);
         }
 
     }).start();

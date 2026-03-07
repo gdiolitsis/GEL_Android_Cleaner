@@ -1822,8 +1822,6 @@ private void runPanicFrequencyLab() {
         return;
     }
 
-String[] blocks = panicLogText.split("===== ZIP FILE:");
-
 java.util.Map<String, Integer> crashCount = new java.util.HashMap<>();
 
 for (String block : blocks) {
@@ -1869,18 +1867,16 @@ private void runPanicClusteringLab() {
             : "LAB 6 — Panic Domain Clustering");
     logLine();
 
-    String[] blocks = panicLogText.split("===== (FILE|ZIP FILE):");
+String[] blocks = panicLogText.split("(?m)^===== ZIP FILE:");
 
-    if (blocks.length <= 1) {
-        logWarn(gr
-                ? "Δεν υπάρχουν πολλαπλά logs για clustering."
-                : "No multiple logs available for clustering.");
-        return;
-    }
+if (blocks.length <= 1) {
+    logWarn(gr
+            ? "Δεν υπάρχουν πολλαπλά logs για clustering."
+            : "No multiple logs available for clustering.");
+    return;
+}
 
-String[] blocks = panicLogText.split("===== ZIP FILE:");
-
-java.util.Map<String, Integer> crashCount = new java.util.HashMap<>();
+java.util.Map<String, Integer> domainCount = new java.util.HashMap<>();
 
 for (String block : blocks) {
 
@@ -1890,9 +1886,10 @@ for (String block : blocks) {
     resetSignatureCache();
     parseAndCacheSignature(block);
 
-        String key = normalizeDomain(sigDomain);
-        domainCount.put(key, domainCount.getOrDefault(key, 0) + 1);
-    }
+    String key = normalizeDomain(sigDomain);
+
+    domainCount.put(key, domainCount.getOrDefault(key, 0) + 1);
+}
 
     logInfo(gr ? "Συχνότητα Domain:" : "Domain Frequency:");
 
@@ -1938,32 +1935,28 @@ private void runRecurringDomainLab() {
 
     String[] blocks = panicLogText.split("(?m)^===== ZIP FILE:");
 
-    if (blocks.length <= 1) {
+    java.util.Map<String, Integer> domainCount = new java.util.HashMap<>();
+
+    int total = 0;
+
+    for (String block : blocks) {
+
+        if (block == null || block.trim().isEmpty())
+            continue;
+
+        resetSignatureCache();
+        parseAndCacheSignature(block);
+
+        total++;
+
+        String key = normalizeDomain(sigDomain);
+        domainCount.put(key, domainCount.getOrDefault(key, 0) + 1);
+    }
+
+    if (total <= 1) {
         logOk(gr
                 ? "Απαιτούνται πολλαπλά logs για ανίχνευση μοτίβου."
                 : "Multiple logs are required for pattern detection.");
-        return;
-    }
-
-String[] blocks = panicLogText.split("===== ZIP FILE:");
-
-java.util.Map<String, Integer> domainCount = new java.util.HashMap<>();
-
-int total = 0;
-
-for (String block : blocks) {
-
-    if (block == null || block.trim().isEmpty())
-        continue;
-
-    resetSignatureCache();
-    parseAndCacheSignature(block);
-
-    total++;
-    }
-
-    if (total == 0) {
-        logWarn(gr ? "Δεν βρέθηκαν έγκυρα logs." : "No valid logs found.");
         return;
     }
 
@@ -1983,24 +1976,23 @@ for (String block : blocks) {
     int percent = (int) (ratio * 100);
 
     logLabelOkValue(
-        gr ? "Συνολικά logs:" : "Total logs:",
-        String.valueOf(total)
-);
+            gr ? "Συνολικά logs:" : "Total logs:",
+            String.valueOf(total)
+    );
 
-logLabelWarnValue(
-        gr ? "Κυρίαρχο domain:" : "Dominant domain:",
-        safe(dominant) + " (" + max + "/" + total + ")"
-);
+    logLabelWarnValue(
+            gr ? "Κυρίαρχο domain:" : "Dominant domain:",
+            safe(dominant) + " (" + max + "/" + total + ")"
+    );
 
-logLabelOkValue(
-        gr ? "Ποσοστό επανάληψης:" : "Repetition ratio:",
-        percent + "%"
-);
+    logLabelOkValue(
+            gr ? "Ποσοστό επανάληψης:" : "Repetition ratio:",
+            percent + "%"
+    );
 
     // -------------------------------
     // PATTERN INTERPRETATION
     // -------------------------------
-
     if (ratio >= 0.5) {
 
         if (isHighRiskDomain(dominant)) {

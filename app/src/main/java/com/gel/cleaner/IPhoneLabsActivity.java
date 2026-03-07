@@ -1706,7 +1706,7 @@ private void runImpactLab() {
             : "LAB 4 — Impact Analysis");
     logLine();
 
-    logInfo(gr
+    logOk(gr
             ? "Αξιολόγηση πιθανών επιπτώσεων σε hardware ή σύστημα."
             : "Evaluating which hardware or system areas may be affected.");
 
@@ -2153,8 +2153,7 @@ logLabelOkValue(
         gr ? "Δείκτης Σταθερότητας:" : "Stability Index:",
         score + " / 100"
 );
-
-    logLine();
+appendHtml("<br>");
     
 // ------------------------------------------------------------
 // SYNTHESIS (REAL DIAGNOSTIC RESULT)
@@ -2165,6 +2164,7 @@ if (dominant != null && ratio >= 0.5 && score < 60) {
     String domainText = safe(dominant);
 
     logInfo(gr ? "Τεχνικό συμπέρασμα:" : "Technical conclusion:");
+    logLine();
 
 logLabelWarnValue(
         gr ? "Μοτίβο crash:" : "Crash pattern:",
@@ -2280,8 +2280,7 @@ if (dominant != null) {
         gr ? "Πιθανό υποσύστημα:" : "Probable subsystem:",
         safe(suspect)
 );
-
-    logLine();
+appendHtml("<br>");
 
     // ------------------------------------------------------------
     // FINAL VERDICT
@@ -2321,7 +2320,7 @@ if (dominant != null) {
         logOk(gr
                 ? "Συνιστάται τεχνικός έλεγχος."
                 : "Professional inspection recommended.");
-
+                appendHtml("<br>");
     }
     else {
 
@@ -2338,7 +2337,7 @@ if (dominant != null) {
                 : "Immediate technical inspection recommended.");
     }
 
-    logLine();
+    appendHtml("<br>");
 
     // ------------------------------------------------------------
     // PROFESSIONAL NOTE

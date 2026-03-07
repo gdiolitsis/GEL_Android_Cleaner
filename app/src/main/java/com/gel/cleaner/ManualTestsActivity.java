@@ -11762,7 +11762,7 @@ if (!Float.isNaN(percentDeviation) && percentDeviation > 15f) {
                     logLabelValue(
                             gr ? "Γρήγορη καταπόνηση (μέσο sag)"
                                : "Fast stress (avg sag)",
-                            String.format(Locale.US, "%.3f V", sagAvg)
+                            String.format(Locale.US, "%.3f V", sagAvg[0])
                     );
                 }
 
@@ -11809,10 +11809,12 @@ if (!Float.isNaN(internalResistance[0])) {
         logLabelOkValue(
                 gr ? "Εσωτερική αντίσταση μπαταρίας"
                    : "Battery internal resistance",
-                String.format(Locale.US,
+                String.format(
+                        Locale.US,
                         "%.3f Ω (%s)",
                         internalResistance[0],
-                        label)
+                        label
+                )
         );
 
     } else {
@@ -11820,23 +11822,24 @@ if (!Float.isNaN(internalResistance[0])) {
         logLabelWarnValue(
                 gr ? "Εσωτερική αντίσταση μπαταρίας"
                    : "Battery internal resistance",
-                String.format(Locale.US,
+                String.format(
+                        Locale.US,
                         "%.3f Ω (%s)",
                         internalResistance[0],
-                        label)
+                        label
+                )
         );
 
     }
+
+} else {
+
+    logLabelWarnValue(
+            gr ? "Εσωτερική αντίσταση μπαταρίας"
+               : "Battery internal resistance",
+            gr ? "Μη διαθέσιμη" : "Unavailable"
+    );
 }
-
-                } else {
-
-                    logLabelWarnValue(
-                            gr ? "Εσωτερική αντίσταση μπαταρίας"
-                               : "Battery internal resistance",
-                            gr ? "Μη διαθέσιμη" : "Unavailable"
-                    );
-                }
 
                 // voltage recovery
                 if (!Float.isNaN(voltageRecovery[0])) {
@@ -11852,11 +11855,11 @@ if (!Float.isNaN(internalResistance[0])) {
                             gr ? "Ανάκαμψη τάσης μετά το φορτίο"
                                : "Voltage recovery after load",
                             String.format(
-                                    Locale.US,
-                                    "%.3f V (%s)",
-                                    voltageRecovery,
-                                    label
-                            )
+        Locale.US,
+        "%.3f V (%s)",
+        voltageRecovery[0],
+        label
+)
                     );
 
                 } else {
@@ -11886,11 +11889,11 @@ if (!Float.isNaN(internalResistance[0])) {
                             gr ? "Σταθερότητα τάσης μπαταρίας"
                                : "Battery voltage stability",
                             String.format(
-                                    Locale.US,
-                                    "%.0f / 100 (%s)",
-                                    voltageStability,
-                                    label
-                            )
+        Locale.US,
+        "%.0f / 100 (%s)",
+        voltageStability[0],
+        label
+)
                     );
 
                 } else {
@@ -11994,19 +11997,34 @@ if (!Float.isNaN(internalResistance[0])) {
                         String.format(Locale.US, "%.1f°C", endBatteryTemp)
                 );
 
-                float delta = endBatteryTemp - startBatteryTemp;
+                if (!Float.isNaN(startBatteryTemp) && !Float.isNaN(endBatteryTemp)) {
 
-                if (delta >= 3.0f) {
-                    logLabelWarnValue(
-                            gr ? "Θερμική μεταβολή" : "Thermal change",
-                            String.format(Locale.US, "+%.1f°C", delta)
-                    );
-                } else {
-                    logLabelOkValue(
-                            gr ? "Θερμική μεταβολή" : "Thermal change",
-                            String.format(Locale.US, "%.1f°C", delta)
-                    );
-                }
+    float delta = endBatteryTemp - startBatteryTemp;
+
+    if (delta >= 3.0f) {
+
+        logLabelWarnValue(
+                gr ? "Θερμική μεταβολή" : "Thermal change",
+                String.format(Locale.US, "+%.1f°C", delta)
+        );
+
+    } else {
+
+        logLabelOkValue(
+                gr ? "Θερμική μεταβολή" : "Thermal change",
+                String.format(Locale.US, "%.1f°C", delta)
+        );
+
+    }
+
+} else {
+
+    logLabelWarnValue(
+            gr ? "Θερμική μεταβολή" : "Thermal change",
+            gr ? "Μη διαθέσιμα δεδομένα θερμοκρασίας"
+               : "Temperature data unavailable"
+    );
+}
 
                 if (!Float.isNaN(voltageStart)
                         && !Float.isNaN(voltageUnderLoad[0])

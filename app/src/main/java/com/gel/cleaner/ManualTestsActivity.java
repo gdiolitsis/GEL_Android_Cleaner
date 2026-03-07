@@ -11542,7 +11542,7 @@ if (!Float.isNaN(percentDeviation) && percentDeviation > 15f) {
                     if (!Float.isNaN(currentNow)) {
                         float currentAmp = Math.abs(currentNow) / 1000f;
                         if (currentAmp > 0.1f) {
-                            internalResistance = sag / currentAmp;
+                            internalResistance[0] = sag / currentAmp;
                         }
                     }
                 }
@@ -11719,7 +11719,7 @@ if (!Float.isNaN(percentDeviation) && percentDeviation > 15f) {
 
                     if (!Float.isNaN(internalResistance[0])) {
                         if (internalResistance[0] >= 0.25f) finalScore -= 15;
-                        else if (internalResistance >= 0.18f) finalScore -= 8;
+                        else if (internalResistance[0] >= 0.18f) finalScore -= 8;
                     }
 
                     if (collapseRisk[0]) finalScore -= 10;
@@ -11793,12 +11793,10 @@ if (!Float.isNaN(percentDeviation) && percentDeviation > 15f) {
                 // internal resistance
                 if (!Float.isNaN(internalResistance[0])) {
 
-                    String label;
-
-                    if (internalResistance < 0.08f) label = "Excellent";
-                    else if (internalResistance < 0.15f) label = "Normal";
-                    else if (internalResistance < 0.25f) label = "Worn";
-                    else label = "Failing";
+    if (internalResistance[0] < 0.08f) label = "Excellent";
+    else if (internalResistance[0] < 0.15f) label = "Normal";
+    else if (internalResistance[0] < 0.25f) label = "Worn";
+    else label = "Failing";
 
                     logLabelValue(
                             gr ? "Εσωτερική αντίσταση μπαταρίας"

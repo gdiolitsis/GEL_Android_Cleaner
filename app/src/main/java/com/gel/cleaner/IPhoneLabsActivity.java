@@ -1201,37 +1201,51 @@ protected void onActivityResult(int requestCode,
 
         StringBuilder allLogs = new StringBuilder();
 
-        // append mode
-        if (appendMode && panicLogLoaded && panicLogText != null) {
-            allLogs.append(panicLogText);
-        }
+// append mode
+if (appendMode && panicLogLoaded && panicLogText != null) {
+    allLogs.append(panicLogText);
+}
 
-        int loadedCount = 0;
+int loadedCount = 0;
 
-        for (Uri uri : uris) {
+for (Uri uri : uris) {
 
-            String name = (uri != null) ? uri.getLastPathSegment() : "unknown";
-            String safeName = (name != null) ? name : "unknown";
+    String name = (uri != null) ? uri.getLastPathSegment() : "unknown";
+    String safeName = (name != null) ? name : "unknown";
 
-            InputStream is = getContentResolver().openInputStream(uri);
-            if (is == null) continue;
+    InputStream is = getContentResolver().openInputStream(uri);
+    if (is == null) continue;
 
-            String text;
+    String text;
 
-            if (looksLikeZip(safeName)) {
-                text = readPanicFromZip(is);
-            } else {
-                text = readTextStream(is);
-            }
+    if (looksLikeZip(safeName)) {
+        text = readPanicFromZip(is);
+    } else {
+        text = readTextStream(is);
+    }
 
-            try { is.close(); } catch (Throwable ignore) {}
+    try { is.close(); } catch (Throwable ignore) {}
 
-            if (text == null || text.trim().isEmpty()) {
-    logLabelWarnValue(
-        gr ? "Κενό αρχείο:" : "Empty file:",
-        safe(safeName)
-);
-    continue;
+    if (text == null || text.trim().isEmpty()) {
+
+        logLabelWarnValue(
+                gr ? "Κενό αρχείο:" : "Empty file:",
+                safe(safeName)
+        );
+
+        continue;
+    }
+
+    // =====================================================
+    // IMPORTANT: delimiter για τα LAB parsers
+    // =====================================================
+    allLogs.append("\n===== ZIP FILE: ")
+           .append(safe(safeName))
+           .append(" =====\n");
+
+    allLogs.append(text).append("\n");
+
+    loadedCount++;
 }
 
 if (looksCorruptedPanic(text)) {
@@ -2154,12 +2168,21 @@ logLabelOkValue(
         score + " / 100"
 );
 appendHtml("<br>");
+
+boolean singleLog = total == 1;
     
 // ------------------------------------------------------------
 // SYNTHESIS (REAL DIAGNOSTIC RESULT)
 // ------------------------------------------------------------
 
-if (dominant != null && ratio >= 0.5 && score < 60) {
+boolean criticalCrash =
+        "Kernel Panic".equalsIgnoreCase(sigCrashType) ||
+        "Watchdog / Hang".equalsIgnoreCase(sigCrashType);
+
+if (dominant != null && (
+        (ratio >= 0.5 && score < 60) ||
+        (singleLog && (score < 60 || criticalCrash))
+)) {
 
     String domainText = safe(dominant);
 
@@ -2280,6 +2303,7 @@ if (dominant != null) {
         gr ? "Πιθανό υποσύστημα:" : "Probable subsystem:",
         safe(suspect)
 );
+
 appendHtml("<br>");
 
     // ------------------------------------------------------------
@@ -2320,7 +2344,9 @@ appendHtml("<br>");
         logOk(gr
                 ? "Συνιστάται τεχνικός έλεγχος."
                 : "Professional inspection recommended.");
-                appendHtml("<br>");
+             
+   appendHtml("<br>");
+   
     }
     else {
 

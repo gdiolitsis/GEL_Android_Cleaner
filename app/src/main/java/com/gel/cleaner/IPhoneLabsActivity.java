@@ -1678,12 +1678,23 @@ if ("High".equalsIgnoreCase(sigConfidence)) {
             safe(sigConfidence)
     );
 
-} else if ("Medium".equalsIgnoreCase(sigConfidence)) {
+}
+else if ("Medium".equalsIgnoreCase(sigConfidence)) {
 
     logLabelWarnValue(
             gr ? "Επίπεδο Βεβαιότητας:" : "Confidence Level:",
             safe(sigConfidence)
     );
+
+}
+else {
+
+    logLabelOkValue(
+            gr ? "Επίπεδο Βεβαιότητας:" : "Confidence Level:",
+            safe(sigConfidence)
+    );
+
+}
 
 } else {
 

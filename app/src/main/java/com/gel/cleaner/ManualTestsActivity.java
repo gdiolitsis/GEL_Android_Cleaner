@@ -11222,28 +11222,28 @@ logLabelOkValue(
         }
         lab14Dialog.show();
 
-        // ------------------------------------------------------------
-        // 4) DECLARATIONS FOR ELECTRICAL DIAGNOSTICS
-        // ------------------------------------------------------------
-        float vStart = Float.NaN;
-        float vLoad1 = Float.NaN;
-        float vRecover = Float.NaN;
-        float vLoad2 = Float.NaN;
+// ------------------------------------------------------------
+// 4) DECLARATIONS FOR ELECTRICAL DIAGNOSTICS
+// ------------------------------------------------------------
+float vStart = Float.NaN;
+float vLoad1 = Float.NaN;
+float vRecover = Float.NaN;
+float vLoad2 = Float.NaN;
 
-        float sag1 = Float.NaN;
-        float sag2 = Float.NaN;
-        float sagAvg = Float.NaN;
+float sag1 = Float.NaN;
+float sag2 = Float.NaN;
+final float[] sagAvg = {Float.NaN};
 
-        float voltageRecovery = Float.NaN;
-        float voltageStability = Float.NaN;
-        float internalResistance = Float.NaN;
+final float[] voltageRecovery = {Float.NaN};
+final float[] voltageStability = {Float.NaN};
+final float[] internalResistance = {Float.NaN};
 
-        boolean collapseRisk = false;
-        boolean swellingRisk = false;
-        boolean calibrationDrift = false;
+final boolean[] collapseRisk = {false};
+final boolean[] swellingRisk = {false};
+final boolean[] calibrationDrift = {false};
 
-        float expectedPercent = Float.NaN;
-        float percentDeviation = Float.NaN;
+final float[] expectedPercent = {Float.NaN};
+final float[] percentDeviation = {Float.NaN};
 
         // ------------------------------------------------------------
         // 5) FAST BATTERY STRESS (45 sec)
@@ -11465,7 +11465,7 @@ try { restoreBrightnessAndKeepOn(); } catch (Throwable ignore) {}
                     SystemClock.sleep(3000);
                     float vr = getBatteryVoltageFiltered();
                     if (!Float.isNaN(vr)) {
-                        voltageRecovery = vr - voltageUnderLoad[0];
+                        voltageRecovery[0] = vr - voltageUnderLoad[0];
                     }
                 }
 
@@ -11515,19 +11515,19 @@ boolean calibrationDrift = false;
 
 if (baselineFullMah > 0 && startMah > 0) {
 
-    expectedPercent =
-            (float) startMah / (float) baselineFullMah * 100f;
+    expectedPercent[0] =
+        (float) startMah / (float) baselineFullMah * 100f;
 }
 
 if (!Float.isNaN(expectedPercent) && batteryPercent >= 0) {
 
-    percentDeviation =
-            Math.abs(expectedPercent - batteryPercent);
+    percentDeviation[0] =
+        Math.abs(expectedPercent[0] - batteryPercent);
 }
 
-if (!Float.isNaN(percentDeviation) && percentDeviation > 15f) {
+if (!Float.isNaN(percentDeviation[0]) && percentDeviation[0] > 15f) {
 
-    calibrationDrift = true;
+    calibrationDrift[0] = true;
 }
 
                 // ----------------------------------------------------
@@ -11542,7 +11542,7 @@ if (!Float.isNaN(percentDeviation) && percentDeviation > 15f) {
                     if (!Float.isNaN(currentNow)) {
                         float currentAmp = Math.abs(currentNow) / 1000f;
                         if (currentAmp > 0.1f) {
-                            internalResistance = sag / currentAmp;
+                            internalResistance[0] = sag / currentAmp;
                         }
                     }
                 }
@@ -11552,12 +11552,12 @@ if (!Float.isNaN(percentDeviation) && percentDeviation > 15f) {
 
                     if (internalResistance > 0.18f &&
                             voltageRecovery < 0.07f) {
-                        collapseRisk = true;
+                        collapseRisk[0] = true;
                     }
                 }
 
                 if (mahPerHour > 1200)
-                    collapseRisk = true;
+                    collapseRisk[0] = true;
 
                 if (!Float.isNaN(internalResistance) &&
                         !Float.isNaN(tempStart) &&
@@ -11567,13 +11567,13 @@ if (!Float.isNaN(percentDeviation) && percentDeviation > 15f) {
 
                     if (internalResistance > 0.20f &&
                             tempRise > 8.0f) {
-                        swellingRisk = true;
+                        swellingRisk[0] = true;
                     }
                 }
 
                 if (!Float.isNaN(voltageRecovery) &&
                         voltageRecovery < 0.04f) {
-                    swellingRisk = true;
+                    swellingRisk[0] = true;
                 }
 
                 if (baselineFullMah > 0 && startMah > 0) {
@@ -11582,12 +11582,12 @@ if (!Float.isNaN(percentDeviation) && percentDeviation > 15f) {
                 }
 
                 if (!Float.isNaN(expectedPercent) && batteryPercent >= 0) {
-                    percentDeviation =
-                            Math.abs(expectedPercent - batteryPercent);
+                    percentDeviation[0] =
+        Math.abs(expectedPercent[0] - batteryPercent);
                 }
 
-                if (!Float.isNaN(percentDeviation) && percentDeviation > 15f) {
-                    calibrationDrift = true;
+                if (!Float.isNaN(percentDeviation[0]) && percentDeviation[0] > 15f) {
+                    calibrationDrift[0] = true;
                 }
 
                 // ----------------------------------------------------
@@ -11821,7 +11821,7 @@ if (!Float.isNaN(percentDeviation) && percentDeviation > 15f) {
                 }
 
                 // voltage recovery
-                if (!Float.isNaN(voltageRecovery)) {
+                if (!Float.isNaN(voltageRecovery[0])) {
 
                     String label;
 
@@ -11920,7 +11920,7 @@ if (!Float.isNaN(percentDeviation) && percentDeviation > 15f) {
                 }
 
                 // calibration drift
-                if (calibrationDrift) {
+                if (calibrationDrift[0]) {
                     logLabelWarnValue(
                             gr ? "Απόκλιση βαθμονόμησης μπαταρίας"
                                : "Battery calibration drift",
@@ -12148,18 +12148,18 @@ logLabelValue(
                     );
                 }
 
-                // ----------------------------------------------------
-                // 16) SAVE FLAGS
-                // ----------------------------------------------------
-                p.edit()
-                        .putBoolean("lab14_unstable_measurement", variabilityDetected)
-                        .putBoolean("lab14_collapse_risk", collapseRisk)
-                        .putBoolean("lab14_swelling_risk", swellingRisk)
-                        .putBoolean("lab14_calibration_drift", calibrationDrift)
-                        .putFloat("lab14_health_score", finalScore)
-                        .putInt("lab14_aging_index", agingIndex)
-                        .putLong("lab14_last_ts", System.currentTimeMillis())
-                        .apply();
+// ----------------------------------------------------
+// 16) SAVE FLAGS
+// ----------------------------------------------------
+p.edit()
+        .putBoolean("lab14_unstable_measurement", variabilityDetected)
+        .putBoolean("lab14_collapse_risk", collapseRisk[0])
+        .putBoolean("lab14_swelling_risk", swellingRisk[0])
+        .putBoolean("lab14_calibration_drift", calibrationDrift[0])
+        .putFloat("lab14_health_score", finalScore)
+        .putInt("lab14_aging_index", agingIndex)
+        .putLong("lab14_last_ts", System.currentTimeMillis())
+        .apply();
 
                 logLabelOkValue(
                         "LAB 14 storage",
@@ -18372,7 +18372,7 @@ private void lab29FinalSummary() {
     
     appendHtml("<br>");
     
-    // ------------------------------------------------------------
+// ------------------------------------------------------------
 // DEVICE RELIABILITY INDEX
 // ------------------------------------------------------------
 float dri = 100f;
@@ -18380,8 +18380,10 @@ float dri = 100f;
 // battery health
 if (batteryScore >= 0) {
 
-    if (batteryScore < 70) dri -= 15;
-    if (batteryScore < 55) dri -= 25;
+    if (batteryScore < 55)
+        dri -= 25;
+    else if (batteryScore < 70)
+        dri -= 15;
 }
 
 // RAM pressure
@@ -18408,11 +18410,11 @@ boolean thermalIssue =
 
 if (thermalIssue) dri -= 15;
 
+// swelling
 boolean swellingRisk =
         p.getBoolean("lab14_swelling_risk", false);
 
-if (swellingRisk)
-    dri -= 15;
+if (swellingRisk) dri -= 15;
 
 // root risk
 boolean rooted =
@@ -18420,18 +18422,19 @@ boolean rooted =
 
 if (rooted) dri -= 10;
 
+// battery calibration drift
 boolean calibrationDrift =
         p.getBoolean("lab14_calibration_drift", false);
 
-if (calibrationDrift)
-    dri -= 10;
+if (calibrationDrift) dri -= 10;
 
+// battery collapse risk
 boolean collapseRisk =
         p.getBoolean("lab14_collapse_risk", false);
 
-if (collapseRisk)
-    dri -= 20;
+if (collapseRisk) dri -= 20;
 
+if (dri > 100) dri = 100;
 if (dri < 0) dri = 0;
 
 String driLabel;
@@ -18446,8 +18449,8 @@ else if (dri >= 40)
     driLabel = gr ? "Υψηλός κίνδυνος προβλημάτων" : "High risk";
 else
     driLabel = gr ? "Ασταθής συσκευή" : "Unstable device";
-    
-    logLabelOkValue(
+
+logLabelOkValue(
         gr ? "Δείκτης αξιοπιστίας συσκευής"
            : "Device reliability index",
         String.format(

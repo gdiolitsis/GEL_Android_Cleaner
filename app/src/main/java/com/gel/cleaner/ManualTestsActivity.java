@@ -490,8 +490,14 @@ protected void attachBaseContext(Context base) {
 }  
 
 @Override
-protected void onCreate(@Nullable Bundle savedInstanceState) {
+protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+
+    // SAFETY GUARD
+    new Handler(Looper.getMainLooper()).postDelayed(() -> {
+        if (isFinishing() || isDestroyed()) return;
+    }, 120);
+}
 
     prefs = getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
     p = prefs;
@@ -4212,6 +4218,87 @@ private MicQuickResult micCaptureOnceMs(int ms) {
 }
 
 // ============================================================
+// PERMISSION GUARD HELPERS — GEL EDITION
+// Clean single-line permission guards for each LAB
+// ============================================================
+
+// ------------------------------------------------------------
+// MICROPHONE (RECORD_AUDIO)
+// ------------------------------------------------------------
+private boolean guardMic(Runnable afterGranted) {
+    return ensurePermissions(
+            new String[]{Manifest.permission.RECORD_AUDIO},
+            afterGranted
+    );
+}
+
+// ------------------------------------------------------------
+// CAMERA (CAMERA)
+// ------------------------------------------------------------
+private boolean guardCamera(Runnable afterGranted) {
+    return ensurePermissions(
+            new String[]{Manifest.permission.CAMERA},
+            afterGranted
+    );
+}
+
+// ------------------------------------------------------------
+// LOCATION (FINE + COARSE)
+// ------------------------------------------------------------
+private boolean guardLocation(Runnable afterGranted) {
+    return ensurePermissions(
+            new String[]{
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+            },
+            afterGranted
+    );
+}
+
+// ------------------------------------------------------------
+// PHONE STATE (READ_PHONE_STATE)
+// ------------------------------------------------------------
+private boolean guardPhoneState(Runnable afterGranted) {
+    return ensurePermissions(
+            new String[]{Manifest.permission.READ_PHONE_STATE},
+            afterGranted
+    );
+}
+
+// ------------------------------------------------------------
+// STORAGE READ (Android ≤ 12)
+// ------------------------------------------------------------
+private boolean guardStorageRead(Runnable afterGranted) {
+    return ensurePermissions(
+            new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+            afterGranted
+    );
+}
+
+// ------------------------------------------------------------
+// STORAGE WRITE (Android ≤ 10)
+// ------------------------------------------------------------
+private boolean guardStorageWrite(Runnable afterGranted) {
+    return ensurePermissions(
+            new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+            afterGranted
+    );
+}
+
+// ------------------------------------------------------------
+// USAGE ACCESS (SPECIAL PERMISSION — NOT RUNTIME)
+// ------------------------------------------------------------
+private boolean guardUsageAccess() {
+
+    if (hasUsageAccess()) {
+        return true;
+    }
+
+    showUsageAccessDialog();
+    return false;
+}
+
+// ============================================================
 // LABS 1-5: AUDIO & VIBRATION
 // ============================================================
 
@@ -4219,6 +4306,8 @@ private MicQuickResult micCaptureOnceMs(int ms) {
 // LAB 1 - Speaker Tone Test (AUTO) — WITH AUDIO PATH CHECK
 // ============================================================
 private void lab1SpeakerTone() {
+
+    if (!guardMic(this::lab1SpeakerTone)) return;
 
     final boolean gr = AppLang.isGreek(this);
 
@@ -4538,6 +4627,8 @@ gr ? "Αποτυχία δρομολόγησης ήχου ή περιορισμό
 // • FAIL only if absolute silence (RMS == 0 && Peak == 0)
 // ============================================================
 private void lab2SpeakerSweep() {
+
+    if (!guardMic(this::lab2SpeakerSweep)) return;
 
     final boolean gr = AppLang.isGreek(this);
 
@@ -5044,6 +5135,9 @@ new Handler(Looper.getMainLooper()).postDelayed(() -> {
    ============================================================ */
 
 private void lab4MicManual() {
+
+    if (!guardMic(this::lab4MicManual)) return;
+    
     lab4MicBase(() -> lab4MicPro());
 }
 
@@ -6763,6 +6857,8 @@ if (!isFinishing() && !isDestroyed()) {
 // ============================================================
 
 private void lab8CameraHardwareCheck() {
+
+    if (!guardCamera(this::lab8CameraHardwareCheck)) return;
 
     final boolean gr = AppLang.isGreek(this);
 
@@ -9438,6 +9534,13 @@ private void lab12CallFunctionInterpretation() {
 // ============================================================
 
 private void lab13BluetoothConnectivityCheck() {
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        if (!ensurePermissions(
+                new String[]{Manifest.permission.BLUETOOTH_CONNECT},
+                this::lab13BluetoothConnectivityCheck
+        )) return;
+    }
 
     final boolean gr = AppLang.isGreek(this);
 
@@ -15529,13 +15632,7 @@ return (s == null || s.trim().isEmpty()) ? "(no data)" : s;
 
 private void lab26AppsFootprint() {
 
-// ============================================================
-// USAGE ACCESS — MANDATORY GATE
-// ============================================================
-if (!hasUsageAccess()) {
-    showUsageAccessDialog();
-    return;
-}
+    if (!guardUsageAccess()) return;
 
     appendHtml("<br>");
     logLine();
@@ -17796,4 +17893,3 @@ if (requestCode == 8008) {
     
 
     
-

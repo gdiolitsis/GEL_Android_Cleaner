@@ -11790,24 +11790,44 @@ if (!Float.isNaN(percentDeviation) && percentDeviation > 15f) {
                     );
                 }
 
-                // internal resistance
-                if (!Float.isNaN(internalResistance[0])) {
+// internal resistance
+String label = "Unknown";
+
+if (!Float.isNaN(internalResistance[0])) {
 
     if (internalResistance[0] < 0.08f) label = "Excellent";
     else if (internalResistance[0] < 0.15f) label = "Normal";
     else if (internalResistance[0] < 0.25f) label = "Worn";
     else label = "Failing";
 
-                    logLabelValue(
-                            gr ? "Εσωτερική αντίσταση μπαταρίας"
-                               : "Battery internal resistance",
-                            String.format(
-                                    Locale.US,
-                                    "%.3f Ω (%s)",
-                                    internalResistance,
-                                    label
-                            )
-                    );
+}
+
+if (!Float.isNaN(internalResistance[0])) {
+
+    if (internalResistance[0] < 0.15f) {
+
+        logLabelOkValue(
+                gr ? "Εσωτερική αντίσταση μπαταρίας"
+                   : "Battery internal resistance",
+                String.format(Locale.US,
+                        "%.3f Ω (%s)",
+                        internalResistance[0],
+                        label)
+        );
+
+    } else {
+
+        logLabelWarnValue(
+                gr ? "Εσωτερική αντίσταση μπαταρίας"
+                   : "Battery internal resistance",
+                String.format(Locale.US,
+                        "%.3f Ω (%s)",
+                        internalResistance[0],
+                        label)
+        );
+
+    }
+}
 
                 } else {
 

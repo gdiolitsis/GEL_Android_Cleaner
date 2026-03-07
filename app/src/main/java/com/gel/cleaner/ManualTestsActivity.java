@@ -12173,17 +12173,17 @@ p.edit()
         .putBoolean("lab14_unstable_measurement", variabilityDetected)
         .putBoolean("lab14_collapse_risk", collapseRisk[0])
         .putBoolean("lab14_swelling_risk", swellingRisk[0])
-        .putBoolean("lab14_calibration_drift", calibrationDrift)
+        .putBoolean("lab14_calibration_drift", calibrationDrift[0])
         .putFloat("lab14_health_score", finalScore)
         .putInt("lab14_aging_index", agingIndex)
         .putLong("lab14_last_ts", System.currentTimeMillis())
         .apply();
 
                 logLabelOkValue(
-                        "LAB 14 storage",
-                        gr ? "Το αποτέλεσμα αποθηκεύτηκε επιτυχώς"
-                           : "Result stored successfully"
-                );
+        gr ? "Αποθήκευση αποτελέσματος" : "Result storage",
+        gr ? "Το αποτέλεσμα αποθηκεύτηκε επιτυχώς"
+           : "Result stored successfully"
+);
 
                 logLab14Confidence();
 

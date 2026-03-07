@@ -1116,31 +1116,6 @@ private int getBatteryPercentSafe() {
     }
 }
 
-float expectedPercent = Float.NaN;
-
-if (baselineFullMah > 0 && startMah > 0) {
-
-    expectedPercent =
-            (float) startMah / (float) baselineFullMah * 100f;
-}
-
-float percentDeviation = Float.NaN;
-
-if (!Float.isNaN(expectedPercent) && batteryPercent >= 0) {
-
-    percentDeviation =
-            Math.abs(expectedPercent - batteryPercent);
-}
-
-boolean calibrationDrift = false;
-
-if (!Float.isNaN(percentDeviation)) {
-
-    if (percentDeviation > 15f) {
-        calibrationDrift = true;
-    }
-}
-
 // ============================================================
 // BATTERY VOLTAGE FILTER (3-SAMPLE AVERAGE)
 // ============================================================
@@ -10998,44 +10973,44 @@ private void lab14BatteryHealthStressTest() {
                 : "LAB 14 — Battery Health Stress Test");
         logLine();
 
-        logLabelValue(
-                gr ? "Λειτουργία" : "Mode",
-                rooted
-                        ? (gr ? "Προηγμένη (Root access)" : "Advanced (Rooted)")
-                        : (gr ? "Τυπική (Χωρίς Root)" : "Standard (Unrooted)")
-        );
+logLabelOkValue(
+        gr ? "Λειτουργία" : "Mode",
+        rooted
+                ? (gr ? "Προηγμένη (Root access)" : "Advanced (Rooted)")
+                : (gr ? "Τυπική (Χωρίς Root)" : "Standard (Unrooted)")
+);
 
-        logLabelValue(
-                gr ? "Διάρκεια δοκιμής" : "Duration",
-                durationSec + (gr
-                        ? " δευτ. (εργαστηριακή λειτουργία)"
-                        : " sec (laboratory mode)")
-        );
+logLabelOkValue(
+        gr ? "Διάρκεια δοκιμής" : "Duration",
+        durationSec + (gr
+                ? " δευτ. (εργαστηριακή λειτουργία)"
+                : " sec (laboratory mode)")
+);
 
-        logLabelValue(
-                gr ? "Προφίλ καταπόνησης" : "Stress profile",
+logLabelOkValue(
+        gr ? "Προφίλ καταπόνησης" : "Stress profile",
+        gr
+                ? "Fast stress + GEL C Mode + vibration + video + memory bandwidth"
+                : "Fast stress + GEL C Mode + vibration + video + memory bandwidth"
+);
+
+logLabelOkValue(
+        gr ? "Αρχικές συνθήκες" : "Start conditions",
+        String.format(
+                Locale.US,
                 gr
-                        ? "Fast stress + GEL C Mode + vibration + video + memory bandwidth"
-                        : "Fast stress + GEL C Mode + vibration + video + memory bandwidth"
-        );
+                        ? "φόρτιση=%d mAh, ποσοστό=%d%%, κατάσταση=Αποφόρτιση, θερμοκρασία=%.1f°C"
+                        : "charge=%d mAh, level=%d%%, status=Discharging, temp=%.1f°C",
+                startMah,
+                Math.max(0, batteryPercent),
+                (Float.isNaN(tempStart) ? 0f : tempStart)
+        )
+);
 
-        logLabelValue(
-                gr ? "Αρχικές συνθήκες" : "Start conditions",
-                String.format(
-                        Locale.US,
-                        gr
-                                ? "φόρτιση=%d mAh, ποσοστό=%d%%, κατάσταση=Αποφόρτιση, θερμοκρασία=%.1f°C"
-                                : "charge=%d mAh, level=%d%%, status=Discharging, temp=%.1f°C",
-                        startMah,
-                        Math.max(0, batteryPercent),
-                        (Float.isNaN(tempStart) ? 0f : tempStart)
-                )
-        );
-
-        logLabelValue(
-                gr ? "Πηγή δεδομένων" : "Data source",
-                snapStart.source
-        );
+logLabelOkValue(
+        gr ? "Πηγή δεδομένων" : "Data source",
+        snapStart.source
+);
 
         if (baselineFullMah > 0) {
             logLabelOkValue(
@@ -11053,14 +11028,14 @@ private void lab14BatteryHealthStressTest() {
             );
         }
 
-        logLabelValue(
+        logLabelOkValue(
                 gr ? "Κύκλοι φόρτισης" : "Cycle count",
                 cycles > 0
                         ? String.valueOf(cycles)
                         : (gr ? "Μη διαθέσιμο" : "N/A")
         );
 
-        logLabelValue(
+        logLabelOkValue(
                 gr ? "Κατάσταση οθόνης" : "Screen state",
                 gr
                         ? "Φωτεινότητα στο ΜΕΓΙΣΤΟ, keep screen on ενεργό"
@@ -11069,7 +11044,7 @@ private void lab14BatteryHealthStressTest() {
 
         int cores = Runtime.getRuntime().availableProcessors();
 
-        logLabelValue(
+        logLabelOkValue(
                 gr ? "Νήματα καταπόνησης CPU" : "CPU stress threads",
                 cores + (gr
                         ? " (λογικοί πυρήνες=" + cores + ")"
@@ -11100,7 +11075,7 @@ private void lab14BatteryHealthStressTest() {
             );
         }
 
-        logLabelValue(
+        logLabelOkValue(
                 gr ? "Παρακολουθούμενα θερμικά πεδία" : "Thermal domains",
                 "CPU / GPU / SKIN / PMIC / BATT"
         );
@@ -11527,6 +11502,30 @@ final Lab14Engine.GelBatterySnapshot snapEnd = engine.readSnapshot();
                 if (baselineFullMah > 0 && mahPerHour > 0) {
                     drainPercentPerHour = (mahPerHour / baselineFullMah) * 100.0;
                 }
+                
+// ------------------------------------------------------------
+// BATTERY CALIBRATION DRIFT DETECTION
+// ------------------------------------------------------------
+float expectedPercent = Float.NaN;
+float percentDeviation = Float.NaN;
+boolean calibrationDrift = false;
+
+if (baselineFullMah > 0 && startMah > 0) {
+
+    expectedPercent =
+            (float) startMah / (float) baselineFullMah * 100f;
+}
+
+if (!Float.isNaN(expectedPercent) && batteryPercent >= 0) {
+
+    percentDeviation =
+            Math.abs(expectedPercent - batteryPercent);
+}
+
+if (!Float.isNaN(percentDeviation) && percentDeviation > 15f) {
+
+    calibrationDrift = true;
+}
 
                 // ----------------------------------------------------
                 // 10) ELECTRICAL ANALYSIS

@@ -1696,14 +1696,6 @@ else {
 
 }
 
-} else {
-
-    logLabelOkValue(
-            gr ? "Επίπεδο Βεβαιότητας:" : "Confidence Level:",
-            safe(sigConfidence)
-    );
-}
-
 logLabelOkValue(
         gr ? "Επόμενο βήμα:" : "Next step:",
         gr

@@ -11515,19 +11515,19 @@ boolean calibrationDrift = false;
 
 if (baselineFullMah > 0 && startMah > 0) {
 
-    expectedPercent[0] =
+    expectedPercent =
         (float) startMah / (float) baselineFullMah * 100f;
 }
 
 if (!Float.isNaN(expectedPercent) && batteryPercent >= 0) {
 
-    percentDeviation[0] =
-        Math.abs(expectedPercent[0] - batteryPercent);
+    percentDeviation =
+        Math.abs(expectedPercent - batteryPercent);
 }
 
-if (!Float.isNaN(percentDeviation[0]) && percentDeviation[0] > 15f) {
+if (!Float.isNaN(percentDeviation) && percentDeviation > 15f) {
 
-    calibrationDrift[0] = true;
+    calibrationDrift = true;
 }
 
                 // ----------------------------------------------------
@@ -11542,7 +11542,7 @@ if (!Float.isNaN(percentDeviation[0]) && percentDeviation[0] > 15f) {
                     if (!Float.isNaN(currentNow)) {
                         float currentAmp = Math.abs(currentNow) / 1000f;
                         if (currentAmp > 0.1f) {
-                            internalResistance[0] = sag / currentAmp;
+                            internalResistance = sag / currentAmp;
                         }
                     }
                 }
@@ -11582,12 +11582,12 @@ if (!Float.isNaN(percentDeviation[0]) && percentDeviation[0] > 15f) {
                 }
 
                 if (!Float.isNaN(expectedPercent) && batteryPercent >= 0) {
-                    percentDeviation[0] =
-        Math.abs(expectedPercent[0] - batteryPercent);
+                    percentDeviation =
+        Math.abs(expectedPercent - batteryPercent);
                 }
 
-                if (!Float.isNaN(percentDeviation[0]) && percentDeviation[0] > 15f) {
-                    calibrationDrift[0] = true;
+                if (!Float.isNaN(percentDeviation) && percentDeviation > 15f) {
+                    calibrationDrift = true;
                 }
 
                 // ----------------------------------------------------
@@ -11717,8 +11717,8 @@ if (!Float.isNaN(percentDeviation[0]) && percentDeviation[0] > 15f) {
                         else if (gpuTempEnd >= 70f) finalScore -= 3;
                     }
 
-                    if (!Float.isNaN(internalResistance)) {
-                        if (internalResistance >= 0.25f) finalScore -= 15;
+                    if (!Float.isNaN(internalResistance[0])) {
+                        if (internalResistance[0] >= 0.25f) finalScore -= 15;
                         else if (internalResistance >= 0.18f) finalScore -= 8;
                     }
 
@@ -11758,7 +11758,7 @@ if (!Float.isNaN(percentDeviation[0]) && percentDeviation[0] > 15f) {
                 logLine();
 
                 // fast stress summary
-                if (!Float.isNaN(sagAvg)) {
+                if (!Float.isNaN(sagAvg[0])) {
                     logLabelValue(
                             gr ? "Γρήγορη καταπόνηση (μέσο sag)"
                                : "Fast stress (avg sag)",
@@ -11791,7 +11791,7 @@ if (!Float.isNaN(percentDeviation[0]) && percentDeviation[0] > 15f) {
                 }
 
                 // internal resistance
-                if (!Float.isNaN(internalResistance)) {
+                if (!Float.isNaN(internalResistance[0])) {
 
                     String label;
 
@@ -18414,7 +18414,7 @@ if (thermalIssue) dri -= 15;
 boolean swellingRisk =
         p.getBoolean("lab14_swelling_risk", false);
 
-if (swellingRisk[0]) dri -= 15;
+if (swellingRisk) dri -= 15;
 
 // root risk
 boolean rooted =
@@ -18432,7 +18432,7 @@ if (calibrationDrift) dri -= 10;
 boolean collapseRisk =
         p.getBoolean("lab14_collapse_risk", false);
 
-if (collapseRisk[0]) dri -= 20;
+if (collapseRisk) dri -= 20;
 
 if (dri > 100) dri = 100;
 if (dri < 0) dri = 0;

@@ -1822,13 +1822,17 @@ private void runPanicFrequencyLab() {
         return;
     }
 
-    java.util.Map<String, Integer> crashCount = new java.util.HashMap<>();
+String[] blocks = panicLogText.split("===== ZIP FILE:");
 
-    for (String block : blocks) {
-        if (block.trim().isEmpty()) continue;
+java.util.Map<String, Integer> crashCount = new java.util.HashMap<>();
 
-        resetSignatureCache();
-parseAndCacheSignature(block);
+for (String block : blocks) {
+
+    if (block == null || block.trim().isEmpty())
+        continue;
+
+    resetSignatureCache();
+    parseAndCacheSignature(block);
 
         String key = sigCrashType;
         crashCount.put(key, crashCount.getOrDefault(key, 0) + 1);
@@ -1874,13 +1878,17 @@ private void runPanicClusteringLab() {
         return;
     }
 
-    java.util.Map<String, Integer> domainCount = new java.util.HashMap<>();
+String[] blocks = panicLogText.split("===== ZIP FILE:");
 
-    for (String block : blocks) {
-        if (block.trim().isEmpty()) continue;
+java.util.Map<String, Integer> crashCount = new java.util.HashMap<>();
 
-        resetSignatureCache();
-parseAndCacheSignature(block);
+for (String block : blocks) {
+
+    if (block == null || block.trim().isEmpty())
+        continue;
+
+    resetSignatureCache();
+    parseAndCacheSignature(block);
 
         String key = normalizeDomain(sigDomain);
         domainCount.put(key, domainCount.getOrDefault(key, 0) + 1);
@@ -1937,19 +1945,21 @@ private void runRecurringDomainLab() {
         return;
     }
 
-    java.util.Map<String, Integer> domainCount = new java.util.HashMap<>();
+String[] blocks = panicLogText.split("===== ZIP FILE:");
 
-    int total = 0;
+java.util.Map<String, Integer> domainCount = new java.util.HashMap<>();
 
-    for (String block : blocks) {
-        if (block.trim().isEmpty()) continue;
+int total = 0;
 
-        resetSignatureCache();
-parseAndCacheSignature(block);
+for (String block : blocks) {
 
-        String key = normalizeDomain(sigDomain);
-        domainCount.put(key, domainCount.getOrDefault(key, 0) + 1);
-        total++;
+    if (block == null || block.trim().isEmpty())
+        continue;
+
+    resetSignatureCache();
+    parseAndCacheSignature(block);
+
+    total++;
     }
 
     if (total == 0) {
@@ -2041,28 +2051,29 @@ private void runFinalServiceRecommendationLab() {
             : "LAB 8 — Final Service Recommendation");
     logLine();
 
-    // ------------------------------------------------------------
-    // SPLIT LOGS
-    // ------------------------------------------------------------
-    
-    java.util.Map<String,Integer> domainCount = new java.util.HashMap<>();
-    java.util.Map<String,Integer> crashCount  = new java.util.HashMap<>();
+// ------------------------------------------------------------
+// SPLIT LOGS
+// ------------------------------------------------------------
+String[] blocks = panicLogText.split("===== ZIP FILE:");
 
-    int total = 0;
-    int highConfidenceCount = 0;
-    int criticalCrashCount = 0;
+java.util.Map<String,Integer> domainCount = new java.util.HashMap<>();
+java.util.Map<String,Integer> crashCount  = new java.util.HashMap<>();
 
-    // ------------------------------------------------------------
-    // PARSE LOGS
-    // ------------------------------------------------------------
-    for (String block : blocks) {
+int total = 0;
+int highConfidenceCount = 0;
+int criticalCrashCount = 0;
 
-        if (block == null || block.trim().isEmpty()) continue;
+// ------------------------------------------------------------
+// PARSE LOGS
+// ------------------------------------------------------------
+for (String block : blocks) {
 
-        resetSignatureCache();
-        parseAndCacheSignature(block);
+    if (block == null || block.trim().isEmpty()) continue;
 
-        total++;
+    resetSignatureCache();
+    parseAndCacheSignature(block);
+
+    total++;
 
         String domain = normalizeDomain(sigDomain);
         String crash  = sigCrashType;

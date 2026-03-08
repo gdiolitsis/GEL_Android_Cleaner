@@ -12374,7 +12374,7 @@ if (!Float.isNaN(internalResistance[0]) &&
                 }
 
 // internal resistance
-String label = "Unknown";
+label = "Unknown";
 
 if (!Float.isNaN(internalResistance[0])) {
 

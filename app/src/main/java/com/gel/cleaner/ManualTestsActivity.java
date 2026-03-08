@@ -11500,13 +11500,13 @@ logLabelOkValue(
 // ------------------------------------------------------------
 // 4) DECLARATIONS FOR ELECTRICAL DIAGNOSTICS
 // ------------------------------------------------------------
-float vStart = Float.NaN;
-float vLoad1 = Float.NaN;
-float vRecover = Float.NaN;
-float vLoad2 = Float.NaN;
+final float[] vStart = {Float.NaN};
+final float[] vLoad1 = {Float.NaN};
+final float[] vRecover = {Float.NaN};
+final float[] vLoad2 = {Float.NaN};
 
-float sag1 = Float.NaN;
-float sag2 = Float.NaN;
+final float[] sag1 = {Float.NaN};
+final float[] sag2 = {Float.NaN};
 final float[] sagAvg = {Float.NaN};
 
 final float[] voltageRecovery = {Float.NaN};
@@ -11523,6 +11523,9 @@ final float[] structuralIntegrityIndex = {Float.NaN};
 final boolean[] collapseRisk = {false};
 final boolean[] swellingRisk = {false};
 final boolean[] calibrationDrift = {false};
+final boolean[] cellImbalanceRisk = {false};
+final boolean[] batteryFailureRisk = {false};
+final float[] batterySOH = {Float.NaN};
 
 final float[] expectedPercent = {Float.NaN};
 final float[] percentDeviation = {Float.NaN};
@@ -11534,33 +11537,33 @@ final long t0 = SystemClock.elapsedRealtime();
 
 new Thread(() -> {
 
-    vStart = getBatteryVoltageFiltered();
+    vStart[0] = getBatteryVoltageFiltered();
 
-    startCpuBurn_C_Mode();
-    SystemClock.sleep(15000);
-    SystemClock.sleep(250);
-    vLoad1 = getBatteryVoltageFiltered();
+startCpuBurn_C_Mode();
+SystemClock.sleep(15000);
+SystemClock.sleep(250);
+vLoad1[0] = getBatteryVoltageFiltered();
 
-    stopCpuBurn();
-    SystemClock.sleep(15000);
-    SystemClock.sleep(250);
-    vRecover = getBatteryVoltageFiltered();
+stopCpuBurn();
+SystemClock.sleep(15000);
+SystemClock.sleep(250);
+vRecover[0] = getBatteryVoltageFiltered();
 
-    startCpuBurn_C_Mode();
-    SystemClock.sleep(15000);
-    SystemClock.sleep(250);
-    vLoad2 = getBatteryVoltageFiltered();
+startCpuBurn_C_Mode();
+SystemClock.sleep(15000);
+SystemClock.sleep(250);
+vLoad2[0] = getBatteryVoltageFiltered();
 
-    stopCpuBurn();
+stopCpuBurn();
 
-    if (!Float.isNaN(vStart) && !Float.isNaN(vLoad1))
-        sag1 = vStart - vLoad1;
+if (!Float.isNaN(vStart[0]) && !Float.isNaN(vLoad1[0]))
+    sag1[0] = vStart[0] - vLoad1[0];
 
-    if (!Float.isNaN(vRecover) && !Float.isNaN(vLoad2))
-        sag2 = vRecover - vLoad2;
+if (!Float.isNaN(vRecover[0]) && !Float.isNaN(vLoad2[0]))
+    sag2[0] = vRecover[0] - vLoad2[0];
 
-    if (!Float.isNaN(sag1) && !Float.isNaN(sag2))
-        sagAvg[0] = (sag1 + sag2) / 2f;
+if (!Float.isNaN(sag1[0]) && !Float.isNaN(sag2[0]))
+    sagAvg[0] = (sag1[0] + sag2[0]) / 2f;
         
 // ----------------------------------------------------
 // CELL IMBALANCE DETECTOR
@@ -11876,7 +11879,7 @@ if (!Float.isNaN(percentDeviation[0]) && percentDeviation[0] > 15f) {
                 if (!Float.isNaN(voltageStart) &&
                         !Float.isNaN(voltageUnderLoad[0])) {
 
-                    float sag = voltageStart - voltageUnderLoad[0];
+                    float sag = vStart[0] - voltageUnderLoad[0];
                     float currentNow = getBatteryCurrentNowSafe();
 
                     if (!Float.isNaN(currentNow)) {
@@ -12352,7 +12355,7 @@ if (!Float.isNaN(internalResistance[0]) &&
                 // sag under long load
                 if (!Float.isNaN(voltageStart) && !Float.isNaN(voltageUnderLoad[0])) {
 
-                    float sag = voltageStart - voltageUnderLoad[0];
+                    float sag = vStart[0] - voltageUnderLoad[0];
                     String sagLabel;
 
                     if (sag < 0.05f) sagLabel = "Excellent";
@@ -12374,7 +12377,7 @@ if (!Float.isNaN(internalResistance[0]) &&
                 }
 
 // internal resistance
-label = "Unknown";
+String label = "Unknown";
 
 if (!Float.isNaN(internalResistance[0])) {
 
@@ -12867,7 +12870,7 @@ if (!Float.isNaN(batterySOH[0])) {
                         && !Float.isNaN(startBatteryTemp)
                         && !Float.isNaN(endBatteryTemp)) {
 
-                    float sag = voltageStart - voltageUnderLoad[0];
+                    float sag = vStart[0] - voltageUnderLoad[0];
                     float rise = endBatteryTemp - startBatteryTemp;
 
                     if (sag > 0.18f && rise > 6f) {

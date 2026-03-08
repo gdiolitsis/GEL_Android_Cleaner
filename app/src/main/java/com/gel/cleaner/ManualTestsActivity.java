@@ -240,6 +240,8 @@ public class ManualTestsActivity extends AppCompatActivity {
     private Thread lab14GpuThread = null;
     private AlertDialog activeDialog;
     private String pendingTtsText;
+    
+    final float[] batterySOH = {Float.NaN};
 
     private boolean lab6ProCanceled = false;
 
@@ -3017,6 +3019,22 @@ new Thread(() -> {
         }  
     } catch (Throwable ignore) {}  
 }, "LAB-CPU-BURN").start();
+
+}
+
+private void startMainStressPhase(
+        int durationSec,
+        long t0,
+        TextView dotsView,
+        TextView counterText,
+        LinearLayout progressBar
+) {
+
+    // αυτή η μέθοδος υπάρχει μόνο για να καλέσει
+    // το ήδη υπάρχον main stress logic
+
+    // το πραγματικό stress τρέχει στο UI handler
+    // που έχεις ήδη παρακάτω
 
 }
 
@@ -11727,18 +11745,63 @@ if (!Float.isNaN(internalResistance[0]) &&
                 }
 
                 if (baselineFullMah > 0 && startMah > 0) {
-                    expectedPercent =
-                            (float) startMah / (float) baselineFullMah * 100f;
-                }
+                    expectedPercent[0] =
+        (float) startMah / (float) baselineFullMah * 100f;
 
-                if (!Float.isNaN(expectedPercent) && batteryPercent >= 0) {
-                    percentDeviation =
-        Math.abs(expectedPercent - batteryPercent);
-                }
+if (!Float.isNaN(expectedPercent[0]) && batteryPercent >= 0) {
 
-                if (!Float.isNaN(percentDeviation) && percentDeviation > 15f) {
-                    calibrationDrift = true;
-                }
+    percentDeviation[0] =
+            Math.abs(expectedPercent[0] - batteryPercent);
+}
+
+if (!Float.isNaN(percentDeviation[0]) && percentDeviation[0] > 15f) {
+
+    calibrationDrift[0] = true;
+}
+
+// ----------------------------------------------------
+// BATTERY STATE OF HEALTH (SOH)
+// ----------------------------------------------------
+if (!Float.isNaN(internalResistance[0]) &&
+    !Float.isNaN(sagAvg[0])) {
+
+    float rFactor =
+            Math.min(1f, internalResistance[0] / 0.25f);
+
+    float sagFactor =
+            Math.min(1f, sagAvg[0] / 0.25f);
+
+    float thermalFactor = 0f;
+
+    if (!Float.isNaN(thermalImpedance[0])) {
+
+        thermalFactor =
+                Math.min(1f, thermalImpedance[0] / 20f);
+    }
+
+    float drainFactor = 0f;
+
+    if (drainPercentPerHour > 0) {
+
+        drainFactor =
+                Math.min(1f, (float)drainPercentPerHour / 35f);
+    }
+
+    batterySOH[0] =
+            Math.max(
+                    0f,
+                    Math.min(
+                            100f,
+                            100f * (
+                                    1f
+                                    - (0.35f * rFactor)
+                                    - (0.30f * sagFactor)
+                                    - (0.20f * thermalFactor)
+                                    - (0.15f * drainFactor)
+                            )
+                    )
+            );
+}
 
                 // ----------------------------------------------------
                 // 11) SAVE RUN / CONFIDENCE
@@ -12269,6 +12332,45 @@ if (!Float.isNaN(structuralIntegrityIndex[0])) {
     );
 }
 
+// ----------------------------------------------------
+// BATTERY STATE OF HEALTH
+// ----------------------------------------------------
+if (!Float.isNaN(batterySOH[0])) {
+
+    String sohLabel;
+
+    if (batterySOH[0] >= 90)
+        sohLabel = "Excellent";
+    else if (batterySOH[0] >= 80)
+        sohLabel = "Healthy";
+    else if (batterySOH[0] >= 70)
+        sohLabel = "Moderate wear";
+    else if (batterySOH[0] >= 60)
+        sohLabel = "Aging";
+    else
+        sohLabel = "Degraded";
+
+    logLabelValue(
+            gr ? "Κατάσταση υγείας μπαταρίας"
+               : "Battery state of health",
+            String.format(
+                    Locale.US,
+                    "%.0f%% (%s)",
+                    batterySOH[0],
+                    sohLabel
+            )
+    );
+
+} else {
+
+    logLabelWarnValue(
+            gr ? "Κατάσταση υγείας μπαταρίας"
+               : "Battery state of health",
+            gr ? "Μη διαθέσιμο"
+               : "Unavailable"
+    );
+}
+
                 // collapse risk
                 if (collapseRisk[0]) {
                     logLabelWarnValue(
@@ -12314,7 +12416,7 @@ if (!Float.isNaN(structuralIntegrityIndex[0])) {
                                     gr
                                             ? "Απόκλιση %.1f%% μεταξύ fuel-gauge και πραγματικής χωρητικότητας"
                                             : "Deviation %.1f%% between fuel gauge and real capacity",
-                                    percentDeviation
+                                    percentDeviation[0]
                             )
                     );
                 } else {

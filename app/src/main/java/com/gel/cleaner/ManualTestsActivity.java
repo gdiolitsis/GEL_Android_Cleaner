@@ -816,19 +816,24 @@ body7.addView(makeTestButton(
         this::lab27PermissionsPrivacy));
 
 body7.addView(makeTestButton(
-        gr ? "28. Σταθερότητα Υλικού & Ακεραιότητα Διασυνδέσεων\nΥποψία Κόλλησης / Επαφής (Βάσει Συμπτωμάτων)"
-           : "28. Hardware Stability & Interconnect Integrity\nSolder / Contact Suspicion (SYMPTOM-BASED)",
-        this::lab28HardwareStability));
+        gr ? "28. Σταθερότητα Υλικού & Ακεραιότητα Διασυνδέσεων\nΥποψία Κόλλησης / Υγρασίας (Βάσει Συμπτωμάτων)"
+           : "28. Hardware Stability & Interconnect Integrity\nSolder / Moisture Indicators (SYMPTOM-BASED)",
+        this::lab28HardwareStability)); 
+        
+body7.addView(makeTestButton(
+        gr ? "29. Έλεγχος Γνησιότητας Συσκευής & Ανταλλακτικών\nΠιθανή Αντικατάσταση Μερών"
+           : "29. Device Authenticity & Parts Verification\nPossible Non-OEM Components",
+        this::lab29DeviceAuthenticity));
 
 body7.addView(makeTestButton(
-        gr ? "29. Σύνοψη Βαθμολογιών Συσκευής"
-           : "29. DEVICE SCORES Summary",
-        this::lab28CombineFindings));
+        gr ? "30. Σύνοψη Βαθμολογιών Συσκευής"
+           : "30. DEVICE SCORES Summary",
+        this::lab30CombineFindings));
 
 body7.addView(makeTestButton(
-        gr ? "30. Τελική Τεχνική Αναφορά"
-           : "30. FINAL TECH SUMMARY",
-        this::lab29FinalSummary));
+        gr ? "31. Τελική Τεχνική Αναφορά"
+           : "31. FINAL TECH SUMMARY",
+        this::lab31FinalSummary));
 
     // ============================================================  
     // LOG AREA  
@@ -17831,6 +17836,15 @@ private void lab28HardwareStability() {
 
     int symptomScore = 0;
     int powerGlitches = 0;
+    
+    Lab28Evidence ev = Lab28EvidenceReader.readFromGELServiceLog();
+
+randomReboots = ev.rebootPattern;
+signalDrops   = ev.radioInstability;
+sensorFlaps   = ev.sensorFlaps;
+thermalSpikes = ev.thermalSpikes;
+
+if (ev.chargingGlitch) powerGlitches++;
 
     // Technician popup (already helper-based)
     showLab28Popup();
@@ -17914,6 +17928,46 @@ private void lab28HardwareStability() {
         logLabelOkValue(gr ? "Δείκτης Συνεκτικότητας Συμπτωμάτων"
                            : "Symptom consistency score",
                 symptomScore + "/100 (" + symptomLevel + ")");
+                
+// ============================================================
+// MOISTURE EXPOSURE INDICATOR
+// ============================================================
+boolean moistureIndicator = false;
+
+int moistureSignals = 0;
+
+if (sensorFlaps) moistureSignals++;
+if (signalDrops) moistureSignals++;
+if (powerGlitches > 0) moistureSignals++;
+
+if (thermalSpikes && ev.thermalOnlyDuringCharging)
+    moistureSignals++;
+
+if (moistureSignals >= 2)
+    moistureIndicator = true;
+
+appendHtml("<br>");
+
+if (moistureIndicator) {
+
+    logLabelWarnValue(
+            gr ? "Ένδειξη πιθανής υγρασίας"
+               : "Possible moisture exposure",
+            gr
+                    ? "Εντοπίστηκε μοτίβο συμπτωμάτων που σχετίζεται με υγρασία."
+                    : "Symptom pattern consistent with moisture exposure detected."
+    );
+
+} else {
+
+    logLabelOkValue(
+            gr ? "Ένδειξη υγρασίας"
+               : "Moisture exposure",
+            gr
+                    ? "Δεν εντοπίστηκαν σαφή σημάδια."
+                    : "No clear moisture indicators."
+    );
+}
 
     // ============================================================
     // STAGE D — FINAL CONFIDENCE
@@ -18051,20 +18105,238 @@ private static class Lab28EvidenceReader {
 }
 
 // ============================================================
-// LAB 29 — Auto Final Diagnosis Summary (GEL Universal AUTO Edition)
-// Combines Thermals + Battery + Storage + RAM + Apps + Uptime +
-// Security + Privacy + Root + Stability into final scores.
-// NOTE (GEL RULE): Whole block ready for copy-paste.
+// LAB 29 — Device Authenticity & Parts Integrity
+// TECHNICIAN MODE — NON-OEM COMPONENT INDICATORS
 // ============================================================
-private void lab28CombineFindings() {
+private void lab29DeviceAuthenticity() {
 
     final boolean gr = AppLang.isGreek(this);
 
     appendHtml("<br>");
     logLine();
     logInfo(gr
-            ? "LAB 29 — Αυτόματη Τελική Σύνοψη Διάγνωσης (ΠΛΗΡΩΣ ΑΥΤΟΜΑΤΗ)"
-            : "LAB 29 — Auto Final Diagnosis Summary (FULL AUTO)");
+            ? "LAB 29 — Έλεγχος Γνησιότητας Συσκευής"
+            : "LAB 29 — Device Authenticity & Parts Integrity");
+    logWarn(gr
+            ? "Λειτουργία τεχνικού — Έλεγχος πιθανών μη γνήσιων ανταλλακτικών."
+            : "Technician mode — possible non-OEM component detection.");
+    logLine();
+
+    int authenticityScore = 100;
+
+    boolean batterySuspicious = false;
+    boolean displaySuspicious = false;
+    boolean cameraSuspicious = false;
+    boolean fingerprintMismatch = false;
+
+    // ============================================================
+    // BATTERY CHECK
+    // ============================================================
+    appendHtml("<br>");
+    logInfo(gr ? "Έλεγχος Μπαταρίας" : "Battery authenticity check");
+    logLine();
+
+    int level = getBatteryPercentSafe();
+    float voltage = getBatteryVoltageFiltered();
+
+    if (level < 0 || Float.isNaN(voltage)) {
+
+        batterySuspicious = true;
+
+        logLabelWarnValue(
+                gr ? "Μπαταρία"
+                   : "Battery",
+                gr
+                        ? "Ασυνήθιστη συμπεριφορά μετρήσεων."
+                        : "Abnormal battery measurement behaviour."
+        );
+
+        authenticityScore -= 15;
+
+    } else {
+
+        logLabelOkValue(
+                gr ? "Μπαταρία"
+                   : "Battery",
+                gr
+                        ? "Μετρήσεις φυσιολογικές."
+                        : "Battery metrics appear normal."
+        );
+    }
+
+    // ============================================================
+    // DISPLAY CHECK
+    // ============================================================
+    appendHtml("<br>");
+    logInfo(gr ? "Έλεγχος Οθόνης" : "Display authenticity check");
+    logLine();
+
+    Display display = getWindowManager().getDefaultDisplay();
+    float refreshRate = display.getRefreshRate();
+
+    if (refreshRate < 50f) {
+
+        displaySuspicious = true;
+
+        logLabelWarnValue(
+                gr ? "Οθόνη"
+                   : "Display",
+                gr
+                        ? "Ασυνήθιστος ρυθμός ανανέωσης."
+                        : "Unusual display refresh rate detected."
+        );
+
+        authenticityScore -= 10;
+
+    } else {
+
+        logLabelOkValue(
+                gr ? "Οθόνη"
+                   : "Display",
+                String.format(Locale.US,
+                        gr
+                                ? "Ρυθμός ανανέωσης: %.1f Hz"
+                                : "Refresh rate: %.1f Hz",
+                        refreshRate));
+    }
+
+    // ============================================================
+    // CAMERA CHECK
+    // ============================================================
+    appendHtml("<br>");
+    logInfo(gr ? "Έλεγχος Κάμερας" : "Camera authenticity check");
+    logLine();
+
+    boolean cameraAvailable =
+            getPackageManager().hasSystemFeature(
+                    PackageManager.FEATURE_CAMERA_ANY);
+
+    if (!cameraAvailable) {
+
+        cameraSuspicious = true;
+
+        logLabelWarnValue(
+                gr ? "Κάμερα"
+                   : "Camera",
+                gr
+                        ? "Η κάμερα δεν εντοπίστηκε από το σύστημα."
+                        : "Camera not detected by system."
+        );
+
+        authenticityScore -= 20;
+
+    } else {
+
+        logLabelOkValue(
+                gr ? "Κάμερα"
+                   : "Camera",
+                gr
+                        ? "Το module κάμερας φαίνεται λειτουργικό."
+                        : "Camera module appears functional."
+        );
+    }
+
+    // ============================================================
+    // HARDWARE FINGERPRINT CHECK
+    // ============================================================
+    appendHtml("<br>");
+    logInfo(gr ? "Έλεγχος Ταυτότητας Hardware"
+               : "Hardware fingerprint verification");
+    logLine();
+
+    String fingerprint = Build.FINGERPRINT;
+    String board = Build.BOARD;
+    String hardware = Build.HARDWARE;
+
+    if (fingerprint == null || fingerprint.length() < 10) {
+
+        fingerprintMismatch = true;
+
+        logLabelWarnValue(
+                gr ? "Ταυτότητα Hardware"
+                   : "Hardware fingerprint",
+                gr
+                        ? "Ασυνήθιστο fingerprint συστήματος."
+                        : "Unusual system fingerprint detected."
+        );
+
+        authenticityScore -= 10;
+
+    } else {
+
+        logLabelOkValue(
+                gr ? "Fingerprint"
+                   : "System fingerprint",
+                fingerprint);
+    }
+
+    logLabelValue(
+            gr ? "Board"
+               : "Board",
+            board);
+
+    logLabelValue(
+            gr ? "Hardware"
+               : "Hardware",
+            hardware);
+
+    // ============================================================
+    // FINAL RESULT
+    // ============================================================
+    appendHtml("<br>");
+    logLine();
+
+    if (authenticityScore < 0) authenticityScore = 0;
+
+    String level;
+
+    if (authenticityScore >= 90)
+        level = gr ? "ΥΨΗΛΗ ΓΝΗΣΙΟΤΗΤΑ" : "HIGH AUTHENTICITY";
+    else if (authenticityScore >= 70)
+        level = gr ? "ΠΙΘΑΝΗ ΑΝΤΙΚΑΤΑΣΤΑΣΗ" : "POSSIBLE REPLACEMENT";
+    else
+        level = gr ? "ΥΨΗΛΗ ΠΙΘΑΝΟΤΗΤΑ ΜΗ ΓΝΗΣΙΩΝ ΜΕΡΩΝ"
+                   : "HIGH PROBABILITY OF NON-OEM PARTS";
+
+    if (authenticityScore >= 70) {
+
+        logLabelOkValue(
+                gr ? "Δείκτης Γνησιότητας Συσκευής"
+                   : "Device authenticity score",
+                authenticityScore + "/100 (" + level + ")"
+        );
+
+    } else {
+
+        logLabelWarnValue(
+                gr ? "Δείκτης Γνησιότητας Συσκευής"
+                   : "Device authenticity score",
+                authenticityScore + "/100 (" + level + ")"
+        );
+    }
+
+    appendHtml("<br>");
+    logOk(gr
+            ? "Το Lab 29 ολοκληρώθηκε."
+            : "Lab 29 finished.");
+    logLine();
+}
+
+// ============================================================
+// LAB 30 — Auto Final Diagnosis Summary (GEL Universal AUTO Edition)
+// Combines Thermals + Battery + Storage + RAM + Apps + Uptime +
+// Security + Privacy + Root + Stability into final scores.
+// NOTE (GEL RULE): Whole block ready for copy-paste.
+// ============================================================
+private void lab30CombineFindings() {
+
+    final boolean gr = AppLang.isGreek(this);
+
+    appendHtml("<br>");
+    logLine();
+    logInfo(gr
+            ? "LAB 30 — Αυτόματη Τελική Σύνοψη Διάγνωσης (ΠΛΗΡΩΣ ΑΥΤΟΜΑΤΗ)"
+            : "LAB 30 — Auto Final Diagnosis Summary (FULL AUTO)");
     logLine();
 
     // ============================================================
@@ -18147,7 +18419,77 @@ int privacyScore = scorePrivacy(pr);
 String privacyFlag = colorFlagFromScore(privacyScore);
 
 // ------------------------------------------------------------
-// 9) FINAL SCORES
+// 9) AUTHENTICITY / REPAIR INDICATORS (LAB 29)
+// ------------------------------------------------------------
+boolean moistureDetected =
+        p.getBoolean("lab29_moisture_detected", false);
+
+boolean nonOemParts =
+        p.getBoolean("lab29_non_oem_parts", false);
+
+boolean displayReplaced =
+        p.getBoolean("lab29_display_replaced", false);
+
+boolean cameraReplaced =
+        p.getBoolean("lab29_camera_replaced", false);
+
+boolean batteryReplaced =
+        p.getBoolean("lab29_battery_replaced", false);
+
+appendHtml("<br>");
+logInfo(gr ? "Αυθεντικότητα / Επισκευές" : "Authenticity / Repairs");
+logLine();
+
+if (moistureDetected)
+    logLabelWarnValue(
+            gr ? "Υγρασία" : "Moisture",
+            gr ? "Ενδείξεις εισχώρησης υγρασίας"
+               : "Moisture ingress indicators detected"
+    );
+
+if (nonOemParts)
+    logLabelWarnValue(
+            gr ? "Μη γνήσια εξαρτήματα" : "Non-OEM parts",
+            gr ? "Πιθανή χρήση μη γνήσιων ανταλλακτικών"
+               : "Possible non-OEM components detected"
+    );
+
+if (displayReplaced)
+    logLabelWarnValue(
+            gr ? "Οθόνη" : "Display",
+            gr ? "Ενδείξεις αντικατάστασης οθόνης"
+               : "Display replacement indicators detected"
+    );
+
+if (cameraReplaced)
+    logLabelWarnValue(
+            gr ? "Κάμερα" : "Camera",
+            gr ? "Ενδείξεις αντικατάστασης κάμερας"
+               : "Camera replacement indicators detected"
+    );
+
+if (batteryReplaced)
+    logLabelWarnValue(
+            gr ? "Μπαταρία" : "Battery",
+            gr ? "Ενδείξεις αντικατάστασης μπαταρίας"
+               : "Battery replacement indicators detected"
+    );
+
+if (!moistureDetected &&
+    !nonOemParts &&
+    !displayReplaced &&
+    !cameraReplaced &&
+    !batteryReplaced) {
+
+    logLabelOkValue(
+            gr ? "Κατάσταση υλικού" : "Hardware authenticity",
+            gr ? "Δεν εντοπίστηκαν ενδείξεις επισκευής"
+               : "No repair indicators detected"
+    );
+}
+
+// ------------------------------------------------------------
+// 10) FINAL SCORES
 // ------------------------------------------------------------
 int performanceScore = Math.round(
 (storageScore * 0.35f) +
@@ -18360,12 +18702,12 @@ else
     logLabelErrorValue(gr ? "Αποτέλεσμα" : "Result", verdict);
 
 appendHtml("<br>");
-logOk(gr ? "Το Lab 29 ολοκληρώθηκε." : "Lab 29 finished.");
+logOk(gr ? "Το Lab 30 ολοκληρώθηκε." : "Lab 30 finished.");
 logLine();
 }
 
 // ============================================================
-// ======= LAB 29 INTERNAL AUTO HELPERS (SAFE, NO IMPORTS) =====
+// ======= LAB 30 INTERNAL AUTO HELPERS (SAFE, NO IMPORTS) =====
 // ============================================================
 
 private StorageSnapshot readStorageSnapshot() {
@@ -18787,19 +19129,19 @@ return String.format(Locale.US, "%.1f", v);
 }
 
 // ============================================================
-// LAB 30 — FINAL TECHNICIAN SUMMARY (READ-ONLY)
+// LAB 31 — FINAL TECHNICIAN SUMMARY (READ-ONLY)
 // Does NOT modify GELServiceLog — only reads it.
 // Exports via ServiceReportActivity.
 // ============================================================
-private void lab29FinalSummary() {
+private void lab31FinalSummary() {
 
     final boolean gr = AppLang.isGreek(this);
 
     appendHtml("<br>");
     logLine();
     logInfo(gr
-            ? "LAB 30 — ΤΕΛΙΚΗ ΣΥΝΟΨΗ ΤΕΧΝΙΚΟΥ (ΜΟΝΟ ΑΝΑΓΝΩΣΗ)"
-            : "LAB 30 — FINAL TECHNICIAN SUMMARY (READ-ONLY)");
+            ? "LAB 31 — ΤΕΛΙΚΗ ΣΥΝΟΨΗ ΤΕΧΝΙΚΟΥ (ΜΟΝΟ ΑΝΑΓΝΩΣΗ)"
+            : "LAB 31 — FINAL TECHNICIAN SUMMARY (READ-ONLY)");
     logLine();
 
     // ------------------------------------------------------------
@@ -18961,6 +19303,65 @@ private void lab29FinalSummary() {
     );
     
     appendHtml("<br>");
+   
+// ------------------------------------------------------------
+// DEVICE MANIPULATION SUSPICION INDEX
+// (LAB28 + LAB29 indicators)
+// ------------------------------------------------------------
+int manipulationScore = 0;
+
+// LAB28 instability patterns
+boolean hwInstability =
+        p.getBoolean("lab28_instability_pattern", false);
+
+boolean moistureIndicators =
+        p.getBoolean("lab28_moisture_indicators", false);
+
+// LAB29 authenticity indicators
+boolean nonOemParts =
+        p.getBoolean("lab29_non_oem_parts", false);
+
+boolean displayReplaced =
+        p.getBoolean("lab29_display_replaced", false);
+
+boolean cameraReplaced =
+        p.getBoolean("lab29_camera_replaced", false);
+
+boolean batteryReplaced =
+        p.getBoolean("lab29_battery_replaced", false);
+
+// scoring
+if (hwInstability) manipulationScore += 20;
+if (moistureIndicators) manipulationScore += 25;
+if (nonOemParts) manipulationScore += 20;
+if (displayReplaced) manipulationScore += 10;
+if (cameraReplaced) manipulationScore += 10;
+if (batteryReplaced) manipulationScore += 5;
+
+if (manipulationScore > 100) manipulationScore = 100;
+
+String manipulationLabel;
+
+if (manipulationScore >= 60)
+    manipulationLabel = gr ? "Ισχυρές ενδείξεις παρέμβασης"
+                           : "Strong manipulation indicators";
+else if (manipulationScore >= 35)
+    manipulationLabel = gr ? "Μέτριες ενδείξεις παρέμβασης"
+                           : "Moderate manipulation indicators";
+else if (manipulationScore >= 15)
+    manipulationLabel = gr ? "Ασθενείς ενδείξεις"
+                           : "Weak indicators";
+else
+    manipulationLabel = gr ? "Καμία ένδειξη"
+                           : "No indicators";
+                           
+appendHtml("<br>");
+
+logLabelOkValue(
+        gr ? "Δείκτης παρέμβασης συσκευής"
+           : "Device manipulation suspicion index",
+        manipulationScore + "/100 (" + manipulationLabel + ")"
+);
     
 // ------------------------------------------------------------
 // DEVICE RELIABILITY INDEX
@@ -19024,6 +19425,12 @@ boolean collapseRisk =
 
 if (collapseRisk) dri -= 20;
 
+// manipulation suspicion (LAB28 + LAB29)
+if (manipulationScore >= 60)
+    dri -= 20;
+else if (manipulationScore >= 35)
+    dri -= 10;
+
 if (dri > 100) dri = 100;
 if (dri < 0) dri = 0;
 
@@ -19069,8 +19476,8 @@ logLabelOkValue(
 
     appendHtml("<br>");
     logOk(gr
-            ? "Το Lab 30 ολοκληρώθηκε."
-            : "Lab 30 finished.");
+            ? "Το Lab 31 ολοκληρώθηκε."
+            : "Lab 31 finished.");
     logLine();
 }
 

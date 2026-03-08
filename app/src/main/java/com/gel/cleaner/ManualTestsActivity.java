@@ -242,6 +242,10 @@ public class ManualTestsActivity extends AppCompatActivity {
     private String pendingTtsText;
     
     final float[] batterySOH = {Float.NaN};
+    
+    final boolean[] cellImbalanceRisk = {false};
+    
+    final boolean[] batteryFailureRisk = {false};
 
     private boolean lab6ProCanceled = false;
 
@@ -11304,6 +11308,17 @@ new Thread(() -> {
 
     if (!Float.isNaN(sag1) && !Float.isNaN(sag2))
         sagAvg[0] = (sag1 + sag2) / 2f;
+        
+// ----------------------------------------------------
+// CELL IMBALANCE DETECTOR
+// ----------------------------------------------------
+if (!Float.isNaN(sag1) && !Float.isNaN(sag2)) {
+
+    float sagDiff = Math.abs(sag1 - sag2);
+
+    if (sagDiff > 0.05f)
+        cellImbalanceRisk[0] = true;
+}
 
     if (!Float.isNaN(vStart)
             && !Float.isNaN(vLoad1)
@@ -11352,6 +11367,30 @@ new Thread(() -> {
                 );
             }
         }
+        
+// ----------------------------------------------------
+// BATTERY FAILURE PREDICTOR
+// ----------------------------------------------------
+if (!Float.isNaN(internalResistance[0]) &&
+    !Float.isNaN(sagAvg[0])) {
+
+    float sagScore = Math.min(1f, sagAvg[0] / 0.22f);
+    float rScore   = Math.min(1f, internalResistance[0] / 0.25f);
+
+    float thermalScore = 0f;
+
+    if (!Float.isNaN(thermalImpedance[0])) {
+        thermalScore = Math.min(1f, thermalImpedance[0] / 18f);
+    }
+
+    float failureIndex =
+            (0.45f * rScore) +
+            (0.35f * sagScore) +
+            (0.20f * thermalScore);
+
+    if (failureIndex > 0.75f)
+        batteryFailureRisk[0] = true;
+}
         
         startMainStressPhase(
                 durationSec,
@@ -11686,6 +11725,54 @@ if (!Float.isNaN(sag1) &&
                             100f * (1f - asym * 2f) * recoveryNorm
                     )
             );
+}
+
+// ----------------------------------------------------
+// CELL BALANCE CHECK
+// ----------------------------------------------------
+if (cellImbalanceRisk[0]) {
+
+    logLabelWarnValue(
+            gr ? "Ισορροπία κυψελών μπαταρίας"
+               : "Battery cell balance",
+            gr
+                    ? "Εντοπίστηκε πιθανή ασυμμετρία κυψελών"
+                    : "Possible lithium cell imbalance detected"
+    );
+
+} else {
+
+    logLabelOkValue(
+            gr ? "Ισορροπία κυψελών μπαταρίας"
+               : "Battery cell balance",
+            gr
+                    ? "Δεν εντοπίστηκε ανισορροπία"
+                    : "No imbalance detected"
+    );
+}
+
+// ----------------------------------------------------
+// BATTERY FAILURE PREDICTION
+// ----------------------------------------------------
+if (batteryFailureRisk[0]) {
+
+    logLabelErrorValue(
+            gr ? "Πρόβλεψη αποτυχίας μπαταρίας"
+               : "Battery failure prediction",
+            gr
+                    ? "Υψηλή πιθανότητα αστάθειας μπαταρίας στους επόμενους κύκλους."
+                    : "High probability of battery instability in upcoming cycles."
+    );
+
+} else {
+
+    logLabelOkValue(
+            gr ? "Πρόβλεψη αποτυχίας μπαταρίας"
+               : "Battery failure prediction",
+            gr
+                    ? "Δεν εντοπίστηκε άμεσος κίνδυνος."
+                    : "No imminent battery failure detected."
+    );
 }
 
 // ----------------------------------------------------
@@ -12672,12 +12759,14 @@ p.edit()
                 logLab14Confidence();
 
                 appendHtml("<br>");
-                logOk(gr ? "Το Lab 14 ολοκληρώθηκε." : "Lab 14 finished.");
-                logLine();
-            }
-        });
+logOk(gr ? "Το Lab 14 ολοκληρώθηκε." : "Lab 14 finished.");
+logLine();
 
-    } catch (Throwable t) {
+        }   // κλείνει run()
+
+    });     // κλείνει ui.post()
+
+} catch (Throwable t) {
 
     try { stopCpuBurn(); } catch (Throwable ignore) {}
     try { stopMemoryStress(); } catch (Throwable ignore) {}

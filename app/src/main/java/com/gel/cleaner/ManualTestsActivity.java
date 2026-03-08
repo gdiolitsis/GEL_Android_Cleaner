@@ -12762,9 +12762,8 @@ p.edit()
 logOk(gr ? "Το Lab 14 ολοκληρώθηκε." : "Lab 14 finished.");
 logLine();
 
-        }   // κλείνει run()
-
-    });     // κλείνει ui.post()
+        } 
+    }
 
 } catch (Throwable t) {
 

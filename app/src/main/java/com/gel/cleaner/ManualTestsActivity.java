@@ -2560,6 +2560,8 @@ try { if (br != null) br.close(); } catch (Throwable ignore) {}
 }
 }
 
+
+
 // ------------------------------------------------------------
 // LAB 15 thermal correlation — BILINGUAL (LABEL WHITE, VALUES GREEN)
 // ------------------------------------------------------------
@@ -4315,6 +4317,252 @@ private String getLab28TextGR() {
         "Τα αποτελέσματα, μπορεί να υποδεικνύουν πρότυπα συμπεριφοράς, συμβατά με διακοπτόμενη επαφή. " +
         "όπως, ασταθή λειτουργία, τυχαίες επανεκκινήσεις, ή απώλειες σήματος. " +
         "Χρησιμοποίησε το lab, αυστηρά ως εργαλείο προελέγχου, και όχι ως τελική διάγνωση υλικού.";
+}
+
+// ============================================================
+// LAB 29 — Device Authenticity & Repair Analysis
+// SERVICE LEVEL — COMPONENT & BOARD INSPECTION (LOGIC BASED)
+// ============================================================
+private void lab29AuthenticityCheck() {
+
+    final boolean gr = AppLang.isGreek(this);
+
+    appendHtml("<br>");
+    logLine();
+    logInfo(gr
+            ? "LAB 29 — Έλεγχος γνησιότητας συσκευής & πιθανών επισκευών"
+            : "LAB 29 — Device authenticity & repair inspection");
+    logLine();
+
+    int manipulationScore = 0;
+
+    boolean batteryAuthSuspect =
+            p.getBoolean("lab14_battery_auth_suspect", false);
+
+    boolean calibrationDrift =
+            p.getBoolean("lab14_calibration_drift", false);
+
+    boolean collapseRisk =
+            p.getBoolean("lab14_collapse_risk", false);
+
+    boolean swellingRisk =
+            p.getBoolean("lab14_swelling_risk", false);
+
+    boolean instabilityPattern =
+            p.getBoolean("lab28_instability_pattern", false);
+
+    boolean thermalSpike =
+            p.getBoolean("lab28_thermal_spike", false);
+
+    boolean radioInstability =
+            p.getBoolean("lab28_radio_instability", false);
+
+    boolean sensorFlaps =
+            p.getBoolean("lab28_sensor_flaps", false);
+
+    boolean rebootPattern =
+            p.getBoolean("lab28_reboot_pattern", false);
+
+    // ------------------------------------------------------------
+    // BATTERY AUTHENTICITY
+    // ------------------------------------------------------------
+    if (batteryAuthSuspect) {
+
+        logLabelWarnValue(
+                gr ? "Μπαταρία"
+                   : "Battery",
+                gr
+                        ? "Ενδείξεις πιθανής μη γνήσιας ή aftermarket μπαταρίας"
+                        : "Possible aftermarket or non-original battery detected"
+        );
+
+        manipulationScore += 20;
+
+    } else {
+
+        logLabelOkValue(
+                gr ? "Μπαταρία"
+                   : "Battery",
+                gr
+                        ? "Δεν εντοπίστηκαν ενδείξεις μη γνήσιας μπαταρίας"
+                        : "No indicators of non-original battery"
+        );
+    }
+
+    if (calibrationDrift) {
+
+        logLabelWarnValue(
+                gr ? "Fuel gauge"
+                   : "Fuel gauge",
+                gr
+                        ? "Απόκλιση βαθμονόμησης μπαταρίας"
+                        : "Battery fuel-gauge calibration drift detected"
+        );
+
+        manipulationScore += 10;
+    }
+
+    if (collapseRisk || swellingRisk) {
+
+        logLabelWarnValue(
+                gr ? "Συμπεριφορά μπαταρίας"
+                   : "Battery behaviour",
+                gr
+                        ? "Ανώμαλη ηλεκτροχημική συμπεριφορά"
+                        : "Abnormal electrochemical behaviour"
+        );
+
+        manipulationScore += 10;
+    }
+
+    // ------------------------------------------------------------
+    // SENSOR & BOARD LINES
+    // ------------------------------------------------------------
+    if (sensorFlaps) {
+
+        logLabelWarnValue(
+                gr ? "Αισθητήρες"
+                   : "Sensors",
+                gr
+                        ? "Ασταθής λειτουργία αισθητήρων"
+                        : "Sensor instability detected"
+        );
+
+        manipulationScore += 10;
+    }
+
+    // ------------------------------------------------------------
+    // RADIO / BASEBAND
+    // ------------------------------------------------------------
+    if (radioInstability) {
+
+        logLabelWarnValue(
+                gr ? "Ραδιοσύστημα"
+                   : "Radio subsystem",
+                gr
+                        ? "Ασταθής λειτουργία modem ή RF γραμμών"
+                        : "Possible modem / RF line instability"
+        );
+
+        manipulationScore += 10;
+    }
+
+    // ------------------------------------------------------------
+    // THERMAL PMIC BEHAVIOUR
+    // ------------------------------------------------------------
+    if (thermalSpike) {
+
+        logLabelWarnValue(
+                gr ? "Θερμική συμπεριφορά"
+                   : "Thermal behaviour",
+                gr
+                        ? "Απότομες θερμικές αιχμές"
+                        : "Abnormal thermal spikes detected"
+        );
+
+        manipulationScore += 10;
+    }
+
+    // ------------------------------------------------------------
+    // REBOOT PATTERN
+    // ------------------------------------------------------------
+    if (rebootPattern) {
+
+        logLabelWarnValue(
+                gr ? "Επανεκκινήσεις"
+                   : "Reboot behaviour",
+                gr
+                        ? "Μοτίβο επανεκκινήσεων"
+                        : "Unexpected reboot pattern detected"
+        );
+
+        manipulationScore += 15;
+    }
+
+    // ------------------------------------------------------------
+    // BOARD STABILITY
+    // ------------------------------------------------------------
+    if (instabilityPattern) {
+
+        logLabelWarnValue(
+                gr ? "Σταθερότητα συστήματος"
+                   : "System stability",
+                gr
+                        ? "Μοτίβο αστάθειας υλικού"
+                        : "Hardware instability pattern detected"
+        );
+
+        manipulationScore += 15;
+    }
+
+    if (manipulationScore > 100)
+        manipulationScore = 100;
+
+    // ------------------------------------------------------------
+    // FINAL INTERPRETATION
+    // ------------------------------------------------------------
+    String level =
+            (manipulationScore < 20) ? "LOW" :
+            (manipulationScore < 40) ? "MODERATE" :
+            (manipulationScore < 60) ? "ELEVATED" :
+            (manipulationScore < 80) ? "HIGH" :
+                                      "VERY HIGH";
+
+    appendHtml("<br>");
+
+    if (manipulationScore >= 40) {
+
+        logLabelWarnValue(
+                gr ? "Δείκτης επέμβασης συσκευής"
+                   : "Device manipulation index",
+                manipulationScore + "/100 (" + level + ")"
+        );
+
+    } else {
+
+        logLabelOkValue(
+                gr ? "Δείκτης επέμβασης συσκευής"
+                   : "Device manipulation index",
+                manipulationScore + "/100 (" + level + ")"
+        );
+    }
+
+    appendHtml("<br>");
+
+    if (manipulationScore >= 60) {
+
+        logLabelWarnValue(
+                gr ? "Συμπέρασμα"
+                   : "Conclusion",
+                gr
+                        ? "Ισχυρές ενδείξεις ότι η συσκευή έχει επισκευαστεί ή τροποποιηθεί."
+                        : "Strong indicators that the device has been repaired or modified."
+        );
+
+    } else if (manipulationScore >= 30) {
+
+        logLabelWarnValue(
+                gr ? "Συμπέρασμα"
+                   : "Conclusion",
+                gr
+                        ? "Πιθανές ενδείξεις προηγούμενης επισκευής."
+                        : "Possible indicators of previous repair."
+        );
+
+    } else {
+
+        logLabelOkValue(
+                gr ? "Συμπέρασμα"
+                   : "Conclusion",
+                gr
+                        ? "Δεν εντοπίστηκαν σημαντικές ενδείξεις επέμβασης."
+                        : "No significant repair indicators detected."
+        );
+    }
+
+    appendHtml("<br>");
+    logOk(gr ? "Το Lab 29 ολοκληρώθηκε." : "Lab 29 finished.");
+    logLine();
 }
 
 // ============================================================
@@ -11836,21 +12084,6 @@ if (!Float.isNaN(internalResistance[0]) &&
                     swellingRisk[0] = true;
                 }
 
-                if (baselineFullMah > 0 && startMah > 0) {
-                    expectedPercent[0] =
-        (float) startMah / (float) baselineFullMah * 100f;
-
-if (!Float.isNaN(expectedPercent[0]) && batteryPercent >= 0) {
-
-    percentDeviation[0] =
-            Math.abs(expectedPercent[0] - batteryPercent);
-}
-
-if (!Float.isNaN(percentDeviation[0]) && percentDeviation[0] > 15f) {
-
-    calibrationDrift[0] = true;
-}
-
 // ----------------------------------------------------
 // BATTERY STATE OF HEALTH (SOH)
 // ----------------------------------------------------
@@ -11893,6 +12126,51 @@ if (!Float.isNaN(internalResistance[0]) &&
                             )
                     )
             );
+}
+
+// ----------------------------------------------------
+// BATTERY AUTHENTICITY CHECK (counterfeit detection)
+// ----------------------------------------------------
+boolean batteryAuthenticitySuspicion = false;
+
+if (!Float.isNaN(internalResistance[0]) &&
+    !Float.isNaN(voltageRecovery[0]) &&
+    baselineFullMah > 0) {
+
+    float ir = internalResistance[0];
+    float rec = voltageRecovery[0];
+
+    boolean highResistance =
+            ir > 0.22f;
+
+    boolean weakRecovery =
+            rec < 0.06f;
+
+    boolean suspiciousCapacity =
+            baselineFullMah > 6000;
+
+    if ((highResistance && weakRecovery) || suspiciousCapacity) {
+
+        batteryAuthenticitySuspicion = true;
+
+        logLabelWarnValue(
+                gr ? "Έλεγχος γνησιότητας μπαταρίας"
+                   : "Battery authenticity check",
+                gr
+                        ? "Ενδείξεις πιθανής μη γνήσιας ή χαμηλής ποιότητας μπαταρίας"
+                        : "Indicators of possible non-original or low-quality battery"
+        );
+
+    } else {
+
+        logLabelOkValue(
+                gr ? "Έλεγχος γνησιότητας μπαταρίας"
+                   : "Battery authenticity check",
+                gr
+                        ? "Δεν εντοπίστηκαν ενδείξεις μη γνήσιας μπαταρίας"
+                        : "No indicators of non-original battery detected"
+        );
+    }
 }
 
                 // ----------------------------------------------------
@@ -12750,6 +13028,7 @@ p.edit()
         .putBoolean("lab14_collapse_risk", collapseRisk[0])
         .putBoolean("lab14_swelling_risk", swellingRisk[0])
         .putBoolean("lab14_calibration_drift", calibrationDrift[0])
+        .putBoolean("lab14_battery_auth_suspect", batteryAuthenticitySuspicion)
         .putFloat("lab14_health_score", finalScore)
         .putInt("lab14_aging_index", agingIndex)
         .putLong("lab14_last_ts", System.currentTimeMillis())
@@ -14552,6 +14831,165 @@ private void lab18StorageSnapshot() {
 
             boolean wearSignals = detectStorageWearSignals();
             boolean reservedPressure = pctFree < 12;
+            
+            // ------------------------------------------------------------
+// EARLY STORAGE DEGRADATION INDICATORS
+// ------------------------------------------------------------
+boolean nandRisk = false;
+int nandScore = 0;
+
+if (wearSignals)
+    nandScore += 30;
+
+if (reservedPressure)
+    nandScore += 20;
+
+if (swapUsedKb > 0)
+    nandScore += 10;
+
+if ("HIGH".equalsIgnoreCase(pressureLevel))
+    nandScore += 20;
+
+if (pctFree < 10)
+    nandScore += 20;
+
+logLabelValue(
+        gr ? "Δείκτης πιθανής φθοράς NAND"
+           : "Possible NAND degradation index",
+        nandScore + "/100"
+);
+
+if (nandScore >= 60) {
+
+    nandRisk = true;
+
+    logLabelWarnValue(
+            gr ? "Ένδειξη αποθηκευτικού χώρου"
+               : "Storage integrity",
+            gr
+                    ? "Εντοπίστηκε μοτίβο που μπορεί να σχετίζεται με φθορά NAND ή controller."
+                    : "Pattern may indicate NAND or storage controller degradation."
+    );
+
+} else {
+
+    logLabelOkValue(
+            gr ? "Ακεραιότητα αποθηκευτικού χώρου"
+               : "Storage integrity",
+            gr
+                    ? "Δεν εντοπίστηκαν ενδείξεις φθοράς NAND."
+                    : "No NAND degradation indicators detected."
+    );
+}
+
+// ------------------------------------------------------------
+// STORAGE CONTROLLER INSTABILITY DETECTOR
+// ------------------------------------------------------------
+boolean controllerRisk = false;
+int controllerScore = 0;
+
+// υψηλή πίεση μνήμης + swap usage
+if ("HIGH".equalsIgnoreCase(pressureLevel))
+    controllerScore += 25;
+
+if (swapUsedKb > 0)
+    controllerScore += 15;
+
+// πολύ χαμηλός διαθέσιμος χώρος
+if (pctFree < 10)
+    controllerScore += 20;
+
+// storage wear indicators
+if (wearSignals)
+    controllerScore += 20;
+
+// έντονη πίεση συστήματος
+if (pctFree < 7)
+    controllerScore += 20;
+
+logLabelValue(
+        gr ? "Δείκτης σταθερότητας controller"
+           : "Storage controller stability index",
+        controllerScore + "/100"
+);
+
+if (controllerScore >= 60) {
+
+    controllerRisk = true;
+
+    logLabelWarnValue(
+            gr ? "Controller αποθήκευσης"
+               : "Storage controller",
+            gr
+                    ? "Πιθανή αστάθεια controller αποθήκευσης."
+                    : "Possible storage controller instability detected."
+    );
+
+} else {
+
+    logLabelOkValue(
+            gr ? "Controller αποθήκευσης"
+               : "Storage controller",
+            gr
+                    ? "Δεν εντοπίστηκαν ενδείξεις αστάθειας."
+                    : "Controller behaviour appears stable."
+    );
+}
+
+// ------------------------------------------------------------
+// FILESYSTEM CORRUPTION EARLY DETECTOR
+// ------------------------------------------------------------
+boolean fsCorruptionRisk = false;
+int fsScore = 0;
+
+// έντονη πίεση αποθηκευτικού χώρου
+if (pctFree < 10)
+    fsScore += 30;
+
+// πολύ χαμηλός χώρος
+if (pctFree < 7)
+    fsScore += 20;
+
+// χρήση swap
+if (swapUsedKb > 0)
+    fsScore += 15;
+
+// υψηλή πίεση μνήμης
+if ("HIGH".equalsIgnoreCase(pressureLevel))
+    fsScore += 15;
+
+// ενδείξεις wear
+if (wearSignals)
+    fsScore += 20;
+
+logLabelValue(
+        gr ? "Δείκτης ακεραιότητας filesystem"
+           : "Filesystem integrity index",
+        fsScore + "/100"
+);
+
+if (fsScore >= 60) {
+
+    fsCorruptionRisk = true;
+
+    logLabelWarnValue(
+            gr ? "Ακεραιότητα filesystem"
+               : "Filesystem integrity",
+            gr
+                    ? "Εντοπίστηκε μοτίβο που μπορεί να οδηγήσει σε σφάλματα filesystem."
+                    : "Pattern detected that may lead to filesystem errors."
+    );
+
+} else {
+
+    logLabelOkValue(
+            gr ? "Ακεραιότητα filesystem"
+               : "Filesystem integrity",
+            gr
+                    ? "Δεν εντοπίστηκαν ενδείξεις πιθανής αλλοίωσης."
+                    : "No filesystem corruption indicators detected."
+    );
+}
 
             if (wearSignals) {
                 logLabelWarnValue(
@@ -17835,17 +18273,17 @@ private void lab28HardwareStability() {
 
     int symptomScore = 0;
     int powerGlitches = 0;
-    
+
     Lab28Evidence ev = Lab28EvidenceReader.readFromGELServiceLog();
 
-randomReboots = ev.rebootPattern;
-signalDrops   = ev.radioInstability;
-sensorFlaps   = ev.sensorFlaps;
-thermalSpikes = ev.thermalSpikes;
+    randomReboots = ev.rebootPattern;
+    signalDrops   = ev.radioInstability;
+    sensorFlaps   = ev.sensorFlaps;
+    thermalSpikes = ev.thermalSpikes;
 
-if (ev.chargingGlitch) powerGlitches++;
+    if (ev.chargingGlitch) powerGlitches++;
 
-    // Technician popup (already helper-based)
+    // Technician popup
     showLab28Popup();
 
     // ============================================================
@@ -17927,46 +18365,233 @@ if (ev.chargingGlitch) powerGlitches++;
         logLabelOkValue(gr ? "Δείκτης Συνεκτικότητας Συμπτωμάτων"
                            : "Symptom consistency score",
                 symptomScore + "/100 (" + symptomLevel + ")");
-                
-// ============================================================
-// MOISTURE EXPOSURE INDICATOR
-// ============================================================
-boolean moistureIndicator = false;
 
-int moistureSignals = 0;
+    // ============================================================
+    // HARDWARE PATTERN ANALYSIS
+    // ============================================================
+    appendHtml("<br>");
+    logInfo(gr ? "Ανάλυση μοτίβων υλικού" : "Hardware instability patterns");
+    logLine();
 
-if (sensorFlaps) moistureSignals++;
-if (signalDrops) moistureSignals++;
-if (powerGlitches > 0) moistureSignals++;
+    boolean pmicInstability = false;
+    boolean basebandDegradation = false;
+    boolean sensorBusInstability = false;
+    boolean thermalRunaway = false;
+    boolean storageDegradation = false;
 
-if (thermalSpikes && ev.thermalOnlyDuringCharging)
-    moistureSignals++;
+    // PMIC instability
+    if (powerGlitches > 0 && thermalSpikes) {
+        pmicInstability = true;
+        logLabelWarnValue(
+                gr ? "PMIC αστάθεια"
+                   : "PMIC instability",
+                gr
+                        ? "Συνδυασμός θερμικών αιχμών και αστάθειας φόρτισης."
+                        : "Thermal spikes combined with charging instability."
+        );
+    }
 
-if (moistureSignals >= 2)
-    moistureIndicator = true;
+    // Baseband degradation
+    if (signalDrops && randomReboots) {
+        basebandDegradation = true;
+        logLabelWarnValue(
+                gr ? "Baseband αστάθεια"
+                   : "Baseband degradation",
+                gr
+                        ? "Αστάθεια δικτύου και resets modem."
+                        : "Signal instability combined with modem resets."
+        );
+    }
 
-appendHtml("<br>");
+    // Sensor bus instability
+    if (sensorFlaps && randomReboots) {
+        sensorBusInstability = true;
+        logLabelWarnValue(
+                gr ? "Sensor bus αστάθεια"
+                   : "Sensor bus instability",
+                gr
+                        ? "Διακοπτόμενη λειτουργία αισθητήρων."
+                        : "Intermittent sensor communication detected."
+        );
+    }
 
-if (moistureIndicator) {
+    // Thermal runaway
+    if (thermalSpikes && randomReboots) {
+        thermalRunaway = true;
+        logLabelWarnValue(
+                gr ? "Θερμική αστάθεια"
+                   : "Thermal runaway pattern",
+                gr
+                        ? "Απότομες αυξήσεις θερμοκρασίας."
+                        : "Rapid thermal escalation behaviour."
+        );
+    }
+
+    // Storage degradation indicator
+    if (ev.crashPattern.equals("UNKNOWN") && randomReboots) {
+        storageDegradation = true;
+        logLabelWarnValue(
+                gr ? "Αποθηκευτικός χώρος"
+                   : "Storage subsystem",
+                gr
+                        ? "Πιθανή αστάθεια NAND / controller."
+                        : "Possible NAND or storage controller instability."
+        );
+    }
+    
+// ------------------------------------------------------------
+// MOTHERBOARD REPAIR / REBALL INDICATORS
+// ------------------------------------------------------------
+boolean boardRepairSuspicion = false;
+int boardScore = 0;
+
+// συνδυασμός πολλών instability patterns
+if (pmicInstability)
+    boardScore += 25;
+
+if (basebandDegradation)
+    boardScore += 20;
+
+if (sensorBusInstability)
+    boardScore += 20;
+
+if (thermalRunaway)
+    boardScore += 15;
+
+if (storageDegradation)
+    boardScore += 15;
+
+// reboot behaviour
+if (randomReboots)
+    boardScore += 10;
+
+logLabelValue(
+        gr ? "Δείκτης πιθανής επέμβασης μητρικής"
+           : "Motherboard repair suspicion index",
+        boardScore + "/100"
+);
+
+if (boardScore >= 60) {
+
+    boardRepairSuspicion = true;
 
     logLabelWarnValue(
-            gr ? "Ένδειξη πιθανής υγρασίας"
-               : "Possible moisture exposure",
+            gr ? "Μητρική πλακέτα"
+               : "Mainboard integrity",
             gr
-                    ? "Εντοπίστηκε μοτίβο συμπτωμάτων που σχετίζεται με υγρασία."
-                    : "Symptom pattern consistent with moisture exposure detected."
+                    ? "Εντοπίστηκε μοτίβο αστάθειας που συναντάται σε συσκευές μετά από επέμβαση μητρικής."
+                    : "Instability pattern consistent with board repair or micro-soldering detected."
     );
 
 } else {
 
     logLabelOkValue(
-            gr ? "Ένδειξη υγρασίας"
-               : "Moisture exposure",
+            gr ? "Ακεραιότητα μητρικής"
+               : "Mainboard integrity",
             gr
-                    ? "Δεν εντοπίστηκαν σαφή σημάδια."
-                    : "No clear moisture indicators."
+                    ? "Δεν εντοπίστηκαν ισχυρές ενδείξεις επέμβασης."
+                    : "No strong motherboard repair indicators detected."
     );
 }
+
+// ------------------------------------------------------------
+// HIDDEN HARDWARE FAULT PREDICTOR
+// ------------------------------------------------------------
+boolean hiddenFaultRisk = false;
+
+int hiddenScore = 0;
+
+// power instability patterns
+if (pmicInstability)
+    hiddenScore += 25;
+
+// thermal abnormal behaviour
+if (thermalRunaway)
+    hiddenScore += 20;
+
+// baseband aging patterns
+if (basebandDegradation)
+    hiddenScore += 15;
+
+// sensor bus instability
+if (sensorBusInstability)
+    hiddenScore += 15;
+
+// storage subsystem instability
+if (storageDegradation)
+    hiddenScore += 15;
+
+// repeated reboot behaviour
+if (randomReboots)
+    hiddenScore += 10;
+
+logLabelValue(
+        gr ? "Δείκτης κρυφής αστάθειας υλικού"
+           : "Hidden hardware fault predictor",
+        hiddenScore + "/100"
+);
+
+if (hiddenScore >= 60) {
+
+    hiddenFaultRisk = true;
+
+    logLabelWarnValue(
+            gr ? "Πρόβλεψη βλάβης υλικού"
+               : "Hardware risk prediction",
+            gr
+                    ? "Εντοπίστηκε μοτίβο που μπορεί να οδηγήσει σε μελλοντική αστοχία hardware."
+                    : "Pattern detected that may lead to future hardware failure."
+    );
+
+} else {
+
+    logLabelOkValue(
+            gr ? "Σταθερότητα υλικού"
+               : "Hardware stability",
+            gr
+                    ? "Δεν εντοπίστηκαν πρώιμες ενδείξεις αστοχίας."
+                    : "No early hardware fault indicators detected."
+    );
+}
+
+    // ============================================================
+    // MOISTURE EXPOSURE INDICATOR
+    // ============================================================
+    boolean moistureIndicator = false;
+    int moistureSignals = 0;
+
+    if (sensorFlaps) moistureSignals++;
+    if (signalDrops) moistureSignals++;
+    if (powerGlitches > 0) moistureSignals++;
+
+    if (thermalSpikes && ev.thermalOnlyDuringCharging)
+        moistureSignals++;
+
+    if (moistureSignals >= 2)
+        moistureIndicator = true;
+
+    appendHtml("<br>");
+
+    if (moistureIndicator) {
+
+        logLabelWarnValue(
+                gr ? "Ένδειξη πιθανής υγρασίας"
+                   : "Possible moisture exposure",
+                gr
+                        ? "Εντοπίστηκε μοτίβο συμπτωμάτων που σχετίζεται με υγρασία."
+                        : "Symptom pattern consistent with moisture exposure detected."
+        );
+
+    } else {
+
+        logLabelOkValue(
+                gr ? "Ένδειξη υγρασίας"
+                   : "Moisture exposure",
+                gr
+                        ? "Δεν εντοπίστηκαν σαφή σημάδια."
+                        : "No clear moisture indicators."
+        );
+    }
 
     // ============================================================
     // STAGE D — FINAL CONFIDENCE
@@ -18278,6 +18903,76 @@ private void lab29DeviceAuthenticity() {
             gr ? "Hardware"
                : "Hardware",
             hardware);
+           
+// ------------------------------------------------------------
+// READ FLAGS FROM PREVIOUS LABS
+// ------------------------------------------------------------
+boolean sensorFlaps =
+        p.getBoolean("lab28_sensor_flaps", false);
+
+boolean radioInstability =
+        p.getBoolean("lab28_radio_instability", false);
+
+boolean thermalSpike =
+        p.getBoolean("lab28_thermal_spike", false);
+
+boolean rebootPattern =
+        p.getBoolean("lab28_reboot_pattern", false);
+
+boolean instabilityPattern =
+        p.getBoolean("lab28_instability_pattern", false);
+
+boolean collapseRisk =
+        p.getBoolean("lab14_collapse_risk", false);
+
+boolean swellingRisk =
+        p.getBoolean("lab14_swelling_risk", false);
+           
+ // ------------------------------------------------------------
+// WATER DAMAGE INDICATOR (logic-based moisture detection)
+// ------------------------------------------------------------
+boolean moistureSuspicion = false;
+
+int moistureScore = 0;
+
+if (sensorFlaps) moistureScore += 20;
+if (radioInstability) moistureScore += 20;
+if (thermalSpike) moistureScore += 15;
+if (rebootPattern) moistureScore += 15;
+if (instabilityPattern) moistureScore += 20;
+
+if (collapseRisk || swellingRisk)
+    moistureScore += 10;
+
+logLabelValue(
+        gr ? "Δείκτης πιθανής υγρασίας"
+           : "Moisture risk index",
+        moistureScore + "/100"
+);
+
+if (moistureScore >= 50) {
+
+    moistureSuspicion = true;
+
+    logLabelWarnValue(
+            gr ? "Ένδειξη πιθανής υγρασίας"
+               : "Possible moisture exposure",
+            gr
+                    ? "Το σύστημα εντόπισε μοτίβο αστάθειας που συναντάται σε συσκευές με εισχώρηση υγρασίας."
+                    : "Instability pattern similar to moisture-affected devices detected."
+    );
+
+} else {
+
+    logLabelOkValue(
+            gr ? "Έλεγχος υγρασίας"
+               : "Moisture inspection",
+            gr
+                    ? "Δεν εντοπίστηκαν ισχυρές ενδείξεις υγρασίας."
+                    : "No strong moisture indicators detected."
+    );
+}
+            
 
     // ============================================================
     // FINAL RESULT
@@ -18313,6 +19008,10 @@ private void lab29DeviceAuthenticity() {
                 authenticityScore + "/100 (" + level + ")"
         );
     }
+    p.edit()
+        .putBoolean("lab29_moisture_suspect", moistureSuspicion)
+        .apply();
+    
 
     appendHtml("<br>");
     logOk(gr

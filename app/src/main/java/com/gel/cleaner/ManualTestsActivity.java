@@ -11543,20 +11543,19 @@ final Lab14Engine.GelBatterySnapshot snapEnd = engine.readSnapshot();
 // ------------------------------------------------------------
 // BATTERY CALIBRATION DRIFT DETECTION
 // ------------------------------------------------------------
-
 if (baselineFullMah > 0 && startMah > 0) {
 
     expectedPercent[0] =
-        (float) startMah / (float) baselineFullMah * 100f;
+            (float) startMah / (float) baselineFullMah * 100f;
 }
 
-if (!Float.isNaN(expectedPercent[0]) && batteryPercent >= 0)
+if (!Float.isNaN(expectedPercent[0]) && batteryPercent >= 0) {
 
     percentDeviation[0] =
-        Math.abs(expectedPercent[0] - batteryPercent);
+            Math.abs(expectedPercent[0] - batteryPercent);
 }
 
-if (!Float.isNaN(percentDeviation[0]) && percentDeviation[0] > 15f)
+if (!Float.isNaN(percentDeviation[0]) && percentDeviation[0] > 15f) {
 
     calibrationDrift[0] = true;
 }

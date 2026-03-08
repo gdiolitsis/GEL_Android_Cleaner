@@ -11255,6 +11255,8 @@ final float[] percentDeviation = {Float.NaN};
 // ------------------------------------------------------------
 // 5) FAST BATTERY STRESS (45 sec) — BACKGROUND THREAD FIX
 // ------------------------------------------------------------
+final long t0 = SystemClock.elapsedRealtime();
+
 new Thread(() -> {
 
     vStart = getBatteryVoltageFiltered();
@@ -11333,8 +11335,6 @@ new Thread(() -> {
             }
         }
         
-        final long t0 = SystemClock.elapsedRealtime();
-
         startMainStressPhase(
                 durationSec,
                 t0,
@@ -11546,19 +11546,19 @@ final Lab14Engine.GelBatterySnapshot snapEnd = engine.readSnapshot();
 
 if (baselineFullMah > 0 && startMah > 0) {
 
-    expectedPercent =
+    expectedPercent[0] =
         (float) startMah / (float) baselineFullMah * 100f;
 }
 
-if (!Float.isNaN(expectedPercent) && batteryPercent >= 0) {
+if (!Float.isNaN(expectedPercent[0]) && batteryPercent >= 0)
 
-    percentDeviation =
-        Math.abs(expectedPercent - batteryPercent);
+    percentDeviation[0] =
+        Math.abs(expectedPercent[0] - batteryPercent);
 }
 
-if (!Float.isNaN(percentDeviation) && percentDeviation > 15f) {
+if (!Float.isNaN(percentDeviation[0]) && percentDeviation[0] > 15f)
 
-    calibrationDrift = true;
+    calibrationDrift[0] = true;
 }
 
                 // ----------------------------------------------------
@@ -11874,7 +11874,7 @@ if (!Float.isNaN(internalResistance[0]) &&
                     }
 
                     if (collapseRisk[0]) finalScore -= 10;
-                    if (calibrationDrift) finalScore -= 5;
+                    if (calibrationDrift[0]) finalScore -= 5;
 
                     if (finalScore < 0) finalScore = 0;
                     if (finalScore > 100) finalScore = 100;
@@ -12306,7 +12306,7 @@ if (!Float.isNaN(structuralIntegrityIndex[0])) {
                 }
 
                 // calibration drift
-                if (calibrationDrift) {
+                if (calibrationDrift[0]) {
                     logLabelWarnValue(
                             gr ? "Απόκλιση βαθμονόμησης μπαταρίας"
                                : "Battery calibration drift",
@@ -12556,7 +12556,7 @@ p.edit()
         .putBoolean("lab14_unstable_measurement", variabilityDetected)
         .putBoolean("lab14_collapse_risk", collapseRisk[0])
         .putBoolean("lab14_swelling_risk", swellingRisk[0])
-        .putBoolean("lab14_calibration_drift", calibrationDrift)
+        .putBoolean("lab14_calibration_drift", calibrationDrift[0])
         .putFloat("lab14_health_score", finalScore)
         .putInt("lab14_aging_index", agingIndex)
         .putLong("lab14_last_ts", System.currentTimeMillis())

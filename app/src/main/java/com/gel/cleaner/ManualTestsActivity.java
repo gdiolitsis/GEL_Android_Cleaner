@@ -4329,6 +4329,12 @@ private void lab29AuthenticityCheck() {
 	
 SharedPreferences p =
         getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
+        
+boolean collapseRisk =
+        p.getBoolean("lab14_collapse_risk", false);
+
+boolean swellingRisk =
+        p.getBoolean("lab14_swelling_risk", false);
 
 boolean collapseRisk =
         p.getBoolean("lab14_collapse_risk", false);
@@ -4352,9 +4358,6 @@ boolean swellingRisk =
 
     boolean calibrationDrift =
             p.getBoolean("lab14_calibration_drift", false);
-
-    boolean swellingRisk =
-            p.getBoolean("lab14_swelling_risk", false);
 
     boolean instabilityPattern =
             p.getBoolean("lab29_instability_pattern", false);
@@ -11517,6 +11520,7 @@ final float[] sag1 = {Float.NaN};
 final float[] sag2 = {Float.NaN};
 final float[] sagAvg = {Float.NaN};
 
+final float[] voltageUnderLoad = {Float.NaN};
 final float[] voltageRecovery = {Float.NaN};
 final float[] voltageStability = {Float.NaN};
 final float[] internalResistance = {Float.NaN};
@@ -11528,11 +11532,14 @@ final float[] powerStabilityFactor = {Float.NaN};
 final float[] stressSignature = {Float.NaN};
 final float[] structuralIntegrityIndex = {Float.NaN};
 
+float estimatedESR = Float.NaN;
+
 final boolean[] collapseRisk = {false};
 final boolean[] swellingRisk = {false};
 final boolean[] calibrationDrift = {false};
 final boolean[] cellImbalanceRisk = {false};
 final boolean[] batteryFailureRisk = {false};
+
 final float[] batterySOH = {Float.NaN};
 
 final float[] expectedPercent = {Float.NaN};
@@ -11817,9 +11824,9 @@ try { restoreBrightnessAndKeepOn(); } catch (Throwable ignore) {}
 // ----------------------------------------------------
 // VOLTAGE RECOVERY SPEED (electrochemical response)
 // ----------------------------------------------------
-if (!Float.isNaN(vLoad1) && !Float.isNaN(vRecover)) {
+if (!Float.isNaN(vLoad1[0]) && !Float.isNaN(vRecover[0])) {
 
-    float recoveryDelta = vRecover - vLoad1;
+    float recoveryDelta = vRecover[0] - vLoad1[0];
 
     // rest window = 15 sec
     voltageRecoverySpeed[0] = recoveryDelta / 15f;
@@ -11912,13 +11919,23 @@ if (!Float.isNaN(percentDeviation[0]) && percentDeviation[0] > 15f) {
     calibrationDrift[0] = true;
 }
 
+float voltageStart = Float.NaN;
+
+boolean validDrain = false;
+
+float drainMah = 0f;
+float mahPerHour = 0f;
+
 // ----------------------------------------------------
 // 10) ELECTRICAL ANALYSIS
 // ----------------------------------------------------
+
+float estimatedESR = Float.NaN;
+
 if (!Float.isNaN(voltageStart) &&
         !Float.isNaN(voltageUnderLoad[0])) {
 
-    float sag = vStart[0] - voltageUnderLoad[0];
+    float sag = voltageStart - voltageUnderLoad[0];
 
     if (sag < 0.015f)
         sag = 0f;
@@ -11944,7 +11961,7 @@ if (!Float.isNaN(voltageStart) &&
                 estimatedESR = Float.NaN;
 
             // internal resistance estimation
-            internalResistance[0] = sagFiltered / currentAmp;
+            internalResistance[0] = estimatedESR;
         }
     }
 }
@@ -13202,29 +13219,8 @@ if (!Float.isNaN(energyEfficiency)) {
                                 conf.validRuns
                         )
                 );
-                
-// ------------------------------------------------------------
-// BATTERY DIAGNOSIS CONFIDENCE
-// ------------------------------------------------------------
-String confidenceLabel;
-
-if (conf.percent >= 90)
-    confidenceLabel = gr ? "Πολύ υψηλή αξιοπιστία" : "Very high confidence";
-else if (conf.percent >= 75)
-    confidenceLabel = gr ? "Υψηλή αξιοπιστία" : "High confidence";
-else if (conf.percent >= 60)
-    confidenceLabel = gr ? "Μέτρια αξιοπιστία" : "Moderate confidence";
-else
-    confidenceLabel = gr ? "Χαμηλή αξιοπιστία — απαιτείται επανάληψη τεστ"
-                         : "Low confidence — repeat test recommended";
-
-logLabelValue(
-        gr ? "Αξιοπιστία διάγνωσης μπαταρίας"
-           : "Battery diagnosis confidence",
-        confidenceLabel
-);
-
-                logLab14VarianceInfo();
+               
+               logLab14VarianceInfo();
 
 // ----------------------------------------------------
 // BATTERY AGING INDEX
@@ -13456,9 +13452,9 @@ root.addView(title);
 // MAIN MESSAGE (NEON GREEN)
 // ---------------------------
 
-int level = getBatteryPercentSafe();
+int batteryLevel = getBatteryPercentSafe();
 
-if (level > 80) {
+if (batteryLevel > 80) {
 
     logLabelWarnValue(
             gr ? "Δοκιμή φόρτισης"
@@ -18860,7 +18856,6 @@ if (signalDrops && randomReboots && !thermalSpikes) {
 // ----------------------------------------------------
 // SENSOR BUS INSTABILITY DETECTOR (ROOT ONLY)
 // ----------------------------------------------------
-boolean sensorBusInstability = false;
 
 if (!isDeviceRooted()) {
 
@@ -18953,6 +18948,9 @@ if (pmicInstability)
     thermalScore += 20;
 
 // υψηλή θερμοκρασία CPU
+Float cpu = null;
+Float gpu = null;
+
 if (cpu != null && cpu > 85)
     thermalScore += 20;
 

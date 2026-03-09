@@ -11675,20 +11675,18 @@ if (!Float.isNaN(internalResistance[0]) &&
 
 }).start();
 
-        // ------------------------------------------------------------
-        // 6) MAIN STRESS START
-        // ------------------------------------------------------------
-     
-        final String[] dotFrames = {"•", "• •", "• • •"};
+// ------------------------------------------------------------
+// 6) MAIN STRESS START
+// ------------------------------------------------------------
 
-        applyMaxBrightnessAndKeepOn();
-        startCpuBurn_C_Mode();
-        startMemoryStress();
-        startGpuStress();
+final String[] dotFrames = {"•", "• •", "• • •"};
 
-        final float[] voltageUnderLoad = {Float.NaN};
+applyMaxBrightnessAndKeepOn();
+startCpuBurn_C_Mode();
+startMemoryStress();
+startGpuStress();
 
-        ui.postDelayed(() -> {
+ui.postDelayed(() -> {
     voltageUnderLoad[0] = getBatteryVoltageFiltered();
 }, 5250);
 

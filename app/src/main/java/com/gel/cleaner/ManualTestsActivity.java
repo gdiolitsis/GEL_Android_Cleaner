@@ -11568,25 +11568,25 @@ if (!Float.isNaN(sag1[0]) && !Float.isNaN(sag2[0]))
 // ----------------------------------------------------
 // CELL IMBALANCE DETECTOR
 // ----------------------------------------------------
-if (!Float.isNaN(sag1) && !Float.isNaN(sag2)) {
+if (!Float.isNaN(sag1[0]) && !Float.isNaN(sag2[0])) {
 
-    float sagDiff = Math.abs(sag1 - sag2);
+    float sagDiff = Math.abs(sag1[0] - sag2[0]);
 
     if (sagDiff > 0.05f)
         cellImbalanceRisk[0] = true;
 }
 
-    if (!Float.isNaN(vStart)
-            && !Float.isNaN(vLoad1)
-            && !Float.isNaN(vRecover)
-            && !Float.isNaN(vLoad2)) {
+    if (!Float.isNaN(vStart[0])
+        && !Float.isNaN(vLoad1[0])
+        && !Float.isNaN(vRecover[0])
+        && !Float.isNaN(vLoad2[0])) {
 
-        float variance =
-                Math.abs(vStart - vLoad1)
-                        + Math.abs(vRecover - vLoad2);
+    float variance =
+            Math.abs(vStart[0] - vLoad1[0])
+                    + Math.abs(vRecover[0] - vLoad2[0]);
 
-        voltageStability[0] =
-                Math.max(0f, 100f - variance * 120f);
+    voltageStability[0] =
+            Math.max(0f, 100f - variance * 120f);
     }
 
     runOnUiThread(() -> {
@@ -11674,8 +11674,8 @@ if (!Float.isNaN(internalResistance[0]) &&
         final float[] voltageUnderLoad = {Float.NaN};
 
         ui.postDelayed(() -> {
-            voltageUnderLoad[0] = getBatteryVoltageFiltered();
-        }, 5000);
+    voltageUnderLoad[0] = getBatteryVoltageFiltered();
+}, 5250);
 
         final Vibrator vib =
                 (Vibrator) getSystemService(VIBRATOR_SERVICE);
@@ -11801,7 +11801,8 @@ try { restoreBrightnessAndKeepOn(); } catch (Throwable ignore) {}
                     SystemClock.sleep(3000);
                     float vr = getBatteryVoltageFiltered();
                     if (!Float.isNaN(vr)) {
-                        voltageRecovery[0] = vr - voltageUnderLoad[0];
+                        voltageRecovery[0] =
+        Math.max(0f, vr - voltageUnderLoad[0]);
                     }
                 }
                 
@@ -11841,6 +11842,36 @@ final Lab14Engine.GelBatterySnapshot snapEnd = engine.readSnapshot();
                 final long dtMs = Math.max(1, SystemClock.elapsedRealtime() - t0);
                 final long drainMah = Math.max(0, startMah - endMah);
 
+// ----------------------------------------------------
+// DECLARED CAPACITY VALIDATION
+// ----------------------------------------------------
+if (baselineFullMah > 0 && drainMah > 0) {
+
+    float drainRatio =
+            (float) drainMah / (float) baselineFullMah;
+
+    if (drainRatio > 0.12f) {
+
+        logLabelWarnValue(
+                gr ? "Έλεγχος δηλωμένης χωρητικότητας"
+                   : "Declared capacity check",
+                gr
+                        ? "Η δηλωμένη χωρητικότητα πιθανόν δεν είναι ρεαλιστική."
+                        : "Declared battery capacity may be unrealistic."
+        );
+
+    } else {
+
+        logLabelOkValue(
+                gr ? "Έλεγχος δηλωμένης χωρητικότητας"
+                   : "Declared capacity check",
+                gr
+                        ? "Η δηλωμένη χωρητικότητα φαίνεται ρεαλιστική."
+                        : "Declared capacity appears realistic."
+        );
+    }
+}
+
                 final boolean validDrain =
                         drainMah > 0 &&
                                 !(baselineFullMah > 0 && drainMah > (long) (baselineFullMah * 0.30));
@@ -11873,22 +11904,57 @@ if (!Float.isNaN(percentDeviation[0]) && percentDeviation[0] > 15f) {
     calibrationDrift[0] = true;
 }
 
-                // ----------------------------------------------------
-                // 10) ELECTRICAL ANALYSIS
-                // ----------------------------------------------------
-                if (!Float.isNaN(voltageStart) &&
-                        !Float.isNaN(voltageUnderLoad[0])) {
+// ----------------------------------------------------
+// 10) ELECTRICAL ANALYSIS
+// ----------------------------------------------------
+if (!Float.isNaN(voltageStart) &&
+        !Float.isNaN(voltageUnderLoad[0])) {
 
-                    float sag = vStart[0] - voltageUnderLoad[0];
-                    float currentNow = getBatteryCurrentNowSafe();
+    float sag = vStart[0] - voltageUnderLoad[0];
 
-                    if (!Float.isNaN(currentNow)) {
-                        float currentAmp = Math.abs(currentNow) / 1000000f;
-                        if (currentAmp > 0.05f) {
-                            internalResistance[0] = sag / currentAmp;
-                        }
-                    }
-                }
+    // ignore micro sag noise
+    if (sag < 0.015f)
+        sag = 0f;
+
+    float currentNow = getBatteryCurrentNowSafe();
+
+    if (!Float.isNaN(currentNow)) {
+
+        float currentAmp = Math.abs(currentNow) / 1000000f;
+
+        if (currentAmp > 0.1f && currentAmp < 8f) {
+
+            // ESR estimation
+estimatedESR = sag / currentAmp;
+
+// clamp unrealistic ESR (PMIC artefacts)
+if (estimatedESR > 0.5f)
+    estimatedESR = Float.NaN;
+
+            // internal resistance estimation
+            internalResistance[0] = sag / currentAmp;
+        }
+    }
+}
+    
+// ----------------------------------------------------
+// BATTERY ENERGY EFFICIENCY INDEX
+// ----------------------------------------------------
+float energyEfficiency = Float.NaN;
+
+if (!Float.isNaN(voltageStart) &&
+    !Float.isNaN(voltageUnderLoad[0]) &&
+    drainMah > 0) {
+
+    float voltageDrop = voltageStart - voltageUnderLoad[0];
+
+    if (voltageDrop > 0.01f) {
+
+        energyEfficiency =
+                (float) drainMah / voltageDrop;
+
+    }
+}
 
                 if (!Float.isNaN(internalResistance[0]) &&
     !Float.isNaN(voltageRecovery[0])) {
@@ -11957,8 +12023,10 @@ if (!Float.isNaN(vStart[0]) &&
     float d1 = Math.abs(vStart[0] - vLoad1[0]);
     float d2 = Math.abs(vRecover[0] - vLoad2[0]);
 
-    powerStabilityFactor[0] =
-            Math.max(0f, Math.min(100f, 100f - diff * 400f));
+    float diff = (d1 + d2) / 2f;
+
+powerStabilityFactor[0] =
+        Math.max(0f, Math.min(100f, 100f - diff * 400f));
 }
 
 // ----------------------------------------------------
@@ -12415,6 +12483,11 @@ logLabelValue(
 if (!Float.isNaN(vStart[0]) && !Float.isNaN(voltageUnderLoad[0])) {
 
     float sag = vStart[0] - voltageUnderLoad[0];
+
+// ignore micro sag noise
+if (sag < 0.015f)
+    sag = 0f;
+    
     String sagLabel;
 
     if (sag < 0.05f) sagLabel = "Excellent";
@@ -12463,6 +12536,29 @@ if (!Float.isNaN(internalResistance[0])) {
                         label
                 )
         );
+        
+// ----------------------------------------------------
+// BATTERY ESR ESTIMATION
+// ----------------------------------------------------
+if (!Float.isNaN(estimatedESR)) {
+
+    String esrLabel;
+
+    if (estimatedESR < 0.08f)
+        esrLabel = "Excellent ESR";
+    else if (estimatedESR < 0.15f)
+        esrLabel = "Normal ESR";
+    else if (estimatedESR < 0.25f)
+        esrLabel = "High ESR (aging)";
+    else
+        esrLabel = "Critical ESR";
+
+    logLabelValue(
+            gr ? "Ηλεκτροχημική αντίσταση κυψελών (ESR)"
+               : "Battery ESR estimation",
+            String.format(Locale.US, "%.3f Ω (%s)", estimatedESR, esrLabel)
+    );
+}
 
     } else {
 
@@ -12980,6 +13076,11 @@ if (!Float.isNaN(batterySOH[0])) {
                         && !Float.isNaN(endBatteryTemp)) {
 
                     float sag = vStart[0] - voltageUnderLoad[0];
+
+// ignore micro sag noise
+if (sag < 0.015f)
+    sag = 0f;
+                    
 float rise = endBatteryTemp - startBatteryTemp;
 
 boolean highSag = sag > 0.18f;
@@ -13053,6 +13154,31 @@ if (highSag && highThermalRise && highResistance) {
                                     : "Counter anomaly detected (PMIC / system-level behavior). Repeat test after reboot."
                     );
                 }
+                
+if (!Float.isNaN(energyEfficiency)) {
+
+    String effLabel;
+
+    if (energyEfficiency > 8000)
+        effLabel = "High efficiency";
+    else if (energyEfficiency > 5000)
+        effLabel = "Normal efficiency";
+    else if (energyEfficiency > 3000)
+        effLabel = "Low efficiency";
+    else
+        effLabel = "Energy loss detected";
+
+    logLabelValue(
+            gr ? "Ενεργειακή αποδοτικότητα μπαταρίας"
+               : "Battery energy efficiency",
+            String.format(
+                    Locale.US,
+                    "%.0f mAh/V (%s)",
+                    energyEfficiency,
+                    effLabel
+            )
+    );
+}
 
                 // confidence
                 logLabelOkValue(
@@ -13189,8 +13315,6 @@ p.edit()
                 appendHtml("<br>");
 logOk(gr ? "Το Lab 14 ολοκληρώθηκε." : "Lab 14 finished.");
 logLine();
-
-}
 
 } catch (Throwable t) {
 
@@ -18601,6 +18725,11 @@ if (validDrain &&
     !Float.isNaN(voltageRecovery[0])) {
 
     float sag = vStart[0] - voltageUnderLoad[0];
+
+// ignore micro sag noise
+if (sag < 0.015f)
+    sag = 0f;
+    
     float recovery = voltageRecovery[0];
 
     float electricalNoise =

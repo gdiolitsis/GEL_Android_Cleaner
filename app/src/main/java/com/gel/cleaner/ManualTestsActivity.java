@@ -13579,6 +13579,8 @@ if (batteryLevel > 80) {
                     : "Charging diagnostics are reliable only between 20% and 80% battery level."
     );
 
+    lab15Running = false;
+    lab15Finished = true;
     return;
 }
 
@@ -13663,8 +13665,6 @@ root.addView(lab15ProgressBar);
 // MUTE ROW (GLOBAL APP TTS)
 // ---------------------------
 root.addView(buildMuteRow());
-
-    return;
 
 // ---------------------------
 // TTS (ONLY IF NOT MUTED)

@@ -225,6 +225,44 @@ import java.util.Set;
 public class ManualTestsActivity extends AppCompatActivity {
 
     // ============================================================
+    // BATTERY STRESS DIAGNOSTIC STATE (shared between labs)
+    // ============================================================
+
+    final float[] vStart = {Float.NaN};
+    final float[] vLoad1 = {Float.NaN};
+    final float[] vRecover = {Float.NaN};
+    final float[] vLoad2 = {Float.NaN};
+
+    final float[] sag1 = {Float.NaN};
+    final float[] sag2 = {Float.NaN};
+    final float[] sagAvg = {Float.NaN};
+
+    final float[] voltageUnderLoad = {Float.NaN};
+    final float[] voltageRecovery = {Float.NaN};
+    final float[] voltageStability = {Float.NaN};
+    final float[] internalResistance = {Float.NaN};
+
+    final float[] voltageRecoverySpeed = {Float.NaN};
+    final float[] cellElasticityIndex = {Float.NaN};
+    final float[] thermalImpedance = {Float.NaN};
+    final float[] powerStabilityFactor = {Float.NaN};
+    final float[] stressSignature = {Float.NaN};
+    final float[] structuralIntegrityIndex = {Float.NaN};
+
+    float estimatedESR = Float.NaN;
+
+    final boolean[] collapseRisk = {false};
+    final boolean[] swellingRisk = {false};
+    final boolean[] calibrationDrift = {false};
+    final boolean[] cellImbalanceRisk = {false};
+    final boolean[] batteryFailureRisk = {false};
+
+    final float[] batterySOH = {Float.NaN};
+
+    final float[] expectedPercent = {Float.NaN};
+    final float[] percentDeviation = {Float.NaN};
+
+    // ============================================================
     // PERMISSION ENGINE (UNIVERSAL)
     // ============================================================
     private static final int REQ_CORE_PERMS = 5000;
@@ -1063,6 +1101,46 @@ private void logRed(String msg)    { logError(msg); }
 private void logSection(String msg) {  
 logInfo(msg); 
 
+}
+
+// ============================================================
+// RESET BATTERY DIAGNOSTIC STATE
+// ============================================================
+private void resetBatteryDiagnostics() {
+
+    vStart[0] = Float.NaN;
+    vLoad1[0] = Float.NaN;
+    vRecover[0] = Float.NaN;
+    vLoad2[0] = Float.NaN;
+
+    sag1[0] = Float.NaN;
+    sag2[0] = Float.NaN;
+    sagAvg[0] = Float.NaN;
+
+    voltageUnderLoad[0] = Float.NaN;
+    voltageRecovery[0] = Float.NaN;
+    voltageStability[0] = Float.NaN;
+    internalResistance[0] = Float.NaN;
+
+    voltageRecoverySpeed[0] = Float.NaN;
+    cellElasticityIndex[0] = Float.NaN;
+    thermalImpedance[0] = Float.NaN;
+    powerStabilityFactor[0] = Float.NaN;
+    stressSignature[0] = Float.NaN;
+    structuralIntegrityIndex[0] = Float.NaN;
+
+    estimatedESR = Float.NaN;
+
+    collapseRisk[0] = false;
+    swellingRisk[0] = false;
+    calibrationDrift[0] = false;
+    cellImbalanceRisk[0] = false;
+    batteryFailureRisk[0] = false;
+
+    batterySOH[0] = Float.NaN;
+
+    expectedPercent[0] = Float.NaN;
+    percentDeviation[0] = Float.NaN;
 }
 
 // ============================================================
@@ -11196,7 +11274,7 @@ AppTTS.stop();
 // FULL METHOD / COPY-PASTE READY
 // ============================================================
 private void lab14BatteryHealthStressTest() {
-
+    
     final boolean gr = AppLang.isGreek(this);
 
     if (lab14Running) {
@@ -11205,6 +11283,8 @@ private void lab14BatteryHealthStressTest() {
                 : "LAB 14 already running.");
         return;
     }
+    
+    resetBatteryDiagnostics();
 
     lab14Running = true;
 
@@ -11509,43 +11589,6 @@ logLabelOkValue(
         lab14Dialog.show();
 
 // ------------------------------------------------------------
-// 4) DECLARATIONS FOR ELECTRICAL DIAGNOSTICS
-// ------------------------------------------------------------
-final float[] vStart = {Float.NaN};
-final float[] vLoad1 = {Float.NaN};
-final float[] vRecover = {Float.NaN};
-final float[] vLoad2 = {Float.NaN};
-
-final float[] sag1 = {Float.NaN};
-final float[] sag2 = {Float.NaN};
-final float[] sagAvg = {Float.NaN};
-
-final float[] voltageUnderLoad = {Float.NaN};
-final float[] voltageRecovery = {Float.NaN};
-final float[] voltageStability = {Float.NaN};
-final float[] internalResistance = {Float.NaN};
-
-final float[] voltageRecoverySpeed = {Float.NaN};
-final float[] cellElasticityIndex = {Float.NaN};
-final float[] thermalImpedance = {Float.NaN};
-final float[] powerStabilityFactor = {Float.NaN};
-final float[] stressSignature = {Float.NaN};
-final float[] structuralIntegrityIndex = {Float.NaN};
-
-float estimatedESR = Float.NaN;
-
-final boolean[] collapseRisk = {false};
-final boolean[] swellingRisk = {false};
-final boolean[] calibrationDrift = {false};
-final boolean[] cellImbalanceRisk = {false};
-final boolean[] batteryFailureRisk = {false};
-
-final float[] batterySOH = {Float.NaN};
-
-final float[] expectedPercent = {Float.NaN};
-final float[] percentDeviation = {Float.NaN};
-
-// ------------------------------------------------------------
 // 5) FAST BATTERY STRESS (45 sec) — BACKGROUND THREAD FIX
 // ------------------------------------------------------------
 final long t0 = SystemClock.elapsedRealtime();
@@ -11576,6 +11619,30 @@ if (!Float.isNaN(vStart[0]) && !Float.isNaN(vLoad1[0]))
 
 if (!Float.isNaN(vRecover[0]) && !Float.isNaN(vLoad2[0]))
     sag2[0] = vRecover[0] - vLoad2[0];
+
+// ----------------------------------------------------
+// PMIC RAIL STABILITY CHECK
+// ----------------------------------------------------
+if (!Float.isNaN(sag1[0]) && !Float.isNaN(sag2[0])) {
+
+    float railDrop = Math.abs(sag1[0] - sag2[0]);
+
+    if (railDrop > 0.08f) {
+
+        collapseRisk[0] = true;
+
+        logLabelWarnValue(
+                gr ? "Αστάθεια γραμμής τροφοδοσίας"
+                   : "Power rail instability",
+                gr
+                        ? "Ασύμμετρη πτώση τάσης μεταξύ κύκλων φορτίου."
+                        : "Asymmetric voltage drop between load cycles."
+        );
+    }
+
+    if (railDrop > 0.20f)
+        swellingRisk[0] = true;
+}
 
 if (!Float.isNaN(sag1[0]) && !Float.isNaN(sag2[0]))
     sagAvg[0] = (sag1[0] + sag2[0]) / 2f;
@@ -12537,32 +12604,58 @@ if (sag < 0.015f)
     );
 }
 
-// internal resistance
-String label = "Unknown";
-
+// ----------------------------------------------------
+// INTERNAL RESISTANCE DIAGNOSIS
+// ----------------------------------------------------
 if (!Float.isNaN(internalResistance[0])) {
 
-    if (internalResistance[0] < 0.08f) label = "Excellent";
-    else if (internalResistance[0] < 0.15f) label = "Normal";
-    else if (internalResistance[0] < 0.25f) label = "Worn";
+    float r = internalResistance[0];
+    float rMilli = r * 1000f;
+
+    String label;
+
+    if (r < 0.08f) label = "Excellent";
+    else if (r < 0.15f) label = "Normal";
+    else if (r < 0.25f) label = "Worn";
     else label = "Failing";
 
-}
-
-if (!Float.isNaN(internalResistance[0])) {
-
-    if (internalResistance[0] < 0.15f) {
+    if (r < 0.15f) {
 
         logLabelOkValue(
                 gr ? "Εσωτερική αντίσταση μπαταρίας"
                    : "Battery internal resistance",
                 String.format(
                         Locale.US,
-                        "%.3f Ω (%s)",
-                        internalResistance[0],
+                        "%.0f mΩ (%s)",
+                        rMilli,
                         label
                 )
         );
+
+    } else {
+
+        logLabelWarnValue(
+                gr ? "Εσωτερική αντίσταση μπαταρίας"
+                   : "Battery internal resistance",
+                String.format(
+                        Locale.US,
+                        "%.0f mΩ (%s)",
+                        rMilli,
+                        label
+                )
+        );
+
+        logLabelWarnValue(
+                gr ? "Διάγνωση αντίστασης"
+                   : "Resistance diagnosis",
+                gr
+                        ? "Υψηλή εσωτερική αντίσταση μπαταρίας."
+                        : "Elevated battery internal resistance detected."
+        );
+
+        collapseRisk[0] = true;
+    }
+}
         
 // ----------------------------------------------------
 // BATTERY ESR ESTIMATION

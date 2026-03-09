@@ -12150,7 +12150,13 @@ if (!Float.isNaN(internalResistance[0]) &&
     boolean suspiciousCapacity =
             baselineFullMah > 6000;
 
-    if ((highResistance && weakRecovery) || suspiciousCapacity) {
+    boolean poorCellDynamics =
+            !Float.isNaN(cellElasticityIndex[0]) &&
+            cellElasticityIndex[0] < 55f;
+
+    if ((highResistance && weakRecovery) ||
+        suspiciousCapacity ||
+        poorCellDynamics) {
 
         batteryAuthenticitySuspicion = true;
 
@@ -12327,6 +12333,61 @@ if (!Float.isNaN(internalResistance[0]) &&
                 else if (finalScore >= 75) healthClass = "B";
                 else if (finalScore >= 60) healthClass = "C";
                 else healthClass = "D";
+                
+// ----------------------------------------------------
+// MEASUREMENT CONFIDENCE ENGINE
+// ----------------------------------------------------
+float measurementConfidence = 100f;
+
+// missing voltage metrics
+if (Float.isNaN(vStart[0]) || Float.isNaN(vLoad1[0]) || Float.isNaN(vRecover[0]))
+    measurementConfidence -= 20f;
+
+// missing sag
+if (Float.isNaN(sagAvg[0]))
+    measurementConfidence -= 15f;
+
+// missing internal resistance
+if (Float.isNaN(internalResistance[0]))
+    measurementConfidence -= 15f;
+
+// missing recovery
+if (Float.isNaN(voltageRecovery[0]))
+    measurementConfidence -= 10f;
+
+// missing temperature
+if (Float.isNaN(tempStart) || Float.isNaN(tempEnd))
+    measurementConfidence -= 10f;
+
+// missing recovery speed
+if (Float.isNaN(voltageRecoverySpeed[0]))
+    measurementConfidence -= 5f;
+
+// clamp
+if (measurementConfidence < 0f) measurementConfidence = 0f;
+
+String confidenceLabel;
+
+if (measurementConfidence >= 90)
+    confidenceLabel = gr ? "Πολύ υψηλή αξιοπιστία" : "Very high confidence";
+else if (measurementConfidence >= 75)
+    confidenceLabel = gr ? "Υψηλή αξιοπιστία" : "High confidence";
+else if (measurementConfidence >= 60)
+    confidenceLabel = gr ? "Μέτρια αξιοπιστία" : "Moderate confidence";
+else
+    confidenceLabel = gr ? "Χαμηλή αξιοπιστία — απαιτείται επανάληψη τεστ"
+                         : "Low confidence — repeat test recommended";
+
+logLabelValue(
+        gr ? "Αξιοπιστία διάγνωσης μπαταρίας"
+           : "Battery diagnostic confidence",
+        String.format(
+                Locale.US,
+                "%.0f%% (%s)",
+                measurementConfidence,
+                confidenceLabel
+        )
+);
 
                 startBatteryTemp = tempStart;
                 endBatteryTemp = tempEnd;
@@ -12351,28 +12412,30 @@ if (!Float.isNaN(internalResistance[0]) &&
                 }
 
                 // sag under long load
-                if (!Float.isNaN(vStart[0]) && !Float.isNaN(voltageUnderLoad[0]))
+if (!Float.isNaN(vStart[0]) && !Float.isNaN(voltageUnderLoad[0])) {
 
-                    float sag = vStart[0] - voltageUnderLoad[0];
-                    String sagLabel;
+    float sag = vStart[0] - voltageUnderLoad[0];
+    String sagLabel;
 
-                    if (sag < 0.05f) sagLabel = "Excellent";
-                    else if (sag < 0.12f) sagLabel = "Normal";
-                    else if (sag < 0.20f) sagLabel = "Weak";
-                    else sagLabel = "Severe";
+    if (sag < 0.05f) sagLabel = "Excellent";
+    else if (sag < 0.12f) sagLabel = "Normal";
+    else if (sag < 0.20f) sagLabel = "Weak";
+    else sagLabel = "Severe";
 
-                    logLabelValue(
-                            gr ? "Πτώση τάσης υπό φορτίο"
-                               : "Voltage sag under load",
-                            String.format(Locale.US, "%.3f V (%s)", sag, sagLabel)
-                    );
-                } else {
-                    logLabelWarnValue(
-                            gr ? "Πτώση τάσης υπό φορτίο"
-                               : "Voltage sag under load",
-                            gr ? "Μη διαθέσιμο" : "Unavailable"
-                    );
-                }
+    logLabelValue(
+            gr ? "Πτώση τάσης υπό φορτίο"
+               : "Voltage sag under load",
+            String.format(Locale.US, "%.3f V (%s)", sag, sagLabel)
+    );
+
+} else {
+
+    logLabelWarnValue(
+            gr ? "Πτώση τάσης υπό φορτίο"
+               : "Voltage sag under load",
+            gr ? "Μη διαθέσιμο" : "Unavailable"
+    );
+}
 
 // internal resistance
 String label = "Unknown";
@@ -13017,28 +13080,52 @@ logLabelValue(
 
                 logLab14VarianceInfo();
 
-                // aging index
-                if (agingIndex >= 0) {
-                    logLabelOkValue(
-                            gr ? "Δείκτης γήρανσης μπαταρίας" : "Battery aging index",
-                            String.format(
-                                    Locale.US,
-                                    "%d / 100 — %s",
-                                    agingIndex,
-                                    agingInterp
-                            )
-                    );
-                } else {
-                    logLabelWarnValue(
-                            gr ? "Δείκτης γήρανσης μπαταρίας" : "Battery aging index",
-                            gr ? "Ανεπαρκή δεδομένα" : "Insufficient data"
-                    );
-                }
+// ----------------------------------------------------
+// BATTERY AGING INDEX
+// ----------------------------------------------------
+if (agingIndex >= 0) {
 
-                logLabelValue(
-                        gr ? "Ανάλυση γήρανσης" : "Aging analysis",
-                        aging.description
-                );
+    logLabelOkValue(
+            gr ? "Δείκτης γήρανσης μπαταρίας"
+               : "Battery aging index",
+            String.format(
+                    Locale.US,
+                    "%d / 100 — %s",
+                    agingIndex,
+                    agingInterp
+            )
+    );
+
+} else {
+
+    logLabelWarnValue(
+            gr ? "Δείκτης γήρανσης μπαταρίας"
+               : "Battery aging index",
+            gr ? "Ανεπαρκή δεδομένα"
+               : "Insufficient data"
+    );
+}
+
+// ----------------------------------------------------
+// AGING INTERPRETATION
+// ----------------------------------------------------
+if (aging != null && aging.description != null) {
+
+    logLabelValue(
+            gr ? "Ανάλυση γήρανσης"
+               : "Aging analysis",
+            aging.description
+    );
+
+} else {
+
+    logLabelWarnValue(
+            gr ? "Ανάλυση γήρανσης"
+               : "Aging analysis",
+            gr ? "Μη διαθέσιμη"
+               : "Unavailable"
+    );
+}
 
                 // final score
                 String scoreText = String.format(

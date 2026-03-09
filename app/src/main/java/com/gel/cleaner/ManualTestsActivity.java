@@ -13648,8 +13648,6 @@ root.addView(lab15ProgressBar);
 // ---------------------------
 root.addView(buildMuteRow());
 
-// αν η μπαταρία είναι >80% μην μιλήσει καν το TTS
-if (level > 80)
     return;
 
 // ---------------------------
@@ -13747,13 +13745,13 @@ final long startMah =
         (startInfo != null && startInfo.currentChargeMah > 0)  
                 ? startInfo.currentChargeMah : -1;  
 
-ui.post(new Runnable() {  
+ui.post(new Runnable() {
 
-    int dotStep = 0;  
-    int lastSeg = -1;  
+    int dotStep = 0;
+    int lastSeg = -1;
 
-    @Override  
-    public void run() {  
+    @Override
+    public void run() {
 
         if (!lab15Running || lab15Finished) return;  
 
@@ -14094,10 +14092,12 @@ try {
 } catch (Throwable ignore) {}
 
 lab15Dialog = null;
-    }  
-});
 
-}
+        } // END run()
+
+    }); // END ui.post()
+
+} // END lab15ChargingSystemSmart()
 
 // ============================================================
 // LAB 16 — Thermal Snapshot

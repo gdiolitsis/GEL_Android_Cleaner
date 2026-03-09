@@ -4413,7 +4413,7 @@ boolean swellingRisk =
         manipulationScore += 10;
     }
 
-    if (collapseRisk || swellingRisk) {
+    if (collapseRisk[0] || swellingRisk[0]) {
 
         logLabelWarnValue(
                 gr ? "Συμπεριφορά μπαταρίας"
@@ -18732,35 +18732,38 @@ private void lab28HardwareStability() {
                            : "Symptom consistency score",
                 symptomScore + "/100 (" + symptomLevel + ")");
 
-    // ============================================================
-    // HARDWARE PATTERN ANALYSIS
-    // ============================================================
-    appendHtml("<br>");
-    logInfo(gr ? "Ανάλυση μοτίβων υλικού" : "Hardware instability patterns");
-    logLine();
+// ============================================================
+// HARDWARE PATTERN ANALYSIS
+// ============================================================
+appendHtml("<br>");
+logInfo(gr ? "Ανάλυση μοτίβων υλικού" : "Hardware instability patterns");
+logLine();
 
-    boolean pmicInstability = false;
-    boolean basebandDegradation = false;
-    boolean sensorBusInstability = false;
-    boolean thermalRunaway = false;
-    boolean storageDegradation = false;
+boolean pmicInstability = false;
+boolean basebandDegradation = false;
+boolean sensorBusInstability = false;
+boolean thermalRunaway = false;
+boolean storageDegradation = false;
 
-// PMIC instability
+
+// PMIC instability (pattern correlation)
 if ((powerGlitches > 1 && thermalSpikes) || powerGlitches > 3) {
-        pmicInstability = true;
-        logLabelWarnValue(
-                gr ? "PMIC αστάθεια"
-                   : "PMIC instability",
-                gr
-                        ? "Συνδυασμός θερμικών αιχμών και αστάθειας φόρτισης."
-                        : "Thermal spikes combined with charging instability."
-        );
-    }
-    
+
+    pmicInstability = true;
+
+    logLabelWarnValue(
+            gr ? "PMIC αστάθεια"
+               : "PMIC instability",
+            gr
+                    ? "Συνδυασμός θερμικών αιχμών και αστάθειας φόρτισης."
+                    : "Thermal spikes combined with charging instability."
+    );
+}
+
+
 // ----------------------------------------------------
 // PMIC / FUEL GAUGE STABILITY CHECK
 // ----------------------------------------------------
-pmicInstability = false;
 
 if (validDrain &&
     !Float.isNaN(voltageStart) &&
@@ -18769,25 +18772,24 @@ if (validDrain &&
 
     float sag = vStart[0] - voltageUnderLoad[0];
 
-// ignore micro sag noise
-if (sag < 0.015f)
-    sag = 0f;
-    
+    // ignore micro sag noise
+    if (sag < 0.015f)
+        sag = 0f;
+
     float recovery = voltageRecovery[0];
 
-    float electricalNoise =
-            Math.abs(sag - recovery);
+    float electricalNoise = Math.abs(sag - recovery);
 
     // abnormal voltage behaviour
     if (electricalNoise > 0.20f)
         pmicInstability = true;
 
     // counter behaviour anomaly
-    if (drainMah == 0 && mahPerHour > 0)
+    if (drainMah == 0f && mahPerHour > 0f)
         pmicInstability = true;
 
     // unrealistic drain spike
-    if (mahPerHour > 2500)
+    if (mahPerHour > 2500f)
         pmicInstability = true;
 }
 
@@ -18868,7 +18870,7 @@ if (!isDeviceRooted()) {
 } else {
 
     // basic communication issues
-    if (sensorBusInstability || sensorFlaps) {
+    if (sensorFlaps)
 
         sensorBusInstability = true;
 
@@ -19944,7 +19946,7 @@ if (thermalSpike) moistureScore += 15;
 if (rebootPattern) moistureScore += 15;
 if (instabilityPattern) moistureScore += 20;
 
-if (collapseRisk || swellingRisk)
+if (collapseRisk[0] || swellingRisk[0])
     moistureScore += 10;
 
 logLabelValue(
@@ -19983,42 +19985,45 @@ if (moistureScore >= 50) {
     appendHtml("<br>");
     logLine();
 
-    if (authenticityScore < 0) authenticityScore = 0;
+    if (authenticityScore < 0)
+    authenticityScore = 0;
 
-    if (authenticityScore >= 90)
-        level = gr ? "ΥΨΗΛΗ ΓΝΗΣΙΟΤΗΤΑ" : "HIGH AUTHENTICITY";
-    else if (authenticityScore >= 70)
-        level = gr ? "ΠΙΘΑΝΗ ΑΝΤΙΚΑΤΑΣΤΑΣΗ" : "POSSIBLE REPLACEMENT";
-    else
-        level = gr ? "ΥΨΗΛΗ ΠΙΘΑΝΟΤΗΤΑ ΜΗ ΓΝΗΣΙΩΝ ΜΕΡΩΝ"
-                   : "HIGH PROBABILITY OF NON-OEM PARTS";
+String authenticityLevel;
 
-    if (authenticityScore >= 70) {
+if (authenticityScore >= 90)
+    authenticityLevel = gr ? "ΥΨΗΛΗ ΓΝΗΣΙΟΤΗΤΑ" : "HIGH AUTHENTICITY";
+else if (authenticityScore >= 70)
+    authenticityLevel = gr ? "ΠΙΘΑΝΗ ΑΝΤΙΚΑΤΑΣΤΑΣΗ" : "POSSIBLE REPLACEMENT";
+else
+    authenticityLevel = gr ? "ΥΨΗΛΗ ΠΙΘΑΝΟΤΗΤΑ ΜΗ ΓΝΗΣΙΩΝ ΜΕΡΩΝ"
+                           : "HIGH PROBABILITY OF NON-OEM PARTS";
 
-        logLabelOkValue(
-                gr ? "Δείκτης Γνησιότητας Συσκευής"
-                   : "Device authenticity score",
-                authenticityScore + "/100 (" + level + ")"
-        );
+if (authenticityScore >= 70) {
 
-    } else {
+    logLabelOkValue(
+            gr ? "Δείκτης Γνησιότητας Συσκευής"
+               : "Device authenticity score",
+            authenticityScore + "/100 (" + authenticityLevel + ")"
+    );
 
-        logLabelWarnValue(
-                gr ? "Δείκτης Γνησιότητας Συσκευής"
-                   : "Device authenticity score",
-                authenticityScore + "/100 (" + level + ")"
-        );
-    }
-    p.edit()
+} else {
+
+    logLabelWarnValue(
+            gr ? "Δείκτης Γνησιότητας Συσκευής"
+               : "Device authenticity score",
+            authenticityScore + "/100 (" + authenticityLevel + ")"
+    );
+}
+
+p.edit()
         .putBoolean("lab29_moisture_suspect", moistureSuspicion)
         .apply();
-    
 
-    appendHtml("<br>");
-    logOk(gr
-            ? "Το Lab 29 ολοκληρώθηκε."
-            : "Lab 29 finished.");
-    logLine();
+appendHtml("<br>");
+logOk(gr
+        ? "Το Lab 29 ολοκληρώθηκε."
+        : "Lab 29 finished.");
+logLine();
 }
 
 // ============================================================
@@ -20575,7 +20580,7 @@ if (hardwareRiskScore >= 60) {
 // ------------------------------------------------------------
 int riskSignals = 0;
 
-if (collapseRisk || swellingRisk) riskSignals++;
+if (collapseRisk[0] || swellingRisk[0]) riskSignals++;
 if (nandRisk || controllerRisk) riskSignals++;
 if (thermalRunawayRisk) riskSignals++;
 if (pmicInstability) riskSignals++;
@@ -20683,7 +20688,7 @@ boolean moistureSuspect =
         p.getBoolean("lab29_moisture_suspect", false);
 
 // instability indicators
-if (collapseRisk || swellingRisk)
+if (collapseRisk[0] || swellingRisk[0])
     certificateWarning = true;
 
 if (moistureSuspect)

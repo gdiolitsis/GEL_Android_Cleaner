@@ -11591,27 +11591,27 @@ if (!Float.isNaN(sag1[0]) && !Float.isNaN(sag2[0])) {
 
     runOnUiThread(() -> {
 
-        if (!Float.isNaN(sag1) && !Float.isNaN(sag2)) {
+    if (!Float.isNaN(sag1[0]) && !Float.isNaN(sag2[0])) {
 
-            logLabelValue(
-                    gr ? "Γρήγορη δοκιμή καταπόνησης"
-                       : "Fast stress test",
-                    String.format(
-                            Locale.US,
-                            "Sag1=%.3fV | Sag2=%.3fV",
-                            sag1,
-                            sag2
-                    )
+        logLabelValue(
+                gr ? "Γρήγορη δοκιμή καταπόνησης"
+                   : "Fast stress test",
+                String.format(
+                        Locale.US,
+                        "Sag1=%.3fV | Sag2=%.3fV",
+                        sag1[0],
+                        sag2[0]
+                )
+        );
+
+        if (sag1[0] > 0.35f || sag2[0] > 0.40f) {
+
+            logLabelWarnValue(
+                    gr ? "Διάγνωση" : "Diagnosis",
+                    gr
+                            ? "Έντονη πτώση τάσης — πιθανή φθορά κυψελών"
+                            : "Severe voltage sag — degraded battery cells"
             );
-
-            if (sag1 > 0.35f || sag2 > 0.40f) {
-
-                logLabelWarnValue(
-                        gr ? "Διάγνωση" : "Diagnosis",
-                        gr
-                                ? "Έντονη πτώση τάσης — πιθανή φθορά κυψελών"
-                                : "Severe voltage sag — degraded battery cells"
-                );
 
             } else {
 
@@ -11912,9 +11912,13 @@ if (!Float.isNaN(voltageStart) &&
 
     float sag = vStart[0] - voltageUnderLoad[0];
 
-    // ignore micro sag noise
     if (sag < 0.015f)
         sag = 0f;
+
+    float sagFiltered = sag;
+
+    if (!Float.isNaN(sagAvg[0]))
+        sagFiltered = (sag + sagAvg[0]) / 2f;
 
     float currentNow = getBatteryCurrentNowSafe();
 
@@ -11925,14 +11929,14 @@ if (!Float.isNaN(voltageStart) &&
         if (currentAmp > 0.1f && currentAmp < 8f) {
 
             // ESR estimation
-estimatedESR = sag / currentAmp;
+            estimatedESR = sagFiltered / currentAmp;
 
-// clamp unrealistic ESR (PMIC artefacts)
-if (estimatedESR > 0.5f)
-    estimatedESR = Float.NaN;
+            // clamp unrealistic ESR (PMIC artefacts)
+            if (estimatedESR > 0.5f)
+                estimatedESR = Float.NaN;
 
             // internal resistance estimation
-            internalResistance[0] = sag / currentAmp;
+            internalResistance[0] = sagFiltered / currentAmp;
         }
     }
 }

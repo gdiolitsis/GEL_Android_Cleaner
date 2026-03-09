@@ -21137,10 +21137,8 @@ if (prevRisk >= 0) {
 
     int agingDiff = agingIndex - prevAging;
 
-if (prevAging >= 0 && agingIndex >= 0 && agingDiff > 10)
-    trendDetected = true;
-
-}
+    if (prevAging >= 0 && agingIndex >= 0 && agingDiff > 10)
+        trendDetected = true;
 
     logLabelValue(
             gr ? "Σύγκριση προηγούμενης διάγνωσης"
@@ -21148,7 +21146,6 @@ if (prevAging >= 0 && agingIndex >= 0 && agingDiff > 10)
             gr ? "Διαφορά δείκτη: " + riskDiff
                : "Risk difference: " + riskDiff
     );
-
 }
 
 if (trendDetected) {
@@ -21176,10 +21173,10 @@ if (trendDetected) {
 // RUN COUNTER + RELIABILITY INDEX
 // ------------------------------------------------------------
 
-int runCount = p.getInt("hw_run_count", 0);
+int runCount = history.getInt("hw_run_count", 0);
 runCount++;
 
-p.edit().putInt("hw_run_count", runCount).apply();
+history.edit().putInt("hw_run_count", runCount).apply();
 
 int reliabilityIndex;
 
@@ -21227,7 +21224,7 @@ if (runCount < 3) {
 // STORE HARDWARE HEALTH SNAPSHOT
 // ------------------------------------------------------------
 
-p.edit()
+history.edit()
         .putInt("hw_last_risk", hardwareRiskScore)
         .putFloat("hw_last_battery_health", finalScore)
         .putInt("hw_last_aging_index", agingIndex)

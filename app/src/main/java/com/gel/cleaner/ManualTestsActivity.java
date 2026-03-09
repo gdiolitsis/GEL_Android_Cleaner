@@ -273,6 +273,8 @@ public class ManualTestsActivity extends AppCompatActivity {
     private static final int REQ_LAB13_BT_CONNECT = 1313;
 
     private AlertDialog lab14RunningDialog;
+    
+    private Lab14Engine lab14Engine;
 // ------------------------------------------------------------
 // LAB14 GPU STRESS
 // ------------------------------------------------------------
@@ -584,6 +586,8 @@ protected void attachBaseContext(Context base) {
 @Override
 protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+    
+    lab14Engine = new Lab14Engine(this);
 
     // SAFETY GUARD
     new Handler(Looper.getMainLooper()).postDelayed(() -> {
@@ -11276,6 +11280,10 @@ AppTTS.stop();
 private void lab14BatteryHealthStressTest() {
     
     final boolean gr = AppLang.isGreek(this);
+    
+    // 🔋 SNAPSHOT ΜΠΑΤΑΡΙΑΣ
+    Lab14Engine.GelBatterySnapshot snap =
+            lab14Engine.readSnapshot();
 
     if (lab14Running) {
         logWarn(gr
@@ -12673,10 +12681,18 @@ if (!Float.isNaN(estimatedESR)) {
     else
         esrLabel = "Critical ESR";
 
-    logLabelValue(
+    logLabelOkValue(
             gr ? "Ηλεκτροχημική αντίσταση κυψελών (ESR)"
                : "Battery ESR estimation",
             String.format(Locale.US, "%.3f Ω (%s)", estimatedESR, esrLabel)
+    );
+
+} else {
+
+    logLabelWarnValue(
+            gr ? "Ηλεκτροχημική αντίσταση κυψελών (ESR)"
+               : "Battery ESR estimation",
+            gr ? "Μη διαθέσιμη" : "Unavailable"
     );
 }
 

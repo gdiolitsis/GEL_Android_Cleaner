@@ -12980,17 +12980,25 @@ if (!Float.isNaN(batterySOH[0])) {
                         && !Float.isNaN(endBatteryTemp)) {
 
                     float sag = vStart[0] - voltageUnderLoad[0];
-                    float rise = endBatteryTemp - startBatteryTemp;
+float rise = endBatteryTemp - startBatteryTemp;
 
-                    if (sag > 0.18f && rise > 6f) {
-                        logLabelWarnValue(
-                                gr ? "Ένδειξη πιθανής διόγκωσης μπαταρίας"
-                                   : "Possible battery swelling indicator",
-                                gr
-                                        ? "Υψηλή πτώση τάσης και έντονη θερμική αύξηση."
-                                        : "High voltage sag combined with strong thermal rise."
-                        );
-                    }
+boolean highSag = sag > 0.18f;
+boolean highThermalRise = rise > 6f;
+boolean highResistance =
+        !Float.isNaN(internalResistance[0]) &&
+        internalResistance[0] > 0.22f;
+
+if (highSag && highThermalRise && highResistance) {
+
+    logLabelWarnValue(
+            gr ? "Ένδειξη πιθανής διόγκωσης μπαταρίας"
+               : "Possible battery swelling indicator",
+            gr
+                    ? "Υψηλή πτώση τάσης, θερμική αύξηση και αυξημένη εσωτερική αντίσταση."
+                    : "High voltage sag, thermal rise and elevated internal resistance."
+    );
+
+}
                 }
 
                 // battery behaviour
@@ -13181,8 +13189,6 @@ p.edit()
                 appendHtml("<br>");
 logOk(gr ? "Το Lab 14 ολοκληρώθηκε." : "Lab 14 finished.");
 logLine();
-
-  } 
 
 } catch (Throwable t) {
 

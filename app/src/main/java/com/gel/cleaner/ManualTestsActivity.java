@@ -144,6 +144,7 @@ import android.text.Spannable;
 import android.text.TextUtils;
 import android.text.method.ScrollingMovementMethod;
 import android.text.style.ForegroundColorSpan;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.TypedValue;
 import android.util.Range;
@@ -246,7 +247,7 @@ public class ManualTestsActivity extends AppCompatActivity {
     final boolean[] cellImbalanceRisk = {false};
     
     final boolean[] batteryFailureRisk = {false};
-
+    
     private boolean lab6ProCanceled = false;
 
     // ============================================================
@@ -4324,6 +4325,15 @@ private String getLab28TextGR() {
 // SERVICE LEVEL — COMPONENT & BOARD INSPECTION (LOGIC BASED)
 // ============================================================
 private void lab29AuthenticityCheck() {
+	
+SharedPreferences p =
+        getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
+
+boolean collapseRisk =
+        p.getBoolean("lab14_collapse_risk", false);
+
+boolean swellingRisk =
+        p.getBoolean("lab14_swelling_risk", false);
 
     final boolean gr = AppLang.isGreek(this);
 
@@ -4341,9 +4351,6 @@ private void lab29AuthenticityCheck() {
 
     boolean calibrationDrift =
             p.getBoolean("lab14_calibration_drift", false);
-
-    boolean collapseRisk =
-            p.getBoolean("lab14_collapse_risk", false);
 
     boolean swellingRisk =
             p.getBoolean("lab14_swelling_risk", false);
@@ -19988,8 +19995,6 @@ if (moistureScore >= 50) {
 
     if (authenticityScore < 0) authenticityScore = 0;
 
-    String level;
-
     if (authenticityScore >= 90)
         level = gr ? "ΥΨΗΛΗ ΓΝΗΣΙΟΤΗΤΑ" : "HIGH AUTHENTICITY";
     else if (authenticityScore >= 70)
@@ -20036,6 +20041,9 @@ private void lab30CombineFindings() {
 	
 SharedPreferences p =
         getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
+        
+boolean silentCorruptionRisk =
+        p.getBoolean("lab27_silent_corruption_risk", false);
 
 // battery data
 int agingIndex =
@@ -20046,6 +20054,9 @@ float finalScore =
 
 boolean collapseRisk =
         p.getBoolean("lab14_collapse_risk", false);
+        
+ boolean swellingRisk =
+        p.getBoolean("lab14_swelling_risk", false);
 
 // stability flags
 boolean pmicInstability =
@@ -20234,8 +20245,7 @@ int hardwareRiskScore = 0;
 // battery risks
 if (collapseRisk)
     hardwareRiskScore += 20;
-
-if (swellingRisk)
+else if (swellingRisk)
     hardwareRiskScore += 15;
 
 // storage risks
@@ -20678,13 +20688,6 @@ logLine();
 
 boolean certificateWarning = false;
 
-// battery flags
-boolean collapseRisk =
-        p.getBoolean("lab14_collapse_risk", false);
-
-boolean swellingRisk =
-        p.getBoolean("lab14_swelling_risk", false);
-
 // authenticity flags
 boolean moistureSuspect =
         p.getBoolean("lab29_moisture_suspect", false);
@@ -21112,11 +21115,12 @@ else
 // ------------------------------------------------------------
 // HARDWARE TREND ENGINE
 // ------------------------------------------------------------
-SharedPreferences p = getSharedPreferences("gel_hw_history", MODE_PRIVATE);
+SharedPreferences history =
+        getSharedPreferences("gel_hw_history", MODE_PRIVATE);
 
-int prevRisk = p.getInt("hw_last_risk", -1);
-float prevBattery = p.getFloat("hw_last_battery_health", -1f);
-int prevAging = p.getInt("hw_last_aging_index", -1);
+int prevRisk = history.getInt("hw_last_risk", -1);
+float prevBattery = history.getFloat("hw_last_battery_health", -1f);
+int prevAging = history.getInt("hw_last_aging_index", -1);
 
 boolean trendDetected = false;
 
@@ -21127,11 +21131,16 @@ if (prevRisk >= 0) {
     if (riskDiff >= 15)
         trendDetected = true;
 
-    if (prevBattery > 0 && (prevBattery - finalScore) > 8)
+    if (prevBattery > 0 && !Float.isNaN(finalScore) &&
+            (prevBattery - finalScore) > 8)
         trendDetected = true;
 
-    if (prevAging >= 0 && (agingIndex - prevAging) > 10)
-        trendDetected = true;
+    int agingDiff = agingIndex - prevAging;
+
+if (prevAging >= 0 && agingIndex >= 0 && agingDiff > 10)
+    trendDetected = true;
+
+}
 
     logLabelValue(
             gr ? "Σύγκριση προηγούμενης διάγνωσης"
@@ -22151,10 +22160,6 @@ boolean calibrationDrift =
         p.getBoolean("lab14_calibration_drift", false);
 
 if (calibrationDrift) dri -= 10;
-
-// battery collapse risk
-boolean collapseRisk =
-        p.getBoolean("lab14_collapse_risk", false);
 
 if (collapseRisk) dri -= 20;
 

@@ -20033,6 +20033,40 @@ if (moistureScore >= 50) {
 // NOTE (GEL RULE): Whole block ready for copy-paste.
 // ============================================================
 private void lab30CombineFindings() {
+	
+SharedPreferences p =
+        getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
+
+// battery data
+int agingIndex =
+        p.getInt("lab14_aging_index", -1);
+
+float finalScore =
+        p.getFloat("lab14_health_score", Float.NaN);
+
+boolean collapseRisk =
+        p.getBoolean("lab14_collapse_risk", false);
+
+// stability flags
+boolean pmicInstability =
+        p.getBoolean("lab28_pmic_instability", false);
+
+boolean sensorBusInstability =
+        p.getBoolean("lab28_sensor_bus_instability", false);
+
+boolean sensorFlaps =
+        p.getBoolean("lab28_sensor_flaps", false);
+
+// storage / controller
+boolean nandRisk =
+        p.getBoolean("lab27_nand_risk", false);
+
+boolean controllerRisk =
+        p.getBoolean("lab27_controller_risk", false);
+
+// thermal
+boolean thermalRunawayRisk =
+        p.getBoolean("lab24_thermal_runaway", false);
 
     final boolean gr = AppLang.isGreek(this);
 
@@ -21007,6 +21041,16 @@ logLabelOkValue(
 // ------------------------------------------------------------
 // FINAL VERDICT
 // ------------------------------------------------------------
+
+appendHtml("<br>");
+logLine();
+
+logInfo(gr
+        ? "ΤΕΛΙΚΗ ΔΙΑΓΝΩΣΗ ΣΥΣΚΕΥΗΣ"
+        : "FINAL DEVICE DIAGNOSIS");
+
+logLine();
+
 appendHtml("<br>");
 logInfo(gr ? "Τελικές Βαθμολογίες" : "FINAL Scores");
 logLine();
@@ -21014,6 +21058,21 @@ logLine();
 logLabelOkValue(
         gr ? "Υγεία συσκευής" : "Device health",
         deviceHealthScore + "% " + colorFlagFromScore(deviceHealthScore)
+);
+
+String deviceClass;
+
+if (deviceHealthScore >= 90)
+    deviceClass = "GEL CERTIFIED";
+else if (deviceHealthScore >= 75)
+    deviceClass = "GEL VERIFIED";
+else
+    deviceClass = "INSPECTION ADVISED";
+
+logLabelValue(
+        gr ? "Κατηγορία συσκευής"
+           : "Device classification",
+        deviceClass
 );
 
 logLabelOkValue(
@@ -21187,16 +21246,34 @@ logInfo(gr
 boolean diagnosticConflict = false;
 int conflictScore = 0;
 
-// Battery healthy but power instability
-if (finalScore >= 80 && pmicInstability) {
+// Battery healthy but PMIC instability
+if (finalScore >= 80 && agingIndex < 70 && pmicInstability) {
+
     diagnosticConflict = true;
     conflictScore += 30;
+
+    logLabelWarnValue(
+            gr ? "Αστάθεια PMIC"
+               : "PMIC instability",
+            gr
+                    ? "Εντοπίστηκε πιθανή αστάθεια ελεγκτή ισχύος."
+                    : "Possible power controller instability detected."
+    );
 }
 
 // Battery healthy but collapse risk
-if (finalScore >= 80 && collapseRisk) {
+if (finalScore >= 80 && agingIndex < 70 && collapseRisk) {
+
     diagnosticConflict = true;
     conflictScore += 30;
+
+    logLabelWarnValue(
+            gr ? "Αστάθεια κυψελών"
+               : "Cell instability",
+            gr
+                    ? "Εντοπίστηκε πιθανή αστάθεια κυψελών μπαταρίας."
+                    : "Possible battery cell instability detected."
+    );
 }
 
 // Storage healthy but controller risk

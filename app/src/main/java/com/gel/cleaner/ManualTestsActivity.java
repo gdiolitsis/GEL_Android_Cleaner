@@ -149,6 +149,7 @@ import android.util.Log;
 import android.util.TypedValue;
 import android.util.Range;
 import android.util.Size;
+import android.view.Display;
 import android.view.Surface;
 import android.view.KeyEvent;
 import android.view.TextureView;
@@ -18874,7 +18875,7 @@ if (!isDeviceRooted()) {
 } else {
 
     // basic communication issues
-    if (sensorErrors > 0 || sensorTimeouts > 0 || sensorFlapping) {
+    if (sensorBusInstability || sensorFlaps) {
 
         sensorBusInstability = true;
 
@@ -18952,15 +18953,11 @@ if (pmicInstability)
     thermalScore += 20;
 
 // υψηλή θερμοκρασία CPU
-if (cpuTemp > 85)
+if (cpu != null && cpu > 85)
     thermalScore += 20;
 
 // υψηλή θερμοκρασία GPU
-if (gpuTemp > 80)
-    thermalScore += 15;
-
-// repeated thermal throttle
-if (thermalThrottleEvents > 0)
+if (gpu != null && gpu > 80)
     thermalScore += 15;
 
 logLabelValue(
@@ -19400,13 +19397,10 @@ try {
     DisplayMetrics dm = new DisplayMetrics();
     getWindowManager().getDefaultDisplay().getMetrics(dm);
     
-    // ------------------------------------------------------------
+// ------------------------------------------------------------
 // PHYSICAL SCREEN SIZE CONSISTENCY CHECK
 // ------------------------------------------------------------
 try {
-
-    DisplayMetrics dm = new DisplayMetrics();
-    getWindowManager().getDefaultDisplay().getMetrics(dm);
 
     int widthPx  = dm.widthPixels;
     int heightPx = dm.heightPixels;
@@ -22157,6 +22151,9 @@ boolean calibrationDrift =
         p.getBoolean("lab14_calibration_drift", false);
 
 if (calibrationDrift) dri -= 10;
+
+boolean collapseRisk =
+        p.getBoolean("lab14_collapse_risk", false);
 
 if (collapseRisk) dri -= 20;
 

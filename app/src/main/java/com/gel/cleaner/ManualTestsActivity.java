@@ -19781,6 +19781,7 @@ if (!sensorSuspicious) {
     );
 
 }
+}
 
 } catch (Throwable ignore) {}
 

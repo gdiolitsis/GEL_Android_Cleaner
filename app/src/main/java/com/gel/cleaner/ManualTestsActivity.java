@@ -18776,9 +18776,11 @@ if (validDrain &&
     if (sag < 0.015f)
         sag = 0f;
 
-    float recovery = voltageRecovery[0];
+    float recoveryDelta =
+        voltageRecovery[0] - voltageUnderLoad[0];
 
-    float electricalNoise = Math.abs(sag - recovery);
+float electricalNoise =
+        Math.abs(sag - recoveryDelta);
 
     // abnormal voltage behaviour
     if (electricalNoise > 0.20f)
@@ -18870,7 +18872,7 @@ if (!isDeviceRooted()) {
 } else {
 
     // basic communication issues
-    if (sensorFlaps)
+    if (sensorFlaps) {
 
         sensorBusInstability = true;
 

@@ -13316,7 +13316,10 @@ p.edit()
 logOk(gr ? "Το Lab 14 ολοκληρώθηκε." : "Lab 14 finished.");
 logLine();
 
-} catch (Throwable t) {
+            }
+        });
+        
+    } catch (Throwable t) {
 
     try { stopCpuBurn(); } catch (Throwable ignore) {}
     try { stopMemoryStress(); } catch (Throwable ignore) {}
@@ -13440,6 +13443,30 @@ root.addView(title);
 // ---------------------------
 // MAIN MESSAGE (NEON GREEN)
 // ---------------------------
+
+int level = getBatteryPercentSafe();
+
+if (level > 80) {
+
+    logLabelWarnValue(
+            gr ? "Δοκιμή φόρτισης"
+               : "Charging test",
+            gr
+                    ? "Παραλείφθηκε — η μπαταρία είναι πάνω από 80%"
+                    : "Skipped — battery above 80%"
+    );
+
+    logLabelWarnValue(
+            gr ? "Σημείωση"
+               : "Note",
+            gr
+                    ? "Η δοκιμή φόρτισης είναι αξιόπιστη μόνο μεταξύ 20% και 80%."
+                    : "Charging diagnostics are reliable only between 20% and 80% battery level."
+    );
+
+    return;
+}
+
 TextView msg = new TextView(this);
 msg.setText(
         gr
@@ -13522,15 +13549,25 @@ root.addView(lab15ProgressBar);
 // ---------------------------
 root.addView(buildMuteRow());
 
+// αν η μπαταρία είναι >80% μην μιλήσει καν το TTS
+if (level > 80)
+    return;
+
 // ---------------------------
 // TTS (ONLY IF NOT MUTED)
 // ---------------------------
 final String ttsText =
         gr
-                ? "Σύνδεσε τον φορτιστή και κράτησε τη συσκευή συνδεδεμένη. "
-                  + "Το τεστ φόρτισης διαρκεί τρία λεπτά."
-                : "Connect the charger and keep the device connected. "
-                  + "The charging test will run for three minutes.";
+                ? "Σύνδεσε τον φορτιστή στη θύρα φόρτισης της συσκευής.\n\n"
+                  + "Το σύστημα θα παρακολουθεί τη συμπεριφορά φόρτισης,\n"
+                  + "για τα επόμενα 3 λεπτά.\n\n"
+                  + "Κράτησε τη συσκευή συνδεδεμένη\n"
+                  + "καθ’ όλη τη διάρκεια του τεστ."
+                : "Connect the charger to the device’s charging port.\n\n"
+                  + "The system will monitor charging behavior\n"
+                  + "for the next 3 minutes.\n\n"
+                  + "Please keep the device connected\n"
+                  + "during the entire test.";
 
 // ============================================================
 // EXIT BUTTON (LAB 15 — GEL STYLE)

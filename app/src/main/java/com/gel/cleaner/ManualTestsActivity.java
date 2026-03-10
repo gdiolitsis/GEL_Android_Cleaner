@@ -11821,11 +11821,11 @@ ui.postDelayed(() -> {
 
         ui.post(new Runnable() {
 
+    int dotStep = 0;
+    int lastSeg = -1;
+
     @Override
     public void run() {
-
-        int dotStep = 0;
-        int lastSeg = -1;
 
                 if (!lab14Running) return;
 
@@ -13591,8 +13591,8 @@ if (batteryLevel > 80) {
 
     lab15Running = false;
     lab15Finished = true;
-    return;
-}
+
+} else {
 
 TextView msg = new TextView(this);
 msg.setText(
@@ -13773,11 +13773,11 @@ final long startMah =
 
 ui.post(new Runnable() {
 
+    int dotStep = 0;
+    int lastSeg = -1;
+
     @Override
     public void run() {
-
-        int dotStep = 0;
-        int lastSeg = -1;
 
         if (!lab15Running || lab15Finished) return;  
 
@@ -14122,6 +14122,8 @@ lab15Dialog = null;
         } // END run()
 
     }); // END ui.post()
+
+} // ΚΛΕΙΝΕΙ ΤΟ else
 
 } // END lab15ChargingSystemSmart()
 

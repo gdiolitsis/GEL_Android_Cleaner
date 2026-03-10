@@ -12043,12 +12043,11 @@ if (!Float.isNaN(voltageStart) &&
 
     float voltageDrop = voltageStart - voltageUnderLoad[0];
 
-    if (voltageDrop > 0.01f) {
+    if (voltageDrop > 0.01f && voltageDrop < 0.6f) {
 
-        energyEfficiency =
-                (float) drainMah / voltageDrop;
-
-    }
+    energyEfficiency =
+            (float) drainMah / voltageDrop;
+}
 }
 
                 if (!Float.isNaN(internalResistance[0]) &&
@@ -12574,27 +12573,47 @@ logLabelValue(
                     );
                 }
 
-                // sag under long load
-if (!Float.isNaN(vStart[0]) && !Float.isNaN(voltageUnderLoad[0])) {
+// sag under long load
+if (!Float.isNaN(voltageStart) && !Float.isNaN(voltageUnderLoad[0])) {
 
-    float sag = vStart[0] - voltageUnderLoad[0];
+    float sag = voltageStart - voltageUnderLoad[0];
 
-// ignore micro sag noise
-if (sag < 0.015f)
-    sag = 0f;
-    
+    // ignore micro sag noise
+    if (sag < 0.015f)
+        sag = 0f;
+
+    // BMS throttling detection
+    boolean bmsThrottling =
+            sag < 0.12f &&
+            voltageStability[0] > 90f &&
+            endBatteryTemp < 42;
+
+    if (bmsThrottling)
+        lab14_systemLimited = true;
+
     String sagLabel;
 
-    if (sag < 0.05f) sagLabel = "Excellent";
-    else if (sag < 0.12f) sagLabel = "Normal";
-    else if (sag < 0.20f) sagLabel = "Weak";
-    else sagLabel = "Severe";
+    if (sag < 0.05f)       sagLabel = "Excellent";
+    else if (sag < 0.12f)  sagLabel = "Normal";
+    else if (sag < 0.20f)  sagLabel = "Weak";
+    else                   sagLabel = "Severe";
 
     logLabelValue(
             gr ? "Πτώση τάσης υπό φορτίο"
                : "Voltage sag under load",
             String.format(Locale.US, "%.3f V (%s)", sag, sagLabel)
     );
+
+    // BMS throttling log
+    if (lab14_systemLimited) {
+
+        logLabelWarnValue(
+                gr ? "Έλεγχος συστήματος" : "System control",
+                gr
+                        ? "Το σύστημα περιορίζει το ρεύμα (BMS throttling)"
+                        : "BMS current throttling detected"
+        );
+    }
 
 } else {
 
@@ -12625,12 +12644,7 @@ if (!Float.isNaN(internalResistance[0])) {
         logLabelOkValue(
                 gr ? "Εσωτερική αντίσταση μπαταρίας"
                    : "Battery internal resistance",
-                String.format(
-                        Locale.US,
-                        "%.0f mΩ (%s)",
-                        rMilli,
-                        label
-                )
+                String.format(Locale.US, "%.0f mΩ (%s)", rMilli, label)
         );
 
     } else {
@@ -12638,12 +12652,7 @@ if (!Float.isNaN(internalResistance[0])) {
         logLabelWarnValue(
                 gr ? "Εσωτερική αντίσταση μπαταρίας"
                    : "Battery internal resistance",
-                String.format(
-                        Locale.US,
-                        "%.0f mΩ (%s)",
-                        rMilli,
-                        label
-                )
+                String.format(Locale.US, "%.0f mΩ (%s)", rMilli, label)
         );
 
         logLabelWarnValue(
@@ -12656,8 +12665,16 @@ if (!Float.isNaN(internalResistance[0])) {
 
         collapseRisk[0] = true;
     }
+
+} else {
+
+    logLabelWarnValue(
+            gr ? "Εσωτερική αντίσταση μπαταρίας"
+               : "Battery internal resistance",
+            gr ? "Μη διαθέσιμη" : "Unavailable"
+    );
 }
-        
+
 // ----------------------------------------------------
 // BATTERY ESR ESTIMATION
 // ----------------------------------------------------
@@ -13204,7 +13221,7 @@ if (!Float.isNaN(batterySOH[0])) {
                         && !Float.isNaN(startBatteryTemp)
                         && !Float.isNaN(endBatteryTemp)) {
 
-                    float sag = vStart[0] - voltageUnderLoad[0];
+                    float sag = voltageStart - voltageUnderLoad[0];
 
 // ignore micro sag noise
 if (sag < 0.015f)
@@ -18872,7 +18889,7 @@ if (validDrain &&
     !Float.isNaN(voltageUnderLoad[0]) &&
     !Float.isNaN(voltageRecovery[0])) {
 
-    float sag = vStart[0] - voltageUnderLoad[0];
+    float sag = voltageStart - voltageUnderLoad[0];
 
     // ignore micro sag noise
     if (sag < 0.015f)

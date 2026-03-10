@@ -11992,13 +11992,6 @@ if (!Float.isNaN(percentDeviation[0]) && percentDeviation[0] > 15f) {
     calibrationDrift[0] = true;
 }
 
-float voltageStart = Float.NaN;
-
-boolean validDrain = false;
-
-float drainMah = 0f;
-float mahPerHour = 0f;
-
 // ----------------------------------------------------
 // 10) ELECTRICAL ANALYSIS
 // ----------------------------------------------------

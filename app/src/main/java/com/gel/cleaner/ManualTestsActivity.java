@@ -283,12 +283,6 @@ public class ManualTestsActivity extends AppCompatActivity {
     private AlertDialog activeDialog;
     private String pendingTtsText;
     
-    final float[] batterySOH = {Float.NaN};
-    
-    final boolean[] cellImbalanceRisk = {false};
-    
-    final boolean[] batteryFailureRisk = {false};
-    
     private boolean lab6ProCanceled = false;
 
     // ============================================================
@@ -4412,12 +4406,6 @@ private void lab29AuthenticityCheck() {
 SharedPreferences p =
         getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
         
-boolean collapseRisk =
-        p.getBoolean("lab14_collapse_risk", false);
-
-boolean swellingRisk =
-        p.getBoolean("lab14_swelling_risk", false);
-
 boolean collapseRisk =
         p.getBoolean("lab14_collapse_risk", false);
 
@@ -12718,12 +12706,14 @@ if (!Float.isNaN(estimatedESR)) {
 }
 
                 // voltage recovery
-                if (!Float.isNaN(voltageRecovery[0])) {
+if (!Float.isNaN(voltageRecovery[0])) {
 
-                    if (voltageRecovery[0] > 0.18f) label = "Excellent";
-                    else if (voltageRecovery[0] > 0.10f) label = "Normal";
-                    else if (voltageRecovery[0] > 0.05f) label = "Weak";
-                    else label = "Unstable";
+    String label;
+
+    if (voltageRecovery[0] > 0.18f) label = "Excellent";
+    else if (voltageRecovery[0] > 0.10f) label = "Normal";
+    else if (voltageRecovery[0] > 0.05f) label = "Weak";
+    else label = "Unstable";
 
                     logLabelValue(
                             gr ? "Ανάκαμψη τάσης μετά το φορτίο"

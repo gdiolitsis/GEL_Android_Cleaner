@@ -14146,8 +14146,6 @@ lab15Dialog = null;
 
     }); // END ui.post()
 
-} // ΚΛΕΙΝΕΙ ΤΟ else
-
 } // END lab15ChargingSystemSmart()
 
 // ============================================================

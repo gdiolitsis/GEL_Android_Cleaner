@@ -13414,9 +13414,13 @@ p.edit()
 
                 logLab14Confidence();
 
-                appendHtml("<br>");
+appendHtml("<br>");
 logOk(gr ? "Το Lab 14 ολοκληρώθηκε." : "Lab 14 finished.");
 logLine();
+
+}   // run()
+
+}); // ui.post Runnable
 
 } catch (Throwable t) {
 

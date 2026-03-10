@@ -13420,8 +13420,9 @@ logLine();
 
             }
         });
-        
-    } catch (Throwable t) {
+
+    } 
+    catch (Throwable t) {
 
     try { stopCpuBurn(); } catch (Throwable ignore) {}
     try { stopMemoryStress(); } catch (Throwable ignore) {}

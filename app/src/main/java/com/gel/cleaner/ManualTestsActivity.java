@@ -12697,39 +12697,6 @@ if (!Float.isNaN(estimatedESR)) {
             String.format(Locale.US, "%.3f Ω (%s)", estimatedESR, esrLabel)
     );
 
-} else {
-
-    logLabelWarnValue(
-            gr ? "Ηλεκτροχημική αντίσταση κυψελών (ESR)"
-               : "Battery ESR estimation",
-            gr ? "Μη διαθέσιμη" : "Unavailable"
-    );
-}
-
-    } else {
-
-        logLabelWarnValue(
-                gr ? "Εσωτερική αντίσταση μπαταρίας"
-                   : "Battery internal resistance",
-                String.format(
-                        Locale.US,
-                        "%.3f Ω (%s)",
-                        internalResistance[0],
-                        label
-                )
-        );
-
-    }
-
-} else {
-
-    logLabelWarnValue(
-            gr ? "Εσωτερική αντίσταση μπαταρίας"
-               : "Battery internal resistance",
-            gr ? "Μη διαθέσιμη" : "Unavailable"
-    );
-}
-
                 // voltage recovery
                 if (!Float.isNaN(voltageRecovery[0])) {
 

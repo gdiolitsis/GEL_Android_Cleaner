@@ -11821,11 +11821,11 @@ ui.postDelayed(() -> {
 
         ui.post(new Runnable() {
 
-            int dotStep = 0;
-            int lastSeg = -1;
+    @Override
+    public void run() {
 
-            @Override
-            public void run() {
+        int dotStep = 0;
+        int lastSeg = -1;
 
                 if (!lab14Running) return;
 
@@ -13773,11 +13773,11 @@ final long startMah =
 
 ui.post(new Runnable() {
 
-    int dotStep = 0;
-    int lastSeg = -1;
-
     @Override
     public void run() {
+
+        int dotStep = 0;
+        int lastSeg = -1;
 
         if (!lab15Running || lab15Finished) return;  
 

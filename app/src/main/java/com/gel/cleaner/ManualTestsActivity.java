@@ -13574,16 +13574,13 @@ int batteryLevel = getBatteryPercentSafe();
 if (batteryLevel > 80) {
 
     logLabelWarnValue(
-            gr ? "Δοκιμή φόρτισης"
-               : "Charging test",
-            gr
-                    ? "Παραλείφθηκε — η μπαταρία είναι πάνω από 80%"
-                    : "Skipped — battery above 80%"
+            gr ? "Δοκιμή φόρτισης" : "Charging test",
+            gr ? "Παραλείφθηκε — η μπαταρία είναι πάνω από 80%"
+               : "Skipped — battery above 80%"
     );
 
     logLabelWarnValue(
-            gr ? "Σημείωση"
-               : "Note",
+            gr ? "Σημείωση" : "Note",
             gr
                     ? "Η δοκιμή φόρτισης είναι αξιόπιστη μόνο μεταξύ 20% και 80%."
                     : "Charging diagnostics are reliable only between 20% and 80% battery level."
@@ -13591,8 +13588,8 @@ if (batteryLevel > 80) {
 
     lab15Running = false;
     lab15Finished = true;
-
-} else {
+    return;
+}
 
 TextView msg = new TextView(this);
 msg.setText(
@@ -13779,12 +13776,12 @@ ui.post(new Runnable() {
     @Override
     public void run() {
 
-        if (!lab15Running || lab15Finished) return;  
+        if (!lab15Running || lab15Finished) return;
 
-        boolean chargingNow = isDeviceCharging();  
-        long now = SystemClock.elapsedRealtime();  
+        boolean chargingNow = isDeviceCharging();
+        long now = SystemClock.elapsedRealtime();
 
-        dotsView.setText(dotFrames[dotStep++ % dotFrames.length]);  
+        dotsView.setText(dotFrames[dotStep++ % dotFrames.length]);
 
 // ------------------------------------------------------------
 // CHARGING STATE TRACKING (5s debounce unplug)
@@ -13816,9 +13813,9 @@ if (chargingNow) {
         unplugTs[0] = now;
     }
 
-    long unplugSec = (now - unplugTs[0]) / 1000;
+    long unplugMs = now - unplugTs[0];
 
-    if (unplugSec >= 5) {
+if (unplugMs >= 8000)
 
         lab15FlapUnstable = true;
         lab15Finished = true;
@@ -14000,24 +13997,50 @@ if (startMah > 0 && endInfo != null &&
             )
     );
 
-    logInfo(gr ? "Ισχύς φόρτισης:" : "Charging strength:");
+logInfo(gr ? "Ισχύς φόρτισης:" : "Charging strength:");
 
-    if (mahPerMin >= 20.0) {
-        logLabelOkValue(gr ? "Ισχύς" : "Strength", gr ? "ΙΣΧΥΡΗ" : "STRONG");
-        lab15_strengthWeak = false;
+// ------------------------------------------------------------
+// PMIC / CHARGING IC DIAGNOSTIC
+// ------------------------------------------------------------
+if (lab15_strengthKnown && mahPerMin < 1 && !lab15FlapUnstable) {
 
-    } else if (mahPerMin >= 10.0) {
-        logLabelOkValue(gr ? "Ισχύς" : "Strength", gr ? "ΚΑΝΟΝΙΚΗ" : "NORMAL");
-        lab15_strengthWeak = false;
+    logLabelWarnValue(
+            gr ? "Ελεγκτής φόρτισης" : "Charging controller",
+            gr
+                    ? "Πιθανή δυσλειτουργία IC φόρτισης (PMIC)"
+                    : "Possible charging IC / PMIC limitation"
+    );
+}
 
-    } else if (mahPerMin >= 5.0) {
-        logLabelWarnValue(gr ? "Ισχύς" : "Strength", gr ? "ΜΕΤΡΙΑ" : "MODERATE");
-        lab15_strengthWeak = true;
+if (mahPerMin >= 20.0) {
+    logLabelOkValue(gr ? "Ισχύς" : "Strength", gr ? "ΙΣΧΥΡΗ" : "STRONG");
+    lab15_strengthWeak = false;
 
-    } else {
-        logLabelErrorValue(gr ? "Ισχύς" : "Strength", gr ? "ΑΣΘΕΝΗΣ" : "WEAK");
-        lab15_strengthWeak = true;
-    }
+} else if (mahPerMin >= 10.0) {
+    logLabelOkValue(gr ? "Ισχύς" : "Strength", gr ? "ΚΑΝΟΝΙΚΗ" : "NORMAL");
+    lab15_strengthWeak = false;
+
+} else if (mahPerMin >= 5.0) {
+    logLabelWarnValue(gr ? "Ισχύς" : "Strength", gr ? "ΜΕΤΡΙΑ" : "MODERATE");
+    lab15_strengthWeak = true;
+
+} else {
+    logLabelErrorValue(gr ? "Ισχύς" : "Strength", gr ? "ΑΣΘΕΝΗΣ" : "WEAK");
+    lab15_strengthWeak = true;
+}
+
+// ------------------------------------------------------------
+// USB PORT / CABLE LOSS DETECTOR
+// ------------------------------------------------------------
+if (lab15_strengthKnown && mahPerMin < 6 && mahPerMin > 1 && !lab15OverTempDuringCharge) {
+
+    logLabelWarnValue(
+            gr ? "Θύρα φόρτισης" : "Charging port",
+            gr
+                    ? "Πιθανή απώλεια ισχύος (καλώδιο / θύρα USB)"
+                    : "Possible power loss (cable / USB port)"
+    );
+}
 
 } else {
 

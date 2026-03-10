@@ -13418,8 +13418,6 @@ p.edit()
 logOk(gr ? "Το Lab 14 ολοκληρώθηκε." : "Lab 14 finished.");
 logLine();
 
-});
-
 } catch (Throwable t) {
 
     try { stopCpuBurn(); } catch (Throwable ignore) {}

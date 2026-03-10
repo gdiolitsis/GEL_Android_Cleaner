@@ -13776,37 +13776,47 @@ if (chargingNow) {
 
 } else if (wasCharging[0]) {
 
-    if (unplugTs[0] < 0) {
-        unplugTs[0] = now;
-    }
+    if (!chargingNow) {
 
-    long unplugMs = now - unplugTs[0];
+        if (unplugTs[0] < 0) {
+            unplugTs[0] = now;
+        }
 
-if (unplugMs >= 8000)
+        long unplugMs = now - unplugTs[0];
 
-        lab15FlapUnstable = true;
-        lab15Finished = true;
-        lab15Running  = false;
+        if (unplugMs >= 8000) {
 
-        lab15StatusText.setText(gr
-                ? "Η φόρτιση διακόπηκε."
-                : "Charging disconnected.");
-        lab15StatusText.setTextColor(0xFFFF4444);
+            lab15FlapUnstable = true;
+            lab15Finished = true;
+            lab15Running  = false;
 
-        logError(gr
-                ? "Ο φορτιστής αποσυνδέθηκε για περισσότερο από 5 δευτερόλεπτα."
-                : "Charger disconnected for more than 5 seconds.");
-        logError(gr
-                ? "Η δοκιμή φόρτισης ακυρώθηκε."
-                : "Charging test aborted.");
+            lab15StatusText.setText(gr
+                    ? "Η φόρτιση διακόπηκε."
+                    : "Charging disconnected.");
+            lab15StatusText.setTextColor(0xFFFF4444);
 
-        try {
-            if (lab15Dialog != null && lab15Dialog.isShowing())
-                lab15Dialog.dismiss();
-        } catch (Throwable ignore) {}
-        lab15Dialog = null;
+            logError(gr
+                    ? "Ο φορτιστής αποσυνδέθηκε για περισσότερο από 5 δευτερόλεπτα."
+                    : "Charger disconnected for more than 5 seconds.");
+            logError(gr
+                    ? "Η δοκιμή φόρτισης ακυρώθηκε."
+                    : "Charging test aborted.");
 
-        return;
+            try {
+                if (lab15Dialog != null && lab15Dialog.isShowing())
+                    lab15Dialog.dismiss();
+            } catch (Throwable ignore) {}
+
+            lab15Dialog = null;
+
+            return;
+        }
+
+    } else {
+
+        // charger came back → reset timer
+        unplugTs[0] = -1;
+
     }
 }
 

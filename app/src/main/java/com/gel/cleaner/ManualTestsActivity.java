@@ -11818,8 +11818,10 @@ ui.postDelayed(() -> {
             lab14StressVideo.start();
 
         } catch (Throwable ignore) {}
+        
+try {
 
-        ui.post(new Runnable() {
+    ui.post(new Runnable() {
 
     int dotStep = 0;
     int lastSeg = -1;
@@ -11851,9 +11853,10 @@ ui.postDelayed(() -> {
                 }
 
                 if (elapsed < durationSec) {
-                    ui.postDelayed(this, 1000);
-                    return;
-                }
+    if (lab14Running)
+        ui.postDelayed(this, 1000);
+    return;
+}
 
                 // ----------------------------------------------------
                 // 7) STOP STRESS / CLEANUP
@@ -13751,13 +13754,15 @@ ui.post(new Runnable() {
         dotsView.setText(dotFrames[dotStep++ % dotFrames.length]);
 
 // ------------------------------------------------------------
-// CHARGING STATE TRACKING (5s debounce unplug)
+// CHARGING STATE TRACKING (robust)
 // ------------------------------------------------------------
 if (chargingNow) {
 
+    // reset unplug timer
     unplugTs[0] = -1;
 
     if (!wasCharging[0]) {
+
         wasCharging[0] = true;
         startTs[0] = now;
 
@@ -13776,13 +13781,23 @@ if (chargingNow) {
 
 } else if (wasCharging[0]) {
 
-    if (!chargingNow) {
+    // first unplug detection
+    if (unplugTs[0] < 0) {
+        unplugTs[0] = now;
+    }
 
-        if (unplugTs[0] < 0) {
-            unplugTs[0] = now;
-        }
+    long unplugMs = now - unplugTs[0];
 
-        long unplugMs = now - unplugTs[0];
+    // tolerate USB renegotiation glitches
+    if (unplugMs < 2000) {
+        return;
+    }
+
+    if (unplugMs >= 10000) {
+
+        lab15FlapUnstable = true;
+        lab15Finished = true;
+        lab15Running  = false;
 
         if (unplugMs >= 8000) {
 
@@ -13854,7 +13869,8 @@ if (seg != lastSeg) {
 }
 
 if (elapsed < LAB15_TOTAL_SECONDS) {
-    ui.postDelayed(this, 1000);
+    if (lab15Running && !lab15Finished)
+        ui.postDelayed(this, 1000);
     return;
 }
 

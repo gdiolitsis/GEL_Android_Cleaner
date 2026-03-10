@@ -11827,9 +11827,12 @@ try {
     int lastSeg = -1;
 
     @Override
-    public void run() {
+public void run() {
 
-                if (!lab14Running) return;
+    if (!lab14Running) {
+        ui.removeCallbacks(this);
+        return;
+    }
 
                 long now = SystemClock.elapsedRealtime();
                 int elapsed = (int) ((now - t0) / 1000);
@@ -11852,9 +11855,14 @@ try {
                     }
                 }
 
-                if (elapsed < durationSec) {
-    if (lab14Running)
-        ui.postDelayed(this, 1000);
+if (elapsed < durationSec) {
+
+    if (!lab14Running) {
+        ui.removeCallbacks(this);
+        return;
+    }
+
+    ui.postDelayed(this, 1000);
     return;
 }
 
@@ -12699,6 +12707,15 @@ if (!Float.isNaN(estimatedESR)) {
                : "Battery ESR estimation",
             String.format(Locale.US, "%.3f Ω (%s)", estimatedESR, esrLabel)
     );
+
+} else {
+
+    logLabelWarnValue(
+            gr ? "Ηλεκτροχημική αντίσταση κυψελών (ESR)"
+               : "Battery ESR estimation",
+            gr ? "Μη διαθέσιμη" : "Unavailable"
+    );
+}
 
                 // voltage recovery
                 if (!Float.isNaN(voltageRecovery[0])) {
@@ -13781,57 +13798,45 @@ if (chargingNow) {
 
 } else if (wasCharging[0]) {
 
-    // first unplug detection
     if (unplugTs[0] < 0) {
         unplugTs[0] = now;
     }
 
     long unplugMs = now - unplugTs[0];
 
-    // tolerate USB renegotiation glitches
+    // ignore short USB renegotiation glitches
     if (unplugMs < 2000) {
+        if (lab15Running && !lab15Finished)
+            ui.postDelayed(this, 500);
         return;
     }
 
+    // real disconnect
     if (unplugMs >= 10000) {
 
         lab15FlapUnstable = true;
         lab15Finished = true;
         lab15Running  = false;
 
-        if (unplugMs >= 8000) {
+        lab15StatusText.setText(gr
+                ? "Η φόρτιση διακόπηκε."
+                : "Charging disconnected.");
+        lab15StatusText.setTextColor(0xFFFF4444);
 
-            lab15FlapUnstable = true;
-            lab15Finished = true;
-            lab15Running  = false;
+        logError(gr
+                ? "Ο φορτιστής αποσυνδέθηκε για περισσότερο από 10 δευτερόλεπτα."
+                : "Charger disconnected for more than 10 seconds.");
+        logError(gr
+                ? "Η δοκιμή φόρτισης ακυρώθηκε."
+                : "Charging test aborted.");
 
-            lab15StatusText.setText(gr
-                    ? "Η φόρτιση διακόπηκε."
-                    : "Charging disconnected.");
-            lab15StatusText.setTextColor(0xFFFF4444);
+        try {
+            if (lab15Dialog != null && lab15Dialog.isShowing())
+                lab15Dialog.dismiss();
+        } catch (Throwable ignore) {}
 
-            logError(gr
-                    ? "Ο φορτιστής αποσυνδέθηκε για περισσότερο από 5 δευτερόλεπτα."
-                    : "Charger disconnected for more than 5 seconds.");
-            logError(gr
-                    ? "Η δοκιμή φόρτισης ακυρώθηκε."
-                    : "Charging test aborted.");
-
-            try {
-                if (lab15Dialog != null && lab15Dialog.isShowing())
-                    lab15Dialog.dismiss();
-            } catch (Throwable ignore) {}
-
-            lab15Dialog = null;
-
-            return;
-        }
-
-    } else {
-
-        // charger came back → reset timer
-        unplugTs[0] = -1;
-
+        lab15Dialog = null;
+        return;
     }
 }
 

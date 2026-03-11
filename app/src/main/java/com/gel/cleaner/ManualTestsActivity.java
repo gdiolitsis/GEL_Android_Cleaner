@@ -4448,10 +4448,10 @@ private void lab29AuthenticityCheck() {
 SharedPreferences p =
         getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
         
-boolean collapseRisk =
+boolean lab14CollapseRisk =
         p.getBoolean("lab14_collapse_risk", false);
 
-boolean swellingRisk =
+boolean lab14SwellingRisk =
         p.getBoolean("lab14_swelling_risk", false);
 
     final boolean gr = AppLang.isGreek(this);
@@ -4468,8 +4468,8 @@ boolean swellingRisk =
     boolean batteryAuthSuspect =
             p.getBoolean("lab14_battery_auth_suspect", false);
 
-    boolean calibrationDrift =
-            p.getBoolean("lab14_calibration_drift", false);
+    boolean lab14CalibrationDrift =
+        p.getBoolean("lab14_calibration_drift", false);
 
     boolean instabilityPattern =
             p.getBoolean("lab29_instability_pattern", false);
@@ -20253,10 +20253,10 @@ int agingIndex =
 float finalScore =
         p.getFloat("lab14_health_score", Float.NaN);
 
-boolean collapseRisk =
+boolean lab14CollapseRisk =
         p.getBoolean("lab14_collapse_risk", false);
-        
- boolean swellingRisk =
+
+boolean lab14SwellingRisk =
         p.getBoolean("lab14_swelling_risk", false);
 
 // stability flags
@@ -22354,15 +22354,15 @@ boolean rooted =
 if (rooted) dri -= 10;
 
 // battery calibration drift
-boolean calibrationDrift =
+boolean lab14CalibrationDrift =
         p.getBoolean("lab14_calibration_drift", false);
 
-if (calibrationDrift) dri -= 10;
+if (lab14CalibrationDrift) dri -= 10;
 
-boolean collapseRisk =
+boolean lab14CollapseRisk =
         p.getBoolean("lab14_collapse_risk", false);
 
-if (collapseRisk) dri -= 20;
+if (lab14CollapseRisk) dri -= 20;
 
 // manipulation suspicion (LAB28 + LAB29)
 if (manipulationScore >= 60)

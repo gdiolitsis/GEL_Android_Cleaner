@@ -12774,6 +12774,30 @@ if (!Float.isNaN(internalResistance[0])) {
 }
 
 // ----------------------------------------------------
+// BATTERY CORRECTION (LAB14 FINAL ADJUSTMENT)
+// ----------------------------------------------------
+
+if (validDrain && mahPerHour > 800) {
+    batteryScore -= 15;
+}
+
+if (collapseRisk[0]) {
+    batteryScore -= 20;
+}
+
+if (swellingRisk[0]) {
+    batteryScore -= 20;
+}
+
+if (calibrationDrift[0]) {
+    batteryScore -= 10;
+}
+
+// clamp
+if (batteryScore < 0) batteryScore = 0;
+if (batteryScore > 100) batteryScore = 100;
+
+// ----------------------------------------------------
 // BATTERY ESR ESTIMATION
 // ----------------------------------------------------
 if (!Float.isNaN(estimatedESR)) {
@@ -20351,30 +20375,6 @@ String thermalFlag = colorFlagFromScore(thermalScore);
 float battPct = getCurrentBatteryPercent();
 boolean charging = isChargingNow();
 int batteryScore = scoreBattery(battTemp, battPct, charging);
-
-// ------------------------------------------------------------
-// LAB14 battery correction
-// ------------------------------------------------------------
-
-if (validDrain && mahPerHour > 800) {
-    batteryScore -= 15;
-}
-
-if (collapseRisk[0]) {
-    batteryScore -= 20;
-}
-
-if (swellingRisk[0]) {
-    batteryScore -= 20;
-}
-
-if (calibrationDrift[0]) {
-    batteryScore -= 10;
-}
-
-// clamp
-if (batteryScore < 0) batteryScore = 0;
-if (batteryScore > 100) batteryScore = 100;
 
 String batteryFlag = colorFlagFromScore(batteryScore);
 

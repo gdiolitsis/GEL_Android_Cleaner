@@ -274,7 +274,49 @@ public class ManualTestsActivity extends AppCompatActivity {
 
     private AlertDialog lab14RunningDialog;
     
+    private boolean lab14_systemLimited = false;
+    
+    boolean wearSignals = false;
+    boolean controllerRisk = false;
+    
+    boolean validDrain = false;
+
+    float voltageStart = Float.NaN;
+
+     long drainMah = 0;
+
+     double mahPerHour = -1;
+    
     private Lab14Engine lab14Engine;
+    
+    private final Runnable lab14VibrationLoop = new Runnable() {
+    @Override
+    public void run() {
+
+        if (!lab14Running) return;
+
+        try {
+            Vibrator vib = (Vibrator) getSystemService(VIBRATOR_SERVICE);
+
+            if (vib != null && vib.hasVibrator()) {
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    vib.vibrate(
+                            VibrationEffect.createOneShot(
+                                    80,
+                                    VibrationEffect.DEFAULT_AMPLITUDE
+                            )
+                    );
+                } else {
+                    vib.vibrate(80);
+                }
+            }
+
+        } catch (Throwable ignore) {}
+
+        ui.postDelayed(this, 1500);
+    }
+};
 // ------------------------------------------------------------
 // LAB14 GPU STRESS
 // ------------------------------------------------------------
@@ -11940,17 +11982,36 @@ if (baselineFullMah > 0 && drainMah > 0) {
     }
 }
 
-                final boolean validDrain =
-                        drainMah > 0 &&
-                                !(baselineFullMah > 0 && drainMah > (long) (baselineFullMah * 0.30));
+// ----------------------------------------------------
+// DRAIN VALIDATION (counter + electrical cross-check)
+// ----------------------------------------------------
 
-                final double mahPerHour =
-                        validDrain ? (drainMah * 3600000.0) / dtMs : -1;
+boolean counterValid =
+        drainMah > 0 &&
+        !(baselineFullMah > 0 &&
+          drainMah > (long) (baselineFullMah * 0.30));
 
-                double drainPercentPerHour = -1;
-                if (baselineFullMah > 0 && mahPerHour > 0) {
-                    drainPercentPerHour = (mahPerHour / baselineFullMah) * 100.0;
-                }
+boolean electricalValid = false;
+
+if (!Float.isNaN(voltageStart) &&
+    !Float.isNaN(voltageUnderLoad[0])) {
+
+    float sagCheck = voltageStart - voltageUnderLoad[0];
+
+    if (sagCheck > 0.02f && sagCheck < 0.6f)
+        electricalValid = true;
+}
+
+final boolean validDrain = counterValid || electricalValid;
+
+final double mahPerHour =
+        validDrain ? (drainMah * 3600000.0) / dtMs : -1;
+
+double drainPercentPerHour = -1;
+
+if (baselineFullMah > 0 && mahPerHour > 0) {
+    drainPercentPerHour = (mahPerHour / baselineFullMah) * 100.0;
+}
                 
 // ------------------------------------------------------------
 // BATTERY CALIBRATION DRIFT DETECTION
@@ -12385,26 +12446,36 @@ if (!Float.isNaN(internalResistance[0]) &&
                 }
 
                 // ----------------------------------------------------
-                // 13) LIFESPAN ESTIMATE
-                // ----------------------------------------------------
-                float monthsTo70 = Float.NaN;
+// 13) LIFESPAN ESTIMATE
+// ----------------------------------------------------
+float monthsTo70 = Float.NaN;
 
-                if (agingIndex >= 0) {
+if (agingIndex >= 0) {
 
-                    float agingSpeed = 0f;
+    float agingSpeed = 0f;
 
-                    agingSpeed += agingIndex * 0.5f;
+    // βασικός δείκτης γήρανσης
+    agingSpeed += agingIndex * 0.5f;
 
-                    if (cycles > 0)
-                        agingSpeed += Math.min(40f, cycles * 0.05f);
+    // κύκλοι φόρτισης
+    if (cycles > 0) {
+        agingSpeed += Math.min(40f, cycles * 0.05f);
+    }
 
-                    if (!Float.isNaN(tempEnd) && tempEnd > 40f)
-                        agingSpeed += (tempEnd - 40f) * 2f;
+    // thermal penalty = μόνο πραγματική αύξηση θερμοκρασίας
+    if (!Float.isNaN(tempStart) && !Float.isNaN(tempEnd)) {
+        float tempRise = Math.max(0f, tempEnd - tempStart);
 
-                    if (agingSpeed > 0) {
-                        monthsTo70 = Math.max(3f, 36f - agingSpeed);
-                    }
-                }
+        if (tempRise > 2f) {
+            agingSpeed += Math.min(20f, (tempRise - 2f) * 2f);
+        }
+    }
+
+    // clamp για να μην ξεφεύγει το μοντέλο
+    agingSpeed = Math.max(0f, Math.min(120f, agingSpeed));
+
+    monthsTo70 = Math.max(3f, 36f - agingSpeed);
+}
 
                 // ----------------------------------------------------
                 // 14) FINAL SCORE

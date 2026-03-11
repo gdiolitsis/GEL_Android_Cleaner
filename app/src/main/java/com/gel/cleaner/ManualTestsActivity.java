@@ -20085,7 +20085,7 @@ if (thermalSpike) moistureScore += 15;
 if (rebootPattern) moistureScore += 15;
 if (instabilityPattern) moistureScore += 20;
 
-if (collapseRisk[0] || swellingRisk[0])
+if (lab14CollapseRisk || lab14SwellingRisk)
     moistureScore += 10;
 
 logLabelValue(
@@ -20377,9 +20377,9 @@ if (!moistureDetected &&
 int hardwareRiskScore = 0;
 
 // battery risks
-if (collapseRisk)
+if (lab14CollapseRisk)
     hardwareRiskScore += 20;
-else if (swellingRisk)
+else if (lab14SwellingRisk)
     hardwareRiskScore += 15;
 
 // storage risks
@@ -20421,7 +20421,7 @@ boolean faultDetected = false;
 // ------------------------------------------------------------
 // BATTERY
 // ------------------------------------------------------------
-if (collapseRisk[0] || swellingRisk[0] || finalScore < 60) {
+if (lab14CollapseRisk[0] || lab14SwellingRisk[0] || finalScore < 60) {
 
     faultDetected = true;
 
@@ -20538,7 +20538,7 @@ int rootConfidence = 0;
 // ------------------------------------------------------------
 // BATTERY ROOT CAUSE
 // ------------------------------------------------------------
-if (collapseRisk[0] || swellingRisk[0] || finalScore < 60) {
+if (lab14CollapseRisk || lab14SwellingRisk || finalScore < 60) {
 
     rootCause = gr
             ? "Υποβάθμιση μπαταρίας"
@@ -20546,7 +20546,7 @@ if (collapseRisk[0] || swellingRisk[0] || finalScore < 60) {
 
     rootConfidence = 80;
 
-    if (collapseRisk[0] && swellingRisk[0]) {
+    if (lab14CollapseRisk && lab14SwellingRisk) {
         rootConfidence = 90;
     }
 }
@@ -20720,7 +20720,7 @@ if (hardwareRiskScore >= 60) {
 // ------------------------------------------------------------
 int riskSignals = 0;
 
-if (collapseRisk[0] || swellingRisk[0]) riskSignals++;
+if (lab14CollapseRisk || lab14SwellingRisk) riskSignals++;
 if (nandRisk || controllerRisk) riskSignals++;
 if (thermalRunawayRisk) riskSignals++;
 if (pmicInstability) riskSignals++;
@@ -20827,7 +20827,7 @@ boolean moistureSuspect =
         p.getBoolean("lab29_moisture_suspect", false);
 
 // instability indicators
-if (collapseRisk[0] || swellingRisk[0])
+if (lab14CollapseRisk || lab14SwellingRisk)
     certificateWarning = true;
 
 if (moistureSuspect)
@@ -20912,8 +20912,8 @@ logLine();
 int evidenceSignals = 0;
 
 // battery evidence
-if (collapseRisk[0]) evidenceSignals++;
-if (swellingRisk[0]) evidenceSignals++;
+if (lab14CollapseRisk) evidenceSignals++;
+if (lab14SwellingRisk) evidenceSignals++;
 
 // authenticity evidence
 if (moistureSuspect) evidenceSignals++;
@@ -21071,7 +21071,8 @@ logLabelOkValue(
         (gr ? "Επίπεδο=" : "Level=") +
         (battPct >= 0 ? fmt1(battPct) + "%" : (gr ? "Άγνωστο" : "Unknown")) +
         " | Temp=" + fmt1(battTemp) + "°C" +
-        " | " + (gr ? "Φόρτιση=" : "Charging=") + charging
+        " | " + (gr ? "Φόρτιση=" : "Charging=") +
+        (charging ? (gr ? "Ναι" : "Yes") : (gr ? "Όχι" : "No"))
 );
 
 appendHtml("<br>");
@@ -21387,22 +21388,7 @@ boolean diagnosticConflict = false;
 int conflictScore = 0;
 
 // Battery healthy but PMIC instability
-if (finalScore >= 80 && agingIndex < 70 && pmicInstability) {
-
-    diagnosticConflict = true;
-    conflictScore += 30;
-
-    logLabelWarnValue(
-            gr ? "Αστάθεια PMIC"
-               : "PMIC instability",
-            gr
-                    ? "Εντοπίστηκε πιθανή αστάθεια ελεγκτή ισχύος."
-                    : "Possible power controller instability detected."
-    );
-}
-
-// Battery healthy but collapse risk
-if (finalScore >= 80 && agingIndex < 70 && collapseRisk[0])
+if (finalScore >= 80 && agingIndex < 70 && lab14CollapseRisk) {
 
     diagnosticConflict = true;
     conflictScore += 30;
@@ -21487,13 +21473,6 @@ logLabelValue(
         gr ? "Δείκτης κινδύνου hardware"
            : "Hardware risk score",
         hardwareRiskScore + "/100"
-);
-
-// Diagnostic reliability
-logLabelValue(
-        gr ? "Αξιοπιστία διάγνωσης"
-           : "Diagnostic reliability",
-        reliabilityIndex + "%"
 );
 
 // Timestamp
@@ -22278,7 +22257,7 @@ if (thermalIssue) dri -= 15;
 boolean swellingRisk =
         p.getBoolean("lab14_swelling_risk", false);
 
-if (swellingRisk) dri -= 15;
+if (lab14SwellingRisk) dri -= 15;
 
 // root risk
 boolean rooted =

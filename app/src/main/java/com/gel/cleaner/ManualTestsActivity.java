@@ -326,6 +326,40 @@ public class ManualTestsActivity extends AppCompatActivity {
     private String pendingTtsText;
     
     private boolean lab6ProCanceled = false;
+    
+// ============================================================  
+// LAB 14 — FLAGS / UI STATE (REQUIRED)  
+// ============================================================  
+private volatile boolean lab14Running = false;  
+private TextView lab14DotsView;  
+private AlertDialog lab14Dialog;  
+private TextView lab14ProgressText;  
+private LinearLayout lab14ProgressBar;  
+private final int LAB14_TOTAL_SECONDS = 5 * 60; // 300 sec hard lock  
+private VideoView lab14StressVideo;
+
+private int lastSelectedStressDurationSec = 60;
+
+// REQUIRED — used by LAB 14 / drain logic  
+long currentChargeMah = -1;  
+
+// capacity estimation  
+long estimatedFullMah = -1;  
+
+// charging state (CRITICAL for LAB 14 / 15)  
+boolean charging = false;  
+
+String source = "Unknown";
+
+}
+
+// ============================================================  
+// Battery stress internals  
+// ============================================================  
+private volatile boolean cpuBurnRunning = false;  
+private final List<Thread> cpuBurnThreads = new ArrayList<>();  
+private float oldWindowBrightness = -2f; // sentinel  
+private boolean oldKeepScreenOn = false;  
 
     // ============================================================
     // LAB 8.1 — STATE (CLASS FIELDS)
@@ -475,19 +509,6 @@ private final Handler lab13Handler =
 private volatile boolean lab13ReceiverSawConnection = false;
 private volatile boolean lab13ReceiverSawDisconnection = false;
 
-// ============================================================  
-// LAB 14 — FLAGS / UI STATE (REQUIRED)  
-// ============================================================  
-private volatile boolean lab14Running = false;  
-private TextView lab14DotsView;  
-private AlertDialog lab14Dialog;  
-private TextView lab14ProgressText;  
-private LinearLayout lab14ProgressBar;  
-private final int LAB14_TOTAL_SECONDS = 5 * 60; // 300 sec hard lock  
-private VideoView lab14StressVideo;
-
-private int lastSelectedStressDurationSec = 60;
-
 // ============================================================
 // LAB 15 — FLAGS (DO NOT MOVE)
 // ============================================================
@@ -571,19 +592,6 @@ int level = -1;
 float temperature = Float.NaN;  
 String status = "Unknown";  
 
-// REQUIRED — used by LAB 14 / drain logic  
-long currentChargeMah = -1;  
-
-// capacity estimation  
-long estimatedFullMah = -1;  
-
-// charging state (CRITICAL for LAB 14 / 15)  
-boolean charging = false;  
-
-String source = "Unknown";
-
-}
-
 // ============================================================  
 // CORE UI  
 // ============================================================  
@@ -596,14 +604,6 @@ private Handler ui;
 // ============================================================  
 private final List<LinearLayout> allSectionBodies  = new ArrayList<>();  
 private final List<Button>       allSectionHeaders = new ArrayList<>();  
-
-// ============================================================  
-// Battery stress internals  
-// ============================================================  
-private volatile boolean cpuBurnRunning = false;  
-private final List<Thread> cpuBurnThreads = new ArrayList<>();  
-private float oldWindowBrightness = -2f; // sentinel  
-private boolean oldKeepScreenOn = false;  
 
 // ============================================================  
 // Lab 10 location permission internals  
@@ -11774,37 +11774,7 @@ startGpuStress();
 ui.postDelayed(() -> {
     voltageUnderLoad[0] = getBatteryVoltageFiltered();
 }, 5250);
-
-        final Vibrator vib =
-                (Vibrator) getSystemService(VIBRATOR_SERVICE);
-
-    @Override
-    public void run() {
-
-        if (!lab14Running || isFinishing()) {
-            ui.removeCallbacks(this);
-            return;
-        }
-
-        try {
-            if (vib != null && vib.hasVibrator()) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    vib.vibrate(
-                            VibrationEffect.createOneShot(
-                                    80,
-                                    VibrationEffect.DEFAULT_AMPLITUDE
-                            )
-                    );
-                } else {
-                    vib.vibrate(80);
-                }
-            }
-        } catch (Throwable ignore) {}
-
-        ui.postDelayed(this, 1500);
-    }
-};
-
+       
 ui.postDelayed(lab14VibrationLoop, 1500);
 
         try {

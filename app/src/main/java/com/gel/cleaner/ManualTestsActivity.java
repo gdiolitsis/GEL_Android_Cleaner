@@ -20421,7 +20421,7 @@ boolean faultDetected = false;
 // ------------------------------------------------------------
 // BATTERY
 // ------------------------------------------------------------
-if (collapseRisk[0] || swellingRisk[0] || finalScore < 60)
+if (collapseRisk[0] || swellingRisk[0] || finalScore < 60) {
 
     faultDetected = true;
 
@@ -20538,7 +20538,7 @@ int rootConfidence = 0;
 // ------------------------------------------------------------
 // BATTERY ROOT CAUSE
 // ------------------------------------------------------------
-if (collapseRisk[0] || swellingRisk[0] || finalScore < 60)
+if (collapseRisk[0] || swellingRisk[0] || finalScore < 60) {
 
     rootCause = gr
             ? "Υποβάθμιση μπαταρίας"
@@ -20546,8 +20546,9 @@ if (collapseRisk[0] || swellingRisk[0] || finalScore < 60)
 
     rootConfidence = 80;
 
-    if (collapseRisk[0] && swellingRisk[0])
+    if (collapseRisk[0] && swellingRisk[0]) {
         rootConfidence = 90;
+    }
 }
 
 // ------------------------------------------------------------
@@ -20744,7 +20745,6 @@ if (riskSignals <= 1) {
     );
 
 }
-
 
 // ------------------------------------------------------------
 // DEVICE RELIABILITY RATING

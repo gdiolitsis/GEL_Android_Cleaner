@@ -13441,6 +13441,18 @@ logLine();
 
 }); // ui.post Runnable
 
+} catch (Throwable t) {
+
+    logError(gr
+            ? "Σφάλμα κατά την εκτέλεση του LAB 14"
+            : "LAB 14 execution error");
+
+} finally {
+
+    lab14Running = false;
+
+}
+
 // ============================================================
 // LAB 14 — UI CLEANUP HELPER
 // ============================================================

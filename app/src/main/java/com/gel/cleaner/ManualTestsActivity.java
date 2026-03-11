@@ -13472,6 +13472,7 @@ logLine();
 }   // run()
 
 }); // ui.post Runnable
+}
 
 } catch (Throwable t) {
 
@@ -13482,8 +13483,6 @@ logLine();
 
         lab14CleanupUI();
 lab14Running = false;
-
-        lab14Running = false;
 
         String errMsg = (t != null && t.getMessage() != null)
                 ? t.getMessage()

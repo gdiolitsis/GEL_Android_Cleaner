@@ -20472,7 +20472,7 @@ boolean faultDetected = false;
 // ------------------------------------------------------------
 // BATTERY
 // ------------------------------------------------------------
-if (lab14CollapseRisk[0] || lab14SwellingRisk[0] || finalScore < 60) {
+if (lab14CollapseRisk || lab14SwellingRisk || finalScore < 60) {
 
     faultDetected = true;
 

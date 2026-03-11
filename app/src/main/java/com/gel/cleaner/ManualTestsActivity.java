@@ -22096,6 +22096,9 @@ private void lab31FinalSummary() {
 
     final boolean gr = AppLang.isGreek(this);
 
+    SharedPreferences p =
+            getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
+
     appendHtml("<br>");
     logLine();
     logInfo(gr
@@ -22813,6 +22816,7 @@ if (requestCode == 8008) {
 
     enableSingleExportButton();
     return;
+}
 }
 
 // ============================================================

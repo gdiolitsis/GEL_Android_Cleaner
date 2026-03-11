@@ -11918,6 +11918,32 @@ final Lab14Engine.GelBatterySnapshot snapEnd = engine.readSnapshot();
 
                 final long dtMs = Math.max(1, SystemClock.elapsedRealtime() - t0);
                 final long drainMah = Math.max(0, startMah - endMah);
+                
+                // sanity guard για παράλογη κατανάλωση
+if (drainMah > 2000) {
+    logLabelWarnValue(
+            gr ? "Ανωμαλία μέτρησης κατανάλωσης"
+               : "Drain measurement anomaly",
+            gr ? "Μη ρεαλιστική τιμή κατανάλωσης."
+               : "Unrealistic battery drain detected."
+    );
+}
+                
+// ------------------------------------------------------------
+// FUEL GAUGE RELIABILITY CHECK
+// ------------------------------------------------------------
+if (drainMah < 10) {
+
+    logLabelWarnValue(
+            gr ? "Αξιοπιστία fuel-gauge"
+               : "Fuel gauge reliability",
+            gr
+                    ? "Ο μετρητής φορτίου δεν ενημερώθηκε αξιόπιστα."
+                    : "Charge counter did not update reliably."
+    );
+
+    variabilityDetected = true;
+}
 
 // ----------------------------------------------------
 // DECLARED CAPACITY VALIDATION
@@ -11955,29 +11981,40 @@ if (baselineFullMah > 0 && drainMah > 0) {
 
 boolean counterValid =
         drainMah > 0 &&
-        !(baselineFullMah > 0 &&
-          drainMah > (long) (baselineFullMah * 0.30));
+        (baselineFullMah <= 0 ||
+         drainMah <= (long)(baselineFullMah * 0.30));
 
 boolean electricalValid = false;
 
 if (!Float.isNaN(voltageStart) &&
-    !Float.isNaN(voltageUnderLoad[0])) {
+    !Float.isNaN(voltageUnderLoad[0]) &&
+    voltageUnderLoad[0] > 0) {
 
     float sagCheck = voltageStart - voltageUnderLoad[0];
 
-    if (sagCheck > 0.02f && sagCheck < 0.6f)
+    if (sagCheck > 0.02f && sagCheck < 0.6f) {
         electricalValid = true;
+    }
 }
+
+// ----------------------------------------------------
+// FINAL DRAIN VALIDATION
+// ----------------------------------------------------
 
 final boolean validDrain = counterValid || electricalValid;
 
+// mAh per hour equivalent
 final double mahPerHour =
-        validDrain ? (drainMah * 3600000.0) / dtMs : -1;
+        (validDrain && dtMs > 0)
+                ? (drainMah * 3600000.0) / dtMs
+                : -1;
 
+// percent per hour equivalent
 double drainPercentPerHour = -1;
 
 if (baselineFullMah > 0 && mahPerHour > 0) {
-    drainPercentPerHour = (mahPerHour / baselineFullMah) * 100.0;
+    drainPercentPerHour =
+            (mahPerHour / (double)baselineFullMah) * 100.0;
 }
                 
 // ------------------------------------------------------------
@@ -13452,6 +13489,8 @@ logLine();
     lab14Running = false;
 
 }
+
+}   // END lab14BatteryHealthStressTest()
 
 // ============================================================
 // LAB 14 — UI CLEANUP HELPER

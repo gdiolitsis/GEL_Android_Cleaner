@@ -13443,38 +13443,6 @@ logLine();
 
 }); // ui.post Runnable
 
-} catch (Throwable t) {
-
-    try { stopCpuBurn(); } catch (Throwable ignore) {}
-    try { stopMemoryStress(); } catch (Throwable ignore) {}
-    try { stopGpuStress(); } catch (Throwable ignore) {}
-    try { restoreBrightnessAndKeepOn(); } catch (Throwable ignore) {}
-
-        lab14CleanupUI();
-lab14Running = false;
-
-        String errMsg = (t != null && t.getMessage() != null)
-                ? t.getMessage()
-                : "Unknown runtime error";
-
-        logLabelErrorValue(
-                "LAB14_ERR_RUNTIME",
-                gr
-                        ? "Απροσδόκητη αποτυχία κατά την εκτέλεση"
-                        : "Unexpected runtime failure"
-        );
-
-        logLabelWarnValue(
-                gr ? "Τεχνική λεπτομέρεια" : "Technical detail",
-                errMsg
-        );
-
-        logWarn(gr
-                ? "Πιθανή αιτία: υπερθέρμανση, σφάλμα μέτρησης fuel-gauge ή περιορισμός λειτουργίας από το σύστημα."
-                : "Possible cause: Thermal limit, fuel-gauge anomaly or system restriction.");
-    }
-}
-
 // ============================================================
 // LAB 14 — UI CLEANUP HELPER
 // ============================================================

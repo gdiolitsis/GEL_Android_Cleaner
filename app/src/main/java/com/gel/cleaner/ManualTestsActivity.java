@@ -12016,6 +12016,49 @@ if (baselineFullMah > 0 && mahPerHour > 0) {
     drainPercentPerHour =
             (mahPerHour / (double)baselineFullMah) * 100.0;
 }
+
+// ------------------------------------------------------------
+// ESTIMATED REAL BATTERY CAPACITY
+// ------------------------------------------------------------
+
+double estimatedCapacityMah = -1;
+
+if (validDrain && mahPerHour > 0 && baselineFullMah > 0) {
+
+    estimatedCapacityMah =
+            baselineFullMah *
+            (baselineFullMah / (baselineFullMah + mahPerHour * 0.25));
+}
+
+double estimatedHealthPercent = -1;
+
+if (estimatedCapacityMah > 0 && baselineFullMah > 0) {
+
+    estimatedHealthPercent =
+            (estimatedCapacityMah / baselineFullMah) * 100.0;
+}
+
+if (estimatedHealthPercent > 100) estimatedHealthPercent = 100;
+if (estimatedHealthPercent < 0) estimatedHealthPercent = 0;
+
+// ------------------------------------------------------------
+// LOG RESULT
+// ------------------------------------------------------------
+
+if (estimatedCapacityMah > 0) {
+
+    logLabelOkValue(
+            gr ? "Εκτιμώμενη πραγματική χωρητικότητα"
+               : "Estimated real battery capacity",
+            String.format(Locale.US, "%.0f mAh", estimatedCapacityMah)
+    );
+
+    logLabelOkValue(
+            gr ? "Εκτιμώμενη υγεία μπαταρίας"
+               : "Estimated battery health",
+            String.format(Locale.US, "%.0f %%", estimatedHealthPercent)
+    );
+}
                 
 // ------------------------------------------------------------
 // BATTERY CALIBRATION DRIFT DETECTION
@@ -20308,6 +20351,31 @@ String thermalFlag = colorFlagFromScore(thermalScore);
 float battPct = getCurrentBatteryPercent();
 boolean charging = isChargingNow();
 int batteryScore = scoreBattery(battTemp, battPct, charging);
+
+// ------------------------------------------------------------
+// LAB14 battery correction
+// ------------------------------------------------------------
+
+if (validDrain && mahPerHour > 800) {
+    batteryScore -= 15;
+}
+
+if (collapseRisk[0]) {
+    batteryScore -= 20;
+}
+
+if (swellingRisk[0]) {
+    batteryScore -= 20;
+}
+
+if (calibrationDrift[0]) {
+    batteryScore -= 10;
+}
+
+// clamp
+if (batteryScore < 0) batteryScore = 0;
+if (batteryScore > 100) batteryScore = 100;
+
 String batteryFlag = colorFlagFromScore(batteryScore);
 
 // ------------------------------------------------------------
@@ -22305,7 +22373,7 @@ boolean thermalIssue =
 if (thermalIssue) dri -= 15;
 
 // swelling
-boolean swellingRisk =
+boolean lab14SwellingRisk =
         p.getBoolean("lab14_swelling_risk", false);
 
 if (lab14SwellingRisk) dri -= 15;

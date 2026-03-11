@@ -22814,7 +22814,6 @@ if (requestCode == 8008) {
     enableSingleExportButton();
     return;
 }
-}
 
 // ============================================================
 // END OF CLASS

@@ -13442,7 +13442,6 @@ logLine();
 }   // run()
 
 }); // ui.post Runnable
-}
 
 } catch (Throwable t) {
 

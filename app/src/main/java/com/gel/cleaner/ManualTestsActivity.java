@@ -11177,7 +11177,6 @@ AppTTS.stop();
     logWarn("Lab 13 aborted by user.");
     logLine();
 }
-}
 
 // ============================================================
 // LAB 14 ARCHITECTURE OVERVIEW
@@ -11267,12 +11266,8 @@ AppTTS.stop();
 // FULL METHOD / COPY-PASTE READY
 // ============================================================
 private void lab14BatteryHealthStressTest() {
-    
+
     final boolean gr = AppLang.isGreek(this);
-    
-    // 🔋 SNAPSHOT ΜΠΑΤΑΡΙΑΣ
-    Lab14Engine.GelBatterySnapshot snap =
-            lab14Engine.readSnapshot();
 
     if (lab14Running) {
         logWarn(gr
@@ -11280,7 +11275,7 @@ private void lab14BatteryHealthStressTest() {
                 : "LAB 14 already running.");
         return;
     }
-    
+
     resetBatteryDiagnostics();
 
     lab14Running = true;
@@ -11549,24 +11544,8 @@ logLabelOkValue(
     try { stopMemoryStress(); } catch (Throwable ignore) {}
     try { restoreBrightnessAndKeepOn(); } catch (Throwable ignore) {}
 
-            try {
-                if (lab14StressVideo != null) {
-                    lab14StressVideo.stopPlayback();
-                    ViewParent parent = lab14StressVideo.getParent();
-                    if (parent instanceof ViewGroup) {
-                        ((ViewGroup) parent).removeView(lab14StressVideo);
-                    }
-                    lab14StressVideo = null;
-                }
-            } catch (Throwable ignore) {}
-
-            lab14Running = false;
-
-            try {
-                if (lab14Dialog != null && lab14Dialog.isShowing())
-                    lab14Dialog.dismiss();
-            } catch (Throwable ignore) {}
-            lab14Dialog = null;
+            lab14CleanupUI();
+lab14Running = false;
 
             logWarn(
                     gr
@@ -11757,27 +11736,35 @@ ui.postDelayed(() -> {
         final Vibrator vib =
                 (Vibrator) getSystemService(VIBRATOR_SERVICE);
 
-        ui.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                if (!lab14Running) return;
+        lab14VibrationLoop = new Runnable() {
+    @Override
+    public void run() {
 
-                try {
-                    if (vib != null && vib.hasVibrator()) {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                            vib.vibrate(VibrationEffect.createOneShot(
+        if (!lab14Running || isFinishing()) {
+            ui.removeCallbacks(this);
+            return;
+        }
+
+        try {
+            if (vib != null && vib.hasVibrator()) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    vib.vibrate(
+                            VibrationEffect.createOneShot(
                                     80,
                                     VibrationEffect.DEFAULT_AMPLITUDE
-                            ));
-                        } else {
-                            vib.vibrate(80);
-                        }
-                    }
-                } catch (Throwable ignore) {}
-
-                ui.postDelayed(this, 1500);
+                            )
+                    );
+                } else {
+                    vib.vibrate(80);
+                }
             }
-        }, 1500);
+        } catch (Throwable ignore) {}
+
+        ui.postDelayed(this, 1500);
+    }
+};
+
+ui.postDelayed(lab14VibrationLoop, 1500);
 
         try {
 
@@ -11804,7 +11791,9 @@ ui.postDelayed(() -> {
             ((ViewGroup) findViewById(android.R.id.content))
                     .addView(lab14StressVideo);
 
-            lab14StressVideo.start();
+            if (lab14StressVideo.isAttachedToWindow()) {
+    lab14StressVideo.start();
+}
 
         } catch (Throwable ignore) {}
         
@@ -11816,10 +11805,10 @@ ui.postDelayed(() -> {
     @Override
 public void run() {
 
-    if (!lab14Running) {
-        ui.removeCallbacks(this);
-        return;
-    }
+    if (!lab14Running || isFinishing() || lab14Dialog == null) {
+    ui.removeCallbacks(this);
+    return;
+}
 
                 long now = SystemClock.elapsedRealtime();
                 int elapsed = (int) ((now - t0) / 1000);
@@ -11856,29 +11845,13 @@ if (elapsed < durationSec) {
                 // ----------------------------------------------------
                 // 7) STOP STRESS / CLEANUP
                 // ----------------------------------------------------
-                try {
-                    if (lab14StressVideo != null) {
-                        lab14StressVideo.stopPlayback();
-                        ViewParent parent = lab14StressVideo.getParent();
-                        if (parent instanceof ViewGroup) {
-                            ((ViewGroup) parent).removeView(lab14StressVideo);
-                        }
-                        lab14StressVideo = null;
-                    }
-                } catch (Throwable ignore) {}
-
-                lab14Running = false;
+                lab14CleanupUI();
+lab14Running = false;
 
 try { stopCpuBurn(); } catch (Throwable ignore) {}
 try { stopMemoryStress(); } catch (Throwable ignore) {}
 try { stopGpuStress(); } catch (Throwable ignore) {}
 try { restoreBrightnessAndKeepOn(); } catch (Throwable ignore) {}
-
-                try {
-                    if (lab14Dialog != null && lab14Dialog.isShowing())
-                        lab14Dialog.dismiss();
-                } catch (Throwable ignore) {}
-                lab14Dialog = null;
 
                 // ----------------------------------------------------
                 // 8) POST-LOAD RECOVERY
@@ -11913,11 +11886,20 @@ SystemClock.sleep(800);
 final Lab14Engine.GelBatterySnapshot snapEnd = engine.readSnapshot();
 
                 if (snapEnd.chargeNowMah <= 0) {
-                    logWarn(gr
-                            ? "Αδυναμία ανάγνωσης τελικού charge counter."
-                            : "Unable to read final charge counter.");
-                    return;
-                }
+
+    logWarn(gr
+            ? "Αδυναμία ανάγνωσης τελικού charge counter."
+            : "Unable to read final charge counter.");
+
+    lab14Running = false;
+
+    try { stopCpuBurn(); } catch (Throwable ignore) {}
+    try { stopMemoryStress(); } catch (Throwable ignore) {}
+    try { stopGpuStress(); } catch (Throwable ignore) {}
+    try { restoreBrightnessAndKeepOn(); } catch (Throwable ignore) {}
+
+    return;
+}
 
                 final long endMah = snapEnd.chargeNowMah;
                 final float tempEnd = snapEnd.temperature;
@@ -13428,24 +13410,8 @@ logLine();
     try { stopGpuStress(); } catch (Throwable ignore) {}
     try { restoreBrightnessAndKeepOn(); } catch (Throwable ignore) {}
 
-        try {
-            if (lab14StressVideo != null) {
-                lab14StressVideo.stopPlayback();
-                ViewParent parent = lab14StressVideo.getParent();
-                if (parent instanceof ViewGroup) {
-                    ((ViewGroup) parent).removeView(lab14StressVideo);
-                }
-                lab14StressVideo = null;
-            }
-        } catch (Throwable ignore) {}
-
-        try {
-            if (lab14Dialog != null && lab14Dialog.isShowing())
-                lab14Dialog.dismiss();
-                
-        } catch (Throwable ignore) {}
-        
-        lab14Dialog = null;
+        lab14CleanupUI();
+lab14Running = false;
 
         lab14Running = false;
 
@@ -13469,6 +13435,38 @@ logLine();
                 ? "Πιθανή αιτία: υπερθέρμανση, σφάλμα μέτρησης fuel-gauge ή περιορισμός λειτουργίας από το σύστημα."
                 : "Possible cause: Thermal limit, fuel-gauge anomaly or system restriction.");
     }
+}
+
+// ============================================================
+// LAB 14 — UI CLEANUP HELPER
+// ============================================================
+private void lab14CleanupUI() {
+	
+	ui.removeCallbacks(lab14VibrationLoop);
+
+    try {
+    if (lab14StressVideo != null) {
+
+        try { lab14StressVideo.suspend(); } catch (Throwable ignore) {}
+        try { lab14StressVideo.stopPlayback(); } catch (Throwable ignore) {}
+
+            ViewParent parent = lab14StressVideo.getParent();
+            if (parent instanceof ViewGroup) {
+                try {
+                    ((ViewGroup) parent).removeView(lab14StressVideo);
+                } catch (Throwable ignore) {}
+            }
+
+            lab14StressVideo = null;
+        }
+    } catch (Throwable ignore) {}
+
+    try {
+        if (lab14Dialog != null && lab14Dialog.isShowing())
+            lab14Dialog.dismiss();
+    } catch (Throwable ignore) {}
+
+    lab14Dialog = null;
 }
 
 //=============================================================
@@ -13755,7 +13753,10 @@ ui.post(new Runnable() {
     @Override
     public void run() {
 
-        if (!lab15Running || lab15Finished) return;
+        if (!lab15Running || lab15Finished || isFinishing()) {
+    ui.removeCallbacks(this);
+    return;
+}
 
         boolean chargingNow = isDeviceCharging();
         long now = SystemClock.elapsedRealtime();

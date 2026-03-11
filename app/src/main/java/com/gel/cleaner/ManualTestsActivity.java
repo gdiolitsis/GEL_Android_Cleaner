@@ -11177,6 +11177,7 @@ AppTTS.stop();
     logWarn("Lab 13 aborted by user.");
     logLine();
 }
+}
 
 // ============================================================
 // LAB 14 ARCHITECTURE OVERVIEW
@@ -11807,8 +11808,6 @@ ui.postDelayed(() -> {
 
         } catch (Throwable ignore) {}
         
-try {
-
     ui.post(new Runnable() {
 
     int dotStep = 0;
@@ -13420,6 +13419,8 @@ logLine();
 
 }   // run()
 
+}); // ui.post Runnable
+
 } catch (Throwable t) {
 
     try { stopCpuBurn(); } catch (Throwable ignore) {}
@@ -13441,7 +13442,9 @@ logLine();
         try {
             if (lab14Dialog != null && lab14Dialog.isShowing())
                 lab14Dialog.dismiss();
+                
         } catch (Throwable ignore) {}
+        
         lab14Dialog = null;
 
         lab14Running = false;

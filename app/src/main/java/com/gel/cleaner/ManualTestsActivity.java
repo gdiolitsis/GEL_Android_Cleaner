@@ -4512,7 +4512,7 @@ boolean lab14SwellingRisk =
         );
     }
 
-    if (calibrationDrift) {
+    if (calibrationDrift[0]) {
 
         logLabelWarnValue(
                 gr ? "Fuel gauge"
@@ -11778,7 +11778,6 @@ ui.postDelayed(() -> {
         final Vibrator vib =
                 (Vibrator) getSystemService(VIBRATOR_SERVICE);
 
-        lab14VibrationLoop = new Runnable() {
     @Override
     public void run() {
 
@@ -20488,7 +20487,7 @@ boolean faultDetected = false;
 // ------------------------------------------------------------
 // BATTERY
 // ------------------------------------------------------------
-if (collapseRisk || swellingRisk || finalScore < 60) {
+if (collapseRisk[0] || swellingRisk[0] || finalScore < 60)
 
     faultDetected = true;
 
@@ -20605,7 +20604,7 @@ int rootConfidence = 0;
 // ------------------------------------------------------------
 // BATTERY ROOT CAUSE
 // ------------------------------------------------------------
-if (collapseRisk || swellingRisk || finalScore < 60) {
+if (collapseRisk[0] || swellingRisk[0] || finalScore < 60)
 
     rootCause = gr
             ? "Υποβάθμιση μπαταρίας"
@@ -20613,7 +20612,7 @@ if (collapseRisk || swellingRisk || finalScore < 60) {
 
     rootConfidence = 80;
 
-    if (collapseRisk && swellingRisk)
+    if (collapseRisk[0] && swellingRisk[0])
         rootConfidence = 90;
 }
 
@@ -20979,8 +20978,8 @@ logLine();
 int evidenceSignals = 0;
 
 // battery evidence
-if (collapseRisk) evidenceSignals++;
-if (swellingRisk) evidenceSignals++;
+if (collapseRisk[0]) evidenceSignals++;
+if (swellingRisk[0]) evidenceSignals++;
 
 // authenticity evidence
 if (moistureSuspect) evidenceSignals++;
@@ -21469,7 +21468,7 @@ if (finalScore >= 80 && agingIndex < 70 && pmicInstability) {
 }
 
 // Battery healthy but collapse risk
-if (finalScore >= 80 && agingIndex < 70 && collapseRisk) {
+if (finalScore >= 80 && agingIndex < 70 && collapseRisk[0])
 
     diagnosticConflict = true;
     conflictScore += 30;

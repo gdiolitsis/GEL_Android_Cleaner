@@ -18171,20 +18171,6 @@ if (crashDetected) {
     crashCount++;
 }
 
-    String shortTxt = readDropBoxEntry(ent);
-    
-    if (shortTxt != null) {
-
-    String tx = shortTxt.toLowerCase(Locale.US);
-
-    if (tx.contains("fatal signal") ||
-        tx.contains("segmentation fault") ||
-        tx.contains("abort message")) {
-
-        crashCount++;
-    }
-}
-
     String clean = tag.toUpperCase(Locale.US)
             .replace("_", " ");
 
@@ -18483,7 +18469,10 @@ logLine();
     appendHtml("<br>");
     logOk(gr ? "Το Lab 25 ολοκληρώθηκε." : "Lab 25 finished.");
     logLine();
-}
+}   // end for tags
+}   // end if db != null
+
+} catch (Throwable ignored) {}
 
 // ============================================================
 // SMALL helper inside same block (allowed)
@@ -22309,7 +22298,7 @@ Settings.Global.DEVELOPMENT_SETTINGS_ENABLED, 0) == 1;
 } catch (Throwable ignored) {}
 
 // ADB Wi-Fi (port property)
-try {
+
 try {
 
     String adbPort =

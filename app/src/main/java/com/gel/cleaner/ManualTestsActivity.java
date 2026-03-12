@@ -11334,6 +11334,8 @@ private void lab14BatteryHealthStressTest() {
     }
 
     resetBatteryDiagnostics();
+    
+    final boolean[] variabilityDetected = { false };
 
     lab14Running = true;
 
@@ -11804,15 +11806,7 @@ ui.postDelayed(() -> {
 // vibration loop
 ui.postDelayed(lab14VibrationLoop, 1500);
 
-
-// hidden video stress
 try {
-
-    lab14StressVideo = new VideoView(this);
-
-    lab14StressVideo.setLayoutParams(
-            new ViewGroup.LayoutParams(2, 2)
-    );
 
     lab14StressVideo.setVideoURI(
             Uri.parse(
@@ -11830,8 +11824,6 @@ try {
     });
 
 } catch (Throwable ignore) {}
-
-
 
 ui.post(new Runnable() {
 
@@ -11875,38 +11867,45 @@ ui.post(new Runnable() {
             }
         }
 
+        // συνεχίζουμε timer
         if (elapsed < durationSec) {
 
             ui.postDelayed(this, 1000);
             return;
         }
 
+        // ----------------------------------------------------
         // 7) STOP STRESS
+        // ----------------------------------------------------
 
         lab14CleanupUI();
-        lab14Running = false;
 
-        try { stopCpuBurn(); } catch (Throwable ignore) {}
-        try { stopMemoryStress(); } catch (Throwable ignore) {}
-        try { stopGpuStress(); } catch (Throwable ignore) {}
-        try { restoreBrightnessAndKeepOn(); } catch (Throwable ignore) {}
+try { stopCpuBurn(); } catch (Throwable ignore) {}
+try { stopMemoryStress(); } catch (Throwable ignore) {}
+try { stopGpuStress(); } catch (Throwable ignore) {}
+try { restoreBrightnessAndKeepOn(); } catch (Throwable ignore) {}
 
-    }
+        // ----------------------------------------------------
+        // 8) POST-LOAD RECOVERY (THREAD)
+        // ----------------------------------------------------
 
-});
+        new Thread(() -> {
 
-                // ----------------------------------------------------
-                // 8) POST-LOAD RECOVERY
-                // ----------------------------------------------------
-                if (!Float.isNaN(voltageUnderLoad[0])) {
-                    SystemClock.sleep(3000);
-                    float vr = getBatteryVoltageFiltered();
-                    if (!Float.isNaN(vr)) {
-                        voltageRecovery[0] =
-        Math.max(0f, vr - voltageUnderLoad[0]);
-                    }
+    lab14Running = false;
+
+            if (!Float.isNaN(voltageUnderLoad[0])) {
+
+                SystemClock.sleep(3000);
+
+                float vr = getBatteryVoltageFiltered();
+
+                if (!Float.isNaN(vr)) {
+
+                    voltageRecovery[0] =
+                            Math.max(0f, vr - voltageUnderLoad[0]);
                 }
-                
+            }
+               
 // ----------------------------------------------------
 // VOLTAGE RECOVERY SPEED (electrochemical response)
 // ----------------------------------------------------
@@ -11975,7 +11974,7 @@ if (drainMah < 10) {
                     : "Charge counter did not update reliably."
     );
 
-    variabilityDetected = true;
+    variabilityDetected[0] = true;
 }
 
 // ----------------------------------------------------
@@ -12471,8 +12470,8 @@ if (!Float.isNaN(internalResistance[0]) &&
 
                 final Lab14Engine.ConfidenceResult conf = engine.computeConfidence();
 
-                boolean variabilityDetected =
-                        !validDrain || conf.percent < 60;
+                variabilityDetected[0] =
+        !validDrain || conf.percent < 60;
 
                 // ----------------------------------------------------
                 // 12) AGING
@@ -12811,24 +12810,23 @@ if (!Float.isNaN(internalResistance[0])) {
 // ----------------------------------------------------
 
 if (validDrain && mahPerHour > 800) {
-    batteryScore -= 15;
+    finalScore -= 15;
 }
 
 if (collapseRisk[0]) {
-    batteryScore -= 20;
+    finalScore -= 20;
 }
 
 if (swellingRisk[0]) {
-    batteryScore -= 20;
+    finalScore -= 20;
 }
 
 if (calibrationDrift[0]) {
-    batteryScore -= 10;
+    finalScore -= 10;
 }
 
-// clamp
-if (batteryScore < 0) batteryScore = 0;
-if (batteryScore > 100) batteryScore = 100;
+if (finalScore < 0) finalScore = 0;
+if (finalScore > 100) finalScore = 100;
 
 // ----------------------------------------------------
 // BATTERY ESR ESTIMATION
@@ -13552,7 +13550,7 @@ if (aging != null && aging.description != null) {
 // 16) SAVE FLAGS
 // ----------------------------------------------------
 p.edit()
-        .putBoolean("lab14_unstable_measurement", variabilityDetected)
+        .putBoolean("lab14_unstable_measurement", variabilityDetected[0])
         .putBoolean("lab14_collapse_risk", collapseRisk[0])
         .putBoolean("lab14_swelling_risk", swellingRisk[0])
         .putBoolean("lab14_calibration_drift", calibrationDrift[0])
@@ -13574,7 +13572,9 @@ appendHtml("<br>");
 logOk(gr ? "Το Lab 14 ολοκληρώθηκε." : "Lab 14 finished.");
 logLine();
 
-}   // run()
+}).start();
+
+    }   // run()
 
 }); // ui.post Runnable
 
@@ -13583,12 +13583,8 @@ logLine();
     logError(gr
             ? "Σφάλμα κατά την εκτέλεση του LAB 14"
             : "LAB 14 execution error");
-
-} finally {
-
-    lab14Running = false;
-
-}
+            
+            }
 
 }   // END lab14BatteryHealthStressTest()
 

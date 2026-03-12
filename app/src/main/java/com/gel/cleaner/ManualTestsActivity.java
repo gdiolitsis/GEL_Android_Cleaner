@@ -11560,6 +11560,20 @@ logLabelOkValue(
         counterText.setTextColor(0xFF39FF14);
         counterText.setGravity(Gravity.CENTER);
         root.addView(counterText);
+        
+        lab14StressVideo = new VideoView(this);
+
+LinearLayout.LayoutParams vLp =
+        new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                dp(120)
+        );
+
+vLp.setMargins(0, dp(10), 0, dp(10));
+
+lab14StressVideo.setLayoutParams(vLp);
+
+root.addView(lab14StressVideo);
 
         final LinearLayout progressBar = new LinearLayout(this);
         progressBar.setOrientation(LinearLayout.HORIZONTAL);
@@ -11620,6 +11634,7 @@ lab14Running = false;
                     .setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         }
         lab14Dialog.show();
+        lab14Running = true;
 
 // ------------------------------------------------------------
 // 5) FAST BATTERY STRESS (45 sec) — BACKGROUND THREAD FIX
@@ -11763,14 +11778,6 @@ if (!Float.isNaN(internalResistance[0]) &&
         batteryFailureRisk[0] = true;
 }
         
-        startMainStressPhase(
-                durationSec,
-                t0,
-                dotsView,
-                counterText,
-                progressBar
-        );
-
     });
 
 }).start();
@@ -11781,47 +11788,47 @@ if (!Float.isNaN(internalResistance[0]) &&
 
 final String[] dotFrames = {"•", "• •", "• • •"};
 
+lab14Running = true;
+
 applyMaxBrightnessAndKeepOn();
+
 startCpuBurn_C_Mode();
 startMemoryStress();
 startGpuStress();
 
+// capture under-load voltage
 ui.postDelayed(() -> {
     voltageUnderLoad[0] = getBatteryVoltageFiltered();
 }, 5250);
-       
+
+// vibration loop
 ui.postDelayed(lab14VibrationLoop, 1500);
 
-        try {
+// hidden video stress
+try {
 
-            lab14StressVideo = new VideoView(this);
+    lab14StressVideo = new VideoView(this);
 
-            lab14StressVideo.setLayoutParams(
-                    new ViewGroup.LayoutParams(1, 1)
-            );
+    lab14StressVideo.setLayoutParams(
+            new ViewGroup.LayoutParams(2, 2)
+    );
 
-            lab14StressVideo.setVideoURI(
-                    Uri.parse(
-                            "android.resource://" +
-                                    getPackageName() +
-                                    "/" +
-                                    R.raw.battery_stress_loop
-                    )
-            );
+    lab14StressVideo.setVideoURI(
+            Uri.parse(
+                    "android.resource://"
+                            + getPackageName()
+                            + "/"
+                            + R.raw.battery_stress_loop
+            )
+    );
 
-            lab14StressVideo.setOnPreparedListener(mp -> {
-                mp.setLooping(true);
-                mp.setVolume(0f, 0f);
-            });
+    lab14StressVideo.setOnPreparedListener(mp -> {
+        mp.setLooping(true);
+        mp.setVolume(0f, 0f);
+        lab14StressVideo.start();
+    });
 
-            ((ViewGroup) findViewById(android.R.id.content))
-                    .addView(lab14StressVideo);
-
-            if (lab14StressVideo.isAttachedToWindow()) {
-    lab14StressVideo.start();
-}
-
-        } catch (Throwable ignore) {}
+} catch (Throwable ignore) {}
         
     ui.post(new Runnable() {
 

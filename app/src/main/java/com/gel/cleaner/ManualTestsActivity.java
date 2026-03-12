@@ -600,6 +600,11 @@ private static class BatteryInfo {
 
     long currentChargeMah = -1;
 
+    // ✅ missing fields
+    boolean charging = false;
+    String source = "Unknown";
+    long estimatedFullMah = -1;
+
 }
 
 // ============================================================  

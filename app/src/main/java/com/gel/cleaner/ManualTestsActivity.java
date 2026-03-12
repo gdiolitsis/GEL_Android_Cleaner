@@ -18161,7 +18161,8 @@ if (!crashDetected && shortTxt != null) {
 
     if (tx.contains("fatal signal") ||
         tx.contains("segmentation fault") ||
-        tx.contains("abort message")) {
+        tx.contains("abort message") ||
+        tx.contains("signal 11")) {
 
         crashDetected = true;
     }
@@ -18474,30 +18475,45 @@ logLine();
 
 } catch (Throwable ignored) {}
 
+} // END lab25CrashHistory()
+
 // ============================================================
-// SMALL helper inside same block (allowed)
-// Reads first 10 lines of DropBox entry
+// SMALL helper
+// Reads first lines of DropBox entry safely
 // ============================================================
 private String readDropBoxEntry(DropBoxManager.Entry ent) {
-try {
-if (ent == null) return "(no text)";
-InputStream is = ent.getInputStream();
-if (is == null) return "(no text)";
 
-BufferedReader br = new BufferedReader(new InputStreamReader(is));  
-    StringBuilder sb = new StringBuilder();  
-    String line;  
-    int count = 0;  
-    while ((line = br.readLine()) != null && count < 10) {  
-        sb.append(line).append(" ");  
-        count++;  
-    }  
-    br.close();  
-    return sb.toString().trim();  
-} catch (Exception e) {  
-    return "(read error)";  
-}
+    if (ent == null) return "(no text)";
 
+    try (InputStream is = ent.getInputStream()) {
+
+        if (is == null) return "(no text)";
+
+        BufferedReader br =
+                new BufferedReader(new InputStreamReader(is));
+
+        StringBuilder sb = new StringBuilder();
+        String line;
+        int lines = 0;
+
+        while ((line = br.readLine()) != null && lines < 10) {
+
+            if (line.trim().isEmpty()) continue;
+
+            sb.append(line.trim()).append(" ");
+            lines++;
+        }
+
+        String txt = sb.toString().trim();
+
+        if (txt.length() > 160)
+            txt = txt.substring(0, 160) + "...";
+
+        return txt.isEmpty() ? "(no text)" : txt;
+
+    } catch (Throwable ignored) {
+        return "(unreadable)";
+    }
 }
 
 private String safeStr(String s) {

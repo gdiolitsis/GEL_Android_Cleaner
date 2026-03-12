@@ -13598,6 +13598,8 @@ private void lab14CleanupUI() {
 private void lab15ChargingSystemSmart() {
 
     final boolean gr = AppLang.isGreek(this);
+    SharedPreferences p =
+            getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
 
     if (lab15Running) {
         logWarn(gr
@@ -15388,15 +15390,18 @@ private void lab18StorageSnapshot() {
         // ------------------------------------------------------------
         boolean rooted = isDeviceRooted();
 
-        if (rooted) {
+boolean wearSignals = false;
+boolean controllerRisk = false;
 
-            logLine();
-            logInfo(gr
-                    ? "Προχωρημένη ανάλυση αποθηκευτικού χώρου (root access):"
-                    : "Advanced storage analysis (root access):");
+if (rooted) {
 
-            boolean wearSignals = detectStorageWearSignals();
-            boolean reservedPressure = pctFree < 12;
+    logLine();
+    logInfo(gr
+            ? "Προχωρημένη ανάλυση αποθηκευτικού χώρου (root access):"
+            : "Advanced storage analysis (root access):");
+
+    wearSignals = detectStorageWearSignals();
+    boolean reservedPressure = pctFree < 12;
             
 // ------------------------------------------------------------
 // EARLY STORAGE DEGRADATION INDICATORS
@@ -15404,20 +15409,26 @@ private void lab18StorageSnapshot() {
 boolean nandRisk = false;
 int nandScore = 0;
 
+// primary signal
 if (wearSignals)
-    nandScore += 30;
+    nandScore += 60;
 
+// secondary contextual signals
 if (reservedPressure)
-    nandScore += 20;
+    nandScore += 10;
 
 if (swapUsedKb > 0)
     nandScore += 10;
 
 if ("HIGH".equalsIgnoreCase(pressureLevel))
-    nandScore += 20;
+    nandScore += 10;
 
-if (pctFree < 10)
-    nandScore += 20;
+if (pctFree < 5)
+    nandScore += 10;
+
+// prevent false NAND diagnosis when wearSignals not present
+if (!wearSignals)
+    nandScore = Math.min(nandScore, 40);
 
 logLabelValue(
         gr ? "Δείκτης πιθανής φθοράς NAND"
@@ -15425,7 +15436,7 @@ logLabelValue(
         nandScore + "/100"
 );
 
-if (nandScore >= 60) {
+if (nandScore >= 70) {
 
     nandRisk = true;
 
@@ -16276,42 +16287,61 @@ boolean biometricSupported = false;
 
 if (Build.VERSION.SDK_INT >= 29) {
     try {
+
         android.hardware.biometrics.BiometricManager bm =
                 getSystemService(android.hardware.biometrics.BiometricManager.class);
 
         if (bm != null) {
+
             int r = bm.canAuthenticate(
                     android.hardware.biometrics.BiometricManager.Authenticators.BIOMETRIC_STRONG
             );
 
+            if (r != android.hardware.biometrics.BiometricManager.BIOMETRIC_SUCCESS) {
+
+                r = bm.canAuthenticate(
+                        android.hardware.biometrics.BiometricManager.Authenticators.BIOMETRIC_WEAK
+                );
+            }
+
             if (r == android.hardware.biometrics.BiometricManager.BIOMETRIC_SUCCESS) {
+
                 biometricSupported = true;
+
                 logLabelOkValue(
                         gr ? "Βιομετρικά" : "Biometrics",
                         gr ? "Υλικό παρόν & έτοιμο για χρήση"
                            : "Hardware present & usable"
                 );
+
             } else {
+
                 logLabelWarnValue(
                         gr ? "Βιομετρικά" : "Biometrics",
                         gr ? "Υπάρχουν αλλά δεν είναι έτοιμα"
                            : "Present but not ready"
                 );
             }
+
         } else {
+
             logLabelWarnValue(
                     gr ? "Βιομετρικά" : "Biometrics",
                     gr ? "Μη διαθέσιμος διαχειριστής"
                        : "Manager unavailable"
             );
         }
+
     } catch (Throwable e) {
+
         logLabelWarnValue(
                 gr ? "Βιομετρικά" : "Biometrics",
                 (gr ? "Αποτυχία ελέγχου: " : "Check failed: ") + e.getMessage()
         );
     }
+
 } else {
+
     logLabelWarnValue(
             gr ? "Βιομετρικά" : "Biometrics",
             gr ? "Δεν υποστηρίζονται σε αυτήν την έκδοση Android"
@@ -17457,12 +17487,15 @@ for (String p : suPaths) {
 }  
 
 // which su (best-effort, avoid false positives)  
-String whichSu = lab24_execFirstLine("which su");  
-if (whichSu != null && whichSu.contains("/su")) {  
-    rootScore += 12;  
-    rootFindings.add("'which su' returned: " + whichSu);  
-    suFound = true;  
-}  
+String whichSu = lab24_execFirstLine("which su");
+if (whichSu != null &&
+    (whichSu.contains("/system/xbin/") ||
+     whichSu.contains("/su/"))) {
+
+    rootScore += 12;
+    rootFindings.add("'which su' returned: " + whichSu);
+    suFound = true;
+}
 
 // try exec su (strong indicator)  
 boolean suExec = lab24_canExecSu();  
@@ -17497,12 +17530,21 @@ for (String rp : rootPkgs) {
 
 // build tags  
 try {  
-    String tags = Build.TAGS;  
-    if (tags != null && tags.contains("test-keys")) {  
-        rootScore += 15;  
-        rootFindings.add("Build.TAGS contains test-keys.");  
-    }  
-} catch (Throwable ignore) {}  
+    try {
+
+    String tags = Build.TAGS;
+
+    if (tags != null && tags.contains("test-keys")) {
+
+        rootFindings.add("Build.TAGS contains test-keys.");
+
+        // only increase score if other root signals exist
+        if (suFound || pkgHit) {
+            rootScore += 10;
+        }
+    }
+
+} catch (Throwable ignore) {}
 
 // suspicious system properties  
 String roSecure = lab24_getProp("ro.secure");  
@@ -17528,15 +17570,20 @@ String vbmeta  = lab24_getProp("ro.boot.vbmeta.device_state"); // locked/unlocke
 String flashL  = lab24_getProp("ro.boot.flash.locked"); // 1/0  
 String wlBit   = lab24_getProp("ro.boot.warranty_bit"); // 0/1 (OEM)  
 
-if (vbState != null &&  
-        (vbState.contains("orange") ||  
-         vbState.contains("yellow") ||  
-         vbState.contains("red"))) {  
-    blScore += 30;  
-    blFindings.add("VerifiedBootState=" + vbState);  
-} else if (vbState != null) {  
-    blFindings.add("VerifiedBootState=" + vbState);  
-}  
+if (vbState != null) {
+
+    String v = vbState.toLowerCase(Locale.US);
+
+    if (v.contains("orange") ||
+        v.contains("yellow") ||
+        v.contains("red")) {
+
+        blScore += 30;
+        blFindings.add("VerifiedBootState=" + vbState);
+    } else {
+        blFindings.add("VerifiedBootState=" + vbState);
+    }
+}
 
 if (vbmeta != null && vbmeta.contains("unlocked")) {  
     blScore += 35;  
@@ -17595,11 +17642,12 @@ if (lab24_fileExists("/data/local/bootanimation.zip")) {
     animFindings.add("Custom bootanimation: /data/local/bootanimation.zip");  
 }  
 
-boolean sysBoot =  
-        lab24_fileExists("/system/media/bootanimation.zip") ||  
-        lab24_fileExists("/product/media/bootanimation.zip") ||  
-        lab24_fileExists("/oem/media/bootanimation.zip") ||  
-        lab24_fileExists("/vendor/media/bootanimation.zip");  
+boolean sysBoot =
+        lab24_fileExists("/system/media/bootanimation.zip") ||
+        lab24_fileExists("/product/media/bootanimation.zip") ||
+        lab24_fileExists("/oem/media/bootanimation.zip") ||
+        lab24_fileExists("/vendor/media/bootanimation.zip") ||
+        lab24_fileExists("/system_ext/media/bootanimation.zip");
 
 if (!sysBoot) {  
     animScore += 15;  
@@ -17611,7 +17659,14 @@ if (!sysBoot) {
 // ---------------------------  
 // FINAL RISK SCORE  
 // ---------------------------  
-int risk = Math.min(100, rootScore + blScore + animScore);  
+int magiskStealthScore = 0;
+List<String> magiskStealthFindings = new ArrayList<>();
+
+try {
+    magiskStealthScore = lab24_magiskStealthScore(magiskStealthFindings);
+} catch (Throwable ignore) {}
+
+int risk = Math.min(100, rootScore + blScore + animScore + Math.min(25, magiskStealthScore / 2));
 
 logInfo(gr ? "Έλεγχος Root:" : "Root Scan:");  
 if (rootFindings.isEmpty()) {  
@@ -17641,6 +17696,21 @@ if (animFindings.isEmpty()) {
     for (String s : animFindings)
         logWarn("• " + s);  
 }  
+
+logInfo(gr ? "Magisk / Stealth heuristics:"
+           : "Magisk / Stealth heuristics:");
+
+if (magiskStealthFindings.isEmpty()) {
+
+    logOk(gr
+            ? "Δεν εντοπίστηκαν ισχυρές ενδείξεις stealth root."
+            : "No strong stealth root indicators detected.");
+
+} else {
+
+    for (String s : magiskStealthFindings)
+        logWarn("• " + s);
+}
 
 logInfo(gr ? "ΤΕΛΙΚΗ ΕΚΤΙΜΗΣΗ:"
            : "FINAL VERDICT:");
@@ -17783,6 +17853,164 @@ if (br != null) try { br.close(); } catch (Throwable ignore) {}
 }
 
 // ============================================================
+// LAB 24 — MAGISK STEALTH HEURISTICS (HONEST / HEURISTIC ONLY)
+// Detects strong indicators of hidden root environments.
+// Does NOT claim certainty.
+// ============================================================
+private int lab24_magiskStealthScore(List<String> findings) {
+
+    int score = 0;
+
+    // --------------------------------------------------------
+    // 1) Zygisk / denylist style property hints
+    // --------------------------------------------------------
+    try {
+        String v;
+
+        v = lab24_getProp("ro.dalvik.vm.native.bridge");
+        if (v != null && !v.isEmpty() && !"0".equals(v)) {
+            score += 10;
+            findings.add("native.bridge is set: " + v);
+        }
+
+        v = lab24_getProp("init.svc.magiskd");
+        if (v != null) {
+            score += 35;
+            findings.add("init.svc.magiskd=" + v);
+        }
+
+        v = lab24_getProp("persist.magisk.hide");
+        if (v != null) {
+            score += 20;
+            findings.add("persist.magisk.hide detected");
+        }
+
+    } catch (Throwable ignore) {}
+
+    // --------------------------------------------------------
+    // 2) Typical Magisk / overlay / mirror traces
+    // --------------------------------------------------------
+    String[] paths = {
+            "/sbin/.magisk",
+            "/dev/.magisk_unblock",
+            "/cache/.magisk",
+            "/data/adb/magisk",
+            "/data/adb/modules",
+            "/data/adb/service.d",
+            "/data/adb/post-fs-data.d",
+            "/debug_ramdisk",
+            "/dev/zygisk",
+            "/metadata/magisk"
+    };
+
+    for (String p : paths) {
+        try {
+            if (lab24_fileExists(p)) {
+                score += 20;
+                findings.add("suspicious root path: " + p);
+            }
+        } catch (Throwable ignore) {}
+    }
+
+    // --------------------------------------------------------
+    // 3) Mount table traces
+    // --------------------------------------------------------
+    try {
+        String mounts = lab24_readWholeFile("/proc/self/mounts");
+        if (mounts != null) {
+            String m = mounts.toLowerCase(Locale.US);
+
+            if (m.contains("magisk")) {
+                score += 35;
+                findings.add("/proc/self/mounts contains magisk");
+            }
+
+            if (m.contains("/data/adb/modules")) {
+                score += 25;
+                findings.add("mounts reference /data/adb/modules");
+            }
+
+            if (m.contains("overlay") && m.contains("/system")) {
+                score += 10;
+                findings.add("overlay mount affecting /system detected");
+            }
+        }
+    } catch (Throwable ignore) {}
+
+    // --------------------------------------------------------
+    // 4) /proc/* cmdline / maps traces (best effort)
+    // --------------------------------------------------------
+    try {
+        String maps = lab24_readWholeFile("/proc/self/maps");
+        if (maps != null) {
+            String mm = maps.toLowerCase(Locale.US);
+
+            if (mm.contains("zygisk")) {
+                score += 25;
+                findings.add("/proc/self/maps contains zygisk");
+            }
+
+            if (mm.contains("magisk")) {
+                score += 25;
+                findings.add("/proc/self/maps contains magisk");
+            }
+        }
+    } catch (Throwable ignore) {}
+
+    // --------------------------------------------------------
+    // 5) Package hiding paradox:
+    // no Magisk package, but strong root shell / adb module traces
+    // --------------------------------------------------------
+    try {
+        boolean shellRoot = lab24_canExecSu();
+        boolean magiskPkg = false;
+
+        List<String> installed = lab24_getInstalledPackagesLower();
+        for (String p : installed) {
+            if (p == null) continue;
+            if (p.contains("magisk")) {
+                magiskPkg = true;
+                break;
+            }
+        }
+
+        boolean adbModules =
+                lab24_fileExists("/data/adb/modules") ||
+                lab24_fileExists("/data/adb/service.d") ||
+                lab24_fileExists("/data/adb/post-fs-data.d");
+
+        if (shellRoot && adbModules && !magiskPkg) {
+            score += 30;
+            findings.add("root shell + /data/adb traces present without visible Magisk package");
+        }
+
+    } catch (Throwable ignore) {}
+
+    return Math.min(score, 100);
+}
+
+private String lab24_readWholeFile(String path) {
+    BufferedReader br = null;
+    try {
+        br = new BufferedReader(new FileReader(new File(path)));
+        StringBuilder sb = new StringBuilder();
+        String line;
+        int lines = 0;
+
+        while ((line = br.readLine()) != null && lines < 400) {
+            sb.append(line).append('\n');
+            lines++;
+        }
+
+        return sb.toString();
+    } catch (Throwable ignore) {
+        return null;
+    } finally {
+        try { if (br != null) br.close(); } catch (Throwable ignore) {}
+    }
+}
+
+// ============================================================
 // LABS 25 — 30: ADVANCED / LOGS
 // ============================================================
 
@@ -17892,70 +18120,234 @@ private void lab25CrashHistory() {
 
             for (String tag : tags) {
 
-                DropBoxManager.Entry ent = db.getNextEntry(tag, 0);
+DropBoxManager.Entry ent = db.getNextEntry(tag, since);
 
-                while (ent != null) {
+// Android 13–14 workaround: retry from epoch if first call returns null
+if (ent == null) {
+    try {
+        ent = db.getNextEntry(tag, 0);
+    } catch (Throwable ignore) {}
+}
 
-                    if (tag.contains("system_server")) {
-                        systemCount++;
-                    } else if (tag.contains("anr")) {
-                        anrCount++;
-                    } else if (tag.contains("crash")) {
-                        crashCount++;
-                    }
+int scanned = 0;
 
-                    String shortTxt = readDropBoxEntry(ent);
-                    String clean = tag.toUpperCase(Locale.US)
-                            .replace("_", " ");
+while (ent != null && scanned < 50) {
 
-                    details.add(clean + ": " + shortTxt);
+    scanned++;
 
-                    try {
-                        String key;
+boolean crashDetected = false;
 
-                        if (shortTxt != null && shortTxt.length() > 0) {
-                            String t = shortTxt.toLowerCase(Locale.US);
-                            int pi = t.indexOf("package:");
-                            if (pi >= 0) {
-                                String rest = t.substring(pi + 8).trim();
-                                String[] parts =
-                                        rest.split("[\\s\\n\\r\\t]+");
-                                key = (parts.length > 0 &&
-                                       parts[0].contains("."))
-                                        ? parts[0]
-                                        : clean;
-                            } else {
-                                key = clean;
-                            }
-                        } else {
-                            key = clean;
-                        }
+String ttag = tag.toLowerCase(Locale.US);
 
-                        appEvents.put(key,
-                                appEvents.getOrDefault(key, 0) + 1);
+if (ttag.contains("system_server")) {
 
-                    } catch (Exception ignored) {}
+    systemCount++;
 
-                    ent = db.getNextEntry(tag,
-                            ent.getTimeMillis());
-                }
+} else if (ttag.contains("anr")) {
+
+    anrCount++;
+
+} else if (ttag.contains("crash") ||
+           ttag.contains("native_crash") ||
+           ttag.contains("tombstone")) {
+
+    crashDetected = true;
+}
+
+String shortTxt = readDropBoxEntry(ent);
+
+if (!crashDetected && shortTxt != null) {
+
+    String tx = shortTxt.toLowerCase(Locale.US);
+
+    if (tx.contains("fatal signal") ||
+        tx.contains("segmentation fault") ||
+        tx.contains("abort message")) {
+
+        crashDetected = true;
+    }
+}
+
+if (crashDetected) {
+    crashCount++;
+}
+
+    String shortTxt = readDropBoxEntry(ent);
+    
+    if (shortTxt != null) {
+
+    String tx = shortTxt.toLowerCase(Locale.US);
+
+    if (tx.contains("fatal signal") ||
+        tx.contains("segmentation fault") ||
+        tx.contains("abort message")) {
+
+        crashCount++;
+    }
+}
+
+    String clean = tag.toUpperCase(Locale.US)
+            .replace("_", " ");
+
+    details.add(clean + ": " + shortTxt);
+
+    try {
+
+        String key;
+
+        if (shortTxt != null && shortTxt.length() > 0) {
+
+            String t = shortTxt.toLowerCase(Locale.US);
+            int pi = t.indexOf("package:");
+
+            if (pi >= 0) {
+
+                String rest = t.substring(pi + 8).trim();
+                String[] parts =
+                        rest.split("[\\s\\n\\r\\t]+");
+
+                key = (parts.length > 0 && parts[0].contains("."))
+                        ? parts[0]
+                        : clean;
+
+            } else {
+                key = clean;
             }
+
+        } else {
+            key = clean;
         }
 
+        appEvents.put(
+                key,
+                appEvents.getOrDefault(key, 0) + 1
+        );
+
     } catch (Exception ignored) {}
+
+    try {
+        long next = ent.getTimeMillis();
+        ent = db.getNextEntry(tag, next);
+    } catch (Throwable ignore) {
+        break;
+    }
+}
 
     // ============================================================
     // (C) SUMMARY + RISK SCORE
     // ============================================================
-    int risk = 0;
-    risk += crashCount * 5;
-    risk += anrCount * 8;
-    risk += systemCount * 15;
-    if (risk > 100) risk = 100;
+int risk = 0;
+risk += crashCount * 5;
+risk += anrCount * 8;
+risk += systemCount * 15;
 
-    appendHtml("<br>");
-    logInfo(gr ? "Σύνοψη Σταθερότητας" : "Stability summary");
-    logLine();
+// Crash pattern analyzer
+List<String> crashPatternFindings = new ArrayList<>();
+int hwPatternScore = analyzeCrashPattern(details, crashPatternFindings);
+
+if (hwPatternScore > 0) {
+    risk += Math.min(30, hwPatternScore / 2);
+}
+
+// ------------------------------------------------------------
+// Crash pattern analysis output
+// ------------------------------------------------------------
+logInfo(gr
+        ? "Ανάλυση μοτίβου crash"
+        : "Crash pattern analysis");
+logLine();
+
+if (crashPatternFindings.isEmpty()) {
+
+    logLabelOkValue(
+            gr ? "Μοτίβο" : "Pattern",
+            gr
+                    ? "Δεν εντοπίστηκαν ενδείξεις χαμηλού επιπέδου σφαλμάτων"
+                    : "No low-level crash indicators detected"
+    );
+
+} else {
+
+    for (String s : crashPatternFindings)
+        logWarn("• " + s);
+
+    if (hwPatternScore >= 40) {
+
+        logLabelWarnValue(
+                gr ? "Εκτίμηση" : "Assessment",
+                gr
+                        ? "Πιθανό μοτίβο χαμηλού επιπέδου σφαλμάτων (RAM / storage / kernel)"
+                        : "Possible low-level fault pattern (RAM / storage / kernel)"
+        );
+
+    } else {
+
+        logLabelWarnValue(
+                gr ? "Εκτίμηση" : "Assessment",
+                gr
+                        ? "Μικρές ενδείξεις συστημικών σφαλμάτων"
+                        : "Minor system-level fault indicators"
+        );
+    }
+}
+
+if (risk > 100) risk = 100;
+
+appendHtml("<br>");
+logInfo(gr
+        ? "Έλεγχος καθυστέρησης αποθηκευτικού"
+        : "Storage latency probe");
+logLine();
+
+long latency = storageLatencyProbe();
+
+if (latency < 0) {
+
+    logLabelWarnValue(
+            gr ? "Κατάσταση" : "Status",
+            gr ? "Δεν ήταν δυνατή η μέτρηση latency"
+               : "Unable to measure storage latency"
+    );
+
+} else {
+
+    logLabelOkValue(
+            gr ? "Latency" : "Latency",
+            latency + " ms"
+    );
+
+    if (latency > 120) {
+
+        logLabelWarnValue(
+                gr ? "Εκτίμηση" : "Assessment",
+                gr
+                        ? "Αργή απόκριση αποθηκευτικού (πιθανή κόπωση NAND ή έντονη δραστηριότητα I/O)"
+                        : "Slow storage response (possible NAND wear or heavy I/O)"
+        );
+
+    } else if (latency > 60) {
+
+        logLabelWarnValue(
+                gr ? "Εκτίμηση" : "Assessment",
+                gr
+                        ? "Μέτρια καθυστέρηση I/O"
+                        : "Moderate I/O latency"
+        );
+
+    } else {
+
+        logLabelOkValue(
+                gr ? "Εκτίμηση" : "Assessment",
+                gr
+                        ? "Φυσιολογική απόκριση αποθηκευτικού"
+                        : "Normal storage latency"
+        );
+    }
+}
+
+appendHtml("<br>");
+logInfo(gr ? "Σύνοψη Σταθερότητας" : "Stability summary");
+logLine();
 
     logLabelOkValue(
             gr ? "Συμβάντα Crash" : "Crash events",
@@ -18125,6 +18517,130 @@ return (s == null || s.trim().isEmpty()) ? "(no data)" : s;
 }
 
 // ============================================================
+// LAB 25 — CRASH PATTERN ANALYZER (HEURISTIC)
+// Distinguishes software vs possible hardware patterns
+// ============================================================
+private int analyzeCrashPattern(List<String> details,
+                                List<String> findings) {
+
+    int hwScore = 0;
+
+    if (details == null || details.isEmpty())
+        return 0;
+
+    for (String d : details) {
+
+        if (d == null) continue;
+
+        String t = d.toLowerCase(Locale.US);
+
+        // ----------------------------------------------------
+        // Kernel / low level
+        // ----------------------------------------------------
+        if (t.contains("kernel panic") ||
+            t.contains("fatal signal 11") ||
+            t.contains("segmentation fault")) {
+
+            hwScore += 15;
+            findings.add("Low-level fault signature detected");
+        }
+
+        // ----------------------------------------------------
+        // memory corruption hints
+        // ----------------------------------------------------
+        if (t.contains("memory corruption") ||
+            t.contains("heap corruption") ||
+            t.contains("out of memory") ||
+            t.contains("ashmem")) {
+
+            hwScore += 10;
+            findings.add("Memory instability indicators");
+        }
+
+        // ----------------------------------------------------
+        // storage / fs corruption
+        // ----------------------------------------------------
+        if (t.contains("i/o error") ||
+            t.contains("filesystem corruption") ||
+            t.contains("ext4 error") ||
+            t.contains("f2fs error")) {
+
+            hwScore += 20;
+            findings.add("Filesystem / storage error pattern");
+        }
+
+        // ----------------------------------------------------
+        // system_server crashes
+        // ----------------------------------------------------
+        if (t.contains("system_server")) {
+
+            hwScore += 8;
+            findings.add("system_server crash detected");
+        }
+
+        // ----------------------------------------------------
+        // repeated native crash patterns
+        // ----------------------------------------------------
+        if (t.contains("libc.so") ||
+            t.contains("abort message")) {
+
+            hwScore += 6;
+        }
+    }
+
+    return Math.min(hwScore, 100);
+}
+
+// ============================================================
+// STORAGE LATENCY PROBE (micro benchmark)
+// ============================================================
+private long storageLatencyProbe() {
+
+    File f = null;
+    FileOutputStream fos = null;
+    FileInputStream fis = null;
+
+    try {
+
+        byte[] data = new byte[4096];
+        new java.util.Random().nextBytes(data);
+
+        f = new File(getCacheDir(), "gel_io_probe.tmp");
+
+        // warmup write
+        try {
+            FileOutputStream warm = new FileOutputStream(f);
+            warm.write(data);
+            warm.close();
+        } catch (Throwable ignore) {}
+
+        long t0 = System.nanoTime();
+
+        fos = new FileOutputStream(f);
+        fos.write(data);
+        fos.flush();
+        fos.getFD().sync();
+
+        fis = new FileInputStream(f);
+        fis.read(data);
+
+        long t1 = System.nanoTime();
+
+        return (t1 - t0) / 1_000_000;
+
+    } catch (Throwable ignore) {
+
+        return -1;
+
+    } finally {
+
+        try { if (fos != null) fos.close(); } catch (Throwable ignore) {}
+        try { if (fis != null) fis.close(); } catch (Throwable ignore) {}
+        try { if (f != null) f.delete(); } catch (Throwable ignore) {}
+    }
+}
+
+// ============================================================
 // LAB 26 — Installed Applications Impact Analysis (FINAL v2 • Full Bilingual • Engine-backed)
 // ============================================================
 
@@ -18273,7 +18789,7 @@ if (r.topDataConsumers != null && !r.topDataConsumers.isEmpty()) {
         AppImpactEngine.AppScore a = r.topDataConsumers.get(i);
         if (a == null) continue;
 
-        if (a.dataBytesSinceBoot <= 0) {
+        if (a.dataBytesSinceBoot < 1024) {
             continue; // εξαφανίζουμε τα μηδενικά
         }
 
@@ -18384,7 +18900,7 @@ if (!r.usageAccessOk) {
 // ---------- Data text (TrafficStats since boot) ----------
 String dataText;
 
-if (a.dataBytesSinceBoot <= 0) {
+if (a.dataBytesSinceBoot < 1024) {
 
     dataText = gr
             ? "Δεδομένα: δεν υπάρχουν διαθέσιμα στοιχεία (πιθανός περιορισμός συστήματος/ROM)"
@@ -18485,38 +19001,55 @@ String detail = gr
 // ============================================================
 // ROOT HELPER — BEST EFFORT DIRECTORY SIZE (SAFE)
 // ============================================================
-private long dirSizeBestEffortRoot(File dir) {
+private long dirSizeBestEffortRootFast(File root) {
 
-    if (dir == null) return 0L;
+    if (root == null) return 0L;
 
     try {
-        if (!dir.exists() || !dir.isDirectory()) return 0L;
+        if (!root.exists() || !root.isDirectory()) return 0L;
     } catch (Throwable ignore) {
         return 0L;
     }
 
+    final long HARD_LIMIT = 500_000_000L; // 500MB safety cap
+
     long total = 0L;
+    ArrayDeque<File> stack = new ArrayDeque<>();
+    stack.push(root);
 
-    File[] files;
-    try {
-        files = dir.listFiles();
-    } catch (Throwable t) {
-        return 0L;
-    }
+    while (!stack.isEmpty()) {
 
-    if (files == null) return 0L;
+        File dir = stack.pop();
+        if (dir == null) continue;
 
-    for (File f : files) {
-
-        if (f == null) continue;
-
+        File[] files;
         try {
-            if (f.isFile()) {
-                total += Math.max(0L, f.length());
-            } else if (f.isDirectory()) {
-                total += dirSizeBestEffortRoot(f);
-            }
-        } catch (Throwable ignore) {}
+            files = dir.listFiles();
+        } catch (Throwable ignore) {
+            continue;
+        }
+
+        if (files == null) continue;
+
+        for (File f : files) {
+
+            if (f == null) continue;
+
+            try {
+                if (f.isFile()) {
+
+                    long len = f.length();
+                    if (len > 0) {
+                        total += len;
+                        if (total >= HARD_LIMIT) return total;
+                    }
+
+                } else if (f.isDirectory()) {
+
+                    stack.push(f);
+                }
+            } catch (Throwable ignore) {}
+        }
     }
 
     return total;
@@ -19208,11 +19741,27 @@ if (pmicInstability)
 Float cpu = null;
 Float gpu = null;
 
-if (cpu != null && cpu > 85)
+try {
+
+    Map<String, Float> zones = readThermalZones();
+
+    if (zones != null) {
+
+        cpu = pickZone(zones,
+                "cpu", "cpu-therm", "big", "little",
+                "tsens", "mtktscpu");
+
+        gpu = pickZone(zones,
+                "gpu", "gpu-therm", "gpuss",
+                "mtkgpu");
+    }
+
+} catch (Throwable ignored) {}
+
+if (cpu != null && cpu > 85f)
     thermalScore += 20;
 
-// υψηλή θερμοκρασία GPU
-if (gpu != null && gpu > 80)
+if (gpu != null && gpu > 80f)
     thermalScore += 15;
 
 logLabelValue(
@@ -19541,10 +20090,20 @@ private void lab29DeviceAuthenticity() {
 
     final boolean gr = AppLang.isGreek(this);
 
+    SharedPreferences p =
+            getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
+
+    // battery risk flags from LAB 14
+    boolean lab14CollapseRisk =
+            p.getBoolean("lab14_collapse_risk", false);
+
+    boolean lab14SwellingRisk =
+            p.getBoolean("lab14_swelling_risk", false);
+
     appendHtml("<br>");
     logLine();
     logInfo(gr
-            ? "LAB 29 — Έλεγχος Γνησιότητας Συσκευής"
+            ? "LAB 29 — Έλεγχος Γνησιότητας Συσκευής & Ακεραιότητας Εξαρτημάτων"
             : "LAB 29 — Device Authenticity & Parts Integrity");
     logWarn(gr
         ? "Λειτουργία τεχνικού — Έλεγχος πιθανών μη γνήσιων ανταλλακτικών."
@@ -19615,7 +20174,12 @@ if (!isDeviceRooted()) {
     logLine();
 
     Display display = getWindowManager().getDefaultDisplay();
-    float refreshRate = display.getRefreshRate();
+
+float refreshRate = 60f;
+
+if (display != null) {
+    refreshRate = display.getRefreshRate();
+}
 
     if (refreshRate < 30f) {
 
@@ -19650,7 +20214,12 @@ if (!isDeviceRooted()) {
 try {
 
     DisplayMetrics dm = new DisplayMetrics();
-    getWindowManager().getDefaultDisplay().getMetrics(dm);
+
+Display display = getWindowManager().getDefaultDisplay();
+
+if (display != null) {
+    display.getMetrics(dm);
+}
     
 // ------------------------------------------------------------
 // PHYSICAL SCREEN SIZE CONSISTENCY CHECK
@@ -21742,11 +22311,18 @@ Settings.Global.DEVELOPMENT_SETTINGS_ENABLED, 0) == 1;
 
 // ADB Wi-Fi (port property)
 try {
-String adbPort = System.getProperty("service.adb.tcp.port", "");
-if (adbPort != null && !adbPort.trim().isEmpty()) {
-int p = Integer.parseInt(adbPort.trim());
-s.adbWifiOn = (p > 0);
-}
+try {
+
+    String adbPort =
+            System.getProperty("service.adb.tcp.port");
+
+    if (adbPort != null && adbPort.matches("\\d+")) {
+
+        int p = Integer.parseInt(adbPort);
+
+        s.adbWifiOn = (p > 0);
+    }
+
 } catch (Throwable ignored) {}
 
 // Root suspicion (no root needed)
@@ -22012,9 +22588,10 @@ return s;
 }
 
 private String colorFlagFromScore(int s) {
-if (s >= 80) return "";
-if (s >= 55) return "";
-return "";
+
+    if (s >= 80) return "🟢";
+    if (s >= 55) return "🟡";
+    return "🔴";
 }
 
 private String finalVerdict(int health, int sec, int priv, int perf) {

@@ -265,12 +265,12 @@ public class ManualTestsActivity extends AppCompatActivity {
     // ============================================================
     // PERMISSION ENGINE (UNIVERSAL)
     // ============================================================
-    private static final int REQ_CORE_PERMS = 5000;
+    private final int REQ_CORE_PERMS = 5000;
     private Runnable pendingAfterPermission = null;
 
-    private static final int REQ_LAB6_TOUCH = 6006;
-    private static final int REQ_LAB6_COLOR = 6007;
-    private static final int REQ_LAB13_BT_CONNECT = 1313;
+    private final int REQ_LAB6_TOUCH = 6006;
+    private final int REQ_LAB6_COLOR = 6007;
+    private final int REQ_LAB13_BT_CONNECT = 1313;
 
     private AlertDialog lab14RunningDialog;
     

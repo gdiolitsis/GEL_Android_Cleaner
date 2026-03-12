@@ -188,6 +188,7 @@ import com.gel.cleaner.UIHelpers;
 // JAVA — IO / NET
 // ============================================================
 import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileOutputStream;
@@ -200,6 +201,7 @@ import java.nio.ByteBuffer;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.util.ArrayDeque;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.Random;
@@ -326,6 +328,12 @@ public class ManualTestsActivity extends AppCompatActivity {
     private String pendingTtsText;
     
     private boolean lab6ProCanceled = false;
+    
+// ============================================================
+// BATTERY SCORE STATE
+// ============================================================
+private int batteryScore = 100;
+private boolean variabilityDetected = false;
     
 // ============================================================  
 // LAB 14 — FLAGS / UI STATE (REQUIRED)  
@@ -584,11 +592,14 @@ private static class PrivacySnapshot {
     int totalUserAppsChecked;  
 }  
 
-private static class BatteryInfo {  
+private static class BatteryInfo {
 
-int level = -1;  
-float temperature = Float.NaN;  
-String status = "Unknown";  
+    int level = -1;
+    float temperature = Float.NaN;
+    String status = "Unknown";
+
+    long currentChargeMah = -1;
+
 }
 
 // ============================================================  
@@ -15463,7 +15474,7 @@ if (nandScore >= 70) {
 // ------------------------------------------------------------
 // STORAGE CONTROLLER INSTABILITY DETECTOR
 // ------------------------------------------------------------
-boolean controllerRisk = false;
+
 int controllerScore = 0;
 
 // υψηλή πίεση μνήμης + swap usage
@@ -18119,6 +18130,8 @@ private void lab25CrashHistory() {
             };
 
             for (String tag : tags) {
+            	
+long since = 0;
 
 DropBoxManager.Entry ent = db.getNextEntry(tag, since);
 
@@ -20212,7 +20225,6 @@ if (display != null) {
                     refreshRate));
 }
 
-
 // ------------------------------------------------------------
 // DISPLAY PANEL CONSISTENCY CHECK
 // ------------------------------------------------------------
@@ -20220,7 +20232,7 @@ try {
 
     DisplayMetrics dm = new DisplayMetrics();
 
-Display display = getWindowManager().getDefaultDisplay();
+Display disp = getWindowManager().getDefaultDisplay();
 
 if (display != null) {
     display.getMetrics(dm);

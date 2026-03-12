@@ -11830,61 +11830,95 @@ try {
 
 } catch (Throwable ignore) {}
         
-    ui.post(new Runnable() {
+// hidden video stress
+try {
+
+    lab14StressVideo = new VideoView(this);
+
+    lab14StressVideo.setLayoutParams(
+            new ViewGroup.LayoutParams(2, 2)
+    );
+
+    lab14StressVideo.setVideoURI(
+            Uri.parse(
+                    "android.resource://"
+                            + getPackageName()
+                            + "/"
+                            + R.raw.battery_stress_loop
+            )
+    );
+
+    lab14StressVideo.setOnPreparedListener(mp -> {
+        mp.setLooping(true);
+        mp.setVolume(0f, 0f);
+        lab14StressVideo.start();
+    });
+
+} catch (Throwable ignore) {}
+
+
+ui.post(new Runnable() {
 
     int dotStep = 0;
     int lastSeg = -1;
 
     @Override
-public void run() {
+    public void run() {
 
-    if (!lab14Running || isFinishing() || lab14Dialog == null) {
-    ui.removeCallbacks(this);
-    return;
-}
+        // ✅ σωστό guard για LAB14
+        if (!lab14Running || isFinishing() || lab14Dialog == null) {
+            ui.removeCallbacks(this);
+            return;
+        }
 
-                long now = SystemClock.elapsedRealtime();
-                int elapsed = (int) ((now - t0) / 1000);
+        long now = SystemClock.elapsedRealtime();
+        int elapsed = (int) ((now - t0) / 1000);
 
-                dotsView.setText(dotFrames[dotStep++ % dotFrames.length]);
-                counterText.setText(
-                        gr
-                                ? "Πρόοδος: " + Math.min(elapsed, durationSec) + " / " + durationSec + " δευτ."
-                                : "Progress: " + Math.min(elapsed, durationSec) + " / " + durationSec + " sec"
-                );
+        dotsView.setText(dotFrames[dotStep++ % dotFrames.length]);
 
-                int segSpan = Math.max(1, durationSec / 10);
-                int seg = Math.min(10, elapsed / segSpan);
+        counterText.setText(
+                gr
+                        ? "Πρόοδος: " + Math.min(elapsed, durationSec) + " / " + durationSec + " δευτ."
+                        : "Progress: " + Math.min(elapsed, durationSec) + " / " + durationSec + " sec"
+        );
 
-                if (seg != lastSeg) {
-                    lastSeg = seg;
-                    for (int i = 0; i < progressBar.getChildCount(); i++) {
-                        progressBar.getChildAt(i)
-                                .setBackgroundColor(i < seg ? 0xFF39FF14 : 0xFF333333);
-                    }
-                }
+        int segSpan = Math.max(1, durationSec / 10);
+        int seg = Math.min(10, elapsed / segSpan);
 
-if (elapsed < durationSec) {
+        if (seg != lastSeg) {
+            lastSeg = seg;
 
-    if (!lab14Running) {
-        ui.removeCallbacks(this);
-        return;
+            for (int i = 0; i < progressBar.getChildCount(); i++) {
+                progressBar.getChildAt(i)
+                        .setBackgroundColor(
+                                i < seg
+                                        ? 0xFF39FF14
+                                        : 0xFF333333
+                        );
+            }
+        }
+
+        // ✅ σωστό loop condition
+        if (elapsed < durationSec) {
+
+            ui.postDelayed(this, 1000);
+            return;
+        }
+
+        // =========================
+        // 7) STOP STRESS / CLEANUP LAB 14
+        // =========================
+
+        lab14CleanupUI();
+        lab14Running = false;
+
+        try { stopCpuBurn(); } catch (Throwable ignore) {}
+        try { stopMemoryStress(); } catch (Throwable ignore) {}
+        try { stopGpuStress(); } catch (Throwable ignore) {}
+        try { restoreBrightnessAndKeepOn(); } catch (Throwable ignore) {}
+
     }
-
-    ui.postDelayed(this, 1000);
-    return;
-}
-
-                // ----------------------------------------------------
-                // 7) STOP STRESS / CLEANUP
-                // ----------------------------------------------------
-                lab14CleanupUI();
-lab14Running = false;
-
-try { stopCpuBurn(); } catch (Throwable ignore) {}
-try { stopMemoryStress(); } catch (Throwable ignore) {}
-try { stopGpuStress(); } catch (Throwable ignore) {}
-try { restoreBrightnessAndKeepOn(); } catch (Throwable ignore) {}
+});
 
                 // ----------------------------------------------------
                 // 8) POST-LOAD RECOVERY

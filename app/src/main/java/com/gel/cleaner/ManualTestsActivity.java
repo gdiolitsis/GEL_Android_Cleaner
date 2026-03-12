@@ -11804,6 +11804,7 @@ ui.postDelayed(() -> {
 // vibration loop
 ui.postDelayed(lab14VibrationLoop, 1500);
 
+
 // hidden video stress
 try {
 
@@ -11829,32 +11830,7 @@ try {
     });
 
 } catch (Throwable ignore) {}
-        
-// hidden video stress
-try {
 
-    lab14StressVideo = new VideoView(this);
-
-    lab14StressVideo.setLayoutParams(
-            new ViewGroup.LayoutParams(2, 2)
-    );
-
-    lab14StressVideo.setVideoURI(
-            Uri.parse(
-                    "android.resource://"
-                            + getPackageName()
-                            + "/"
-                            + R.raw.battery_stress_loop
-            )
-    );
-
-    lab14StressVideo.setOnPreparedListener(mp -> {
-        mp.setLooping(true);
-        mp.setVolume(0f, 0f);
-        lab14StressVideo.start();
-    });
-
-} catch (Throwable ignore) {}
 
 
 ui.post(new Runnable() {
@@ -11865,7 +11841,6 @@ ui.post(new Runnable() {
     @Override
     public void run() {
 
-        // ✅ σωστό guard για LAB14
         if (!lab14Running || isFinishing() || lab14Dialog == null) {
             ui.removeCallbacks(this);
             return;
@@ -11886,9 +11861,11 @@ ui.post(new Runnable() {
         int seg = Math.min(10, elapsed / segSpan);
 
         if (seg != lastSeg) {
+
             lastSeg = seg;
 
             for (int i = 0; i < progressBar.getChildCount(); i++) {
+
                 progressBar.getChildAt(i)
                         .setBackgroundColor(
                                 i < seg
@@ -11898,16 +11875,13 @@ ui.post(new Runnable() {
             }
         }
 
-        // ✅ σωστό loop condition
         if (elapsed < durationSec) {
 
             ui.postDelayed(this, 1000);
             return;
         }
 
-        // =========================
-        // 7) STOP STRESS / CLEANUP LAB 14
-        // =========================
+        // 7) STOP STRESS
 
         lab14CleanupUI();
         lab14Running = false;
@@ -11918,8 +11892,8 @@ ui.post(new Runnable() {
         try { restoreBrightnessAndKeepOn(); } catch (Throwable ignore) {}
 
     }
+
 });
-}
 
                 // ----------------------------------------------------
                 // 8) POST-LOAD RECOVERY

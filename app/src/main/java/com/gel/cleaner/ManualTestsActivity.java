@@ -17529,7 +17529,6 @@ for (String rp : rootPkgs) {
 }  
 
 // build tags  
-try {  
     try {
 
     String tags = Build.TAGS;

@@ -589,6 +589,7 @@ private static class BatteryInfo {
 int level = -1;  
 float temperature = Float.NaN;  
 String status = "Unknown";  
+}
 
 // ============================================================  
 // CORE UI  
@@ -23400,7 +23401,6 @@ if (requestCode == 8008) {
 }
 }
 
-}
 // ============================================================
 // END OF CLASS
 // ============================================================

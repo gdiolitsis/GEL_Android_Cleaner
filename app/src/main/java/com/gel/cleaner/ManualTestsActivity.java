@@ -3258,9 +3258,10 @@ btnRestart.setOnClickListener(v -> {
 
     }
 });
+}
 
 // ------------------------------------------------------------
-// Brightness + keep screen on (LAB stress)
+// Brightness + keep screen on (LAB 14 stress)
 // ------------------------------------------------------------
 
 private void applyMaxBrightnessAndKeepOn() {

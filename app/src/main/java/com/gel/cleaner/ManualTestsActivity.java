@@ -820,7 +820,7 @@ body3.addView(makeTestButton(
     body4.addView(makeTestButtonRedGold(
         gr ? "14. Δοκιμή Καταπόνησης Υγείας Μπαταρίας"
            : "14. Battery Health Stress Test",
-        () -> showLab14PreTestAdvisory(this::lab14BatteryHealthStressTest)
+        this::lab14BatteryHealthStressTest
 ));
 
 body4.addView(makeTestButton(
@@ -2879,6 +2879,237 @@ private AlertDialog.Builder lab14DialogBuilder() {
     return b;
 }
 
+// ============================================================
+// LAB 14 — CONDITION CHECK POPUP (GEL STYLE + TTS + HELPERS)
+// ============================================================
+private void showLab14ConditionCheck(Runnable startAction) {
+
+    final boolean gr = AppLang.isGreek(this);
+
+    int percent = getBatteryPercentSafe();
+
+    float tempC = Float.NaN;
+    boolean chargingNow = false;
+
+    try {
+
+        IntentFilter f =
+                new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+
+        Intent i = registerReceiver(null, f);
+
+        if (i != null) {
+
+            int t =
+                    i.getIntExtra(
+                            BatteryManager.EXTRA_TEMPERATURE,
+                            -1
+                    );
+
+            if (t > 0)
+                tempC = t / 10f;
+
+            int status =
+                    i.getIntExtra(
+                            BatteryManager.EXTRA_STATUS,
+                            -1
+                    );
+
+            chargingNow =
+                    status == BatteryManager.BATTERY_STATUS_CHARGING
+                            || status == BatteryManager.BATTERY_STATUS_FULL;
+        }
+
+    } catch (Throwable ignore) {}
+
+    boolean ok =
+            !chargingNow &&
+            percent >= 30 &&
+            percent <= 70 &&
+            (Float.isNaN(tempC) || tempC < 38f);
+
+
+    AlertDialog.Builder b =
+            new AlertDialog.Builder(
+                    this,
+                    android.R.style.Theme_Material_Dialog_NoActionBar
+            );
+
+    b.setCancelable(true);
+
+    LinearLayout root = buildGELPopupRoot(this);
+
+
+    // HEADER
+    root.addView(
+            buildPopupHeader(
+                    this,
+                    gr
+                            ? "Έλεγχος συνθηκών LAB 14"
+                            : "LAB 14 Condition Check"
+            )
+    );
+
+
+    StringBuilder warn = new StringBuilder();
+
+if (percent < 30 || percent > 70) {
+
+    warn.append(
+            gr
+                    ? "• Η μπαταρία πρέπει να είναι φορτισμένη μεταξύ 30% και 70%\n"
+                    : "• Battery must be charged between 30% and 70%\n"
+    );
+}
+
+if (chargingNow) {
+
+    warn.append(
+            gr
+                    ? "• Η συσκευή δεν πρέπει να φορτίζει\n"
+                    : "• Device must not be charging\n"
+    );
+}
+
+if (!Float.isNaN(tempC) && tempC >= 38f) {
+
+    warn.append(
+            gr
+                    ? "• Η θερμοκρασία είναι υψηλή για stress test\n"
+                    : "• Temperature too high for stress test\n"
+    );
+}
+
+if (warn.length() == 0) {
+
+    warn.append(
+            gr
+                    ? "Οι συνθήκες είναι κατάλληλες για το τεστ."
+                    : "Conditions are OK for the test."
+    );
+}
+
+final String txt =
+        (gr ? "Μπαταρία: " : "Battery: ")
+                + percent + "%\n"
+                +
+                (gr ? "Θερμοκρασία: " : "Temperature: ")
+                + (Float.isNaN(tempC)
+                ? "N/A"
+                : String.format(Locale.US, "%.1f°C", tempC))
+                + "\n"
+                +
+                (gr ? "Φόρτιση: " : "Charging: ")
+                + (chargingNow ? "YES" : "NO")
+                + "\n\n"
+                + warn.toString();
+
+    TextView msg = new TextView(this);
+    msg.setText(txt);
+    msg.setTextColor(0xFF39FF14);
+    msg.setTextSize(14.5f);
+    msg.setLineSpacing(0f, 1.2f);
+
+    root.addView(msg);
+
+
+    // MUTE ROW
+    root.addView(buildMuteRow());
+
+
+    LinearLayout row =
+            new LinearLayout(this);
+
+    row.setOrientation(
+            LinearLayout.HORIZONTAL
+    );
+
+
+    Button cancel =
+            gelButton(
+                    this,
+                    gr ? "Ακύρωση" : "Cancel",
+                    0xFF8B0000
+            );
+
+    Button go =
+            gelButton(
+                    this,
+                    gr ? "Συνέχεια" : "Continue",
+                    0xFF0B5D1E
+            );
+
+
+    LinearLayout.LayoutParams lp =
+            new LinearLayout.LayoutParams(
+                    0,
+                    dp(48),
+                    1
+            );
+
+    lp.setMargins(
+            dp(6),
+            dp(18),
+            dp(6),
+            0
+    );
+
+    cancel.setLayoutParams(lp);
+    go.setLayoutParams(lp);
+
+    row.addView(cancel);
+
+    if (ok)
+        row.addView(go);
+
+    root.addView(row);
+
+
+    b.setView(root);
+
+    AlertDialog dlg = b.create();
+
+    if (dlg.getWindow() != null)
+        dlg.getWindow().setBackgroundDrawable(
+                new ColorDrawable(Color.TRANSPARENT)
+        );
+
+    dlg.show();
+
+
+    // 🔊 TTS
+    new Handler(Looper.getMainLooper()).postDelayed(() -> {
+
+        if (dlg.isShowing()
+                && !AppTTS.isMuted(this)) {
+
+            AppTTS.ensureSpeak(
+                    this,
+                    txt
+            );
+        }
+
+    }, 120);
+
+
+    cancel.setOnClickListener(v -> {
+
+        AppTTS.stop();
+        dlg.dismiss();
+
+    });
+
+
+    go.setOnClickListener(v -> {
+
+        AppTTS.stop();
+        dlg.dismiss();
+
+        if (startAction != null)
+            startAction.run();
+
+    });
+}
 
 // ============================================================
 // LAB 14 HELPERS — PRE-TEST ADVISORY POPUP (HELPERS + AppTTS)
@@ -2929,44 +3160,96 @@ root.addView(
 // MUTE ROW (CHECKBOX)
 root.addView(buildMuteRow());
 
-    Button btnContinue = gelButton(
-            this,
-            gr ? "Συνέχεια παρ’ όλα αυτά" : "Continue anyway",
-            0xFF0B5D1E
-    );
+    LinearLayout row = new LinearLayout(this);
+row.setOrientation(LinearLayout.VERTICAL);
 
-    LinearLayout.LayoutParams lp =
-            new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    dp(52)
-            );
-    lp.setMargins(0, dp(18), 0, 0);
-    btnContinue.setLayoutParams(lp);
-    root.addView(btnContinue);
+Button btnRestart = gelButton(
+        this,
+        gr ? "Επανεκκίνηση τώρα" : "Restart now",
+        0xFF8B0000
+);
 
-    b.setView(root);
+Button btnContinue = gelButton(
+        this,
+        gr ? "Συνέχεια παρόλα αυτά"
+           : "Continue anyway",
+        0xFF0B5D1E
+);
 
-    AlertDialog dlg = b.create();
-    if (dlg.getWindow() != null)
-        dlg.getWindow().setBackgroundDrawable(
-                new ColorDrawable(Color.TRANSPARENT)
+
+LinearLayout.LayoutParams lp =
+        new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                dp(52)
         );
 
-    dlg.show();
+lp.setMargins(0, dp(14), 0, 0);
 
-    // 🔊 TTS — ΜΟΝΟ αν δεν είναι muted
-    new Handler(Looper.getMainLooper()).postDelayed(() -> {
-        if (dlg.isShowing() && !AppTTS.isMuted(this)) {
-            AppTTS.ensureSpeak(this, text);
+btnRestart.setLayoutParams(lp);
+btnContinue.setLayoutParams(lp);
+
+row.addView(btnRestart);
+row.addView(btnContinue);
+
+root.addView(row);
+
+
+b.setView(root);
+
+AlertDialog dlg = b.create();
+
+if (dlg.getWindow() != null)
+    dlg.getWindow().setBackgroundDrawable(
+            new ColorDrawable(Color.TRANSPARENT)
+    );
+
+dlg.show();
+
+
+// 🔊 TTS
+new Handler(Looper.getMainLooper()).postDelayed(() -> {
+    if (dlg.isShowing() && !AppTTS.isMuted(this)) {
+        AppTTS.ensureSpeak(this, text);
+    }
+}, 120);
+
+// CONTINUE
+btnContinue.setOnClickListener(v -> {
+
+    AppTTS.stop();
+    dlg.dismiss();
+
+    if (onContinue != null)
+        onContinue.run();
+});
+
+// RESTART
+btnRestart.setOnClickListener(v -> {
+
+    AppTTS.stop();
+    dlg.dismiss();
+
+    try {
+
+        PowerManager pm =
+                (PowerManager) getSystemService(POWER_SERVICE);
+
+        if (pm != null) {
+            pm.reboot(null);
         }
-    }, 120);
 
-    btnContinue.setOnClickListener(v -> {
-        AppTTS.stop();
-        dlg.dismiss();
-        if (onContinue != null) onContinue.run();
-    });
-}
+    } catch (Throwable e) {
+
+        try {
+            startActivity(
+                    new Intent(
+                            Settings.ACTION_SETTINGS
+                    )
+            );
+        } catch (Throwable ignore) {}
+
+    }
+});
 
 // ------------------------------------------------------------
 // Brightness + keep screen on (LAB stress)
@@ -3123,7 +3406,7 @@ private void logLab14Confidence() {
 
     if (runs <= 1) {
 
-        logWarn(gr
+        logLabelWarnValue(gr
                 ? "Εμπιστοσύνη: Προκαταρκτική (1 εκτέλεση)"
                 : "Confidence: Preliminary (1 run)");
 
@@ -3134,18 +3417,18 @@ private void logLab14Confidence() {
     }
     else if (runs == 2) {
 
-        logWarn(gr
+        logLabelWarnValue(gr
                 ? "Εμπιστοσύνη: Μεσαία (2 εκτελέσεις)"
                 : "Confidence: Medium (2 runs)");
 
         logWarn(gr
-                ? "Συνιστάται μία επιπλέον εκτέλεση για επιβεβαίωση της τάσης φθοράς της μπαταρίας."
-                : "One additional run is recommended to confirm battery aging trend.");
+                ? "Για υψηλότερη διαγνωστική ακρίβεια, εκτέλεσε το τεστ 1 ακόμη φορά, σε διαφορετική ημέρα, υπό παρόμοιες συνθήκες."
+                : "For higher diagnostic accuracy, run this test 1 more time, on a different day, under similar conditions.");
 
     }
     else {
 
-        logOk(gr
+        logLabelOkValue(gr
                 ? "Εμπιστοσύνη: Υψηλή (3+ συνεπείς εκτελέσεις)"
                 : "Confidence: High (3+ consistent runs)");
 
@@ -11272,10 +11555,27 @@ AppTTS.stop();
 }
 
 // ============================================================
+// LAB 14 — ENTRY (POPUP FLOW)
+// ============================================================
+private void lab14BatteryHealthStressTest() {
+
+    showLab14ConditionCheck(() -> {
+
+        showLab14PreTestAdvisory(() -> {
+
+            lab14BatteryHealthStressTest_REAL();
+
+        });
+
+    });
+
+}
+
+// ============================================================
 // LAB 14 — Battery Health Stress Test
 // FINAL PRO / STABLE / CLEAN FLOW
 // ============================================================
-private void lab14BatteryHealthStressTest() {
+private void lab14BatteryHealthStressTest_REAL() {
 
     final boolean gr = AppLang.isGreek(this);
 
@@ -11592,14 +11892,29 @@ private void lab14BatteryHealthStressTest() {
         root.addView(counterText);
 
         lab14StressVideo = new VideoView(this);
-        LinearLayout.LayoutParams vLp =
-                new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        dp(120)
-                );
-        vLp.setMargins(0, dp(10), 0, dp(10));
-        lab14StressVideo.setLayoutParams(vLp);
-        root.addView(lab14StressVideo);
+
+LinearLayout videoHolder = new LinearLayout(this);
+videoHolder.setOrientation(LinearLayout.VERTICAL);
+videoHolder.setGravity(Gravity.CENTER);
+
+LinearLayout.LayoutParams holderLp =
+        new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+
+holderLp.setMargins(0, dp(10), 0, dp(10));
+videoHolder.setLayoutParams(holderLp);
+LinearLayout.LayoutParams vLp =
+        new LinearLayout.LayoutParams(
+                dp(220),
+                dp(120)
+        );
+
+vLp.gravity = Gravity.CENTER;
+lab14StressVideo.setLayoutParams(vLp);
+videoHolder.addView(lab14StressVideo);
+root.addView(videoHolder);
 
         final LinearLayout progressBar = new LinearLayout(this);
         progressBar.setOrientation(LinearLayout.HORIZONTAL);
@@ -12884,11 +13199,17 @@ private void lab14BatteryHealthStressTest() {
                             );
 
                             lab14LogConfidence(
-                                    gr,
-                                    measurementConfidenceF,
-                                    confidenceLabelF,
-                                    confF
-                            );
+                            gr,
+                            measurementConfidenceF,
+                            confidenceLabelF,
+                            confF
+                              );
+
+                            incLab14RunCount();
+
+                            logLab14Confidence();
+
+                            logLab14VarianceInfo();
 
                             lab14StopAllStress();
 

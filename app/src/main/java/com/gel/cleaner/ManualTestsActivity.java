@@ -12836,7 +12836,7 @@ private void lab14BatteryHealthStressTest() {
                                     validDrainF,
                                     startBatteryTemp,
                                     endBatteryTemp,
-                                    lab14_systemLimited[0],
+                                    lab14_systemLimited,
                                     collapseRisk,
                                     swellingRisk,
                                     calibrationDrift
@@ -12847,7 +12847,7 @@ private void lab14BatteryHealthStressTest() {
                                     validDrainF,
                                     variabilityDetected,
                                     calibrationDrift,
-                                    lab14_systemLimited[0],
+                                    lab14_systemLimited,
                                     percentDeviation[0],
                                     confF
                             );
@@ -12868,7 +12868,7 @@ private void lab14BatteryHealthStressTest() {
                                     collapseRisk,
                                     swellingRisk,
                                     calibrationDrift,
-                                    lab14_systemLimited[0]
+                                    lab14_systemLimited
                             );
 
                             lab14LogSave(

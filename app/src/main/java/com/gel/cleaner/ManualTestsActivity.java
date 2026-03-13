@@ -13493,25 +13493,6 @@ private void lab14StopAllStress() {
     lab14Running = false;
 }
 
-    @Override
-    public void run() {
-
-        if (!lab14Running || lab14Cancelled) return;
-
-        try {
-            Vibrator v =
-                    (Vibrator) getSystemService(VIBRATOR_SERVICE);
-
-            if (v != null && v.hasVibrator()) {
-                v.vibrate(120);
-            }
-
-        } catch (Throwable ignore) {}
-
-        ui.postDelayed(this, 800);
-    }
-};
-
 //=============================================================
 // LAB 15 - Charging System Diagnostic (SMART)
 // FINAL / LOCKED — NO PATCHES — NO SIDE EFFECTS

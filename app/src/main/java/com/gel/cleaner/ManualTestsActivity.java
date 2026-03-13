@@ -296,6 +296,9 @@ public class ManualTestsActivity extends AppCompatActivity {
     
     private AlertDialog lab14Dialog;    
     
+    private int __oldBrightness = -1;
+
+    
     private final Runnable lab14VibrationLoop = new Runnable() {
     @Override
     public void run() {
@@ -1104,6 +1107,7 @@ public void onBackPressed() {
     try {
         lab14Cancelled = true;
         lab14StopAllStress();
+        restoreBrightness();   // ✅ ΠΡΟΣΘΗΚΗ
         lab14CleanupUI();
     } catch (Throwable ignore) {}
 
@@ -2858,6 +2862,10 @@ private void lab14CancelStress() {
     try { stopGpuStress(); } catch (Throwable ignore) {}
 
     try {
+        restoreBrightness();   // ✅ ΠΡΟΣΘΗΚΗ
+    } catch (Throwable ignore) {}
+
+    try {
         lab14CleanupUI();
     } catch (Throwable ignore) {}
 
@@ -3254,7 +3262,6 @@ btnRestart.setOnClickListener(v -> {
 // ------------------------------------------------------------
 // Brightness + keep screen on (LAB stress)
 // ------------------------------------------------------------
-private int __oldBrightness = -1;
 
 private void applyMaxBrightnessAndKeepOn() {
 try {
@@ -3289,6 +3296,66 @@ if (__oldBrightness >= 0) {
 
 } catch (Throwable ignore) {}
 
+}
+
+// ============================================================
+// LAB 14 — PARTIAL DIAGNOSIS (SYSTEM LIMITED / INVALID RUN)
+// ============================================================
+private void lab14LogPartialMode(
+        boolean gr,
+        boolean[] lab14_systemLimited,
+        boolean validDrain,
+        Lab14Engine.ConfidenceResult conf
+) {
+
+    if (!lab14_systemLimited[0] && validDrain) return;
+
+    appendHtml("<br>");
+    logLine();
+
+    logWarn(gr
+            ? "Περιορισμένη διάγνωση"
+            : "Limited diagnostic mode");
+
+    logLine();
+
+    if (lab14_systemLimited[0]) {
+
+        logWarn(gr
+                ? "Ανιχνεύθηκε περιορισμός ρεύματος από το σύστημα (BMS / thermal / vendor limiter)."
+                : "System current limiting detected (BMS / thermal / vendor limiter).");
+
+    }
+
+    if (!validDrain) {
+
+        logWarn(gr
+                ? "Η κατανάλωση δεν ήταν επαρκής για πλήρη ανάλυση."
+                : "Drain rate not sufficient for full analysis.");
+
+    }
+
+    if (conf != null && conf.percent < 60) {
+
+        logWarn(gr
+                ? "Η στατιστική αξιοπιστία είναι χαμηλή."
+                : "Statistical confidence is low.");
+
+    }
+
+    logInfo(gr
+            ? "Η πλήρης εκτίμηση υγείας μπαταρίας δεν είναι διαθέσιμη σε αυτό το run."
+            : "Full battery health estimation not available for this run.");
+
+    logInfo(gr
+            ? "Τα ηλεκτρικά και θερμικά ευρήματα παραμένουν ενδεικτικά."
+            : "Electrical and thermal findings remain indicative.");
+
+    logInfo(gr
+            ? "Συνιστάται επανάληψη με φόρτιση 30–70%, χωρίς φόρτιση και σε φυσιολογική θερμοκρασία."
+            : "Repeat test at 30–70% battery, not charging, normal temperature.");
+
+    logLine();
 }
 
 // ------------------------------------------------------------
@@ -11643,6 +11710,8 @@ private void lab14BatteryHealthStressTest_REAL() {
     lab14Cancelled = false;
     lab14Running = true;
 
+    applyMaxBrightnessAndKeepOn();
+    
     // ------------------------------------------------------------
     // ENGINE
     // ------------------------------------------------------------
@@ -11952,10 +12021,12 @@ root.addView(videoHolder);
         exitBtn.setLayoutParams(lpExit);
 
         exitBtn.setOnClickListener(v -> {
-            lab14Cancelled = true;
-            lab14StopAllStress();
-            lab14CleanupUI();
-            lab14Running = false;
+    lab14Cancelled = true;
+    lab14StopAllStress();
+    restoreBrightness();   // ✅ ΠΡΟΣΘΗΚΗ
+    lab14CleanupUI();
+    lab14Running = false;
+});
             logWarn(
                     gr
                             ? "LAB 14 ακυρώθηκε από τον χρήστη."
@@ -13129,111 +13200,166 @@ root.addView(videoHolder);
                                 );
                             }
 
-                            // main pipeline
-                            lab14LogStressResult(
-                                    gr,
-                                    sagAvg[0],
-                                    voltageStart,
-                                    voltageUnderLoad[0],
-                                    voltageRecovery[0],
-                                    voltageRecoverySpeed[0],
-                                    voltageStability[0],
-                                    internalResistance[0],
-                                    estimatedESRF,
-                                    thermalImpedance[0],
-                                    energyEfficiencyF,
-                                    startMah,
-                                    endMahF,
-                                    drainMahF,
-                                    dtMsF,
-                                    mahPerHourF,
-                                    drainPercentPerHourF,
-                                    validDrainF,
-                                    startBatteryTemp,
-                                    endBatteryTemp,
-                                    lab14_systemLimited,
-                                    collapseRisk,
-                                    swellingRisk,
-                                    calibrationDrift
-                            );
+// main pipeline
+lab14LogStressResult(
+        gr,
+        sagAvg[0],
+        voltageStart,
+        voltageUnderLoad[0],
+        voltageRecovery[0],
+        voltageRecoverySpeed[0],
+        voltageStability[0],
+        internalResistance[0],
+        estimatedESRF,
+        thermalImpedance[0],
+        energyEfficiencyF,
+        startMah,
+        endMahF,
+        drainMahF,
+        dtMsF,
+        mahPerHourF,
+        drainPercentPerHourF,
+        validDrainF,
+        startBatteryTemp,
+        endBatteryTemp,
+        lab14_systemLimited,
+        collapseRisk,
+        swellingRisk,
+        calibrationDrift
+);
 
-                            lab14LogConsistency(
-                                    gr,
-                                    validDrainF,
-                                    variabilityDetected,
-                                    calibrationDrift,
-                                    lab14_systemLimited,
-                                    percentDeviation[0],
-                                    confF
-                            );
+lab14LogConsistency(
+        gr,
+        validDrainF,
+        variabilityDetected,
+        calibrationDrift,
+        lab14_systemLimited,
+        percentDeviation[0],
+        confF
+);
 
-                            lab14LogAging(
-                                    gr,
-                                    agingIndexF,
-                                    agingInterpF,
-                                    agingF,
-                                    Float.NaN
-                            );
+// ------------------------------------------------
+// PARTIAL / FULL MODE DECISION
+// ------------------------------------------------
 
-                            lab14LogFinalScore(
-                                    gr,
-                                    finalScoreF,
-                                    finalLabelF,
-                                    healthClassF,
-                                    collapseRisk,
-                                    swellingRisk,
-                                    calibrationDrift,
-                                    lab14_systemLimited
-                            );
+boolean partial =
+        lab14_systemLimited[0]
+        || !validDrainF
+        || (confF != null && confF.percent < 60);
 
-                            lab14LogSave(
-                                    gr,
-                                    p,
-                                    variabilityDetected,
-                                    collapseRisk,
-                                    swellingRisk,
-                                    calibrationDrift,
-                                    false,
-                                    finalScoreF,
-                                    agingIndexF
-                            );
+// ------------------------------------------------
+// PARTIAL MODE
+// ------------------------------------------------
 
-                            lab14LogConfidence(
-                            gr,
-                            measurementConfidenceF,
-                            confidenceLabelF,
-                            confF
-                              );
+if (partial) {
 
-                            incLab14RunCount();
+    lab14LogPartialMode(
+            gr,
+            lab14_systemLimited,
+            validDrainF,
+            confF
+    );
 
-                            logLab14Confidence();
+} else {
 
-                            logLab14VarianceInfo();
+    // FULL MODE
 
-                            lab14StopAllStress();
+    lab14LogAging(
+            gr,
+            agingIndexF,
+            agingInterpF,
+            agingF,
+            Float.NaN
+    );
 
-                            appendHtml("<br>");
-                            logOk(
-                                    gr
-                                            ? "Το Lab 14 ολοκληρώθηκε."
-                                            : "Lab 14 finished."
-                            );
-                            logLine();
+    lab14LogFinalScore(
+            gr,
+            finalScoreF,
+            finalLabelF,
+            healthClassF,
+            collapseRisk,
+            swellingRisk,
+            calibrationDrift,
+            lab14_systemLimited
+    );
+
+}
+
+// ------------------------------------------------
+// SAVE (πάντα save για variance system)
+// ------------------------------------------------
+
+lab14LogSave(
+        gr,
+        p,
+        variabilityDetected,
+        collapseRisk,
+        swellingRisk,
+        calibrationDrift,
+        false,
+        finalScoreF,
+        agingIndexF
+);
+
+// ------------------------------------------------
+// CONFIDENCE
+// ------------------------------------------------
+
+lab14LogConfidence(
+        gr,
+        measurementConfidenceF,
+        confidenceLabelF,
+        confF
+);
+
+// ------------------------------------------------
+// RUN COUNT
+// ------------------------------------------------
+
+incLab14RunCount();
+
+logLab14Confidence();
+
+logLab14VarianceInfo();
+
+// ------------------------------------------------
+// STOP
+// ------------------------------------------------
+
+lab14StopAllStress();
+restoreBrightness();   // ✅ ΕΔΩ
+
+appendHtml("<br>");
+logOk(
+        gr
+                ? "Το Lab 14 ολοκληρώθηκε."
+                : "Lab 14 finished."
+);
+logLine();
 
                         });
 
                     } catch (Throwable t) {
 
-                        runOnUiThread(() -> {
-                            lab14Cancelled = true;
-                            logError(
-                                    gr
-                                            ? "Σφάλμα LAB 14"
-                                            : "LAB 14 error"
-                            );
-                        });
-                    }
+    runOnUiThread(() -> {
+
+        lab14Cancelled = true;
+
+        try {
+            lab14StopAllStress();
+        } catch (Throwable ignore) {}
+
+        try {
+            restoreBrightness();   // ✅ ΠΡΟΣΘΗΚΗ
+        } catch (Throwable ignore) {}
+
+        logError(
+                gr
+                        ? "Σφάλμα LAB 14"
+                        : "LAB 14 error"
+        );
+    });
+}
 
                 }).start();
             }
@@ -13241,9 +13367,10 @@ root.addView(videoHolder);
 
     } catch (Throwable t) {
 
-        lab14StopAllStress();
-        lab14CleanupUI();
-        lab14Cancelled = true;
+    lab14StopAllStress();
+    restoreBrightness();
+    lab14CleanupUI();
+    lab14Cancelled = true;
 
         logError(
                 gr

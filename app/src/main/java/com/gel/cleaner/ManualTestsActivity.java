@@ -826,6 +826,13 @@ body3.addView(makeTestButton(
         this::lab14BatteryHealthStressTest
 ));
 
+body4.addView(makeTestButtonRedGold(
+        gr
+                ? "14B. Τελικός έλεγχος προστασίας μπαταρίας από το σύστημα"
+                : "14B. Final check of battery protection by the system",
+        this::lab14BProtectionTest
+));
+
 body4.addView(makeTestButton(
         gr ? "15. Διαγνωστικός Έλεγχος Συστήματος Φόρτισης (Smart)"
            : "15. Charging System Diagnostic (Smart)",
@@ -3357,6 +3364,461 @@ private void lab14LogPartialMode(
             : "Repeat test at 30–70% battery, not charging, normal temperature.");
 
     logLine();
+}
+
+// ============================================================
+// LAB 14 — SYSTEM BATTERY PROTECTION CHECK
+// ============================================================
+private void Lab14BatteryProtectionCheck(
+        boolean gr,
+        boolean[] lab14_systemLimited,
+        boolean validDrain
+) {
+
+    appendHtml("<br>");
+    logLine();
+
+    logInfo(gr
+        ? "Τελικός έλεγχος προστασίας μπαταρίας από το σύστημα"
+        : "Final check of battery protection by the system");
+
+    logLine();
+
+    boolean systemLimited = lab14_systemLimited[0];
+
+    if (systemLimited) {
+
+        logOk(gr
+                ? "Ενεργοποιήθηκε μηχανισμός προστασίας κατά τη δοκιμή."
+                : "Protection mechanism activated during stress.");
+
+        logOk(gr
+                ? "Το σύστημα περιόρισε την κατανάλωση για προστασία της συσκευής."
+                : "System limited power to protect the device.");
+
+    } else {
+
+        logWarn(gr
+                ? "Δεν ενεργοποιήθηκε μηχανισμός προστασίας υπό υψηλό φορτίο."
+                : "No protection mechanism detected under heavy load.");
+
+        logWarn(gr
+                ? "Πιθανό πρόβλημα λογισμικού ή θερμικής πολιτικής."
+                : "Possible software or thermal policy issue.");
+
+    }
+
+    if (!validDrain) {
+
+        logWarn(gr
+                ? "Η καταπόνηση δεν ήταν επαρκής για πλήρη έλεγχο."
+                : "Stress level not sufficient for full check.");
+
+    }
+
+    logLine();
+}
+
+// ============================================================
+// LAB 14B — CONDITIONS CHECK (SYSTEM PROTECTION TEST)
+// ============================================================
+private boolean checkLab14BConditions() {
+
+    final boolean gr = AppLang.isGreek(this);
+
+    int percent = getBatteryPercentSafe();
+
+    boolean chargingNow = false;
+
+    float tempC = Float.NaN;
+
+    try {
+
+        IntentFilter f =
+                new IntentFilter(
+                        Intent.ACTION_BATTERY_CHANGED
+                );
+
+        Intent i =
+                registerReceiver(null, f);
+
+        if (i != null) {
+
+            int t =
+                    i.getIntExtra(
+                            BatteryManager.EXTRA_TEMPERATURE,
+                            -1
+                    );
+
+            if (t > 0)
+                tempC = t / 10f;
+
+            int status =
+                    i.getIntExtra(
+                            BatteryManager.EXTRA_STATUS,
+                            -1
+                    );
+
+            chargingNow =
+                    status == BatteryManager.BATTERY_STATUS_CHARGING
+                            || status == BatteryManager.BATTERY_STATUS_FULL;
+        }
+
+    } catch (Throwable ignore) {}
+
+
+
+    appendHtml("<br>");
+    logLine();
+
+    logInfo(gr
+            ? "Έλεγχος συνθηκών για τεστ προστασίας συστήματος"
+            : "Checking conditions for system protection test");
+
+    logLine();
+
+
+    // ----------------------------------------------------
+    // BATTERY %
+    // ----------------------------------------------------
+
+    if (percent < 80) {
+
+        logWarn(gr
+                ? "Η μπαταρία πρέπει να είναι 80–100%."
+                : "Battery must be between 80–100%.");
+
+        logLabelErrorValue(
+                gr ? "Τρέχον επίπεδο"
+                   : "Current level",
+                percent + "%"
+        );
+
+        return false;
+    }
+
+
+
+    // ----------------------------------------------------
+    // TEMPERATURE HIGH
+    // ----------------------------------------------------
+
+    if (!Float.isNaN(tempC) && tempC > 42f) {
+
+        logWarn(gr
+                ? "Η θερμοκρασία είναι υψηλή για έλεγχο προστασίας."
+                : "Temperature too high for protection test.");
+
+        logLabelErrorValue(
+                gr ? "Θερμοκρασία"
+                   : "Temperature",
+                String.format(Locale.US, "%.1f°C", tempC)
+        );
+
+        return false;
+    }
+
+
+
+    // ----------------------------------------------------
+    // TEMPERATURE LOW
+    // ----------------------------------------------------
+
+    if (!Float.isNaN(tempC) && tempC < 10f) {
+
+        logWarn(gr
+                ? "Η θερμοκρασία είναι πολύ χαμηλή."
+                : "Temperature too low.");
+
+        logLabelErrorValue(
+                gr ? "Θερμοκρασία"
+                   : "Temperature",
+                String.format(Locale.US, "%.1f°C", tempC)
+        );
+
+        return false;
+    }
+
+
+
+    // ----------------------------------------------------
+    // OK
+    // ----------------------------------------------------
+
+    logOk(gr
+            ? "Οι συνθήκες είναι κατάλληλες."
+            : "Conditions OK.");
+
+    logLine();
+
+    return true;
+}
+
+// ============================================================
+// LAB 14B — SYSTEM BATTERY PROTECTION CHECK (ENTRY)
+// ============================================================
+private void lab14BProtectionTest() {
+
+    final boolean gr = AppLang.isGreek(this);
+
+    showLab14BAdvisory(() -> {
+
+        if (!checkLab14BConditions()) {
+            return;
+        }
+
+        logLine();
+
+        logInfo(gr
+                ? "Τελικός έλεγχος προστασίας μπαταρίας από το σύστημα"
+                : "Final check of battery protection by the system");
+
+        logLine();
+
+
+        new Thread(() -> {
+
+            try {
+
+                Lab14Engine engine = new Lab14Engine(this);
+
+                Lab14Engine.GelBatterySnapshot start =
+                        engine.readSnapshot();
+
+                if (start == null) {
+
+                    runOnUiThread(() -> logError(
+                            gr
+                                    ? "Αποτυχία ανάγνωσης μπαταρίας"
+                                    : "Battery read failed"
+                    ));
+
+                    return;
+                }
+
+
+                long startMah = start.chargeNowMah;
+
+                float vStart = getBatteryVoltageFiltered();
+
+                float tempStart = start.temperature;
+
+
+                // ============================
+                // MINI STRESS
+                // ============================
+
+                runOnUiThread(() ->
+                        logInfo(gr
+                                ? "Εκτέλεση δοκιμής φορτίου..."
+                                : "Running load test...")
+                );
+
+                startCpuBurn();
+                startMemoryStress();
+                startGpuStress();
+
+                SystemClock.sleep(20000);
+
+                stopCpuBurn();
+                stopMemoryStress();
+                stopGpuStress();
+
+
+                // ============================
+                // END SNAPSHOT
+                // ============================
+
+                Lab14Engine.GelBatterySnapshot end =
+                        engine.readSnapshot();
+
+                if (end == null) return;
+
+                long endMah = end.chargeNowMah;
+
+                float vEnd = getBatteryVoltageFiltered();
+
+                float tempEnd = end.temperature;
+
+
+                // ============================
+                // DETECT DRAIN
+                // ============================
+
+                long drain = startMah - endMah;
+
+                boolean validDrain = drain > 0;
+
+
+                // ============================
+                // DETECT LIMITER
+                // ============================
+
+                boolean[] systemLimited = new boolean[]{ false };
+
+                if (tempEnd - tempStart < 1.0f && drain < 5) {
+
+                    systemLimited[0] = true;
+
+                }
+
+                if (vEnd > vStart - 0.01f) {
+
+                    systemLimited[0] = true;
+
+                }
+
+
+                // ============================
+                // RESULT
+                // ============================
+
+                runOnUiThread(() -> {
+
+                    Lab14BatteryProtectionCheck(
+                            gr,
+                            systemLimited,
+                            validDrain
+                    );
+
+                });
+
+            }
+            catch (Throwable t) {
+
+                runOnUiThread(() ->
+                        logError(
+                                gr
+                                        ? "Σφάλμα test"
+                                        : "Test error"
+                        )
+                );
+
+            }
+
+        }).start();
+
+    });
+
+}
+
+// ============================================================
+// LAB 14B — PRE TEST ADVISORY (FINAL GEL STYLE)
+// ============================================================
+private void showLab14BAdvisory(Runnable onContinue) {
+
+    final boolean gr = AppLang.isGreek(this);
+
+    AlertDialog.Builder b =
+            new AlertDialog.Builder(
+                    this,
+                    android.R.style.Theme_Material_Dialog_NoActionBar
+            );
+
+    b.setCancelable(true);
+
+    LinearLayout root = buildGELPopupRoot(this);
+
+    // HEADER
+    root.addView(
+            buildPopupHeader(
+                    this,
+                    gr
+                            ? "Τελικός έλεγχος προστασίας μπαταρίας από το σύστημα"
+                            : "Final check of battery protection by the system"
+            )
+    );
+
+    final String text =
+            gr
+                    ? "Για τον έλεγχο προστασίας, φόρτισε τη συσκευή "
+                      + "στο 80–100% και άφησε τη συσκευή σε ηρεμία "
+                      + "πριν ξεκινήσει η δοκιμή.\n\n"
+                      + "Η δοκιμή ελέγχει αν το σύστημα περιορίζει "
+                      + "την κατανάλωση για προστασία της μπαταρίας."
+                    : "For this test, charge the device "
+                      + "to 80–100% and let the phone stay idle "
+                      + "before starting.\n\n"
+                      + "This test checks if the system limits "
+                      + "power consumption to protect the battery.";
+
+    TextView msg = new TextView(this);
+    msg.setText(text);
+    msg.setTextColor(0xFF39FF14);
+    msg.setTextSize(14.5f);
+    msg.setLineSpacing(0f, 1.2f);
+
+    root.addView(msg);
+
+    // MUTE ROW
+    root.addView(buildMuteRow());
+
+    LinearLayout row = new LinearLayout(this);
+    row.setOrientation(LinearLayout.VERTICAL);
+
+    Button btnContinue =
+            gelButton(
+                    this,
+                    gr ? "Συνέχεια" : "Continue",
+                    0xFF0B5D1E
+            );
+
+    LinearLayout.LayoutParams lp =
+            new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    dp(52)
+            );
+
+    lp.setMargins(0, dp(14), 0, 0);
+
+    btnContinue.setLayoutParams(lp);
+
+    row.addView(btnContinue);
+
+    root.addView(row);
+
+    b.setView(root);
+
+    AlertDialog dlg = b.create();
+
+    if (dlg.getWindow() != null)
+        dlg.getWindow().setBackgroundDrawable(
+                new ColorDrawable(Color.TRANSPARENT)
+        );
+
+    dlg.show();
+
+
+    // ============================
+    // TTS (FINAL SAFE VERSION)
+    // ============================
+    new Handler(Looper.getMainLooper()).postDelayed(() -> {
+
+        if (!dlg.isShowing()) return;
+
+        AppTTS.stop();
+
+        if (!AppTTS.isMuted(this)) {
+            AppTTS.ensureSpeak(this, text);
+        }
+
+    }, 120);
+
+
+    // ============================
+    // CONTINUE
+    // ============================
+    btnContinue.setOnClickListener(v -> {
+
+        AppTTS.stop();
+
+        dlg.dismiss();
+
+        if (onContinue != null)
+            onContinue.run();
+
+    });
+
 }
 
 // ------------------------------------------------------------
@@ -13323,12 +13785,24 @@ logLab14Confidence();
 
 logLab14VarianceInfo();
 
+
+// ------------------------------------------------
+// SYSTEM PROTECTION CHECK
+// ------------------------------------------------
+
+Lab14BatteryProtectionCheck(
+        gr,
+        lab14_systemLimited,
+        validDrainF
+);
+
+
 // ------------------------------------------------
 // STOP
 // ------------------------------------------------
 
 lab14StopAllStress();
-restoreBrightness();   // ✅ ΕΔΩ
+restoreBrightness();
 
 appendHtml("<br>");
 logOk(

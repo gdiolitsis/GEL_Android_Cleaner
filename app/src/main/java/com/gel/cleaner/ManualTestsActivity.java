@@ -1001,6 +1001,7 @@ if (!serviceLogInit) {
 
 }  // onCreate ENDS HERE
 
+
 private boolean ensurePermissions(String[] permissions, Runnable afterGranted) {
 
     List<String> missing = new ArrayList<>();
@@ -1027,82 +1028,78 @@ private boolean ensurePermissions(String[] permissions, Runnable afterGranted) {
     return false;
 }
 
+
+// ============================================================
+// onPause
+// ============================================================
 @Override
 protected void onPause() {
 
-    // ============================================================
-    // LAB 3 — FORCE STOP IF USER LEFT ACTIVITY
-    // ============================================================
     try {
         lab3WaitingUser = false;
         stopLab3Tone();
-        SystemClock.sleep(120);
         restoreLab3Audio();
-    } catch (Throwable ignore) {
-        // never crash on pause
-    }
+    } catch (Throwable ignore) {}
 
-    // ============================================================
-    // TTS STOP — lifecycle safe (no speech leaks)
-    // ============================================================
+    try {
+        lab14StopAllStress();
+        lab14CleanupUI();
+    } catch (Throwable ignore) {}
+
     try {
         if (tts != null && tts[0] != null) {
             tts[0].stop();
         }
-    } catch (Throwable ignore) {
-        // never crash on pause
-    }
+    } catch (Throwable ignore) {}
 
     super.onPause();
 }
 
+
+// ============================================================
+// onDestroy
+// ============================================================
 @Override
 protected void onDestroy() {
 
-    // ============================================================
-    // HANDLER CLEANUP — prevent pending UI callbacks
-    // ============================================================
     try {
         if (ui != null) {
             ui.removeCallbacksAndMessages(null);
         }
     } catch (Throwable ignore) {}
 
-    // ============================================================
-    // LAB 13 — receiver cleanup (SAFE)
-    // ============================================================
     try {
         unregisterReceiver(lab13BtReceiver);
-    } catch (Throwable ignore) {
-    }
+    } catch (Throwable ignore) {}
 
-    // ============================================================
-    // LAB 14 — dots animation cleanup
-    // ============================================================
     try {
         if (lab14DotsView != null) {
             lab14DotsView.removeCallbacks(null);
         }
     } catch (Throwable ignore) {}
 
-    // ============================================================
-    // LAB 14 — HARD STOP (FINAL)
-    // ============================================================
     try {
         lab14StopAllStress();
     } catch (Throwable ignore) {}
 
-    // ============================================================
-    // LAB 14 — UI CLEANUP
-    // ============================================================
     try {
         lab14CleanupUI();
+    } catch (Throwable ignore) {}
+
+    try {
+        if (tts != null && tts[0] != null) {
+            tts[0].stop();
+            tts[0].shutdown();
+        }
     } catch (Throwable ignore) {}
 
     super.onDestroy();
 }
 
 
+// ============================================================
+// BACK
+// ============================================================
 @Override
 public void onBackPressed() {
 
@@ -1113,40 +1110,6 @@ public void onBackPressed() {
     } catch (Throwable ignore) {}
 
     super.onBackPressed();
-}
-
-
-@Override
-protected void onPause() {
-
-    try {
-        lab14StopAllStress();
-        lab14CleanupUI();
-    } catch (Throwable ignore) {}
-
-    super.onPause();
-}
-
-    // ============================================================
-    // TTS FULL CLEANUP — final lifecycle teardown
-    // ============================================================
-    try {
-        if (tts != null && tts[0] != null) {
-            tts[0].stop();
-            tts[0].shutdown();
-        }
-    } catch (Throwable ignore) {
-        // never crash on destroy
-    } finally {
-        if (tts != null) {
-            tts[0] = null;
-        }
-        if (ttsReady != null) {
-            ttsReady[0] = false;
-        }
-    }
-
-    super.onDestroy();
 }
 
 // ============================================================

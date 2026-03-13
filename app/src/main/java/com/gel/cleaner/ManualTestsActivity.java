@@ -280,6 +280,7 @@ public class ManualTestsActivity extends AppCompatActivity {
     
     boolean wearSignals = false;
     boolean controllerRisk = false;
+    private boolean batteryBehaviourWarning = false;
     
     boolean validDrain = false;
 
@@ -294,7 +295,6 @@ public class ManualTestsActivity extends AppCompatActivity {
     private volatile boolean lab14Cancelled = false;
     
     private AlertDialog lab14Dialog;    
-    private Runnable lab14VibrationLoop;
     
     private final Runnable lab14VibrationLoop = new Runnable() {
     @Override
@@ -350,8 +350,6 @@ private TextView lab14ProgressText;
 private LinearLayout lab14ProgressBar;  
 private final int LAB14_TOTAL_SECONDS = 5 * 60; // 300 sec hard lock  
 private VideoView lab14StressVideo;
-
-final boolean[] lab14_systemLimited = { false };
 
 private int lastSelectedStressDurationSec = 60;
 
@@ -12304,12 +12302,10 @@ private void lab14BatteryHealthStressTest() {
                         String agingInterp = "N/A";
 
                         if (aging != null &&
-                            aging.valid &&
-                            validDrain &&
-                            conf != null &&
-                            conf.percent >= 60) {
-
-                            agingIndex = aging.index;
+        agingIndex > 0 &&
+        validDrain &&
+        conf != null &&
+        conf.percent >= 60) {                            
 
                             if (agingIndex < 20)
                                 agingInterp = "Excellent";
@@ -13497,7 +13493,6 @@ private void lab14StopAllStress() {
     lab14Running = false;
 }
 
-private final Runnable lab14VibrationLoop = new Runnable() {
     @Override
     public void run() {
 

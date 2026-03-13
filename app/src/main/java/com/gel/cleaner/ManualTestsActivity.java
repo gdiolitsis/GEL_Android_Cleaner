@@ -12026,7 +12026,7 @@ root.addView(videoHolder);
     restoreBrightness();   // ✅ ΠΡΟΣΘΗΚΗ
     lab14CleanupUI();
     lab14Running = false;
-});
+
             logWarn(
                     gr
                             ? "LAB 14 ακυρώθηκε από τον χρήστη."

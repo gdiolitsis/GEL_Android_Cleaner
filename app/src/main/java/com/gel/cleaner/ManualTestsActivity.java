@@ -3016,10 +3016,13 @@ final String txt =
                 : String.format(Locale.US, "%.1f°C", tempC))
                 + "\n"
                 +
-                (gr ? "Φόρτιση: " : "Charging: ")
-                + (chargingNow ? "YES" : "NO")
-                + "\n\n"
-                + warn.toString();
+                (chargingNow
+                        ? (gr
+                        ? "Η συσκευή φορτίζεται. Αποσύνδεσε τον φορτιστή."
+                        : "Device is charging. Disconnect the charger.")
+                        : (gr
+                        ? "Η συσκευή δεν φορτίζεται."
+                        : "Device is not charging."));
 
     TextView msg = new TextView(this);
     msg.setText(txt);
@@ -3182,7 +3185,7 @@ row.setOrientation(LinearLayout.VERTICAL);
 
 Button btnRestart = gelButton(
         this,
-        gr ? "Επανεκκίνηση τώρα" : "Restart now",
+        gr ? "Έξοδος για επανεκκίνηση" : "Exit for restart"
         0xFF8B0000
 );
 
@@ -3244,30 +3247,20 @@ btnContinue.setOnClickListener(v -> {
 btnRestart.setOnClickListener(v -> {
 
     AppTTS.stop();
-    dlg.dismiss();
 
     try {
+        dlg.dismiss();
+    } catch (Throwable ignore) {}
 
-        PowerManager pm =
-                (PowerManager) getSystemService(POWER_SERVICE);
+    try {
+        finishAffinity();
+    } catch (Throwable ignore) {}
 
-        if (pm != null) {
-            pm.reboot(null);
-        }
+    try {
+        System.exit(0);
+    } catch (Throwable ignore) {}
 
-    } catch (Throwable e) {
-
-        try {
-            startActivity(
-                    new Intent(
-                            Settings.ACTION_SETTINGS
-                    )
-            );
-        } catch (Throwable ignore) {}
-
-    }
 });
-}
 
 // ------------------------------------------------------------
 // Brightness + keep screen on (LAB 14 stress)

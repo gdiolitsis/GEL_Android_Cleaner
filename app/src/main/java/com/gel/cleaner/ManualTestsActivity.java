@@ -225,6 +225,8 @@ import java.util.Map;
 import java.util.Set;
 
 public class ManualTestsActivity extends AppCompatActivity {
+	
+	private AlertDialog progressDialog;
 
     // ============================================================
     // BATTERY STRESS DIAGNOSTIC STATE (shared between labs)
@@ -4277,12 +4279,7 @@ private void startMemoryStress() {
 
     runOnUiThread(() -> {
 
-        try {
-            if (progressDialog != null)
-                progressDialog.dismiss();
-        } catch (Throwable ignore) {}
-
-        logLine();
+    logLine(); το
 
         logError(gr
                 ? "Ανιχνεύθηκε φόρτιση κατά τη διάρκεια της δοκιμής."
@@ -13291,14 +13288,22 @@ root.addView(videoHolder);
 // ----------------------------------------------------
 
 int swellingScore = 0;
-                        
-                        if (!Float.isNaN(voltageRecovery[0]) &&
-                            !lab14_systemLimited[0] &&
-                            voltageRecovery[0] < 0.04f) {
-                            collapseRisk[0] = true;
-                        }
+swellingRisk[0] = false;
 
-                        if (validDrain &&
+
+// collapse detector
+
+if (!Float.isNaN(voltageRecovery[0]) &&
+    !lab14_systemLimited[0] &&
+    voltageRecovery[0] < 0.04f) {
+
+    collapseRisk[0] = true;
+}
+
+
+// ESR + temp rise
+
+if (validDrain &&
     !Float.isNaN(internalResistance[0]) &&
     !Float.isNaN(tempStart) &&
     !Float.isNaN(tempEnd)) {
@@ -13313,114 +13318,154 @@ int swellingScore = 0;
     }
 }
 
-                        if (!Float.isNaN(sag1[0]) &&
-                            !Float.isNaN(sag2[0])) {
-                            	                            
-                            float sagDiff =
-                                    Math.abs(sag1[0] - sag2[0]);
 
-                            if (sagDiff > 0.05f) {
-                                cellImbalanceRisk[0] = true;
-                            }
+// thermal impedance
 
-                            float norm =
-                                    Math.min(1f, sagDiff / 0.25f);
+if (!Float.isNaN(thermalImpedance[0]) &&
+    thermalImpedance[0] > 0.15f) {
 
-                            powerStabilityFactor[0] =
-                                    Math.max(
-                                            0f,
-                                            Math.min(
-                                                    100f,
-                                                    (1f - norm) * 100f
-                                            )
-                                    );
-                        }
+    swellingScore++;
 
-                        if (!Float.isNaN(sag1[0]) &&
-                            !Float.isNaN(sag2[0]) &&
-                            !Float.isNaN(voltageRecovery[0])) {
-                            	                            
-                            float sagDiff =
-                                    Math.abs(sag1[0] - sag2[0]);
+}
 
-                            float sagNorm =
-                                    Math.min(1f, sagDiff / 0.25f);
 
-                            float recoveryNorm =
-                                    Math.min(1f, voltageRecovery[0] / 0.15f);
+// sag diff
 
-                            float index =
-                                    (1f - sagNorm) * recoveryNorm;
+if (!Float.isNaN(sag1[0]) &&
+    !Float.isNaN(sag2[0])) {
 
-                            stressSignature[0] =
-                                    Math.max(
-                                            0f,
-                                            Math.min(100f, index * 100f)
-                                    );
-                        }
+    float sagDiff =
+            Math.abs(sag1[0] - sag2[0]);
 
-                        if (!Float.isNaN(internalResistance[0]) &&
-                            !Float.isNaN(voltageRecoverySpeed[0]) &&
-                            !Float.isNaN(sagAvg[0])) {
+    if (sagDiff > 0.05f) {
 
-                            float rNorm =
-                                    Math.min(1f, internalResistance[0] / 0.25f);
+        cellImbalanceRisk[0] = true;
+        swellingScore++;
 
-                            float sagNorm =
-                                    Math.min(1f, sagAvg[0] / 0.25f);
+    }
 
-                            float recNorm =
-                                    Math.min(1f, voltageRecoverySpeed[0] / 0.012f);
+    float norm =
+            Math.min(1f, sagDiff / 0.25f);
 
-                            float index =
-                                    (recNorm + (1f - rNorm) + (1f - sagNorm)) / 3f;
+    powerStabilityFactor[0] =
+            Math.max(
+                    0f,
+                    Math.min(
+                            100f,
+                            (1f - norm) * 100f
+                    )
+            );
+}
 
-                            cellElasticityIndex[0] =
-                                    Math.max(
-                                            0f,
-                                            Math.min(100f, index * 100f)
-                                    );
-                        }
 
-                        if (!Float.isNaN(cellElasticityIndex[0]) &&
-                            !Float.isNaN(stressSignature[0])) {
+// stress signature
 
-                            float base =
-                                    (cellElasticityIndex[0] + stressSignature[0]) / 2f;
+if (!Float.isNaN(sag1[0]) &&
+    !Float.isNaN(sag2[0]) &&
+    !Float.isNaN(voltageRecovery[0])) {
 
-                            if (!Float.isNaN(thermalImpedance[0])) {
+    float sagDiff =
+            Math.abs(sag1[0] - sag2[0]);
 
-                                float thermalNorm =
-                                        Math.min(
-                                                100f,
-                                                Math.max(
-                                                        0f,
-                                                        100f - thermalImpedance[0] * 4f
-                                                )
-                                        );
+    float sagNorm =
+            Math.min(1f, sagDiff / 0.25f);
 
-                                structuralIntegrityIndex[0] =
-                                        (base + thermalNorm) / 2f;
+    float recoveryNorm =
+            Math.min(1f, voltageRecovery[0] / 0.15f);
 
-                            } else {
+    float index =
+            (1f - sagNorm) * recoveryNorm;
 
-                                structuralIntegrityIndex[0] = base;
-                            }
-                        }
+    stressSignature[0] =
+            Math.max(
+                    0f,
+                    Math.min(100f, index * 100f)
+            );
+}
 
-                        if (!Float.isNaN(internalResistance[0]) &&
-                            !Float.isNaN(voltageRecovery[0])) {
 
-                            boolean highR =
-                                    internalResistance[0] > 0.22f;
+// elasticity
 
-                            boolean weakRec =
-                                    voltageRecovery[0] < 0.06f;
+if (!Float.isNaN(internalResistance[0]) &&
+    !Float.isNaN(voltageRecoverySpeed[0]) &&
+    !Float.isNaN(sagAvg[0])) {
 
-                            if (highR && weakRec) {
-                                batteryBehaviourWarning = true;
-                            }
-                        }
+    float rNorm =
+            Math.min(1f, internalResistance[0] / 0.25f);
+
+    float sagNorm =
+            Math.min(1f, sagAvg[0] / 0.25f);
+
+    float recNorm =
+            Math.min(1f, voltageRecoverySpeed[0] / 0.012f);
+
+    float index =
+            (recNorm + (1f - rNorm) + (1f - sagNorm)) / 3f;
+
+    cellElasticityIndex[0] =
+            Math.max(
+                    0f,
+                    Math.min(100f, index * 100f)
+            );
+}
+
+
+// structural
+
+if (!Float.isNaN(cellElasticityIndex[0]) &&
+    !Float.isNaN(stressSignature[0])) {
+
+    float base =
+            (cellElasticityIndex[0] + stressSignature[0]) / 2f;
+
+    if (!Float.isNaN(thermalImpedance[0])) {
+
+        float thermalNorm =
+                Math.min(
+                        100f,
+                        Math.max(
+                                0f,
+                                100f - thermalImpedance[0] * 4f
+                        )
+                );
+
+        structuralIntegrityIndex[0] =
+                (base + thermalNorm) / 2f;
+
+    } else {
+
+        structuralIntegrityIndex[0] = base;
+
+    }
+}
+
+
+// behaviour
+
+if (!Float.isNaN(internalResistance[0]) &&
+    !Float.isNaN(voltageRecovery[0])) {
+
+    boolean highR =
+            internalResistance[0] > 0.22f;
+
+    boolean weakRec =
+            voltageRecovery[0] < 0.06f;
+
+    if (highR && weakRec) {
+
+        batteryBehaviourWarning = true;
+
+    }
+}
+
+
+// final swelling decision
+
+if (swellingScore >= 2) {
+
+    swellingRisk[0] = true;
+
+}
 
                         // ----------------------------------------------------
                         // SAVE RUN / CONFIDENCE
@@ -13431,8 +13476,12 @@ int swellingScore = 0;
 
                         engine.saveRun();
 
-                        final Lab14Engine.ConfidenceResult conf =
-                                engine.computeConfidence();
+                        Lab14Engine.ConfidenceResult newConf =
+        engine.computeConfidence();
+
+if (newConf != null) {
+    conf = newConf;
+}
 
                         if (!validDrain) {
                             variabilityDetected[0] = true;
@@ -13442,42 +13491,51 @@ int swellingScore = 0;
                             variabilityDetected[0] = true;
                         }
 
-                        // ----------------------------------------------------
-                        // AGING
-                        // ----------------------------------------------------
-                        final Lab14Engine.AgingResult aging =
-                                engine.computeAging(
-                                        mahPerHour,
-                                        conf,
-                                        cycles,
-                                        tempStart,
-                                        tempEnd
-                                );
+// ----------------------------------------------------
+// AGING
+// ----------------------------------------------------
 
-                        int agingIndex = -1;
-                        String agingInterp = "N/A";
+final Lab14Engine.AgingResult aging =
+        engine.computeAging(
+                mahPerHour,
+                conf,
+                cycles,
+                tempStart,
+                tempEnd
+        );
 
-                        if (aging != null &&
-        agingIndex > 0 &&
-        validDrain &&
-        conf != null &&
-        conf.percent >= 60) {                            
+int agingIndex = -1;
+String agingInterp = "N/A";
 
-                            if (agingIndex < 20)
-                                agingInterp = "Excellent";
-                            else if (agingIndex < 40)
-                                agingInterp = "Good";
-                            else if (agingIndex < 60)
-                                agingInterp = "Moderate";
-                            else if (agingIndex < 80)
-                                agingInterp = "High";
-                            else
-                                agingInterp = "Severe";
+if (aging != null) {
 
-                        } else {
-                            agingIndex = -1;
-                            agingInterp = "Insufficient data";
-                        }
+    agingIndex = aging.agingIndex;
+
+}
+
+if (aging != null &&
+    agingIndex >= 0 &&
+    validDrain &&
+    conf != null &&
+    conf.percent >= 60) {
+
+    if (agingIndex < 20)
+        agingInterp = "Excellent";
+    else if (agingIndex < 40)
+        agingInterp = "Good";
+    else if (agingIndex < 60)
+        agingInterp = "Moderate";
+    else if (agingIndex < 80)
+        agingInterp = "High";
+    else
+        agingInterp = "Severe";
+
+} else {
+
+    agingIndex = -1;
+    agingInterp = "Insufficient data";
+
+}
 
                         // ----------------------------------------------------
                         // FINAL SCORE
@@ -14024,13 +14082,17 @@ if (partial) {
 
     // FULL MODE
 
-    lab14LogAging(
-            gr,
-            agingIndexF,
-            agingInterpF,
-            agingF,
-            Float.NaN
-    );
+final int agingIndexF = agingIndex;
+final String agingInterpF = agingInterp;
+final Lab14Engine.AgingResult agingF = aging;
+
+lab14LogAging(
+        gr,
+        agingIndexF,
+        agingInterpF,
+        agingF,
+        Float.NaN
+);
 
     if (lab14_systemLimited[0]) {
 
@@ -14066,7 +14128,9 @@ lab14LogSave(
         calibrationDrift,
         false,
         finalScoreF,
-        agingIndexF
+        agingIndexF,
+        partial,
+        lab14_systemLimited
 );
 
 // ------------------------------------------------
@@ -14505,8 +14569,10 @@ private void lab14LogSave(
         boolean[] calibrationDrift,
         boolean batteryAuthenticitySuspicion,
         int finalScore,
-        int agingIndex
-) {
+        int agingIndex,
+        boolean partial,
+        boolean[] lab14_systemLimited
+)
 
 // ------------------------------------------------
 // SAVE RESULT (FULL MODE ONLY)

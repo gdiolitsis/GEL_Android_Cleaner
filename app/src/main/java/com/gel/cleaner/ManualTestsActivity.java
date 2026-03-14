@@ -5625,31 +5625,82 @@ boolean lab14SwellingRisk =
         );
     }
 
-    if (calibrationDrift[0]) {
+if (calibrationDrift[0]) {
 
-        logLabelWarnValue(
-                gr ? "Fuel gauge"
-                   : "Fuel gauge",
-                gr
-                        ? "Απόκλιση βαθμονόμησης μπαταρίας"
-                        : "Battery fuel-gauge calibration drift detected"
-        );
+    logLabelWarnValue(
+            gr ? "Fuel gauge"
+               : "Fuel gauge",
+            gr
+                    ? "Απόκλιση βαθμονόμησης μπαταρίας"
+                    : "Battery fuel-gauge calibration drift detected"
+    );
 
-        manipulationScore += 10;
+    manipulationScore += 10;
+}
+
+
+// ------------------------------------------------
+// swelling multi-criteria
+// ------------------------------------------------
+
+if (!Float.isNaN(internalResistance[0]) &&
+    !Float.isNaN(startBatteryTemp) &&
+    !Float.isNaN(endBatteryTemp)) {
+
+    float tempRise = endBatteryTemp - startBatteryTemp;
+
+    if (internalResistance[0] > 0.20f &&
+        tempRise > 8f) {
+
+        swellingScore++;
+
     }
+}
 
-    if (collapseRisk[0] || swellingRisk[0]) {
 
-        logLabelWarnValue(
-                gr ? "Συμπεριφορά μπαταρίας"
-                   : "Battery behaviour",
-                gr
-                        ? "Ανώμαλη ηλεκτροχημική συμπεριφορά"
-                        : "Abnormal electrochemical behaviour"
-        );
+if (!Float.isNaN(thermalImpedance[0]) &&
+    thermalImpedance[0] > 0.15f) {
 
-        manipulationScore += 10;
+    swellingScore++;
+
+}
+
+
+if (!Float.isNaN(sag1[0]) &&
+    !Float.isNaN(sag2[0])) {
+
+    float sagDiff =
+            Math.abs(sag1[0] - sag2[0]);
+
+    if (sagDiff > 0.05f) {
+        swellingScore++;
     }
+}
+
+
+// ------------------------------------------------
+// FINAL swelling decision
+// ------------------------------------------------
+
+if (swellingScore >= 2) {
+
+    swellingRisk[0] = true;
+
+}
+
+
+if (collapseRisk[0] || swellingRisk[0]) {
+
+    logLabelWarnValue(
+            gr ? "Συμπεριφορά μπαταρίας"
+               : "Battery behaviour",
+            gr
+                    ? "Ανώμαλη ηλεκτροχημική συμπεριφορά"
+                    : "Abnormal electrochemical behaviour"
+    );
+
+    manipulationScore += 10;
+}
 
     // ------------------------------------------------------------
     // SENSOR & BOARD LINES
@@ -12817,7 +12868,7 @@ root.addView(videoHolder);
 
             if (!Float.isNaN(sag1[0]) &&
                 !Float.isNaN(sag2[0])) {
-
+                	
                 float railDrop = Math.abs(sag1[0] - sag2[0]);
 
                 if (railDrop > 0.08f &&
@@ -12826,9 +12877,11 @@ root.addView(videoHolder);
                 }
 
                 if (railDrop > 0.20f &&
-                    !lab14_systemLimited[0]) {
-                    swellingRisk[0] = true;
-                }
+    !lab14_systemLimited[0]) {
+
+    swellingScore++;
+
+}
 
                 float sagDiff = Math.abs(sag1[0] - sag2[0]);
                 if (sagDiff > 0.05f) {
@@ -13233,9 +13286,12 @@ root.addView(videoHolder);
                             }
                         }
 
-                        // ----------------------------------------------------
-                        // ADVANCED DETECTORS
-                        // ----------------------------------------------------
+// ----------------------------------------------------
+// ADVANCED DETECTORS
+// ----------------------------------------------------
+
+int swellingScore = 0;
+                        
                         if (!Float.isNaN(voltageRecovery[0]) &&
                             !lab14_systemLimited[0] &&
                             voltageRecovery[0] < 0.04f) {
@@ -13243,21 +13299,23 @@ root.addView(videoHolder);
                         }
 
                         if (validDrain &&
-                            !Float.isNaN(internalResistance[0]) &&
-                            !Float.isNaN(tempStart) &&
-                            !Float.isNaN(tempEnd)) {
+    !Float.isNaN(internalResistance[0]) &&
+    !Float.isNaN(tempStart) &&
+    !Float.isNaN(tempEnd)) {
 
-                            float tempRise = tempEnd - tempStart;
+    float tempRise = tempEnd - tempStart;
 
-                            if (internalResistance[0] > 0.20f &&
-                                tempRise > 8f) {
-                                swellingRisk[0] = true;
-                            }
-                        }
+    if (internalResistance[0] > 0.20f &&
+        tempRise > 8f) {
+
+        swellingScore++;
+
+    }
+}
 
                         if (!Float.isNaN(sag1[0]) &&
                             !Float.isNaN(sag2[0])) {
-
+                            	                            
                             float sagDiff =
                                     Math.abs(sag1[0] - sag2[0]);
 
@@ -13281,7 +13339,7 @@ root.addView(videoHolder);
                         if (!Float.isNaN(sag1[0]) &&
                             !Float.isNaN(sag2[0]) &&
                             !Float.isNaN(voltageRecovery[0])) {
-
+                            	                            
                             float sagDiff =
                                     Math.abs(sag1[0] - sag2[0]);
 
@@ -13505,7 +13563,7 @@ root.addView(videoHolder);
 
                         if (!Float.isNaN(internalResistance[0]) &&
                             !lab14_systemLimited[0]) {
-
+                            	
                             if (internalResistance[0] >= 0.25f)
                                 finalScore -= 15;
                             else if (internalResistance[0] >= 0.18f)
@@ -13944,7 +14002,10 @@ lab14LogStressResult(
 // PARTIAL / FULL MODE DECISION
 // ------------------------------------------------
 
-boolean partial = Float.isNaN(drainMahF) || drainMahF < 5;
+boolean partial =
+        Float.isNaN(drainMahF) ||
+        drainMahF < 5;
+
 
 // ------------------------------------------------
 // PARTIAL MODE
@@ -13971,9 +14032,6 @@ if (partial) {
             Float.NaN
     );
 
-
-    // limiter warning (does NOT cancel aging)
-
     if (lab14_systemLimited[0]) {
 
         logWarn(gr
@@ -13981,30 +14039,6 @@ if (partial) {
                 : "System limiter detected. Result is indicative.");
 
     }
-
-
-    lab14LogFinalScore(
-            gr,
-            finalScoreF,
-            finalLabelF,
-            healthClassF,
-            collapseRisk,
-            swellingRisk,
-            calibrationDrift,
-            lab14_systemLimited
-    );
-
-}
-
-    // FULL MODE
-
-    lab14LogAging(
-            gr,
-            agingIndexF,
-            agingInterpF,
-            agingF,
-            Float.NaN
-    );
 
     lab14LogFinalScore(
             gr,
@@ -14035,7 +14069,6 @@ lab14LogSave(
         agingIndexF
 );
 
-
 // ------------------------------------------------
 // RUN COUNT (πρέπει πριν από reliability/confidence)
 // ------------------------------------------------
@@ -14052,7 +14085,6 @@ if (validDrainF && !lab14_systemLimited[0]) {
 
 }
 
-
 // ------------------------------------------------
 // RELIABILITY SUMMARY (uses runCount)
 // ------------------------------------------------
@@ -14063,7 +14095,6 @@ lab14LogReliabilitySummary(
         lab14_systemLimited,
         confF
 );
-
 
 // ------------------------------------------------
 // CONFIDENCE (uses runCount)
@@ -14076,7 +14107,6 @@ lab14LogConfidence(
         confF
 );
 
-
 // ------------------------------------------------
 // SYSTEM PROTECTION CHECK
 // ------------------------------------------------
@@ -14086,7 +14116,6 @@ Lab14BatteryProtectionCheck(
         lab14_systemLimited,
         validDrainF
 );
-
 
 // ------------------------------------------------
 // STOP
@@ -14478,10 +14507,6 @@ private void lab14LogSave(
         int finalScore,
         int agingIndex
 ) {
-
-    // ------------------------------------------------
-// SAVE RESULT (only if valid run)
-// ------------------------------------------------
 
 // ------------------------------------------------
 // SAVE RESULT (FULL MODE ONLY)

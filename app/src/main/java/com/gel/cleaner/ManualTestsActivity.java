@@ -14056,6 +14056,10 @@ lab14LogStressResult(
         calibrationDrift
 );
 
+final int agingIndexF = agingIndex;
+final String agingInterpF = agingInterp;
+final Lab14Engine.AgingResult agingF = aging;
+
 // ------------------------------------------------
 // PARTIAL / FULL MODE DECISION
 // ------------------------------------------------
@@ -14063,11 +14067,6 @@ lab14LogStressResult(
 boolean partial =
         Float.isNaN(drainMahF) ||
         drainMahF < 5;
-
-
-// ------------------------------------------------
-// PARTIAL MODE
-// ------------------------------------------------
 
 if (partial) {
 
@@ -14080,26 +14079,18 @@ if (partial) {
 
 } else {
 
-    // FULL MODE
-
-final int agingIndexF = agingIndex;
-final String agingInterpF = agingInterp;
-final Lab14Engine.AgingResult agingF = aging;
-
-lab14LogAging(
-        gr,
-        agingIndexF,
-        agingInterpF,
-        agingF,
-        Float.NaN
-);
+    lab14LogAging(
+            gr,
+            agingIndexF,
+            agingInterpF,
+            agingF,
+            Float.NaN
+    );
 
     if (lab14_systemLimited[0]) {
-
         logWarn(gr
                 ? "Η μέτρηση έγινε με περιορισμό από το σύστημα. Το αποτέλεσμα είναι ενδεικτικό."
                 : "System limiter detected. Result is indicative.");
-
     }
 
     lab14LogFinalScore(
@@ -14112,7 +14103,6 @@ lab14LogAging(
             calibrationDrift,
             lab14_systemLimited
     );
-
 }
 
 // ------------------------------------------------
@@ -14572,7 +14562,7 @@ private void lab14LogSave(
         int agingIndex,
         boolean partial,
         boolean[] lab14_systemLimited
-)
+) {
 
 // ------------------------------------------------
 // SAVE RESULT (FULL MODE ONLY)

@@ -3021,8 +3021,8 @@ final String txt =
                         ? "Η συσκευή φορτίζεται. Αποσύνδεσε τον φορτιστή."
                         : "Device is charging. Disconnect the charger.")
                         : (gr
-                        ? "Η συσκευή δεν φορτίζεται."
-                        : "Device is not charging."));
+                        ? "Η συσκευή δεν φορτίζεται. Συνέχισε το τεστ."
+                        : "Device is not charging. Continue to test"));
 
     TextView msg = new TextView(this);
     msg.setText(txt);
@@ -4011,108 +4011,165 @@ private static final String KEY_LAB14_LAST_DRAIN_1 = "lab14_drain_1";
 private static final String KEY_LAB14_LAST_DRAIN_2 = "lab14_drain_2";
 private static final String KEY_LAB14_LAST_DRAIN_3 = "lab14_drain_3";
 
-private void logLab14VarianceInfo() {
-
-    final boolean gr = AppLang.isGreek(this);
-
-    int runs = getLab14RunCount();
-    if (runs < 2) return;
-
-    try {
-        SharedPreferences sp = getSharedPreferences(LAB14_PREFS, MODE_PRIVATE);
-
-        double[] vals = new double[]{
-                Double.longBitsToDouble(sp.getLong(KEY_LAB14_LAST_DRAIN_1, Double.doubleToLongBits(-1))),
-                Double.longBitsToDouble(sp.getLong(KEY_LAB14_LAST_DRAIN_2, Double.doubleToLongBits(-1))),
-                Double.longBitsToDouble(sp.getLong(KEY_LAB14_LAST_DRAIN_3, Double.doubleToLongBits(-1)))
-        };
-
-        double sum = 0;
-        int n = 0;
-        for (double v : vals) {
-            if (v > 0) {
-                sum += v;
-                n++;
-            }
-        }
-        if (n < 2) return;
-
-        double mean = sum / n;
-        double var = 0;
-        for (double v : vals) {
-            if (v > 0)
-                var += (v - mean) * (v - mean);
-        }
-        var /= n;
-
-        double relVar = Math.sqrt(var) / mean;
-
-        logInfo(gr ? "Συνέπεια μετρήσεων:" : "Measurement consistency:");
-
-        if (relVar < 0.08) {
-            logOk(gr
-                    ? "Τα αποτελέσματα είναι συνεπή μεταξύ των εκτελέσεων."
-                    : "Results are consistent across runs.");
-        }
-        else if (relVar < 0.15) {
-            logOk(gr
-                    ? "Μικρή μεταβλητότητα ανιχνεύθηκε. Τα αποτελέσματα είναι γενικά αξιόπιστα."
-                    : "Minor variability detected. Results are generally reliable.");
-        }
-        else {
-            logWarn(gr
-                    ? "Υψηλή μεταβλητότητα ανιχνεύθηκε. Επανεκτέλεσε το τεστ μετά από επανεκκίνηση για μεγαλύτερη αξιοπιστία."
-                    : "High variability detected. Repeat the test after a system restart to improve reliability.");
-        }
-
-    } catch (Throwable ignore) {}
-}
-
-private void logLab14Confidence() {
-
-    final boolean gr = AppLang.isGreek(this);
+private void lab14LogReliabilitySummary(
+        boolean gr,
+        boolean validDrain,
+        boolean[] lab14_systemLimited,
+        Lab14Engine.ConfidenceResult conf
+) {
 
     int runs = getLab14RunCount();
+
+    appendHtml("<br>");
     logLine();
 
-    if (runs <= 1) {
+    logInfo(gr
+            ? "Αξιοπιστία διάγνωσης"
+            : "Diagnostic reliability");
+
+    logLine();
+
+
+    // -----------------------
+    // VALID RUN
+    // -----------------------
+
+    boolean validRun = validDrain && !lab14_systemLimited[0];
+
+    logLabelValue(
+            gr ? "Έγκυρη εκτέλεση"
+               : "Valid run",
+            validRun
+                    ? (gr ? "Ναι" : "Yes")
+                    : (gr ? "Όχι" : "No")
+    );
+
+
+    // -----------------------
+    // LIMITER
+    // -----------------------
+
+    if (lab14_systemLimited[0]) {
 
         logLabelWarnValue(
-    gr ? "Εμπιστοσύνη" : "Confidence",
-    gr ? "Προκαταρκτική (1 εκτέλεση)"
-       : "Preliminary (1 run)"
-);
+                gr ? "Περιορισμός συστήματος"
+                   : "System limited",
+                gr
+                        ? "Το BMS περιόρισε την κατανάλωση"
+                        : "BMS current limiting detected"
+        );
+
+    } else {
+
+        logLabelOkValue(
+                gr ? "Περιορισμός συστήματος"
+                   : "System limited",
+                gr ? "Δεν εντοπίστηκε"
+                   : "Not detected"
+        );
+
+    }
+
+
+    // -----------------------
+    // RUN COUNT
+    // -----------------------
+
+    logLabelValue(
+            gr ? "Έγκυρες εκτελέσεις"
+               : "Valid runs",
+            String.valueOf(runs)
+    );
+
+
+    // -----------------------
+    // CONSISTENCY
+    // -----------------------
+
+    if (conf != null && runs >= 2) {
+
+        logLabelValue(
+                gr ? "Στατιστική συνέπεια"
+                   : "Run consistency",
+                String.format(
+                        Locale.US,
+                        "%d%% (%d runs)",
+                        conf.percent,
+                        conf.validRuns
+                )
+        );
+
+    } else {
+
+        logLabelWarnValue(
+                gr ? "Στατιστική συνέπεια"
+                   : "Run consistency",
+                gr
+                        ? "Ανεπαρκή δεδομένα"
+                        : "Insufficient data"
+        );
+
+    }
+
+
+    // -----------------------
+    // CONFIDENCE (same logic as before)
+    // -----------------------
+
+    logLine();
+
+    if (runs <= 0) {
+
+        logLabelWarnValue(
+                gr ? "Εμπιστοσύνη" : "Confidence",
+                gr ? "Δεν υπάρχει ακόμη έγκυρη καταγεγραμμένη εκτέλεση"
+                   : "No valid recorded run yet"
+        );
 
         logWarn(gr
-                ? "Για υψηλότερη διαγνωστική ακρίβεια, εκτέλεσε το τεστ 2 ακόμη φορές, σε διαφορετική ημέρα, υπό παρόμοιες συνθήκες."
-                : "For higher diagnostic accuracy, run this test 2 more times, on a different day, under similar conditions.");
+                ? "Η τρέχουσα εκτέλεση δεν καταχωρήθηκε ως έγκυρη. Απαιτούνται 3 έγκυρες εκτελέσεις."
+                : "Current run not valid. 3 valid runs required.");
+
+    }
+    else if (runs == 1) {
+
+        logLabelWarnValue(
+                gr ? "Εμπιστοσύνη" : "Confidence",
+                gr ? "Προκαταρκτική (1 έγκυρη εκτέλεση)"
+                   : "Preliminary (1 valid run)"
+        );
+
+        logWarn(gr
+                ? "Απαιτούνται ακόμη 2 έγκυρες εκτελέσεις."
+                : "2 more valid runs required.");
 
     }
     else if (runs == 2) {
 
         logLabelWarnValue(
-    gr ? "Εμπιστοσύνη" : "Confidence",
-    gr ? "Μεσαία (2 εκτελέσεις)"
-       : "Medium (2 runs)"
-);
+                gr ? "Εμπιστοσύνη" : "Confidence",
+                gr ? "Μεσαία (2 έγκυρες εκτελέσεις)"
+                   : "Medium (2 valid runs)"
+        );
 
         logWarn(gr
-                ? "Για υψηλότερη διαγνωστική ακρίβεια, εκτέλεσε το τεστ 1 ακόμη φορά, σε διαφορετική ημέρα, υπό παρόμοιες συνθήκες."
-                : "For higher diagnostic accuracy, run this test 1 more time, on a different day, under similar conditions.");
+                ? "Απαιτείται ακόμη 1 έγκυρη εκτέλεση."
+                : "1 more valid run required.");
 
     }
     else {
 
         logLabelOkValue(
-    gr ? "Εμπιστοσύνη" : "Confidence",
-    gr ? "Υψηλή (3+ εκτελέσεις)"
-       : "High (3+ runs)"
-);
+                gr ? "Εμπιστοσύνη" : "Confidence",
+                gr ? "Υψηλή (3+ έγκυρες εκτελέσεις)"
+                   : "High (3+ valid runs)"
+        );
 
         logInfo(gr
                 ? "Η διαγνωστική αξιοπιστία της μπαταρίας είναι υψηλή."
                 : "Battery diagnostic confidence is high.");
     }
+
 }
 
 private int getLab14RunCount() {
@@ -4212,9 +4269,18 @@ private void startMemoryStress() {
     // 🔴 CHECK CHARGING
     if (isChargingNowSafe()) {
 
-        stopCpuBurn();
-        stopGpuStress();
-        stopMemoryStress();
+    stopCpuBurn();
+    stopGpuStress();
+    stopMemoryStress();
+
+    lab14Running = false;
+
+    runOnUiThread(() -> {
+
+        try {
+            if (progressDialog != null)
+                progressDialog.dismiss();
+        } catch (Throwable ignore) {}
 
         logLine();
 
@@ -4227,13 +4293,10 @@ private void startMemoryStress() {
                 : "Disconnect charger and run the test again.");
 
         logLine();
+    });
 
-        lab14Running = false;
-
-        return;
-    }
-
-    // εδώ συνεχίζει κανονικά το test
+    return;
+}
 
                 for (int i = 0; i < buf.length; i += 64) {
                     buf[i] = (byte) r.nextInt(255);
@@ -13877,24 +13940,11 @@ lab14LogStressResult(
         calibrationDrift
 );
 
-lab14LogConsistency(
-        gr,
-        validDrainF,
-        variabilityDetected,
-        calibrationDrift,
-        lab14_systemLimited,
-        percentDeviation[0],
-        confF
-);
-
 // ------------------------------------------------
 // PARTIAL / FULL MODE DECISION
 // ------------------------------------------------
 
-boolean partial =
-        lab14_systemLimited[0]
-        || !validDrainF
-        || (confF != null && confF.percent < 60);
+boolean partial = Float.isNaN(drainMahF) || drainMahF < 5;
 
 // ------------------------------------------------
 // PARTIAL MODE
@@ -13910,6 +13960,41 @@ if (partial) {
     );
 
 } else {
+
+    // FULL MODE
+
+    lab14LogAging(
+            gr,
+            agingIndexF,
+            agingInterpF,
+            agingF,
+            Float.NaN
+    );
+
+
+    // limiter warning (does NOT cancel aging)
+
+    if (lab14_systemLimited[0]) {
+
+        logWarn(gr
+                ? "Η μέτρηση έγινε με περιορισμό από το σύστημα. Το αποτέλεσμα είναι ενδεικτικό."
+                : "System limiter detected. Result is indicative.");
+
+    }
+
+
+    lab14LogFinalScore(
+            gr,
+            finalScoreF,
+            finalLabelF,
+            healthClassF,
+            collapseRisk,
+            swellingRisk,
+            calibrationDrift,
+            lab14_systemLimited
+    );
+
+}
 
     // FULL MODE
 
@@ -13950,8 +14035,38 @@ lab14LogSave(
         agingIndexF
 );
 
+
 // ------------------------------------------------
-// CONFIDENCE
+// RUN COUNT (πρέπει πριν από reliability/confidence)
+// ------------------------------------------------
+
+if (validDrainF && !lab14_systemLimited[0]) {
+
+    incLab14RunCount();
+
+} else {
+
+    logWarn(gr
+            ? "Η εκτέλεση δεν μετρήθηκε λόγω περιορισμού ή μη έγκυρων δεδομένων."
+            : "Run not counted due to limiter or invalid data.");
+
+}
+
+
+// ------------------------------------------------
+// RELIABILITY SUMMARY (uses runCount)
+// ------------------------------------------------
+
+lab14LogReliabilitySummary(
+        gr,
+        validDrainF,
+        lab14_systemLimited,
+        confF
+);
+
+
+// ------------------------------------------------
+// CONFIDENCE (uses runCount)
 // ------------------------------------------------
 
 lab14LogConfidence(
@@ -13960,16 +14075,6 @@ lab14LogConfidence(
         confidenceLabelF,
         confF
 );
-
-// ------------------------------------------------
-// RUN COUNT
-// ------------------------------------------------
-
-incLab14RunCount();
-
-logLab14Confidence();
-
-logLab14VarianceInfo();
 
 
 // ------------------------------------------------
@@ -14206,106 +14311,6 @@ private void lab14LogStressResult(
 }
 
 // ============================================================
-// LAB 14 — LOG CONSISTENCY
-// ============================================================
-private void lab14LogConsistency(
-        boolean gr,
-        boolean validDrain,
-        boolean[] variabilityDetected,
-        boolean[] calibrationDrift,
-        boolean[] lab14_systemLimited,
-        float percentDeviation,
-        Lab14Engine.ConfidenceResult conf
-) {
-
-    appendHtml("<br>");
-    logLine();
-    logInfo(gr
-            ? "Συνέπεια μετρήσεων"
-            : "Measurement consistency");
-    logLine();
-
-    if (validDrain) {
-        logLabelOkValue(
-                gr ? "Έγκυρη μέτρηση"
-                   : "Valid measurement",
-                gr ? "Ναι"
-                   : "Yes"
-        );
-    } else {
-        logLabelWarnValue(
-                gr ? "Έγκυρη μέτρηση"
-                   : "Valid measurement",
-                gr ? "Όχι"
-                   : "No"
-        );
-    }
-
-    if (variabilityDetected[0]) {
-        logLabelWarnValue(
-                gr ? "Αστάθεια μετρήσεων"
-                   : "Measurement instability",
-                gr
-                        ? "Τα αποτελέσματα δεν είναι πλήρως συνεπή"
-                        : "Results not fully consistent"
-        );
-    } else {
-        logLabelOkValue(
-                gr ? "Αστάθεια μετρήσεων"
-                   : "Measurement instability",
-                gr
-                        ? "Δεν εντοπίστηκε"
-                        : "Not detected"
-        );
-    }
-
-    if (calibrationDrift[0]) {
-        logLabelWarnValue(
-                gr ? "Απόκλιση βαθμονόμησης"
-                   : "Calibration drift",
-                String.format(Locale.US, "%.1f%%", percentDeviation)
-        );
-    } else {
-        logLabelOkValue(
-                gr ? "Βαθμονόμηση"
-                   : "Calibration",
-                "OK"
-        );
-    }
-
-    if (lab14_systemLimited[0]) {
-        logLabelWarnValue(
-                gr ? "Περιορισμός συστήματος"
-                   : "System limited",
-                gr
-                        ? "Το BMS περιόρισε το ρεύμα"
-                        : "BMS current limiting detected"
-        );
-    } else {
-        logLabelOkValue(
-                gr ? "Περιορισμός συστήματος"
-                   : "System limited",
-                gr
-                        ? "Δεν εντοπίστηκε"
-                        : "Not detected"
-        );
-    }
-
-    if (conf != null) {
-        logLabelValue(
-                gr ? "Στατιστική συνέπεια"
-                   : "Run consistency",
-                String.format(
-                        Locale.US,
-                        "%d%% (%d runs)",
-                        conf.percent,
-                        conf.validRuns
-                )
-        );
-    }
-}
-
-// ============================================================
 // LAB 14 — LOG AGING
 // ============================================================
 private void lab14LogAging(
@@ -14474,6 +14479,16 @@ private void lab14LogSave(
         int agingIndex
 ) {
 
+    // ------------------------------------------------
+// SAVE RESULT (only if valid run)
+// ------------------------------------------------
+
+// ------------------------------------------------
+// SAVE RESULT (FULL MODE ONLY)
+// ------------------------------------------------
+
+if (!partial && !lab14_systemLimited[0]) {
+
     p.edit()
             .putBoolean("lab14_unstable_measurement", variabilityDetected[0])
             .putBoolean("lab14_collapse_risk", collapseRisk[0])
@@ -14491,6 +14506,20 @@ private void lab14LogSave(
             gr ? "Το αποτέλεσμα αποθηκεύτηκε"
                : "Result stored"
     );
+
+} else {
+
+    logWarn(gr
+            ? "Η εκτέλεση δεν αποθηκεύτηκε (partial / limiter / invalid run)."
+            : "Run not saved (partial / limiter / invalid run).");
+
+    logLabelWarnValue(
+            gr ? "Αποθήκευση αποτελέσματος"
+               : "Result storage",
+            gr ? "Δεν αποθηκεύτηκε"
+               : "Not stored"
+    );
+
 }
 
 // ============================================================

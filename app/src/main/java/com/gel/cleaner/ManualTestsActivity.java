@@ -3577,35 +3577,20 @@ private void lab14BProtectionTest() {
 
         logLine();
 
-
         new Thread(() -> {
-        	
-boolean cpuThrottle = false;
 
-if (cpuFreqStart > 0 && cpuFreqEnd > 0) {
+            boolean cpuThrottle = false;
+            boolean thermalLimit = false;
+            boolean powerLimit = false;
 
-    if (cpuFreqEnd < cpuFreqStart * 0.7) {
-        cpuThrottle = true;
-    }
+            long cpuFreqStart = -1L;
+            long cpuFreqEnd = -1L;
 
-}
+            float cpuTempStart = Float.NaN;
+            float cpuTempEnd = Float.NaN;
 
-boolean thermalLimit = false;
-
-if (!Float.isNaN(cpuTempStart)
-        && !Float.isNaN(cpuTempEnd)) {
-
-    if (cpuTempEnd > cpuTempStart + 8f) {
-        thermalLimit = true;
-    }
-
-}
-
-boolean powerLimit = false;
-
-if (validDrain && systemLimited[0]) {
-    powerLimit = true;
-}
+            boolean[] systemLimited = new boolean[]{ false };
+            boolean validDrain = false;
 
             try {
 
@@ -3615,7 +3600,6 @@ if (validDrain && systemLimited[0]) {
                         engine.readSnapshot();
 
                 if (start == null) {
-
                     runOnUiThread(() ->
                             logError(
                                     gr
@@ -3623,21 +3607,15 @@ if (validDrain && systemLimited[0]) {
                                             : "Battery read failed"
                             )
                     );
-
                     return;
                 }
-
 
                 long startMah = start.chargeNowMah;
                 float tempStart = start.temperature;
                 float vStart = getBatteryVoltageFiltered();
-                long cpuFreqStart = readCpuFreq();
-                float cpuTempStart = readCpuTempSafe2();
 
-
-                // ============================
-                // MINI STRESS
-                // ============================
+                cpuFreqStart = readCpuFreq();
+                cpuTempStart = readCpuTempSafe2();
 
                 runOnUiThread(() ->
                         logInfo(gr
@@ -3646,7 +3624,6 @@ if (validDrain && systemLimited[0]) {
                 );
 
                 try {
-
                     startCpuBurn_C_Mode();
                     startGpuStress();
                     startMemoryStress();
@@ -3660,95 +3637,203 @@ if (validDrain && systemLimited[0]) {
                     try { stopCpuBurn(); } catch (Throwable ignore) {}
                     try { stopGpuStress(); } catch (Throwable ignore) {}
                     try { stopMemoryStress(); } catch (Throwable ignore) {}
-
                 }
-
-
-                // ============================
-                // END SNAPSHOT
-                // ============================
 
                 Lab14Engine.GelBatterySnapshot end =
                         engine.readSnapshot();
 
-                if (end == null) return;
-
+                if (end == null) {
+                    runOnUiThread(() ->
+                            logError(
+                                    gr
+                                            ? "Αποτυχία τελικής ανάγνωσης μπαταρίας"
+                                            : "Final battery read failed"
+                            )
+                    );
+                    return;
+                }
 
                 long endMah = end.chargeNowMah;
                 float tempEnd = end.temperature;
                 float vEnd = getBatteryVoltageFiltered();
-                long cpuFreqEnd = readCpuFreq();
-                float cpuTempEnd = readCpuTempSafe2();
 
-                // ============================
-                // DETECT DRAIN
-                // ============================
+                cpuFreqEnd = readCpuFreq();
+                cpuTempEnd = readCpuTempSafe2();
 
-                boolean validDrain =
-                        (startMah - endMah) > 0;
+                validDrain = (startMah - endMah) > 0;
 
-
-                // ============================
-                // DETECT LIMITER
-                // ============================
-
-                boolean[] systemLimited =
-                        new boolean[]{ false };
-
-
+                // ----------------------------------------------------
+                // SYSTEM LIMITER DETECTION
+                // ----------------------------------------------------
                 if (!Float.isNaN(tempStart)
                         && !Float.isNaN(tempEnd)
-                        && tempEnd - tempStart < 1.0f) {
+                        && (tempEnd - tempStart) < 1.0f) {
 
                     systemLimited[0] = true;
                 }
 
-
-                if (vEnd > vStart - 0.01f) {
+                if (!Float.isNaN(vStart)
+                        && !Float.isNaN(vEnd)
+                        && vEnd > (vStart - 0.01f)) {
 
                     systemLimited[0] = true;
                 }
 
-                // ============================
-                // RESULT
-                // ============================
+                // ----------------------------------------------------
+                // CPU THROTTLE DETECTION
+                // ----------------------------------------------------
+                if (cpuFreqStart > 0L && cpuFreqEnd > 0L) {
+                    if (cpuFreqEnd < (long) (cpuFreqStart * 0.7)) {
+                        cpuThrottle = true;
+                    }
+                }
+
+                // ----------------------------------------------------
+                // THERMAL LIMIT DETECTION
+                // ----------------------------------------------------
+                if (!Float.isNaN(cpuTempStart)
+                        && !Float.isNaN(cpuTempEnd)) {
+
+                    if (cpuTempEnd > cpuTempStart + 8f) {
+                        thermalLimit = true;
+                    }
+                }
+
+                // ----------------------------------------------------
+                // POWER LIMIT DETECTION
+                // ----------------------------------------------------
+                if (validDrain && systemLimited[0]) {
+                    powerLimit = true;
+                }
+
+                final boolean cpuThrottleF = cpuThrottle;
+                final boolean thermalLimitF = thermalLimit;
+                final boolean powerLimitF = powerLimit;
+                final boolean validDrainF = validDrain;
+                final boolean[] systemLimitedF = systemLimited;
+
+                final long startMahF = startMah;
+                final long endMahF = endMah;
+                final float tempStartF = tempStart;
+                final float tempEndF = tempEnd;
+                final float vStartF = vStart;
+                final float vEndF = vEnd;
+                final long cpuFreqStartF = cpuFreqStart;
+                final long cpuFreqEndF = cpuFreqEnd;
+                final float cpuTempStartF = cpuTempStart;
+                final float cpuTempEndF = cpuTempEnd;
 
                 runOnUiThread(() -> {
 
+                    // βασικό συμπέρασμα protection
                     Lab14BatteryProtectionCheck(
                             gr,
-                            systemLimited,
-                            validDrain
+                            systemLimitedF,
+                            validDrainF
                     );
 
+                    // ------------------------------------------------
+                    // PRO DETAILS
+                    // ------------------------------------------------
+                    logLabelValue(
+                            gr ? "Μεταβολή φόρτισης" : "Charge delta",
+                            String.format(
+                                    Locale.US,
+                                    "%d mAh",
+                                    Math.max(0L, startMahF - endMahF)
+                            )
+                    );
+
+                    if (!Float.isNaN(vStartF) && !Float.isNaN(vEndF)) {
+                        logLabelValue(
+                                gr ? "Μεταβολή τάσης" : "Voltage delta",
+                                String.format(
+                                        Locale.US,
+                                        "%.3f V → %.3f V",
+                                        vStartF,
+                                        vEndF
+                                )
+                        );
+                    }
+
+                    if (!Float.isNaN(tempStartF) && !Float.isNaN(tempEndF)) {
+                        logLabelValue(
+                                gr ? "Μεταβολή θερμοκρασίας μπαταρίας" : "Battery temperature delta",
+                                String.format(
+                                        Locale.US,
+                                        "%.1f°C → %.1f°C",
+                                        tempStartF,
+                                        tempEndF
+                                )
+                        );
+                    }
+
+                    if (cpuFreqStartF > 0L && cpuFreqEndF > 0L) {
+                        logLabelValue(
+                                gr ? "Συχνότητα CPU" : "CPU frequency",
+                                String.format(
+                                        Locale.US,
+                                        "%d → %d",
+                                        cpuFreqStartF,
+                                        cpuFreqEndF
+                                )
+                        );
+                    }
+
+                    if (!Float.isNaN(cpuTempStartF) && !Float.isNaN(cpuTempEndF)) {
+                        logLabelValue(
+                                gr ? "Θερμοκρασία CPU" : "CPU temperature",
+                                String.format(
+                                        Locale.US,
+                                        "%.1f°C → %.1f°C",
+                                        cpuTempStartF,
+                                        cpuTempEndF
+                                )
+                        );
+                    }
+
+                    if (cpuThrottleF) {
+                        logWarn(gr
+                                ? "Ανιχνεύθηκε περιορισμός CPU."
+                                : "CPU throttling detected.");
+                    } else {
+                        logOk(gr
+                                ? "Δεν ανιχνεύθηκε περιορισμός CPU."
+                                : "No CPU throttling detected.");
+                    }
+
+                    if (thermalLimitF) {
+                        logWarn(gr
+                                ? "Ανιχνεύθηκε θερμικός περιορισμός."
+                                : "Thermal limit detected.");
+                    } else {
+                        logOk(gr
+                                ? "Δεν ανιχνεύθηκε θερμικός περιορισμός."
+                                : "No thermal limit detected.");
+                    }
+
+                    if (powerLimitF) {
+                        logWarn(gr
+                                ? "Ανιχνεύθηκε περιορισμός ισχύος."
+                                : "Power limit detected.");
+                    } else {
+                        logOk(gr
+                                ? "Δεν ανιχνεύθηκε περιορισμός ισχύος."
+                                : "No power limit detected.");
+                    }
+
+                    logLine();
+                    logOk(gr
+                            ? "Το LAB 14B ολοκληρώθηκε."
+                            : "LAB 14B finished.");
+                    logLine();
                 });
 
-            }
-            catch (Throwable t) {
-            	
-            if (cpuThrottle) {
+            } catch (Throwable t) {
 
-    logWarn(gr
-            ? "Ανιχνεύθηκε περιορισμός CPU."
-            : "CPU throttling detected.");
-
-}
-
-if (thermalLimit) {
-
-    logWarn(gr
-            ? "Ανιχνεύθηκε θερμικός περιορισμός."
-            : "Thermal limit detected.");
-
-}
-
-if (powerLimit) {
-
-    logWarn(gr
-            ? "Ανιχνεύθηκε περιορισμός ισχύος."
-            : "Power limit detected.");
-
-}
+                try { stopCpuBurn(); } catch (Throwable ignore) {}
+                try { stopGpuStress(); } catch (Throwable ignore) {}
+                try { stopMemoryStress(); } catch (Throwable ignore) {}
 
                 runOnUiThread(() ->
                         logError(
@@ -3757,7 +3842,6 @@ if (powerLimit) {
                                         : "Test error"
                         )
                 );
-
             }
 
         }).start();

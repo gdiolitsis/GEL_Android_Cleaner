@@ -278,6 +278,8 @@ public class ManualTestsActivity extends AppCompatActivity {
     
     final boolean[] lab14_systemLimited = { false };
     
+    private volatile boolean __cpuBurn = false;
+    
     boolean wearSignals = false;
     boolean controllerRisk = false;
     private boolean batteryBehaviourWarning = false;
@@ -3850,63 +3852,6 @@ private void showLab14BAdvisory(Runnable onContinue) {
 
     dlg.show();
     
-// ============================================================
-// CPU FREQ READ
-// ============================================================
-private long readCpuFreq() {
-
-    try {
-
-        java.io.File f =
-                new java.io.File(
-                        "/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq"
-                );
-
-        if (!f.exists()) return -1;
-
-        java.io.BufferedReader br =
-                new java.io.BufferedReader(
-                        new java.io.FileReader(f)
-                );
-
-        String s = br.readLine();
-
-        br.close();
-
-        return Long.parseLong(s.trim());
-
-    } catch (Throwable ignore) {}
-
-    return -1;
-}
-
-private float readCpuTempSafe2() {
-
-    try {
-
-        java.io.File f =
-                new java.io.File(
-                        "/sys/class/thermal/thermal_zone0/temp"
-                );
-
-        if (!f.exists()) return Float.NaN;
-
-        java.io.BufferedReader br =
-                new java.io.BufferedReader(
-                        new java.io.FileReader(f)
-                );
-
-        String s = br.readLine();
-
-        br.close();
-
-        return Float.parseFloat(s) / 1000f;
-
-    } catch (Throwable ignore) {}
-
-    return Float.NaN;
-}
-
     // ============================
     // TTS (FINAL SAFE VERSION)
     // ============================
@@ -4087,12 +4032,19 @@ private void logLab14Confidence() {
 }
 
 private int getLab14RunCount() {
-try {
-return getSharedPreferences(LAB14_PREFS, MODE_PRIVATE)
-.getInt(KEY_LAB14_RUNS, 0);
-} catch (Throwable ignore) {
-return 0;
-}
+
+    try {
+
+        return getSharedPreferences(
+                LAB14_PREFS,
+                MODE_PRIVATE
+        ).getInt(KEY_LAB14_RUNS, 0);
+
+    } catch (Throwable ignore) {
+
+        return 0;
+
+    }
 }
 
 // ------------------------------------------------------------
@@ -4117,21 +4069,25 @@ return null;
 // ------------------------------------------------------------
 // CPU stress (controlled) — used by LAB 14/17
 // ------------------------------------------------------------
-private volatile boolean __cpuBurn = false;
 
 private void startCpuBurn_C_Mode() {
-__cpuBurn = true;
 
-new Thread(() -> {  
-    try {  
-        while (__cpuBurn) {  
-            double x = 0;  
-            for (int i = 0; i < 100_000; i++) {  
-                x += Math.sqrt(i);  
-            }  
-        }  
-    } catch (Throwable ignore) {}  
-}, "LAB-CPU-BURN").start();
+    __cpuBurn = true;
+    new Thread(() -> {
+
+        try {
+
+            while (__cpuBurn) {
+                double x = 0;
+                for (int i = 0; i < 100000; i++) {
+                    x += Math.sqrt(i);
+                }
+
+            }
+
+        } catch (Throwable ignore) {}
+
+    }, "LAB-CPU-BURN").start();
 
 }
 
@@ -14532,6 +14488,63 @@ private void lab14StopAllStress() {
     try { restoreBrightnessAndKeepOn(); } catch (Throwable ignore) {}
 
     lab14Running = false;
+}
+
+// ============================================================
+// CPU FREQ READ
+// ============================================================
+private long readCpuFreq() {
+
+    try {
+
+        java.io.File f =
+                new java.io.File(
+                        "/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq"
+                );
+
+        if (!f.exists()) return -1;
+
+        java.io.BufferedReader br =
+                new java.io.BufferedReader(
+                        new java.io.FileReader(f)
+                );
+
+        String s = br.readLine();
+
+        br.close();
+
+        return Long.parseLong(s.trim());
+
+    } catch (Throwable ignore) {}
+
+    return -1;
+}
+
+private float readCpuTempSafe2() {
+
+    try {
+
+        java.io.File f =
+                new java.io.File(
+                        "/sys/class/thermal/thermal_zone0/temp"
+                );
+
+        if (!f.exists()) return Float.NaN;
+
+        java.io.BufferedReader br =
+                new java.io.BufferedReader(
+                        new java.io.FileReader(f)
+                );
+
+        String s = br.readLine();
+
+        br.close();
+
+        return Float.parseFloat(s) / 1000f;
+
+    } catch (Throwable ignore) {}
+
+    return Float.NaN;
 }
 
 //=============================================================

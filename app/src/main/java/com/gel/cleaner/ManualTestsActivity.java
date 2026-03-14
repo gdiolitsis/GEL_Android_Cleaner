@@ -4197,6 +4197,8 @@ private void startMainStressPhase(
 private Thread memStressThread;
 
 private void startMemoryStress() {
+	
+	final boolean gr = AppLang.isGreek(this);
 
     memStressThread = new Thread(() -> {
 

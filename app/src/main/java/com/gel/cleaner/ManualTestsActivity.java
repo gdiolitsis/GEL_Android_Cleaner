@@ -4279,7 +4279,7 @@ private void startMemoryStress() {
 
     runOnUiThread(() -> {
 
-    logLine(); το
+    logLine();
 
         logError(gr
                 ? "Ανιχνεύθηκε φόρτιση κατά τη διάρκεια της δοκιμής."

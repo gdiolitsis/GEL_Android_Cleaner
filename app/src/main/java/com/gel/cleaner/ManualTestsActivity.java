@@ -12873,13 +12873,6 @@ root.addView(videoHolder);
                     collapseRisk[0] = true;
                 }
 
-                if (railDrop > 0.20f &&
-    !lab14_systemLimited[0]) {
-
-    swellingScore++;
-
-}
-
                 float sagDiff = Math.abs(sag1[0] - sag2[0]);
                 if (sagDiff > 0.05f) {
                     cellImbalanceRisk[0] = true;
@@ -13288,6 +13281,13 @@ root.addView(videoHolder);
 // ----------------------------------------------------
 
 int swellingScore = 0;
+boolean batteryBehaviourWarning = false;
+
+Lab14Engine.ConfidenceResult conf = null;
+
+int agingIndex = -1;
+String agingInterp = "N/A";
+
 swellingRisk[0] = false;
 
 
@@ -13504,12 +13504,9 @@ final Lab14Engine.AgingResult aging =
                 tempEnd
         );
 
-int agingIndex = -1;
-String agingInterp = "N/A";
-
 if (aging != null) {
 
-    agingIndex = aging.agingIndex;
+    agingIndex = aging.index;
 
 }
 
@@ -14055,10 +14052,6 @@ lab14LogStressResult(
         swellingRisk,
         calibrationDrift
 );
-
-final int agingIndexF = agingIndex;
-final String agingInterpF = agingInterp;
-final Lab14Engine.AgingResult agingF = aging;
 
 // ------------------------------------------------
 // PARTIAL / FULL MODE DECISION

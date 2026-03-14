@@ -3185,7 +3185,7 @@ row.setOrientation(LinearLayout.VERTICAL);
 
 Button btnRestart = gelButton(
         this,
-        gr ? "Έξοδος για επανεκκίνηση" : "Exit for restart"
+        gr ? "Έξοδος για επανεκκίνηση" : "Exit for restart",
         0xFF8B0000
 );
 
@@ -4205,6 +4205,32 @@ private void startMemoryStress() {
             Random r = new Random();
 
             while (lab14Running) {
+
+    // 🔴 CHECK CHARGING
+    if (isChargingNowSafe()) {
+
+        stopCpuBurn();
+        stopGpuStress();
+        stopMemoryStress();
+
+        logLine();
+
+        logError(gr
+                ? "Ανιχνεύθηκε φόρτιση κατά τη διάρκεια της δοκιμής."
+                : "Charging detected during test.");
+
+        logWarn(gr
+                ? "Αποσύνδεσε τον φορτιστή και εκτέλεσε το τεστ από την αρχή."
+                : "Disconnect charger and run the test again.");
+
+        logLine();
+
+        lab14Running = false;
+
+        return;
+    }
+
+    // εδώ συνεχίζει κανονικά το test
 
                 for (int i = 0; i < buf.length; i += 64) {
                     buf[i] = (byte) r.nextInt(255);
@@ -14649,6 +14675,32 @@ private void incLab14RunCount() {
 
     } catch (Throwable ignore) {}
 
+}
+
+private boolean isChargingNowSafe() {
+
+    try {
+
+        IntentFilter f =
+                new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+
+        Intent i =
+                registerReceiver(null, f);
+
+        if (i == null) return false;
+
+        int status =
+                i.getIntExtra(
+                        BatteryManager.EXTRA_STATUS,
+                        -1
+                );
+
+        return status == BatteryManager.BATTERY_STATUS_CHARGING
+                || status == BatteryManager.BATTERY_STATUS_FULL;
+
+    } catch (Throwable ignore) {}
+
+    return false;
 }
 
 //=============================================================

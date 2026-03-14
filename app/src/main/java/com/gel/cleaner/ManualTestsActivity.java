@@ -1114,7 +1114,7 @@ public void onBackPressed() {
     try {
         lab14Cancelled = true;
         lab14StopAllStress();
-        restoreBrightness();   // ✅ ΠΡΟΣΘΗΚΗ
+        restoreBrightnessAndKeepOn();   // ✅ ΠΡΟΣΘΗΚΗ
         lab14CleanupUI();
     } catch (Throwable ignore) {}
 
@@ -2869,7 +2869,7 @@ private void lab14CancelStress() {
     try { stopGpuStress(); } catch (Throwable ignore) {}
 
     try {
-        restoreBrightness();   // ✅ ΠΡΟΣΘΗΚΗ
+        restoreBrightnessAndKeepOn();   // ✅ ΠΡΟΣΘΗΚΗ
     } catch (Throwable ignore) {}
 
     try {
@@ -3555,7 +3555,7 @@ private boolean checkLab14BConditions() {
 }
 
 // ============================================================
-// LAB 14B — SYSTEM BATTERY PROTECTION CHECK (ENTRY)
+// LAB 14B — SYSTEM BATTERY PROTECTION TEST
 // ============================================================
 private void lab14BProtectionTest() {
 
@@ -3587,21 +3587,23 @@ private void lab14BProtectionTest() {
 
                 if (start == null) {
 
-                    runOnUiThread(() -> logError(
-                            gr
-                                    ? "Αποτυχία ανάγνωσης μπαταρίας"
-                                    : "Battery read failed"
-                    ));
+                    runOnUiThread(() ->
+                            logError(
+                                    gr
+                                            ? "Αποτυχία ανάγνωσης μπαταρίας"
+                                            : "Battery read failed"
+                            )
+                    );
 
                     return;
                 }
 
 
                 long startMah = start.chargeNowMah;
-
-                float vStart = getBatteryVoltageFiltered();
-
                 float tempStart = start.temperature;
+                float vStart = getBatteryVoltageFiltered();
+                long cpuFreqStart = readCpuFreq();
+                float cpuTempStart = readCpuTempSafe2();
 
 
                 // ============================
@@ -3614,15 +3616,23 @@ private void lab14BProtectionTest() {
                                 : "Running load test...")
                 );
 
-                startCpuBurn();
-                startMemoryStress();
-                startGpuStress();
+                try {
 
-                SystemClock.sleep(20000);
+                    startCpuBurn_C_Mode();
+                    startGpuStress();
+                    startMemoryStress();
 
-                stopCpuBurn();
-                stopMemoryStress();
-                stopGpuStress();
+                    SystemClock.sleep(20000);
+
+                } catch (Throwable ignore) {
+
+                } finally {
+
+                    try { stopCpuBurn(); } catch (Throwable ignore) {}
+                    try { stopGpuStress(); } catch (Throwable ignore) {}
+                    try { stopMemoryStress(); } catch (Throwable ignore) {}
+
+                }
 
 
                 // ============================
@@ -3634,40 +3644,68 @@ private void lab14BProtectionTest() {
 
                 if (end == null) return;
 
+
                 long endMah = end.chargeNowMah;
-
-                float vEnd = getBatteryVoltageFiltered();
-
                 float tempEnd = end.temperature;
-
+                float vEnd = getBatteryVoltageFiltered();
+                long cpuFreqEnd = readCpuFreq();
+                float cpuTempEnd = readCpuTempSafe2();
 
                 // ============================
                 // DETECT DRAIN
                 // ============================
 
-                long drain = startMah - endMah;
-
-                boolean validDrain = drain > 0;
+                boolean validDrain =
+                        (startMah - endMah) > 0;
 
 
                 // ============================
                 // DETECT LIMITER
                 // ============================
 
-                boolean[] systemLimited = new boolean[]{ false };
+                boolean[] systemLimited =
+                        new boolean[]{ false };
 
-                if (tempEnd - tempStart < 1.0f && drain < 5) {
+
+                if (!Float.isNaN(tempStart)
+                        && !Float.isNaN(tempEnd)
+                        && tempEnd - tempStart < 1.0f) {
 
                     systemLimited[0] = true;
-
                 }
+
 
                 if (vEnd > vStart - 0.01f) {
 
                     systemLimited[0] = true;
-
                 }
 
+boolean cpuThrottle = false;
+
+if (cpuFreqStart > 0 && cpuFreqEnd > 0) {
+
+    if (cpuFreqEnd < cpuFreqStart * 0.7) {
+        cpuThrottle = true;
+    }
+
+}
+
+boolean thermalLimit = false;
+
+if (!Float.isNaN(cpuTempStart)
+        && !Float.isNaN(cpuTempEnd)) {
+
+    if (cpuTempEnd > cpuTempStart + 8f) {
+        thermalLimit = true;
+    }
+
+}
+
+boolean powerLimit = false;
+
+if (validDrain && systemLimited[0]) {
+    powerLimit = true;
+}
 
                 // ============================
                 // RESULT
@@ -3685,6 +3723,30 @@ private void lab14BProtectionTest() {
 
             }
             catch (Throwable t) {
+            	
+            if (cpuThrottle) {
+
+    logWarn(gr
+            ? "Ανιχνεύθηκε περιορισμός CPU."
+            : "CPU throttling detected.");
+
+}
+
+if (thermalLimit) {
+
+    logWarn(gr
+            ? "Ανιχνεύθηκε θερμικός περιορισμός."
+            : "Thermal limit detected.");
+
+}
+
+if (powerLimit) {
+
+    logWarn(gr
+            ? "Ανιχνεύθηκε περιορισμός ισχύος."
+            : "Power limit detected.");
+
+}
 
                 runOnUiThread(() ->
                         logError(
@@ -3787,7 +3849,63 @@ private void showLab14BAdvisory(Runnable onContinue) {
         );
 
     dlg.show();
+    
+// ============================================================
+// CPU FREQ READ
+// ============================================================
+private long readCpuFreq() {
 
+    try {
+
+        java.io.File f =
+                new java.io.File(
+                        "/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq"
+                );
+
+        if (!f.exists()) return -1;
+
+        java.io.BufferedReader br =
+                new java.io.BufferedReader(
+                        new java.io.FileReader(f)
+                );
+
+        String s = br.readLine();
+
+        br.close();
+
+        return Long.parseLong(s.trim());
+
+    } catch (Throwable ignore) {}
+
+    return -1;
+}
+
+private float readCpuTempSafe2() {
+
+    try {
+
+        java.io.File f =
+                new java.io.File(
+                        "/sys/class/thermal/thermal_zone0/temp"
+                );
+
+        if (!f.exists()) return Float.NaN;
+
+        java.io.BufferedReader br =
+                new java.io.BufferedReader(
+                        new java.io.FileReader(f)
+                );
+
+        String s = br.readLine();
+
+        br.close();
+
+        return Float.parseFloat(s) / 1000f;
+
+    } catch (Throwable ignore) {}
+
+    return Float.NaN;
+}
 
     // ============================
     // TTS (FINAL SAFE VERSION)
@@ -12486,7 +12604,7 @@ root.addView(videoHolder);
         exitBtn.setOnClickListener(v -> {
     lab14Cancelled = true;
     lab14StopAllStress();
-    restoreBrightness();   // ✅ ΠΡΟΣΘΗΚΗ
+    restoreBrightnessAndKeepOn();   // ✅ ΠΡΟΣΘΗΚΗ
     lab14CleanupUI();
     lab14Running = false;
 
@@ -13802,7 +13920,7 @@ Lab14BatteryProtectionCheck(
 // ------------------------------------------------
 
 lab14StopAllStress();
-restoreBrightness();
+restoreBrightnessAndKeepOn();
 
 appendHtml("<br>");
 logOk(
@@ -13825,7 +13943,7 @@ logLine();
         } catch (Throwable ignore) {}
 
         try {
-            restoreBrightness();   // ✅ ΠΡΟΣΘΗΚΗ
+            restoreBrightnessAndKeepOn();   // ✅ ΠΡΟΣΘΗΚΗ
         } catch (Throwable ignore) {}
 
         logError(
@@ -13843,7 +13961,7 @@ logLine();
     } catch (Throwable t) {
 
     lab14StopAllStress();
-    restoreBrightness();
+    restoreBrightnessAndKeepOn();
     lab14CleanupUI();
     lab14Cancelled = true;
 

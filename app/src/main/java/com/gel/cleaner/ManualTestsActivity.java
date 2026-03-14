@@ -3261,6 +3261,7 @@ btnRestart.setOnClickListener(v -> {
     } catch (Throwable ignore) {}
 
 });
+}
 
 // ------------------------------------------------------------
 // Brightness + keep screen on (LAB 14 stress)

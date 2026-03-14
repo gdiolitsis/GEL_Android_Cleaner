@@ -3579,6 +3579,33 @@ private void lab14BProtectionTest() {
 
 
         new Thread(() -> {
+        	
+boolean cpuThrottle = false;
+
+if (cpuFreqStart > 0 && cpuFreqEnd > 0) {
+
+    if (cpuFreqEnd < cpuFreqStart * 0.7) {
+        cpuThrottle = true;
+    }
+
+}
+
+boolean thermalLimit = false;
+
+if (!Float.isNaN(cpuTempStart)
+        && !Float.isNaN(cpuTempEnd)) {
+
+    if (cpuTempEnd > cpuTempStart + 8f) {
+        thermalLimit = true;
+    }
+
+}
+
+boolean powerLimit = false;
+
+if (validDrain && systemLimited[0]) {
+    powerLimit = true;
+}
 
             try {
 
@@ -3681,33 +3708,6 @@ private void lab14BProtectionTest() {
 
                     systemLimited[0] = true;
                 }
-
-boolean cpuThrottle = false;
-
-if (cpuFreqStart > 0 && cpuFreqEnd > 0) {
-
-    if (cpuFreqEnd < cpuFreqStart * 0.7) {
-        cpuThrottle = true;
-    }
-
-}
-
-boolean thermalLimit = false;
-
-if (!Float.isNaN(cpuTempStart)
-        && !Float.isNaN(cpuTempEnd)) {
-
-    if (cpuTempEnd > cpuTempStart + 8f) {
-        thermalLimit = true;
-    }
-
-}
-
-boolean powerLimit = false;
-
-if (validDrain && systemLimited[0]) {
-    powerLimit = true;
-}
 
                 // ============================
                 // RESULT
@@ -3999,9 +3999,11 @@ private void logLab14Confidence() {
 
     if (runs <= 1) {
 
-        logLabelWarnValue(gr
-                ? "Εμπιστοσύνη: Προκαταρκτική (1 εκτέλεση)"
-                : "Confidence: Preliminary (1 run)");
+        logLabelWarnValue(
+    gr ? "Εμπιστοσύνη" : "Confidence",
+    gr ? "Προκαταρκτική (1 εκτέλεση)"
+       : "Preliminary (1 run)"
+);
 
         logWarn(gr
                 ? "Για υψηλότερη διαγνωστική ακρίβεια, εκτέλεσε το τεστ 2 ακόμη φορές, σε διαφορετική ημέρα, υπό παρόμοιες συνθήκες."
@@ -4010,9 +4012,11 @@ private void logLab14Confidence() {
     }
     else if (runs == 2) {
 
-        logLabelWarnValue(gr
-                ? "Εμπιστοσύνη: Μεσαία (2 εκτελέσεις)"
-                : "Confidence: Medium (2 runs)");
+        logLabelWarnValue(
+    gr ? "Εμπιστοσύνη" : "Confidence",
+    gr ? "Μεσαία (2 εκτελέσεις)"
+       : "Medium (2 runs)"
+);
 
         logWarn(gr
                 ? "Για υψηλότερη διαγνωστική ακρίβεια, εκτέλεσε το τεστ 1 ακόμη φορά, σε διαφορετική ημέρα, υπό παρόμοιες συνθήκες."
@@ -4021,9 +4025,11 @@ private void logLab14Confidence() {
     }
     else {
 
-        logLabelOkValue(gr
-                ? "Εμπιστοσύνη: Υψηλή (3+ συνεπείς εκτελέσεις)"
-                : "Confidence: High (3+ consistent runs)");
+        logLabelOkValue(
+    gr ? "Εμπιστοσύνη" : "Confidence",
+    gr ? "Υψηλή (3+ εκτελέσεις)"
+       : "High (3+ runs)"
+);
 
         logInfo(gr
                 ? "Η διαγνωστική αξιοπιστία της μπαταρίας είναι υψηλή."
@@ -14545,6 +14551,27 @@ private float readCpuTempSafe2() {
     } catch (Throwable ignore) {}
 
     return Float.NaN;
+}
+
+private void incLab14RunCount() {
+
+    try {
+
+        SharedPreferences sp =
+                getSharedPreferences(
+                        LAB14_PREFS,
+                        MODE_PRIVATE
+                );
+
+        int runs =
+                sp.getInt(KEY_LAB14_RUNS, 0);
+
+        sp.edit()
+                .putInt(KEY_LAB14_RUNS, runs + 1)
+                .apply();
+
+    } catch (Throwable ignore) {}
+
 }
 
 //=============================================================

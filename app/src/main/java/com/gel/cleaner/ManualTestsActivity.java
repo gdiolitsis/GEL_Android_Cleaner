@@ -13135,9 +13135,11 @@ if (!Float.isNaN(pulseSag[0]) &&
                 // ----------------------------------------------------
                 // 7) POST-LOAD ANALYSIS THREAD
                 // ----------------------------------------------------
-                new Thread(() -> {
+                try {
 
-                    try {
+    new Thread(() -> {
+
+        try {
 
                         // ----------------------------------------------------
                         // FAST STRESS ANALYSIS
@@ -14800,6 +14802,10 @@ logLine();
             restoreBrightnessAndKeepOn();
         } catch (Throwable ignore) {}
 
+        try {
+            lab14CleanupUI();
+        } catch (Throwable ignore) {}
+
         logError(
                 gr
                         ? "Σφάλμα LAB 14"
@@ -14807,30 +14813,6 @@ logLine();
         );
     });
 
-}
-
-} catch (Throwable t) {
-
-    try {
-        lab14StopAllStress();
-    } catch (Throwable ignore) {}
-
-    try {
-        restoreBrightnessAndKeepOn();
-    } catch (Throwable ignore) {}
-
-    try {
-        lab14CleanupUI();
-    } catch (Throwable ignore) {}
-
-    lab14Cancelled = true;
-
-    logError(
-            gr
-                    ? "Σφάλμα LAB 14"
-                    : "LAB 14 error"
-    );
-}
 }
 
 // ============================================================

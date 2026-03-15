@@ -410,10 +410,13 @@ public final class Lab14Engine {
     // AGING INDEX
     // ============================================================
     public static final class AgingResult {
-        public boolean severe;
-        public String description;
-    }
 
+    public boolean severe;
+    public int index;
+    public String description;
+
+}
+    
     public AgingResult computeAging(
         double mahPerHour,
         ConfidenceResult conf,

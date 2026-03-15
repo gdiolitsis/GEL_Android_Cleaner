@@ -13662,6 +13662,7 @@ if (aging != null &&
                         final Lab14Engine.AgingResult agingF = aging;
                         final int agingIndexF = agingIndex;
                         final String agingInterpF = agingInterp;
+                        final boolean batteryBehaviourWarningF = batteryBehaviourWarning;
                         final int finalScoreF = finalScore;
                         final String finalLabelF = finalLabel;
                         final String healthClassF = healthClass;
@@ -13939,7 +13940,7 @@ if (aging != null &&
                                 }
                             }
 
-                            if (batteryBehaviourWarning) {
+                            if (batteryBehaviourWarningF) {
                                 logLabelWarnValue(
                                         gr ? "Συμπεριφορά μπαταρίας"
                                            : "Battery behaviour",

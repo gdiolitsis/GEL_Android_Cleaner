@@ -406,7 +406,7 @@ public final class Lab14Engine {
         return p;
     }
 
-    // ============================================================
+// ============================================================
 // AGING INDEX
 // ============================================================
 public static final class AgingResult {
@@ -442,14 +442,18 @@ public AgingResult computeAging(
         thermalStress = (tAfter - tBefore) > 7.0;
     }
 
+    // -------------------------
     // severity logic
+    // -------------------------
 
     r.severe =
             mahPerHour > 900
             || (mahPerHour > 750 && cycleCount > 300)
             || (thermalStress && mahPerHour > 700);
 
-    // index
+    // -------------------------
+    // index (0–100)
+    // -------------------------
 
     if (r.severe) {
 

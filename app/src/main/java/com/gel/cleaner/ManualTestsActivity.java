@@ -14783,34 +14783,30 @@ logOk(
 );
 logLine();
 
-                    }); // runOnUiThread
+        } catch (Throwable t) {
 
-                }); // ui.post
+            lab14StopAllStress();
+            restoreBrightnessAndKeepOn();
 
-            }).start(); // Thread
+            try {
+                lab14CleanupUI();
+            } catch (Throwable ignore) {}
 
-    } catch (Throwable t) {
+            lab14Cancelled = true;
 
-        lab14StopAllStress();
-        restoreBrightnessAndKeepOn();
+            logError(
+                    gr
+                            ? "Σφάλμα LAB 14"
+                            : "LAB 14 error"
+            );
 
-        try {
-            lab14CleanupUI();
-        } catch (Throwable ignore) {}
+        } finally {
 
-        lab14Cancelled = true;
+            lab14Running = false;
 
-        logError(
-                gr
-                        ? "Σφάλμα LAB 14"
-                        : "LAB 14 error"
-        );
+        }
 
-    } finally {
-
-        lab14Running = false;
-
-    }
+    }).start();
 
 // ============================================================
 // LAB 14 — LOG STRESS RESULT

@@ -301,6 +301,18 @@ public class ManualTestsActivity extends AppCompatActivity {
     private AlertDialog lab14Dialog;    
     
     private int __oldBrightness = -1;
+    
+// ------------------------------------------------
+// LAB14 state (must be fields for lambda/thread)
+// ------------------------------------------------
+
+private Lab14Engine.ConfidenceResult lab14Conf = null;
+
+private int lab14AgingIndex = -1;
+
+private String lab14AgingInterp = "N/A";
+
+private boolean lab14BatteryBehaviourWarning = false;
 
     
     private final Runnable lab14VibrationLoop = new Runnable() {
@@ -12358,13 +12370,15 @@ resetBatteryDiagnostics();
 
 final boolean[] variabilityDetected = { false };
 
-Lab14Engine.ConfidenceResult conf = null;
-int agingIndex = -1;
-String agingInterp = "N/A";
+// reset LAB14 state (fields)
+lab14Conf = null;
+lab14AgingIndex = -1;
+lab14AgingInterp = "N/A";
+lab14BatteryBehaviourWarning = false;
 
 final SharedPreferences p =
         getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
-
+        
     // ------------------------------------------------------------
     // RESET RUNTIME FLAGS / METRICS
     // ------------------------------------------------------------
@@ -13385,7 +13399,7 @@ if (!Float.isNaN(internalResistance[0]) &&
 
     if (highR && weakRec) {
 
-        batteryBehaviourWarning = true;
+        lab14BatteryBehaviourWarning = true;
 
     }
 }
@@ -13412,7 +13426,7 @@ if (swellingScore >= 2) {
         engine.computeConfidence();
 
 if (newConf != null) {
-    conf = newConf;
+    lab14Conf = newConf;
 }
 
                         if (!validDrain) {
@@ -13438,7 +13452,7 @@ final Lab14Engine.AgingResult aging =
 
 if (aging != null) {
 
-    agingIndex = aging.severe ? 80 : 20;
+    lab14AgingIndex = aging.severe ? 80 : 20;
 
 }
 
@@ -13449,7 +13463,7 @@ if (aging != null &&
     conf.percent >= 60) {
 
     if (agingIndex < 20)
-        agingInterp = "Excellent";
+        lab14AgingInterp = "Excellent";
     else if (agingIndex < 40)
         agingInterp = "Good";
     else if (agingIndex < 60)
@@ -13657,11 +13671,12 @@ if (aging != null &&
                         final long drainMahF = drainMah;
                         final boolean validDrainF = validDrain;
                         final double mahPerHourF = mahPerHour;
-                        final double drainPercentPerHourF = drainPercentPerHour;
-                        final Lab14Engine.ConfidenceResult confF = conf;
+                        final double drainPercentPerHourF = drainPercentPerHour;           
                         final Lab14Engine.AgingResult agingF = aging;
-                        final int agingIndexF = agingIndex;
-                        final String agingInterpF = agingInterp;
+                        final Lab14Engine.ConfidenceResult confF = lab14Conf;
+                        final int agingIndexF = lab14AgingIndex;
+                        final String agingInterpF = lab14AgingInterp;
+                        final boolean batteryBehaviourWarningF = lab14BatteryBehaviourWarning;
                         final boolean batteryBehaviourWarningF = batteryBehaviourWarning;
                         final int finalScoreF = finalScore;
                         final String finalLabelF = finalLabel;

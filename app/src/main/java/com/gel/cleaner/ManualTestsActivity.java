@@ -14293,11 +14293,43 @@ private void lab14LogStressResult(
 ) {
 
     appendHtml("<br>");
-    logLine();
-    logInfo(gr
-            ? "LAB 14 — Αποτέλεσμα καταπόνησης"
-            : "LAB 14 — Stress result");
-    logLine();
+logLine();
+logInfo(gr
+        ? "LAB 14 — Αποτέλεσμα καταπόνησης"
+        : "LAB 14 — Stress result");
+logLine();
+
+// =====================================================
+// LIMITER CHECK
+// =====================================================
+
+if (lab14_systemLimited[0]) {
+
+    logLabelWarnValue(
+            gr ? "Πτώση τάσης"
+               : "Voltage sag",
+            gr
+                    ? "Δεν μετρήθηκε (περιορισμός συστήματος)"
+                    : "Not measurable (system limiter)"
+    );
+
+    logLabelWarnValue(
+        gr ? "Ανάκαμψη τάσης"
+           : "Voltage recovery",
+        gr
+                ? "Η μέτρηση επηρεάστηκε από τον περιορισμό BMS"
+                : "Measurement affected by BMS limiting"
+);
+
+    logLabelWarnValue(
+            gr ? "Απόκριση τάσης"
+               : "Voltage response",
+            gr
+                    ? "Περιορίστηκε από BMS"
+                    : "Limited by BMS"
+    );
+
+} else {
 
     if (!Float.isNaN(sagAvg)) {
         logLabelValue(
@@ -14424,6 +14456,7 @@ private void lab14LogStressResult(
                 String.format(Locale.US, "%.0f mAh/V", energyEfficiency)
         );
     }
+}
 }
 
 // ============================================================

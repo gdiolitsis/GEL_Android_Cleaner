@@ -4035,33 +4035,41 @@ private void lab14LogReliabilitySummary(
     int runs = getLab14RunCount();
 
     appendHtml("<br>");
-    logLine();
-
-    logInfo(gr
+    
+    logΟκ(gr
             ? "Αξιοπιστία διάγνωσης"
             : "Diagnostic reliability");
 
     logLine();
 
 
-    // -----------------------
-    // VALID RUN
-    // -----------------------
+    // =====================================================
+    // CURRENT RUN STATUS
+    // =====================================================
 
     boolean validRun = validDrain && !lab14_systemLimited[0];
 
-    logLabelValue(
+    if (validRun) {
+
+    logLabelOkValue(
             gr ? "Έγκυρη εκτέλεση"
                : "Valid run",
-            validRun
-                    ? (gr ? "Ναι" : "Yes")
-                    : (gr ? "Όχι" : "No")
+            gr ? "Ναι" : "Yes"
     );
 
+} else {
 
-    // -----------------------
+    logLabelErrorValue(
+            gr ? "Έγκυρη εκτέλεση"
+               : "Valid run",
+            gr ? "Όχι" : "No"
+    );
+
+}
+
+    // =====================================================
     // LIMITER
-    // -----------------------
+    // =====================================================
 
     if (lab14_systemLimited[0]) {
 
@@ -4085,31 +4093,39 @@ private void lab14LogReliabilitySummary(
     }
 
 
-    // -----------------------
-    // RUN COUNT
-    // -----------------------
+    // =====================================================
+    // STORED RUNS
+    // =====================================================
 
-    logLabelValue(
-            gr ? "Έγκυρες εκτελέσεις"
-               : "Valid runs",
+    logLabelOkValue(
+            gr ? "Καταγεγραμμένες έγκυρες εκτελέσεις"
+               : "Stored valid runs",
             String.valueOf(runs)
     );
 
 
-    // -----------------------
+    // =====================================================
     // CONSISTENCY
-    // -----------------------
+    // =====================================================
 
-    if (conf != null && runs >= 2) {
+    int consistency = -1;
+    int validRunsForConsistency = 0;
 
-        logLabelValue(
+    if (conf != null) {
+        consistency = conf.percent;
+        validRunsForConsistency = conf.validRuns;
+    }
+
+    if (consistency >= 0 && validRunsForConsistency >= 2) {
+
+        logLabelOkValue(
                 gr ? "Στατιστική συνέπεια"
                    : "Run consistency",
                 String.format(
                         Locale.US,
                         "%d%% (%d runs)",
-                        conf.percent,
-                        conf.validRuns
+                        consistency,
+                        validRunsForConsistency
                 )
         );
 
@@ -4125,26 +4141,74 @@ private void lab14LogReliabilitySummary(
 
     }
 
-
-    // -----------------------
-    // CONFIDENCE (same logic as before)
-    // -----------------------
-
     logLine();
+
+
+    // =====================================================
+    // CURRENT RUN INVALID
+    // =====================================================
+
+    if (!validRun) {
+
+        logLabelWarnValue(
+                gr ? "Εμπιστοσύνη" : "Confidence",
+                gr
+                        ? "Ενδεικτική (τρέχουσα εκτέλεση μη έγκυρη)"
+                        : "Indicative (current run not valid)"
+        );
+
+        logWarn(gr
+                ? "Η τρέχουσα εκτέλεση δεν καταχωρήθηκε ως έγκυρη."
+                : "Current run not valid.");
+
+        logWarn(gr
+                ? "Απαιτούνται 3 έγκυρες εκτελέσεις."
+                : "3 valid runs required.");
+
+        return;
+    }
+
+
+    // =====================================================
+    // LIMITER DETECTED
+    // =====================================================
+
+    if (lab14_systemLimited[0]) {
+
+        logLabelWarnValue(
+                gr ? "Εμπιστοσύνη" : "Confidence",
+                gr
+                        ? "Περιορισμένη (εντοπίστηκε limiter)"
+                        : "Limited (system limiter detected)"
+        );
+
+        logWarn(gr
+                ? "Συνιστάται επανάληψη μετά από cooldown."
+                : "Repeat test after cooldown.");
+
+        return;
+    }
+
+
+    // =====================================================
+    // RUN COUNT CONFIDENCE
+    // =====================================================
 
     if (runs <= 0) {
 
         logLabelWarnValue(
                 gr ? "Εμπιστοσύνη" : "Confidence",
-                gr ? "Δεν υπάρχει ακόμη έγκυρη καταγεγραμμένη εκτέλεση"
-                   : "No valid recorded run yet"
+                gr ? "Δεν υπάρχει ακόμη έγκυρη εκτέλεση"
+                   : "No valid run yet"
         );
 
         logWarn(gr
-                ? "Η τρέχουσα εκτέλεση δεν καταχωρήθηκε ως έγκυρη. Απαιτούνται 3 έγκυρες εκτελέσεις."
-                : "Current run not valid. 3 valid runs required.");
+        ? "Απαιτούνται 3 έγκυρες εκτελέσεις, σε διαφορετικές ημέρες με παρόμοιες συνθήκες."
+        : "3 valid runs required, on different days under similar conditions.");
 
+        return;
     }
+
     else if (runs == 1) {
 
         logLabelWarnValue(
@@ -4154,10 +4218,12 @@ private void lab14LogReliabilitySummary(
         );
 
         logWarn(gr
-                ? "Απαιτούνται ακόμη 2 έγκυρες εκτελέσεις."
-                : "2 more valid runs required.");
+        ? "Απαιτούνται ακόμα 2 έγκυρες εκτελέσεις, σε διαφορετικές ημέρες με παρόμοιες συνθήκες."
+        : "2 more valid runs required, on different days under similar conditions.");
 
+        return;
     }
+
     else if (runs == 2) {
 
         logLabelWarnValue(
@@ -4167,22 +4233,54 @@ private void lab14LogReliabilitySummary(
         );
 
         logWarn(gr
-                ? "Απαιτείται ακόμη 1 έγκυρη εκτέλεση."
-                : "1 more valid run required.");
+        ? "Απαιτείται 1 ακόμα έγκυρη εκτελεση, σε διαφορετική ημέρα με παρόμοιες συνθήκες."
+        : "1 more valid run required, on different day under similar conditions.");
 
+        return;
     }
-    else {
 
-        logLabelOkValue(
-                gr ? "Εμπιστοσύνη" : "Confidence",
-                gr ? "Υψηλή (3+ έγκυρες εκτελέσεις)"
-                   : "High (3+ valid runs)"
-        );
 
-        logInfo(gr
-                ? "Η διαγνωστική αξιοπιστία της μπαταρίας είναι υψηλή."
-                : "Battery diagnostic confidence is high.");
-    }
+// =====================================================
+// CONSISTENCY INFO
+// =====================================================
+
+if (consistency >= 70) {
+
+    logLabelOkValue(
+            gr ? "Πληροφορία" : "Info",
+            gr ? "Οι μετρήσεις είναι συνεπείς"
+               : "Measurements are consistent"
+    );
+
+    logOk(gr
+            ? "Οι εκτελέσεις έγιναν σε παρόμοιες συνθήκες."
+            : "Runs were performed under similar conditions.");
+
+}
+else if (consistency >= 50) {
+
+    logLabelOkValue(
+            gr ? "Πληροφορία" : "Info",
+            gr ? "Υπάρχουν μικρές διαφορές μεταξύ εκτελέσεων"
+               : "Minor variation between runs"
+    );
+
+    logOk(gr
+            ? "Μικρές αποκλίσεις θεωρούνται φυσιολογικές."
+            : "Small variations are normal.");
+
+}
+else {
+
+    logLabelWarnValue(
+            gr ? "Πληροφορία" : "Info",
+            gr ? "Μεγάλες αποκλίσεις μεταξύ εκτελέσεων"
+               : "Large deviation between runs"
+    );
+
+    logWarn(gr
+            ? "Οι εκτελέσεις έγιναν σε διαφορετικές συνθήκες με μεγάλες αποκλίσεις."
+            : "Runs were performed under different conditions with large deviation.");
 
 }
 
@@ -14096,17 +14194,6 @@ lab14LogReliabilitySummary(
 );
 
 // ------------------------------------------------
-// CONFIDENCE (uses runCount)
-// ------------------------------------------------
-
-lab14LogConfidence(
-        gr,
-        measurementConfidenceF,
-        confidenceLabelF,
-        confF
-);
-
-// ------------------------------------------------
 // SYSTEM PROTECTION CHECK
 // ------------------------------------------------
 
@@ -14547,66 +14634,6 @@ if (!partial && !lab14_systemLimited[0]) {
     );
 
 }
-}
-
-// ============================================================
-// LAB 14 — LOG CONFIDENCE
-// ============================================================
-private void lab14LogConfidence(
-        boolean gr,
-        float measurementConfidence,
-        String confidenceLabel,
-        Lab14Engine.ConfidenceResult conf
-) {
-
-    appendHtml("<br>");
-    logLine();
-    logInfo(gr
-            ? "Αξιοπιστία διάγνωσης"
-            : "Diagnostic confidence");
-    logLine();
-
-    if (conf != null) {
-        logLabelValue(
-                gr ? "Στατιστική συνέπεια"
-                   : "Run consistency",
-                String.format(
-                        Locale.US,
-                        "%d%% (%d runs)",
-                        conf.percent,
-                        conf.validRuns
-                )
-        );
-    }
-
-    logLabelValue(
-            gr ? "Αξιοπιστία μέτρησης"
-               : "Measurement confidence",
-            String.format(
-                    Locale.US,
-                    "%.0f%% (%s)",
-                    measurementConfidence,
-                    confidenceLabel
-            )
-    );
-
-    if (measurementConfidence < 60) {
-        logLabelWarnValue(
-                gr ? "Σύσταση"
-                   : "Recommendation",
-                gr
-                        ? "Συνιστάται επανάληψη τεστ"
-                        : "Repeat test recommended"
-        );
-    } else {
-        logLabelOkValue(
-                gr ? "Σύσταση"
-                   : "Recommendation",
-                gr
-                        ? "Η διάγνωση θεωρείται αξιόπιστη"
-                        : "Result considered reliable"
-        );
-    }
 }
 
 // ============================================================
@@ -22763,77 +22790,6 @@ logLabelValue(
                 ? "Η αξιολόγηση βασίζεται σε διαγνωστική ανάλυση hardware και στατιστική συνέπεια μετρήσεων."
                 : "Evaluation based on hardware diagnostics and measurement consistency."
 );
-
-// ------------------------------------------------------------
-// GEL DIAGNOSTIC CONFIDENCE
-// ------------------------------------------------------------
-appendHtml("<br>");
-logInfo(gr
-        ? "Αξιοπιστία Διάγνωσης GEL"
-        : "GEL Diagnostic Confidence");
-logLine();
-
-int evidenceSignals = 0;
-
-// battery evidence
-if (lab14CollapseRisk) evidenceSignals++;
-if (lab14SwellingRisk) evidenceSignals++;
-
-// authenticity evidence
-if (moistureSuspect) evidenceSignals++;
-
-// hardware instability
-if (hardwareRiskScore >= 30) evidenceSignals++;
-
-// reliability factor
-if (reliabilityScore >= 85) evidenceSignals++;
-
-int confidencePercent = 65 + (evidenceSignals * 7);
-if (confidencePercent > 98) confidencePercent = 98;
-
-logLabelValue(
-        gr ? "Confidence"
-           : "Confidence",
-        confidencePercent + "%"
-);
-
-logLabelValue(
-        gr ? "Signals analysed"
-           : "Signals analysed",
-        String.valueOf(evidenceSignals)
-);
-
-if (confidencePercent >= 85) {
-
-    logLabelOkValue(
-            gr ? "Ερμηνεία"
-               : "Interpretation",
-            gr
-                    ? "Υψηλή αξιοπιστία διάγνωσης."
-                    : "High diagnostic reliability."
-    );
-
-} else if (confidencePercent >= 70) {
-
-    logLabelWarnValue(
-            gr ? "Ερμηνεία"
-               : "Interpretation",
-            gr
-                    ? "Μέτρια αξιοπιστία — συνιστάται επανάληψη ελέγχου."
-                    : "Moderate reliability — repeating diagnostics recommended."
-    );
-
-} else {
-
-    logLabelWarnValue(
-            gr ? "Ερμηνεία"
-               : "Interpretation",
-            gr
-                    ? "Περιορισμένη αξιοπιστία διάγνωσης."
-                    : "Limited diagnostic confidence."
-    );
-
-}
 
 // ------------------------------------------------------------
 // TECHNICIAN NOTE

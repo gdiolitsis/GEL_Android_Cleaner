@@ -12423,6 +12423,13 @@ private void lab14BatteryHealthStressTest_REAL() {
     resetBatteryDiagnostics();
 
     final boolean[] variabilityDetected = { false };
+
+int swellingScore = 0;
+boolean batteryBehaviourWarning = false;
+Lab14Engine.ConfidenceResult conf = null;
+int agingIndex = -1;
+String agingInterp = "N/A";
+    
     final SharedPreferences p =
             getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
 
@@ -13280,16 +13287,7 @@ root.addView(videoHolder);
 // ADVANCED DETECTORS
 // ----------------------------------------------------
 
-int swellingScore = 0;
-boolean batteryBehaviourWarning = false;
-
-Lab14Engine.ConfidenceResult conf = null;
-
-int agingIndex = -1;
-String agingInterp = "N/A";
-
 swellingRisk[0] = false;
-
 
 // collapse detector
 
@@ -13299,7 +13297,6 @@ if (!Float.isNaN(voltageRecovery[0]) &&
 
     collapseRisk[0] = true;
 }
-
 
 // ESR + temp rise
 
@@ -13506,7 +13503,7 @@ final Lab14Engine.AgingResult aging =
 
 if (aging != null) {
 
-    agingIndex = aging.index;
+    agingIndex = aging.severe ? 80 : 20;
 
 }
 

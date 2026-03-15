@@ -4056,6 +4056,7 @@ if (lab14_systemLimited[0]) {
                     ? "Εντοπίστηκε περιορισμός BMS"
                     : "BMS current limiting detected"
     );
+    }
 
     logWarn(gr
             ? "Η μέτρηση έγινε με περιορισμό από το σύστημα. Το αποτέλεσμα είναι ενδεικτικό."
@@ -4100,6 +4101,7 @@ if (lab14_systemLimited[0]) {
                     ? "Το BMS περιόρισε την κατανάλωση"
                     : "BMS current limiting detected"
     );
+    }
 
     logWarn(gr
             ? "Η μέτρηση έγινε με περιορισμό από το σύστημα. Το αποτέλεσμα είναι ενδεικτικό."
@@ -13294,8 +13296,6 @@ if (sag < 0.02f &&
                                 sagFiltered = (sag + sagAvg[0]) / 2f;
                             }
 
-                            float currentNow = getBatteryCurrentNowSafe();
-
                             if (!Float.isNaN(currentNow)) {
 
                                 float currentAmp =
@@ -13339,9 +13339,7 @@ if (sag < 0.02f &&
                         }
 
                         if (!Float.isNaN(tempStart) &&
-                            !Float.isNaN(tempEnd)) {
-
-                            float currentNow = getBatteryCurrentNowSafe();
+                            !Float.isNaN(tempEnd)) {                           
 
                             if (!Float.isNaN(currentNow)) {
 
@@ -13541,7 +13539,7 @@ if (!Float.isNaN(internalResistance[0]) &&
 
     if (highR && weakRec) {
 
-        lab14BatteryBehaviourWarning = true;
+        boolean lab14BatteryBehaviourWarning = false;
 
     }
 }
@@ -14507,7 +14505,6 @@ if (lab14_systemLimited[0]) {
         );
     }
 }
-}
 
 // ============================================================
 // LAB 14 — LOG AGING
@@ -14652,13 +14649,16 @@ private void lab14LogFinalScore(
         );
     }
 
-        logLabelWarnValue(
-                gr ? "Περιορισμός συστήματος"
-                   : "System limited",
-                gr
-                        ? "Το BMS περιόρισε το ρεύμα — μικρότερη αξιοπιστία"
-                        : "BMS current limiting detected"
-        );
+        if (lab14_systemLimited[0]) {
+
+    logLabelWarnValue(
+            gr ? "Περιορισμός συστήματος"
+               : "System limited",
+            gr
+                    ? "Το BMS περιόρισε το ρεύμα — μικρότερη αξιοπιστία"
+                    : "BMS current limiting detected"
+    );
+}
     }
 }
 

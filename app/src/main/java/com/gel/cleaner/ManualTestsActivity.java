@@ -14809,6 +14809,7 @@ appendHtml("<br>");
     lab14Running = false;
 
 }
+}
 
 // ============================================================
 // LAB 14 — LOG STRESS RESULT

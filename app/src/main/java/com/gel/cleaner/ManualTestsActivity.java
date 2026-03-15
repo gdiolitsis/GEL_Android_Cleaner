@@ -13449,7 +13449,7 @@ if (lab14Conf != null && lab14Conf.percent < 50) {
 final Lab14Engine.AgingResult aging =
         engine.computeAging(
                 mahPerHour,
-                conf,
+                lab14conf,
                 cycles,
                 tempStart,
                 tempEnd

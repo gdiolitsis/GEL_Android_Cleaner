@@ -3337,6 +3337,8 @@ private void lab14LogPartialMode(
 
     logLine();
 
+    if (lab14_systemLimited[0]) {
+
         logWarn(gr
                 ? "Ανιχνεύθηκε περιορισμός ρεύματος από το σύστημα (BMS / thermal / vendor limiter)."
                 : "System current limiting detected (BMS / thermal / vendor limiter).");

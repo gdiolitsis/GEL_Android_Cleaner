@@ -12417,21 +12417,17 @@ private void lab14BatteryHealthStressTest_REAL() {
         lab14Cancelled = false;
     }
 
-    // ------------------------------------------------------------
-    // RESET DIAGNOSTICS
-    // ------------------------------------------------------------
-    resetBatteryDiagnostics();
+// RESET DIAGNOSTICS
+resetBatteryDiagnostics();
 
-    final boolean[] variabilityDetected = { false };
+final boolean[] variabilityDetected = { false };
 
-int swellingScore = 0;
-boolean batteryBehaviourWarning = false;
 Lab14Engine.ConfidenceResult conf = null;
 int agingIndex = -1;
 String agingInterp = "N/A";
-    
-    final SharedPreferences p =
-            getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
+
+final SharedPreferences p =
+        getSharedPreferences("GEL_DIAG", MODE_PRIVATE);
 
     // ------------------------------------------------------------
     // RESET RUNTIME FLAGS / METRICS
@@ -13286,6 +13282,9 @@ root.addView(videoHolder);
 // ----------------------------------------------------
 // ADVANCED DETECTORS
 // ----------------------------------------------------
+
+int swellingScore = 0;
+boolean batteryBehaviourWarning = false;
 
 swellingRisk[0] = false;
 

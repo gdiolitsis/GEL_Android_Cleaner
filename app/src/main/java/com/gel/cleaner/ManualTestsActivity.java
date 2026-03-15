@@ -14784,9 +14784,9 @@ logLine();
 
                         });
 
-                    }).start();
+}).start();
 
-        } catch (Throwable t) {
+} catch (Throwable t) {
 
     runOnUiThread(() -> {
 
@@ -14808,8 +14808,6 @@ logLine();
     });
 
 }
-
-}).start();
 
 } catch (Throwable t) {
 

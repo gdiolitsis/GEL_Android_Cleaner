@@ -12479,7 +12479,6 @@ AppTTS.stop();
     logWarn("Lab 13 aborted by user.");
     logLine();
 }
-}
 
 // ============================================================
 // LAB 14 — ENTRY (POPUP FLOW)
@@ -14785,6 +14784,8 @@ appendHtml("<br>");
             logLine();
 
         });
+
+    }   // ← ΚΛΕΙΝΕΙ ΤΟ try ΤΟΥ THREAD
 
     }).start();
 

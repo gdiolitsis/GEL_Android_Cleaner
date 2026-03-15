@@ -13422,20 +13422,25 @@ if (swellingScore >= 2) {
 
                         engine.saveRun();
 
-                        Lab14Engine.ConfidenceResult newConf =
+Lab14Engine.ConfidenceResult newConf =
         engine.computeConfidence();
 
 if (newConf != null) {
     lab14Conf = newConf;
 }
 
-                        if (!validDrain) {
-                            variabilityDetected[0] = true;
-                        }
+if (!validDrain) {
+    variabilityDetected[0] = true;
+}
 
-                        if (conf != null && conf.percent < 50) {
-                            variabilityDetected[0] = true;
-                        }
+if (lab14Conf != null && lab14Conf.percent < 50) {
+
+    variabilityDetected[0] = true;
+
+    logWarn(gr
+            ? "Χαμηλή αξιοπιστία μέτρησης μπαταρίας"
+            : "Low battery measurement confidence");
+}
 
 // ----------------------------------------------------
 // AGING

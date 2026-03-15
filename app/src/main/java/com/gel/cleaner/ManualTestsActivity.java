@@ -3337,8 +3337,6 @@ private void lab14LogPartialMode(
 
     logLine();
 
-    if (lab14_systemLimited[0]) {
-
         logWarn(gr
                 ? "Ανιχνεύθηκε περιορισμός ρεύματος από το σύστημα (BMS / thermal / vendor limiter)."
                 : "System current limiting detected (BMS / thermal / vendor limiter).");
@@ -4043,6 +4041,26 @@ private void lab14LogReliabilitySummary(
     logLine();
 
 
+// =====================================================
+// LIMITER DETECTED
+// =====================================================
+
+if (lab14_systemLimited[0]) {
+
+    logLabelWarnValue(
+            gr ? "Περιορισμός συστήματος"
+               : "System limited",
+            gr
+                    ? "Εντοπίστηκε περιορισμός BMS"
+                    : "BMS current limiting detected"
+    );
+
+    logWarn(gr
+            ? "Η μέτρηση έγινε με περιορισμό από το σύστημα. Το αποτέλεσμα είναι ενδεικτικό."
+            : "Measurement affected by system limiter. Result is indicative.");
+
+}
+
     // =====================================================
     // CURRENT RUN STATUS
     // =====================================================
@@ -4067,67 +4085,86 @@ private void lab14LogReliabilitySummary(
 
 }
 
-    // =====================================================
-    // LIMITER
-    // =====================================================
+// =====================================================
+// LIMITER
+// =====================================================
 
-    if (lab14_systemLimited[0]) {
+if (lab14_systemLimited[0]) {
 
-        logLabelWarnValue(
-                gr ? "Περιορισμός συστήματος"
-                   : "System limited",
-                gr
-                        ? "Το BMS περιόρισε την κατανάλωση"
-                        : "BMS current limiting detected"
-        );
-
-    } else {
-
-        logLabelOkValue(
-                gr ? "Περιορισμός συστήματος"
-                   : "System limited",
-                gr ? "Δεν εντοπίστηκε"
-                   : "Not detected"
-        );
-
-    }
-
-
-    // =====================================================
-    // STORED RUNS
-    // =====================================================
-
-    logLabelOkValue(
-            gr ? "Καταγεγραμμένες έγκυρες εκτελέσεις"
-               : "Stored valid runs",
-            String.valueOf(runs)
+    logLabelWarnValue(
+            gr ? "Περιορισμός συστήματος"
+               : "System limited",
+            gr
+                    ? "Το BMS περιόρισε την κατανάλωση"
+                    : "BMS current limiting detected"
     );
 
+    logWarn(gr
+            ? "Η μέτρηση έγινε με περιορισμό από το σύστημα. Το αποτέλεσμα είναι ενδεικτικό."
+            : "System limiter detected. Result is indicative.");
+
+}
+
+// =====================================================
+// STORED RUNS (always show)
+// =====================================================
+
+logLabelOkValue(
+        gr ? "Καταγεγραμμένες έγκυρες εκτελέσεις"
+           : "Stored valid runs",
+        String.valueOf(runs)
+);
 
     // =====================================================
     // CONSISTENCY
     // =====================================================
 
     int consistency = -1;
-    int validRunsForConsistency = 0;
+int validRunsForConsistency = 0;
+Lab14Engine.ConfidenceTier tier = null;
 
-    if (conf != null) {
-        consistency = conf.percent;
-        validRunsForConsistency = conf.validRuns;
-    }
+if (conf != null) {
+    consistency = conf.percent;
+    validRunsForConsistency = conf.validRuns;
+    tier = conf.tier;
+}
 
     if (consistency >= 0 && validRunsForConsistency >= 2) {
 
-        logLabelOkValue(
-                gr ? "Στατιστική συνέπεια"
-                   : "Run consistency",
-                String.format(
-                        Locale.US,
-                        "%d%% (%d runs)",
-                        consistency,
-                        validRunsForConsistency
-                )
-        );
+        String tierLabel = "";
+
+if (tier != null) {
+
+    switch (tier) {
+
+        case PRELIMINARY:
+            tierLabel = gr ? "Προκαταρκτική" : "Preliminary";
+            break;
+
+        case MEDIUM:
+            tierLabel = gr ? "Μεσαία" : "Medium";
+            break;
+
+        case HIGH:
+            tierLabel = gr ? "Υψηλή" : "High";
+            break;
+
+        default:
+            tierLabel = gr ? "Άγνωστη" : "Unknown";
+    }
+}
+
+logLabelOkValue(
+        gr ? "Στατιστική συνέπεια"
+           : "Run consistency",
+        String.format(
+                Locale.US,
+                "%d%% (%d runs, %s)",
+                consistency,
+                validRunsForConsistency,
+                tierLabel
+        )
+);
 
     } else {
 
@@ -4168,33 +4205,21 @@ private void lab14LogReliabilitySummary(
         return;
     }
 
+// =====================================================
+// SKIP RUN COUNT IF CURRENT RUN LIMITED
+// =====================================================
 
-    // =====================================================
-    // LIMITER DETECTED
-    // =====================================================
+if (lab14_systemLimited[0]) {
+    logWarn(gr
+            ? "Η εκτέλεση επηρεάστηκε από limiter."
+            : "Run affected by limiter.");
+}
 
-    if (lab14_systemLimited[0]) {
+// =====================================================
+// RUN COUNT CONFIDENCE
+// =====================================================
 
-        logLabelWarnValue(
-                gr ? "Εμπιστοσύνη" : "Confidence",
-                gr
-                        ? "Περιορισμένη (εντοπίστηκε limiter)"
-                        : "Limited (system limiter detected)"
-        );
-
-        logWarn(gr
-                ? "Συνιστάται επανάληψη μετά από cooldown."
-                : "Repeat test after cooldown.");
-
-        return;
-    }
-
-
-    // =====================================================
-    // RUN COUNT CONFIDENCE
-    // =====================================================
-
-    if (runs <= 0) {
+if (runs <= 0) {
 
         logLabelWarnValue(
                 gr ? "Εμπιστοσύνη" : "Confidence",
@@ -12921,9 +12946,13 @@ root.addView(videoHolder);
                 float railDrop = Math.abs(sag1[0] - sag2[0]);
 
                 if (railDrop > 0.08f &&
-                    !lab14_systemLimited[0]) {
-                    collapseRisk[0] = true;
-                }
+    validDrain &&
+    !lab14_systemLimited[0] &&
+    !Float.isNaN(internalResistance[0])) {
+
+    collapseRisk[0] = true;
+
+}
 
                 float sagDiff = Math.abs(sag1[0] - sag2[0]);
                 if (sagDiff > 0.05f) {
@@ -13245,10 +13274,17 @@ root.addView(videoHolder);
 
                             float sag = voltageStart - voltageUnderLoad[0];
 
-                            if (sag < 0.02f) {
-                                lab14_systemLimited[0] = true;
-                                sag = 0f;
-                            }
+                            float currentNow = getBatteryCurrentNowSafe();
+
+if (sag < 0.02f &&
+    !Float.isNaN(currentNow) &&
+    Math.abs(currentNow) < 200000f) {
+
+    // very low sag + very low current → likely system limited
+    lab14_systemLimited[0] = true;
+    sag = 0f;
+
+}
 
                             float sagFiltered = sag;
 
@@ -13340,10 +13376,13 @@ swellingRisk[0] = false;
 // collapse detector
 
 if (!Float.isNaN(voltageRecovery[0]) &&
+    validDrain &&
     !lab14_systemLimited[0] &&
+    !Float.isNaN(internalResistance[0]) &&
     voltageRecovery[0] < 0.04f) {
 
     collapseRisk[0] = true;
+
 }
 
 // ESR + temp rise
@@ -13488,7 +13527,9 @@ if (!Float.isNaN(cellElasticityIndex[0]) &&
 // behaviour
 
 if (!Float.isNaN(internalResistance[0]) &&
-    !Float.isNaN(voltageRecovery[0])) {
+    !Float.isNaN(voltageRecovery[0]) &&
+    validDrain &&
+    !lab14_systemLimited[0]) {
 
     boolean highR =
             internalResistance[0] > 0.22f;
@@ -13506,7 +13547,9 @@ if (!Float.isNaN(internalResistance[0]) &&
 
 // final swelling decision
 
-if (swellingScore >= 2) {
+if (swellingScore >= 2 &&
+    validDrain &&
+    !lab14_systemLimited[0]) {
 
     swellingRisk[0] = true;
 
@@ -13556,13 +13599,13 @@ final Lab14Engine.AgingResult aging =
 
 if (aging != null) {
 
-    lab14AgingIndex = aging.severe ? 80 : 20;
+    lab14AgingIndex =
+            Math.max(0, Math.min(100, aging.index));
 
 }
 
 if (aging != null &&
     lab14AgingIndex >= 0 &&
-    validDrain &&
     lab14Conf != null &&
     lab14Conf.percent >= 60) {
 
@@ -13589,11 +13632,14 @@ if (aging != null &&
                         // ----------------------------------------------------
                         int finalScore = 100;
 
-                        if (!validDrain) {
+if (!validDrain) {
 
-                            finalScore = 0;
+    if (lab14Conf != null && lab14Conf.percent >= 70)
+        finalScore = 75;
+    else
+        finalScore = 65;
 
-                        } else {
+} else {
 
                             if (drainPercentPerHour > 0) {
 
@@ -13667,13 +13713,16 @@ if (aging != null &&
                         }
 
                         if (!Float.isNaN(internalResistance[0]) &&
-                            !lab14_systemLimited[0]) {
-                            	
-                            if (internalResistance[0] >= 0.25f)
-                                finalScore -= 15;
-                            else if (internalResistance[0] >= 0.18f)
-                                finalScore -= 8;
-                        }
+    !Float.isNaN(sagAvg[0]) &&
+    validDrain &&
+    !lab14_systemLimited[0]) {
+
+    if (internalResistance[0] >= 0.25f)
+        finalScore -= 15;
+    else if (internalResistance[0] >= 0.18f)
+        finalScore -= 8;
+
+}
 
                         if (collapseRisk[0] &&
                             !lab14_systemLimited[0]) {
@@ -14131,7 +14180,6 @@ if (partial) {
             Float.NaN
     );
 
-    if (lab14_systemLimited[0]) {
         logWarn(gr
                 ? "Η μέτρηση έγινε με περιορισμό από το σύστημα. Το αποτέλεσμα είναι ενδεικτικό."
                 : "System limiter detected. Result is indicative.");
@@ -14602,7 +14650,6 @@ private void lab14LogFinalScore(
         );
     }
 
-    if (lab14_systemLimited[0]) {
         logLabelWarnValue(
                 gr ? "Περιορισμός συστήματος"
                    : "System limited",
@@ -14643,7 +14690,7 @@ if (!partial && !lab14_systemLimited[0]) {
             .putBoolean("lab14_calibration_drift", calibrationDrift[0])
             .putBoolean("lab14_battery_auth_suspect", batteryAuthenticitySuspicion)
             .putFloat("lab14_health_score", finalScore)
-            .putInt("lab14_aging_index", agingIndex)
+            .putInt("lab14_aging_index", lab14AgingIndex)
             .putLong("lab14_last_ts", System.currentTimeMillis())
             .apply();
 

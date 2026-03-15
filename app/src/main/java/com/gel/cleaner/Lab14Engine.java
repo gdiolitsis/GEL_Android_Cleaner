@@ -415,38 +415,38 @@ public final class Lab14Engine {
     }
 
     public AgingResult computeAging(
-            double mahPerHour,
-            ConfidenceResult conf,
-            long cycleCount,
-            Float tBefore,
-            Float tAfter
-    ) {
+        double mahPerHour,
+        ConfidenceResult conf,
+        long cycleCount,
+        Float tBefore,
+        Float tAfter
+) {
 
-        AgingResult r = new AgingResult();
+    AgingResult r = new AgingResult();
 
-        if (mahPerHour <= 0 || conf == null || conf.percent < 70) {
-            r.severe = false;
-            r.description = "Insufficient data for aging evaluation.";
-            return r;
-        }
-
-        boolean thermalStress = false;
-        if (tBefore != null && tAfter != null) {
-            thermalStress = (tAfter - tBefore) > 7.0;
-        }
-
-        r.severe =
-                mahPerHour > 800
-                        && thermalStress
-                        && cycleCount > 200;
-
-        r.description = r.severe
-                ? "Heavy aging indicators detected."
-                : "Aging within expected limits.";
-
+    if (mahPerHour <= 0 || conf == null || conf.percent < 70) {
+        r.severe = false;
+        r.description = "Insufficient data for aging evaluation.";
         return r;
     }
 
+    boolean thermalStress = false;
+
+    if (tBefore != null && tAfter != null) {
+        thermalStress = (tAfter - tBefore) > 7.0;
+    }
+
+    r.severe =
+            mahPerHour > 900
+            || (mahPerHour > 750 && cycleCount > 300)
+            || (thermalStress && mahPerHour > 700);
+
+    r.description = r.severe
+            ? "Heavy aging indicators detected."
+            : "Aging within expected limits.";
+
+    return r;
+}
     // ============================================================
     // THRESHOLDS (PROFILE & ROOT AWARE)
     // ============================================================

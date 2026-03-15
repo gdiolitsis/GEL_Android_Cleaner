@@ -4432,6 +4432,7 @@ private void startMemoryStress() {
     });
 
     return;
+    }
 
                 for (int i = 0; i < buf.length; i += 64) {
                     buf[i] = (byte) r.nextInt(255);

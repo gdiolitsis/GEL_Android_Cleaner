@@ -14783,8 +14783,6 @@ logOk(
 );
 logLine();
 
-}
-
         } catch (Throwable t) {
 
             lab14StopAllStress();
@@ -14809,6 +14807,29 @@ logLine();
         }
 
     }).start();
+
+} catch (Throwable t) {
+
+    lab14StopAllStress();
+    restoreBrightnessAndKeepOn();
+
+    try {
+        lab14CleanupUI();
+    } catch (Throwable ignore) {}
+
+    lab14Cancelled = true;
+
+    logError(
+            gr
+                    ? "Σφάλμα LAB 14"
+                    : "LAB 14 error"
+    );
+
+} finally {
+
+    lab14Running = false;
+
+}
 
 // ============================================================
 // LAB 14 — LOG STRESS RESULT

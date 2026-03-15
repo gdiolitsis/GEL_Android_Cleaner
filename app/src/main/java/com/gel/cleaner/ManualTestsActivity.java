@@ -14785,7 +14785,7 @@ logLine();
 
                     });
 
-                }).start();
+            }).start();
 
     } catch (Throwable t) {
 
@@ -14809,6 +14809,7 @@ logLine();
         lab14Running = false;
 
     }
+}
 
 // ============================================================
 // LAB 14 — LOG STRESS RESULT

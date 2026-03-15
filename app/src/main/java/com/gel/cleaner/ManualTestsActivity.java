@@ -14785,30 +14785,30 @@ appendHtml("<br>");
 
         });
 
-    } catch (Throwable t) {
+    }).start();
 
-        lab14StopAllStress();
-        restoreBrightnessAndKeepOn();
+} catch (Throwable t) {
 
-        try {
-            lab14CleanupUI();
-        } catch (Throwable ignore) {}
+    lab14StopAllStress();
+    restoreBrightnessAndKeepOn();
 
-        lab14Cancelled = true;
+    try {
+        lab14CleanupUI();
+    } catch (Throwable ignore) {}
 
-        logError(
-                gr
-                        ? "Σφάλμα LAB 14"
-                        : "LAB 14 error"
-        );
+    lab14Cancelled = true;
 
-    } finally {
+    logError(
+            gr
+                    ? "Σφάλμα LAB 14"
+                    : "LAB 14 error"
+    );
 
-        lab14Running = false;
+} finally {
 
-    }
+    lab14Running = false;
 
-}).start();
+}
 
 // ============================================================
 // LAB 14 — LOG STRESS RESULT
@@ -25136,5 +25136,4 @@ if (requestCode == 8008) {
 // ============================================================
 // END OF CLASS
 // ============================================================
-}
 }

@@ -4056,7 +4056,6 @@ if (lab14_systemLimited[0]) {
                     ? "Εντοπίστηκε περιορισμός BMS"
                     : "BMS current limiting detected"
     );
-    }
 
     logWarn(gr
             ? "Η μέτρηση έγινε με περιορισμό από το σύστημα. Το αποτέλεσμα είναι ενδεικτικό."
@@ -4101,7 +4100,6 @@ if (lab14_systemLimited[0]) {
                     ? "Το BMS περιόρισε την κατανάλωση"
                     : "BMS current limiting detected"
     );
-    }
 
     logWarn(gr
             ? "Η μέτρηση έγινε με περιορισμό από το σύστημα. Το αποτέλεσμα είναι ενδεικτικό."

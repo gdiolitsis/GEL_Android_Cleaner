@@ -4036,7 +4036,7 @@ private void lab14LogReliabilitySummary(
 
     appendHtml("<br>");
     
-    logΟκ(gr
+    logOk(gr
             ? "Αξιοπιστία διάγνωσης"
             : "Diagnostic reliability");
 

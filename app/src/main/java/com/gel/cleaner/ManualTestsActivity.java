@@ -13457,26 +13457,26 @@ if (aging != null) {
 }
 
 if (aging != null &&
-    agingIndex >= 0 &&
+    lab14AgingIndex >= 0 &&
     validDrain &&
-    conf != null &&
-    conf.percent >= 60) {
+    lab14Conf != null &&
+    lab14Conf.percent >= 60) {
 
-    if (agingIndex < 20)
+    if (lab14AgingIndex < 20)
         lab14AgingInterp = "Excellent";
-    else if (agingIndex < 40)
-        agingInterp = "Good";
-    else if (agingIndex < 60)
-        agingInterp = "Moderate";
-    else if (agingIndex < 80)
-        agingInterp = "High";
+    else if (lab14AgingIndex < 40)
+        lab14AgingInterp = "Good";
+    else if (lab14AgingIndex < 60)
+        lab14AgingInterp = "Moderate";
+    else if (lab14AgingIndex < 80)
+        lab14AgingInterp = "High";
     else
-        agingInterp = "Severe";
+        lab14AgingInterp = "Severe";
 
 } else {
 
-    agingIndex = -1;
-    agingInterp = "Insufficient data";
+    lab14AgingIndex = -1;
+    lab14AgingInterp = "Insufficient data";
 
 }
 
@@ -13677,7 +13677,6 @@ if (aging != null &&
                         final int agingIndexF = lab14AgingIndex;
                         final String agingInterpF = lab14AgingInterp;
                         final boolean batteryBehaviourWarningF = lab14BatteryBehaviourWarning;
-                        final boolean batteryBehaviourWarningF = batteryBehaviourWarning;
                         final int finalScoreF = finalScore;
                         final String finalLabelF = finalLabel;
                         final String healthClassF = healthClass;

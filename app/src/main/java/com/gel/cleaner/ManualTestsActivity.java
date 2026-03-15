@@ -14783,6 +14783,8 @@ logOk(
 );
 logLine();
 
+}
+
         } catch (Throwable t) {
 
             lab14StopAllStress();

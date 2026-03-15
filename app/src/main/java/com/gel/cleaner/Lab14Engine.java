@@ -418,6 +418,7 @@ public final class Lab14Engine {
 }
     
     public AgingResult computeAging(
+    public AgingResult computeAging(
         double mahPerHour,
         ConfidenceResult conf,
         long cycleCount,
@@ -428,9 +429,12 @@ public final class Lab14Engine {
     AgingResult r = new AgingResult();
 
     if (mahPerHour <= 0 || conf == null || conf.percent < 70) {
+
         r.severe = false;
+        r.index = -1;
         r.description = "Insufficient data for aging evaluation.";
         return r;
+
     }
 
     boolean thermalStress = false;
@@ -439,10 +443,33 @@ public final class Lab14Engine {
         thermalStress = (tAfter - tBefore) > 7.0;
     }
 
+    // -------------------------
+    // severity logic
+    // -------------------------
+
     r.severe =
             mahPerHour > 900
             || (mahPerHour > 750 && cycleCount > 300)
             || (thermalStress && mahPerHour > 700);
+
+    // -------------------------
+    // index (0–100)
+    // -------------------------
+
+    if (r.severe) {
+
+        r.index = 80;
+
+    } else {
+
+        if (conf.percent >= 90)
+            r.index = 25;
+        else if (conf.percent >= 70)
+            r.index = 35;
+        else
+            r.index = 45;
+
+    }
 
     r.description = r.severe
             ? "Heavy aging indicators detected."

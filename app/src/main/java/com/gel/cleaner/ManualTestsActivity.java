@@ -14788,39 +14788,50 @@ logLine();
 
         } catch (Throwable t) {
 
-            runOnUiThread(() -> {
+    runOnUiThread(() -> {
 
-                lab14Cancelled = true;
-
-                try {
-                    lab14StopAllStress();
-                } catch (Throwable ignore) {}
-
-                try {
-                    restoreBrightnessAndKeepOn();
-                } catch (Throwable ignore) {}
-
-                logError(
-                        gr
-                                ? "Σφάλμα LAB 14"
-                                : "LAB 14 error"
-                );
-            });
-        }
-
-    } catch (Throwable t) {
-
-        lab14StopAllStress();
-        restoreBrightnessAndKeepOn();
-        lab14CleanupUI();
         lab14Cancelled = true;
+
+        try {
+            lab14StopAllStress();
+        } catch (Throwable ignore) {}
+
+        try {
+            restoreBrightnessAndKeepOn();
+        } catch (Throwable ignore) {}
 
         logError(
                 gr
                         ? "Σφάλμα LAB 14"
                         : "LAB 14 error"
         );
-    }
+    });
+
+}
+
+}).start();
+
+} catch (Throwable t) {
+
+    try {
+        lab14StopAllStress();
+    } catch (Throwable ignore) {}
+
+    try {
+        restoreBrightnessAndKeepOn();
+    } catch (Throwable ignore) {}
+
+    try {
+        lab14CleanupUI();
+    } catch (Throwable ignore) {}
+
+    lab14Cancelled = true;
+
+    logError(
+            gr
+                    ? "Σφάλμα LAB 14"
+                    : "LAB 14 error"
+    );
 }
 
 // ============================================================

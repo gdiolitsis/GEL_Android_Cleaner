@@ -12479,6 +12479,7 @@ AppTTS.stop();
     logWarn("Lab 13 aborted by user.");
     logLine();
 }
+}
 
 // ============================================================
 // LAB 14 — ENTRY (POPUP FLOW)

@@ -4312,7 +4312,6 @@ else {
             : "Runs were performed under different conditions with large deviation.");
 
 }
-}
 
 private int getLab14RunCount() {
 

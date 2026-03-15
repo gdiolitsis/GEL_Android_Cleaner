@@ -407,18 +407,17 @@ public final class Lab14Engine {
     }
 
     // ============================================================
-    // AGING INDEX
-    // ============================================================
-    public static final class AgingResult {
+// AGING INDEX
+// ============================================================
+public static final class AgingResult {
 
     public boolean severe;
     public int index;
     public String description;
 
 }
-    
-    public AgingResult computeAging(
-    public AgingResult computeAging(
+
+public AgingResult computeAging(
         double mahPerHour,
         ConfidenceResult conf,
         long cycleCount,
@@ -443,18 +442,14 @@ public final class Lab14Engine {
         thermalStress = (tAfter - tBefore) > 7.0;
     }
 
-    // -------------------------
     // severity logic
-    // -------------------------
 
     r.severe =
             mahPerHour > 900
             || (mahPerHour > 750 && cycleCount > 300)
             || (thermalStress && mahPerHour > 700);
 
-    // -------------------------
-    // index (0–100)
-    // -------------------------
+    // index
 
     if (r.severe) {
 
